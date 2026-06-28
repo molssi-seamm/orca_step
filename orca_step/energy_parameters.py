@@ -49,9 +49,24 @@ class EnergyParameters(seamm.Parameters):
             "format_string": "",
             "description": "Basis set:",
             "help_text": (
-                "The orbital basis set. ORCA's built-in name is used; a valid "
-                "name may also be typed in. (Basis Set Exchange is a planned "
-                "opt-in alternative.)"
+                "The orbital basis set. A valid name may also be typed in. How "
+                "the name is resolved is set by 'Basis set source' below."
+            ),
+        },
+        "basis source": {
+            "default": "ORCA internal",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("ORCA internal", "Basis Set Exchange"),
+            "format_string": "",
+            "description": "Basis set source:",
+            "help_text": (
+                "Where the orbital basis comes from. 'ORCA internal' uses ORCA's "
+                "built-in definition (the basis name goes on the '!' line). "
+                "'Basis Set Exchange' fetches the named basis from the Basis Set "
+                "Exchange and embeds it, for cross-code-identical definitions or "
+                "bases ORCA does not ship. The auxiliary basis (AutoAux) is "
+                "unaffected."
             ),
         },
         "auxiliary basis": {
@@ -77,6 +92,59 @@ class EnergyParameters(seamm.Parameters):
             "help_text": (
                 "Any additional ORCA '!' keywords to append, e.g. 'TightSCF', "
                 "'RIJCOSX', 'Grid5'."
+            ),
+        },
+        "bond orders": {
+            "default": "yes",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("no", "yes", "yes, and apply to structure"),
+            "format_string": "",
+            "description": "Mayer bond orders:",
+            "help_text": (
+                "Analyze the Mayer bond orders (always written to a CSV file; "
+                "printed for small systems). 'apply to structure' also replaces "
+                "the bonds in the structure with single/aromatic/double/triple "
+                "bonds based on the bond orders."
+            ),
+        },
+        "Hirshfeld charges": {
+            "default": "no",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("no", "yes", "yes, and apply to structure"),
+            "format_string": "",
+            "description": "Hirshfeld charges:",
+            "help_text": (
+                "Compute Hirshfeld atomic charges (written to a CSV file; printed "
+                "for small systems). 'apply to structure' also stores them as the "
+                "atomic charges on the structure."
+            ),
+        },
+        "polarizability": {
+            "default": "no",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("no", "yes"),
+            "format_string": "",
+            "description": "Polarizability:",
+            "help_text": (
+                "Compute the dipole polarizability (analytic for HF and DFT). "
+                "This adds to the cost of the calculation."
+            ),
+        },
+        "save wavefunction": {
+            "default": "no",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("no", "yes"),
+            "format_string": "",
+            "description": "Write the wavefunction (wfx) file:",
+            "help_text": (
+                "Retain the electron density ('keepdensity') and convert it to an "
+                "AIMPAC wavefunction (.wfx) file with orca_2aim. This analytic "
+                "wavefunction is read by a following Atomic Charges step "
+                "(DDEC6 via Chargemol), mirroring the Gaussian wfx path."
             ),
         },
         "results": {

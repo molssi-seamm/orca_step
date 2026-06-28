@@ -44,7 +44,7 @@ class TkEnergy(seamm.TkNode):
 
     def create_dialog(self, title="ORCA Energy"):
         """Create the dialog and its widgets."""
-        frame = super().create_dialog(title=title)
+        frame = super().create_dialog(title=title, widget="notebook", results_tab=True)
         P = self.node.parameters
 
         for key in P:
@@ -76,9 +76,18 @@ class TkEnergy(seamm.TkNode):
         row += 1
 
         widgets = [self["use model chemistry"]]
-        # Method/basis come from the model chemistry when it is used; the
-        # auxiliary basis and extra keywords are ORCA run details either way.
-        keys = ["auxiliary basis", "extra keywords"]
+        # Method and basis name come from the model chemistry when it is used;
+        # the basis source, auxiliary basis, and extra keywords are ORCA run
+        # details that apply either way.
+        keys = [
+            "basis source",
+            "auxiliary basis",
+            "extra keywords",
+            "bond orders",
+            "Hirshfeld charges",
+            "polarizability",
+            "save wavefunction",
+        ]
         if not use_mc:
             keys = ["method", "basis"] + keys
         for key in keys:
@@ -87,4 +96,8 @@ class TkEnergy(seamm.TkNode):
             row += 1
 
         sw.align_labels(widgets, sticky=tk.E)
+
+        # Lay out the Results tab from the metadata (energy, gradients, charges,
+        # ...). Without this the Results tab is created but stays empty.
+        self.setup_results()
         return row
