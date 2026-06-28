@@ -35,7 +35,23 @@ A SEAMM plug-in for ORCA
 Features
 --------
 
-* Please edit this section!
+A SEAMM plug-in for ORCA, a general-purpose quantum-chemistry program, with an
+emphasis on accurate molecular calculations such as DLPNO-CCSD(T).
+
+Like the MOPAC and Gaussian steps, the ORCA step is a sub-flowchart: you add an
+ORCA node to your flowchart and then build a small sub-flowchart of ORCA
+capabilities inside it. Initially the available capabilities are:
+
+* **Energy** -- a single-point energy.
+* **Optimization** -- a geometry optimization.
+
+Further capabilities (frequencies, properties, ...) will be added.
+
+Methods are described by the step's metadata and can be set either explicitly in
+the ORCA dialog (similar to the Gaussian step) or, by default, taken from a
+preceding **Model Chemistry** step. Basis sets default to ORCA's built-in
+families (Pople, Dunning ``cc``, and Karlsruhe ``def2``), with the Basis Set
+Exchange available as a planned opt-in source.
 
 Acknowledgements
 ----------------

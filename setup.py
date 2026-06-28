@@ -77,11 +77,22 @@ setup(
         'Programming Language :: Python :: 3.9',
     ],
     entry_points={
+        'console_scripts': [
+            'orca-step-installer=orca_step.__main__:run',
+        ],
         'org.molssi.seamm': [
-            'ORCA = orca_step:OrcaStep',
+            'ORCA = orca_step:ORCAStep',
         ],
         'org.molssi.seamm.tk': [
-            'ORCA = orca_step:OrcaStep',
+            'ORCA = orca_step:ORCAStep',
+        ],
+        'org.molssi.seamm.orca': [
+            'Energy = orca_step:EnergyStep',
+            'Optimization = orca_step:OptimizationStep',
+        ],
+        'org.molssi.seamm.orca.tk': [
+            'Energy = orca_step:EnergyStep',
+            'Optimization = orca_step:OptimizationStep',
         ],
     }
 )

@@ -1,0 +1,16 @@
+[orca-step]
+# Path to the ORCA executable, if it is not on the PATH. ORCA must be invoked by
+# its full path so it can find its sub-programs.
+# orca-path =
+
+# How many cores/processes ORCA may use (via %pal). Default is serial (1).
+# Parallel ORCA requires a matching OpenMPI runtime (see library-path).
+# ncores = 1
+
+# Directory holding ORCA's required OpenMPI libraries (e.g. libmpi.40.dylib),
+# prepended to (DY)LD_LIBRARY_PATH for parallel runs. On this machine the
+# seamm-orca conda environment provides them.
+# library-path =
+
+# Maximum number of atoms for which to print detailed per-atom results.
+# max_atoms_to_print = 25

@@ -1,145 +1,80 @@
 # -*- coding: utf-8 -*-
 
-"""This file contains metadata describing the results from Orca"""
+"""Metadata describing ORCA's methods, basis sets, and results.
+
+This drives the explicit method/basis GUI (like the Gaussian step) and will also
+back the model-chemistry protocol (``get_model_chemistry_options``) used by the
+Model Chemistry step. It is kept deliberately small for now and will be filled
+out as more of ORCA's capabilities are exposed.
+"""
 
 metadata = {}
 
-"""Description of the computational models for Orca.
+# Methods offered in the explicit GUI. Each is an ORCA "!" keyword. "type"
+# groups them for the model-chemistry protocol (QC = wavefunction, DFT, etc.).
+metadata["methods"] = {
+    "HF": {"type": "HF", "description": "Hartree-Fock"},
+    "MP2": {"type": "MP2", "description": "second-order Moller-Plesset (MP2)"},
+    "RI-MP2": {"type": "MP2", "description": "RI-MP2 (resolution of identity)"},
+    "CCSD(T)": {"type": "QC", "description": "coupled cluster CCSD(T)"},
+    "DLPNO-CCSD(T)": {
+        "type": "QC",
+        "description": "near-linear-scaling DLPNO-CCSD(T)",
+        "needs_aux": True,
+    },
+    "B3LYP": {"type": "DFT", "description": "B3LYP hybrid functional"},
+    "PBE": {"type": "DFT", "description": "PBE GGA functional"},
+    "PBE0": {"type": "DFT", "description": "PBE0 hybrid functional"},
+    "wB97X-D3": {
+        "type": "DFT",
+        "description": "range-separated wB97X-D3 functional",
+    },
+    "M06-2X": {"type": "DFT", "description": "M06-2X meta-hybrid functional"},
+}
 
-Hamiltonians, approximations, and basis set or parameterizations,
-only if appropriate for this code. For example::
+# Curated basis-set families (ORCA's built-in names). Free text is also allowed
+# in the GUI; these are the guided choices.
+metadata["basis sets"] = [
+    # Pople
+    "6-31G",
+    "6-31G*",
+    "6-31G**",
+    "6-31+G*",
+    "6-311G**",
+    "6-311++G**",
+    # Dunning correlation-consistent
+    "cc-pVDZ",
+    "cc-pVTZ",
+    "cc-pVQZ",
+    "aug-cc-pVDZ",
+    "aug-cc-pVTZ",
+    # Karlsruhe def2
+    "def2-SVP",
+    "def2-TZVP",
+    "def2-TZVPP",
+    "def2-QZVP",
+]
 
-    metadata["computational models"] = {
-        "Hartree-Fock": {
-            "models": {
-                "PM7": {
-                    "parameterizations": {
-                        "PM7": {
-                            "elements": "1-60,62-83",
-                            "periodic": True,
-                            "reactions": True,
-                            "optimization": True,
-                            "code": "mopac",
-                        },
-                        "PM7-TS": {
-                            "elements": "1-60,62-83",
-                            "periodic": True,
-                            "reactions": True,
-                            "optimization": False,
-                            "code": "mopac",
-                        },
-                    },
-                },
-            },
-        },
-    }
-"""
-# metadata["computational models"] = {
-# }
+# Auxiliary / fitting basis choices. AutoAux generates a fitting basis for any
+# method/basis and is the robust default for correlated (DLPNO/MP2) methods.
+metadata["auxiliary basis sets"] = [
+    "AutoAux",
+    "none",
+    "def2/J",
+    "def2/JK",
+]
 
-"""Description of the Orca keywords.
+"""Results ORCA can produce. Same recognized fields as the other QM steps."""
+metadata["results"] = {
+    "energy": {
+        "description": "The total energy",
+        "dimensionality": "scalar",
+        "property": "total energy#ORCA#{model}",
+        "type": "float",
+        "units": "E_h",
+    },
+}
 
-(Only needed if this code uses keywords)
-
-Fields
-------
-description : str
-    A human readable description of the keyword.
-takes values : int (optional)
-    Number of values the keyword takes. If missing the keyword takes no values.
-default : str (optional)
-    The default value(s) if the keyword takes values.
-format : str (optional)
-    How the keyword is formatted in the MOPAC input.
-
-For example::
-    metadata["keywords"] = {
-        "0SCF": {
-            "description": "Read in data, then stop",
-        },
-        "ALT_A": {
-            "description": "In PDB files with alternative atoms, select atoms A",
-            "takes values": 1,
-            "default": "A",
-            "format": "{}={}",
-        },
-    }
-"""
-# metadata["keywords"] = {
-# }
-
-"""Properties that Orca produces.
-`metadata["results"]` describes the results that this step can produce. It is a
-dictionary where the keys are the internal names of the results within this step, and
-the values are a dictionary describing the result. For example::
-
-    metadata["results"] = {
-        "total_energy": {
-            "calculation": [
-                "energy",
-                "optimization",
-            ],
-            "description": "The total energy",
-            "dimensionality": "scalar",
-            "methods": [
-                "ccsd",
-                "ccsd(t)",
-                "dft",
-                "hf",
-            ],
-            "property": "total energy#Psi4#{model}",
-            "type": "float",
-            "units": "E_h",
-        },
-    }
-
-Fields
-______
-
-calculation : [str]
-    Optional metadata describing what subtype of the step produces this result.
-    The subtypes are completely arbitrary, but often they are types of calculations
-    which is why this is name `calculation`. To use this, the step or a substep
-    define `self._calculation` as a value. That value is used to select only the
-    results with that value in this field.
-
-description : str
-    A human-readable description of the result.
-
-dimensionality : str
-    The dimensions of the data. The value can be "scalar" or an array definition
-    of the form "[dim1, dim2,...]". Symmetric tringular matrices are denoted
-    "triangular[n,n]". The dimensions can be integers, other scalar
-    results, or standard parameters such as `n_atoms`. For example, '[3]',
-    [3, n_atoms], or "triangular[n_aos, n_aos]".
-
-methods : str
-    Optional metadata like the `calculation` data. `methods` provides a second
-    level of filtering, often used for the Hamiltionian for *ab initio* calculations
-    where some properties may or may not be calculated depending on the type of
-    theory.
-
-property : str
-    An optional definition of the property for storing this result. Must be one of
-    the standard properties defined either in SEAMM or in this steps property
-    metadata in `data/properties.csv`.
-
-type : str
-    The type of the data: string, integer, or float.
-
-units : str
-    Optional units for the result. If present, the value should be in these units.
-"""
-# metadata["results"] = {
-#     "total_energy": {
-#         "calculation": [
-#             "energy",
-#             "optimization",
-#         ],
-#         "description": "The total energy",
-#         "dimensionality": "scalar",
-#         "property": "total energy#Orca#{model}",
-#         "type": "float",
-#         "units": "E_h",
-#     },
-# }
+# Placeholder for the model-chemistry protocol; populated in the Model Chemistry
+# integration phase via get_model_chemistry_options() on ORCAStep.
+metadata["computational models"] = {}
