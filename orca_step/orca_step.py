@@ -1,35 +1,19 @@
 # -*- coding: utf-8 -*-
 
+"""Stevedore helper for the main ORCA node."""
+
 import orca_step
 
+# Basis sets advertised with each method to the Model Chemistry step. ORCA can
+# use any basis it knows; this is a curated, bounded set so the model-chemistry
+# list does not explode. A user wanting another basis can set it explicitly in
+# the ORCA dialog. (Broadening what the Model Chemistry step offers is a
+# model_chemistry_step concern, not ORCA's.)
+_ADVERTISED_BASES = ("def2-SVP", "def2-TZVP", "def2-QZVP", "cc-pVTZ")
 
-class OrcaStep(object):
-    """Helper class needed for the stevedore integration.
 
-    This must provide a `description()` method that returns a dict containing a
-    description of this node, and `create_node()` and `create_tk_node()` methods
-    for creating the graphical and non-graphical nodes.
-
-    The dictionary for the description is the class variable just below these
-    comments. The felds are as follows:
-
-        my_description : {str, str}
-            A human-readable description of this step. It can be
-            several lines long, and needs to be clear to non-expert users.
-            It contains the following keys: description, group, name.
-
-        my_description["description"] : tuple
-            A description of the ORCA step. It must be
-            clear to non-experts.
-
-        my_description["group"] : str
-            Which group in the menus to put this step. If the group does
-            not exist it will be created. Common groups are "Building",
-            "Control", "Custom", "Data", and "Simulations".
-
-        my_description["name"] : str
-            The name of this step, to be displayed in the menus.
-    """
+class ORCAStep(object):
+    """Helper class for the stevedore integration of the ORCA step."""
 
     my_description = {
         "description": "An interface for ORCA",
@@ -38,58 +22,44 @@ class OrcaStep(object):
     }
 
     def __init__(self, flowchart=None, gui=None):
-        """Initialize this helper class, which is used by
-        the application via stevedore to get information about
-        and create node objects for the flowchart
-        """
         pass
 
-    def create_node(self, flowchart=None, **kwargs):
-        """Create and return the new node object.
+    @classmethod
+    def get_model_chemistry_options(cls, periodic_only=False, mdi_only=False):
+        """Return the model chemistries ORCA can provide.
 
-        Parameters
-        ----------
-        flowchart: seamm.Node
-            A non-graphical SEAMM node
-
-        **kwargs : keyword arguments
-            Various keyword arguments such as title, namespace or
-            extension representing the title displayed in the flowchart,
-            the namespace for the plugins of a subflowchart and
-            the extension, respectively.
-
-        Returns
-        -------
-        Orca
+        ORCA is a molecular quantum-chemistry program: not periodic and not
+        (currently) an MDI engine, so it returns nothing when either filter is
+        set. Otherwise it advertises ``ORCA:<type>@<method>/<basis>`` for each
+        method in the metadata paired with a curated set of basis sets.
         """
+        if periodic_only or mdi_only:
+            return {}
 
-        return orca_step.Orca(flowchart=flowchart, **kwargs)
-
-    def create_tk_node(self, canvas=None, **kwargs):
-        """Create and return the graphical Tk node object.
-
-        Parameters
-        ----------
-        canvas : tk.Canvas
-            The Tk Canvas widget
-
-        **kwargs : keyword arguments
-            Various keyword arguments such as tk_flowchart, node, x, y, w, h
-            representing a graphical flowchart object, a non-graphical node for
-            a step, and dimensions of the graphical node.
-
-        Returns
-        -------
-        TkOrca
-        """
-
-        return orca_step.TkOrca(canvas=canvas, **kwargs)
+        options = {}
+        for method, info in orca_step.metadata["methods"].items():
+            mtype = info.get("type", "QC")
+            for basis in _ADVERTISED_BASES:
+                key = f"ORCA:{mtype}@{method}/{basis}"
+                options[key] = {
+                    "model_chemistry": key,
+                    "type": mtype,
+                    "method": method,
+                    "basis": basis,
+                    "description": f"{info.get('description', method)} / {basis}",
+                    "periodic": False,
+                    "mdi_capable": False,
+                }
+        return options
 
     def description(self):
-        """Return a description of what this step does.
+        """Return a description of what this step does."""
+        return ORCAStep.my_description
 
-        Returns
-        -------
-        description : dict(str, str)
-        """
-        return OrcaStep.my_description
+    def create_node(self, flowchart=None, **kwargs):
+        """Return a new ORCA node."""
+        return orca_step.ORCA(flowchart=flowchart, **kwargs)
+
+    def create_tk_node(self, canvas=None, **kwargs):
+        """Return a new graphical ORCA node."""
+        return orca_step.TkORCA(canvas=canvas, **kwargs)
