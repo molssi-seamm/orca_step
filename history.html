@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.6.27 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.6.28 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="_static/documentation_options.js?v=e3a086cf"></script>
+    <script src="_static/documentation_options.js?v=0bba250d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.27" />
+  <meta name="docsearch:version" content="2026.6.28" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,26 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.6.28 – Properties, gradients, citations, and wavefunction export</dt><dd><ul class="simple">
+<li><p>Reports many properties from a single calculation: HOMO/LUMO (and the next
+orbitals) and the gap, the dipole moment, rotational constants, &lt;S^2&gt;, the
+Mulliken, Löwdin, and Hirshfeld atomic charges, the Mayer bond orders and
+valences, and the optional dipole polarizability.</p></li>
+<li><p>The Mayer bond orders and Hirshfeld charges can be written to a CSV file
+and applied to the structure.</p></li>
+<li><p>Energy gradients can be requested and are written to Results.json for use by
+driver steps such as Thermochemistry and Reaction Path.</p></li>
+<li><p>Full citations for each run: the ORCA program, the DFT functional (from the
+ORCA manual), the basis set (via the Basis Set Exchange), and the supporting
+integral and exchange-correlation libraries.</p></li>
+<li><p>Basis sets can be taken from the Basis Set Exchange, including a ‘bse:NAME’
+shorthand that forces a single basis from the Exchange.</p></li>
+<li><p>Can write an analytic wavefunction (.wfx, via orca_2aim) for a following
+Atomic Charges step to partition into DDEC6 charges.</p></li>
+<li><p>Fixed: the Results tab in the GUI was empty; it now lists the available
+results to save to variables, tables, or JSON.</p></li>
+</ul>
+</dd>
 <dt>2026.6.27 – Initial release of the ORCA step</dt><dd><ul class="simple">
 <li><p>A sub-flowchart ORCA plug-in with Energy and Optimization sub-steps.</p></li>
 <li><p>Single-point energies and geometry optimizations, including DLPNO-CCSD(T).</p></li>

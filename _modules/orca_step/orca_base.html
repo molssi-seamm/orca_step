@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.6.27 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.6.28 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=e3a086cf"></script>
+    <script src="../../_static/documentation_options.js?v=0bba250d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.27" />
+  <meta name="docsearch:version" content="2026.6.28" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -620,7 +620,7 @@
     <span class="c1"># ------------------------------------------------------------------</span>
 <div class="viewcode-block" id="ORCABase.run_orca">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.run_orca">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">run_orca</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_orca</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the ORCA input, run ORCA, and return the parsed results.</span>
 
 <span class="sd">        Parameters</span>
@@ -629,6 +629,14 @@
 <span class="sd">            The contents of the ORCA &quot;!&quot; simple-input line (without the &quot;!&quot;).</span>
 <span class="sd">        extra_blocks : str</span>
 <span class="sd">            Any additional ``%`` blocks to place before the geometry.</span>
+<span class="sd">        extra_files : dict | None</span>
+<span class="sd">            Extra input files to write into the run directory (e.g. an external</span>
+<span class="sd">            basis file referenced by ``%basis GTOName ... end``).</span>
+<span class="sd">        make_wfx : bool</span>
+<span class="sd">            After ORCA finishes, run ``orca_2aim`` (shipped alongside ORCA) to</span>
+<span class="sd">            convert the density (retained by the ``keepdensity`` keyword) into an</span>
+<span class="sd">            AIMPAC ``orca.wfx`` wavefunction file for a following Atomic Charges</span>
+<span class="sd">            step. Requires the ORCA input to include ``keepdensity``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -666,6 +674,8 @@
         <span class="n">input_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
         <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;orca.inp&quot;</span><span class="p">:</span> <span class="n">input_text</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">extra_files</span><span class="p">:</span>
+            <span class="n">files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_files</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;orca.inp:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">input_text</span><span class="p">)</span>
 
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orca_config</span><span class="p">()</span>
@@ -680,12 +690,33 @@
                 <span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">library_path</span> <span class="o">+</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">existing</span> <span class="k">if</span> <span class="n">existing</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="c1"># ORCA must be invoked by its full path so it can find its sub-programs.</span>
+        <span class="c1"># When a wavefunction file is wanted, chain orca_2aim (which lives next</span>
+        <span class="c1"># to the orca binary) in the same shell so it runs in this directory</span>
+        <span class="c1"># right after ORCA, reading the just-written orca.gbw/orca.densities.</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{code}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.inp&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.out&quot;</span><span class="p">,</span> <span class="s2">&quot;2&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.err&quot;</span><span class="p">]</span>
+        <span class="n">return_files</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;orca.out&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;orca.err&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;orca.gbw&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;*.bibtex&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;*.txt&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;*.engrad&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
+            <span class="n">orca_2aim</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;orca_2aim&quot;</span><span class="p">)</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;&amp;&amp;&quot;</span><span class="p">,</span> <span class="n">orca_2aim</span><span class="p">,</span> <span class="s2">&quot;orca&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca_2aim.out&quot;</span><span class="p">,</span> <span class="s2">&quot;2&gt;&amp;1&quot;</span><span class="p">]</span>
+            <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;orca.wfx&quot;</span><span class="p">,</span> <span class="s2">&quot;orca_2aim.out&quot;</span><span class="p">]</span>
+
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">cmd</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;</span><span class="si">{code}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.inp&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.out&quot;</span><span class="p">,</span> <span class="s2">&quot;2&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.err&quot;</span><span class="p">],</span>
+            <span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span>
             <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
             <span class="n">directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span>
             <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
-            <span class="n">return_files</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;orca.out&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.err&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.gbw&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.property.txt&quot;</span><span class="p">],</span>
+            <span class="c1"># Wildcards: ORCA writes orca.bibtex (suggested citations) and</span>
+            <span class="c1"># orca.property.txt (and other *.txt depending on options); the</span>
+            <span class="c1"># executor discards files not requested. orca.engrad appears only</span>
+            <span class="c1"># when gradients are requested (! EnGrad).</span>
+            <span class="n">return_files</span><span class="o">=</span><span class="n">return_files</span><span class="p">,</span>
             <span class="n">in_situ</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>

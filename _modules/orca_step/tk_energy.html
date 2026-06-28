@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.6.27 documentation</title>
+    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.6.28 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=e3a086cf"></script>
+    <script src="../../_static/documentation_options.js?v=0bba250d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.27" />
+  <meta name="docsearch:version" content="2026.6.28" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -541,7 +541,7 @@
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.tk_energy.TkEnergy.create_dialog">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_dialog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;ORCA Energy&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create the dialog and its widgets.&quot;&quot;&quot;</span>
-        <span class="n">frame</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">create_dialog</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">create_dialog</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="s2">&quot;notebook&quot;</span><span class="p">,</span> <span class="n">results_tab</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">parameters</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">P</span><span class="p">:</span>
@@ -576,9 +576,18 @@
         <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="n">widgets</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">]]</span>
-        <span class="c1"># Method/basis come from the model chemistry when it is used; the</span>
-        <span class="c1"># auxiliary basis and extra keywords are ORCA run details either way.</span>
-        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;auxiliary basis&quot;</span><span class="p">,</span> <span class="s2">&quot;extra keywords&quot;</span><span class="p">]</span>
+        <span class="c1"># Method and basis name come from the model chemistry when it is used;</span>
+        <span class="c1"># the basis source, auxiliary basis, and extra keywords are ORCA run</span>
+        <span class="c1"># details that apply either way.</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;basis source&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;auxiliary basis&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;extra keywords&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bond orders&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Hirshfeld charges&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;polarizability&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;save wavefunction&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">use_mc</span><span class="p">:</span>
             <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="s2">&quot;basis&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">keys</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
@@ -587,6 +596,10 @@
             <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="n">sw</span><span class="o">.</span><span class="n">align_labels</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">E</span><span class="p">)</span>
+
+        <span class="c1"># Lay out the Results tab from the metadata (energy, gradients, charges,</span>
+        <span class="c1"># ...). Without this the Results tab is created but stays empty.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_results</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">row</span></div>
 </div>
 
