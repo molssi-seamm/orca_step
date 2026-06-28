@@ -1,0 +1,1159 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.6.27 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=c224919a" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=e3a086cf"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/orca_step';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Development Team" href="../authors.html" />
+    <link rel="prev" title="orca_step" href="modules.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2026.6.27" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/SEAMM logo.png" class="logo__image only-light" alt=""/>
+    <img src="../_static/SEAMM Inverted 288x181.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">ORCA</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer_guide/index.html">
+    Developer Documentation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Documentation
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../authors.html">
+    Development Team
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../history.html">
+    History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi-seamm.github.io">
+    Main SEAMM documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi-seamm.github.io">
+    SEAMM Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/molssi-seamm/geometry_analysis_step" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-twitter fa-lg" aria-hidden="true"></i><span class="visually-hidden">Twitter</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer_guide/index.html">
+    Developer Documentation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../authors.html">
+    Development Team
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../history.html">
+    History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi-seamm.github.io">
+    Main SEAMM documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi-seamm.github.io">
+    SEAMM Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/molssi-seamm/geometry_analysis_step" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-twitter fa-lg" aria-hidden="true"></i><span class="visually-hidden">Twitter</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="modules.html">orca_step</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">orca_step package</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API Documentation</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="modules.html" class="nav-link">orca_step</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">orca_step package</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="orca-step-package">
+<h1>orca_step package<a class="headerlink" href="#orca-step-package" title="Link to this heading">#</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+</section>
+<section id="module-orca_step.energy">
+<span id="orca-step-energy-module"></span><h2>orca_step.energy module<a class="headerlink" href="#module-orca_step.energy" title="Link to this heading">#</a></h2>
+<p>An ORCA single-point energy sub-step.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.energy.Energy">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.energy.</span></span><span class="sig-name descname"><span class="pre">Energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Energy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;Logger</span> <span class="pre">orca_step.energy</span> <span class="pre">(WARNING)&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orca_step.orca_base.ORCABase" title="orca_step.orca_base.ORCABase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ORCABase</span></code></a></p>
+<p>A single-point energy with ORCA.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TkEnergy</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">EnergyParameters</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Optimization</span></code></p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy.Energy.analyze">
+<span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.analyze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.analyze" title="Link to this definition">#</a></dt>
+<dd><p>Report the energy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy.Energy.cleanup">
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.cleanup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.cleanup" title="Link to this definition">#</a></dt>
+<dd><p>Nothing to clean up for a single point.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy.Energy.description_text">
+<span class="sig-name descname"><span class="pre">description_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.description_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.description_text" title="Link to this definition">#</a></dt>
+<dd><p>Describe what this sub-step will do.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy.Energy.keyword_line">
+<span class="sig-name descname"><span class="pre">keyword_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.keyword_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.keyword_line" title="Link to this definition">#</a></dt>
+<dd><p>Build the ORCA ‘!’ keyword line.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">use</span> <span class="pre">model</span> <span class="pre">chemistry</span></code> is set, the method (and basis, if given) come
+from the global <code class="docutils literal notranslate"><span class="pre">_model_chemistry</span></code> variable defined by a preceding
+Model Chemistry step; ORCA raises a clear error if it cannot provide that
+model chemistry. Otherwise the explicit method/basis parameters are used.
+The auxiliary basis and extra keywords always come from this node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy.Energy.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.run" title="Link to this definition">#</a></dt>
+<dd><p>Run the single-point energy.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.energy_parameters">
+<span id="orca-step-energy-parameters-module"></span><h2>orca_step.energy_parameters module<a class="headerlink" href="#module-orca_step.energy_parameters" title="Link to this heading">#</a></h2>
+<p>Control parameters for an ORCA single-point energy.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.energy_parameters.EnergyParameters">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.energy_parameters.</span></span><span class="sig-name descname"><span class="pre">EnergyParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy_parameters.html#EnergyParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy_parameters.EnergyParameters" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Parameters</span></code></p>
+<p>The control parameters for an ORCA energy calculation.</p>
+<p>The default path takes the method from a preceding Model Chemistry step; the
+user can turn that off and choose the method and basis explicitly (similar to
+the Gaussian step). The explicit choices are driven by the step’s metadata.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="orca_step.energy_parameters.EnergyParameters.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'auxiliary</span> <span class="pre">basis':</span> <span class="pre">{'default':</span> <span class="pre">'AutoAux',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Auxiliary</span> <span class="pre">(fitting)</span> <span class="pre">basis:',</span> <span class="pre">'enumeration':</span> <span class="pre">('AutoAux',</span> <span class="pre">'none',</span> <span class="pre">'def2/J',</span> <span class="pre">'def2/JK'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;The</span> <span class="pre">auxiliary/fitting</span> <span class="pre">basis.</span> <span class="pre">'AutoAux'</span> <span class="pre">generates</span> <span class="pre">a</span> <span class="pre">fitting</span> <span class="pre">basis</span> <span class="pre">automatically</span> <span class="pre">and</span> <span class="pre">is</span> <span class="pre">the</span> <span class="pre">robust</span> <span class="pre">choice</span> <span class="pre">for</span> <span class="pre">correlated</span> <span class="pre">methods</span> <span class="pre">(DLPNO,</span> <span class="pre">MP2).</span> <span class="pre">'none'</span> <span class="pre">omits</span> <span class="pre">it.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'enum'},</span> <span class="pre">'basis':</span> <span class="pre">{'default':</span> <span class="pre">'def2-TZVP',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Basis</span> <span class="pre">set:',</span> <span class="pre">'enumeration':</span> <span class="pre">('6-31G',</span> <span class="pre">'6-31G*',</span> <span class="pre">'6-31G**',</span> <span class="pre">'6-31+G*',</span> <span class="pre">'6-311G**',</span> <span class="pre">'6-311++G**',</span> <span class="pre">'cc-pVDZ',</span> <span class="pre">'cc-pVTZ',</span> <span class="pre">'cc-pVQZ',</span> <span class="pre">'aug-cc-pVDZ',</span> <span class="pre">'aug-cc-pVTZ',</span> <span class="pre">'def2-SVP',</span> <span class="pre">'def2-TZVP',</span> <span class="pre">'def2-TZVPP',</span> <span class="pre">'def2-QZVP'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;The</span> <span class="pre">orbital</span> <span class="pre">basis</span> <span class="pre">set.</span> <span class="pre">ORCA's</span> <span class="pre">built-in</span> <span class="pre">name</span> <span class="pre">is</span> <span class="pre">used;</span> <span class="pre">a</span> <span class="pre">valid</span> <span class="pre">name</span> <span class="pre">may</span> <span class="pre">also</span> <span class="pre">be</span> <span class="pre">typed</span> <span class="pre">in.</span> <span class="pre">(Basis</span> <span class="pre">Set</span> <span class="pre">Exchange</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">planned</span> <span class="pre">opt-in</span> <span class="pre">alternative.)&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'enum'},</span> <span class="pre">'extra</span> <span class="pre">keywords':</span> <span class="pre">{'default':</span> <span class="pre">'TightSCF',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Extra</span> <span class="pre">keywords:',</span> <span class="pre">'enumeration':</span> <span class="pre">(),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;Any</span> <span class="pre">additional</span> <span class="pre">ORCA</span> <span class="pre">'!'</span> <span class="pre">keywords</span> <span class="pre">to</span> <span class="pre">append,</span> <span class="pre">e.g.</span> <span class="pre">'TightSCF',</span> <span class="pre">'RIJCOSX',</span> <span class="pre">'Grid5'.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'string'},</span> <span class="pre">'method':</span> <span class="pre">{'default':</span> <span class="pre">'DLPNO-CCSD(T)',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Method:',</span> <span class="pre">'enumeration':</span> <span class="pre">('HF',</span> <span class="pre">'MP2',</span> <span class="pre">'RI-MP2',</span> <span class="pre">'CCSD(T)',</span> <span class="pre">'DLPNO-CCSD(T)',</span> <span class="pre">'B3LYP',</span> <span class="pre">'PBE',</span> <span class="pre">'PBE0',</span> <span class="pre">'wB97X-D3',</span> <span class="pre">'M06-2X'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;The</span> <span class="pre">ORCA</span> <span class="pre">method</span> <span class="pre">(an</span> <span class="pre">ORCA</span> <span class="pre">'!'</span> <span class="pre">keyword).&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'enum'},</span> <span class="pre">'results':</span> <span class="pre">{'default':</span> <span class="pre">{},</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'results',</span> <span class="pre">'enumeration':</span> <span class="pre">(),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">'The</span> <span class="pre">results</span> <span class="pre">to</span> <span class="pre">save</span> <span class="pre">to</span> <span class="pre">variables</span> <span class="pre">or</span> <span class="pre">in</span> <span class="pre">tables.',</span> <span class="pre">'kind':</span> <span class="pre">'dictionary'},</span> <span class="pre">'use</span> <span class="pre">model</span> <span class="pre">chemistry':</span> <span class="pre">{'default':</span> <span class="pre">'yes',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Use</span> <span class="pre">the</span> <span class="pre">global</span> <span class="pre">model</span> <span class="pre">chemistry:',</span> <span class="pre">'enumeration':</span> <span class="pre">('yes',</span> <span class="pre">'no'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;Use</span> <span class="pre">the</span> <span class="pre">model</span> <span class="pre">chemistry</span> <span class="pre">defined</span> <span class="pre">by</span> <span class="pre">a</span> <span class="pre">preceding</span> <span class="pre">Model</span> <span class="pre">Chemistry</span> <span class="pre">step</span> <span class="pre">(the</span> <span class="pre">'_model_chemistry'</span> <span class="pre">variable).</span> <span class="pre">If</span> <span class="pre">ORCA</span> <span class="pre">cannot</span> <span class="pre">provide</span> <span class="pre">it,</span> <span class="pre">an</span> <span class="pre">error</span> <span class="pre">is</span> <span class="pre">raised.</span> <span class="pre">Turn</span> <span class="pre">this</span> <span class="pre">off</span> <span class="pre">to</span> <span class="pre">set</span> <span class="pre">the</span> <span class="pre">method</span> <span class="pre">and</span> <span class="pre">basis</span> <span class="pre">explicitly</span> <span class="pre">below.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'boolean'}}</span></span><a class="headerlink" href="#orca_step.energy_parameters.EnergyParameters.parameters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.energy_step">
+<span id="orca-step-energy-step-module"></span><h2>orca_step.energy_step module<a class="headerlink" href="#module-orca_step.energy_step" title="Link to this heading">#</a></h2>
+<p>Stevedore helper for the ORCA Energy sub-step.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.energy_step.EnergyStep">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.energy_step.</span></span><span class="sig-name descname"><span class="pre">EnergyStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy_step.html#EnergyStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy_step.EnergyStep" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy_step.EnergyStep.create_node">
+<span class="sig-name descname"><span class="pre">create_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy_step.html#EnergyStep.create_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy_step.EnergyStep.create_node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy_step.EnergyStep.create_tk_node">
+<span class="sig-name descname"><span class="pre">create_tk_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy_step.html#EnergyStep.create_tk_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy_step.EnergyStep.create_tk_node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy_step.EnergyStep.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy_step.html#EnergyStep.description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy_step.EnergyStep.description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="orca_step.energy_step.EnergyStep.my_description">
+<span class="sig-name descname"><span class="pre">my_description</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'description':</span> <span class="pre">'Single-point</span> <span class="pre">energy</span> <span class="pre">with</span> <span class="pre">ORCA',</span> <span class="pre">'group':</span> <span class="pre">'Calculation',</span> <span class="pre">'name':</span> <span class="pre">'Energy'}</span></span><a class="headerlink" href="#orca_step.energy_step.EnergyStep.my_description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="orca-step-installer-module">
+<h2>orca_step.installer module<a class="headerlink" href="#orca-step-installer-module" title="Link to this heading">#</a></h2>
+</section>
+<section id="module-orca_step.metadata">
+<span id="orca-step-metadata-module"></span><h2>orca_step.metadata module<a class="headerlink" href="#module-orca_step.metadata" title="Link to this heading">#</a></h2>
+<p>Metadata describing ORCA’s methods, basis sets, and results.</p>
+<p>This drives the explicit method/basis GUI (like the Gaussian step) and will also
+back the model-chemistry protocol (<code class="docutils literal notranslate"><span class="pre">get_model_chemistry_options</span></code>) used by the
+Model Chemistry step. It is kept deliberately small for now and will be filled
+out as more of ORCA’s capabilities are exposed.</p>
+</section>
+<section id="module-orca_step.optimization">
+<span id="orca-step-optimization-module"></span><h2>orca_step.optimization module<a class="headerlink" href="#module-orca_step.optimization" title="Link to this heading">#</a></h2>
+<p>An ORCA geometry-optimization sub-step.</p>
+<p>Extends the Energy sub-step by adding the <code class="docutils literal notranslate"><span class="pre">Opt</span></code> keyword and, after the run,
+updating the configuration with the optimized geometry.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.optimization.Optimization">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.optimization.</span></span><span class="sig-name descname"><span class="pre">Optimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Optimization'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;Logger</span> <span class="pre">orca_step.optimization</span> <span class="pre">(WARNING)&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization.html#Optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization.Optimization" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orca_step.energy.Energy" title="orca_step.energy.Energy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Energy</span></code></a></p>
+<p>A geometry optimization with ORCA.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TkOptimization</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">OptimizationParameters</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Energy</span></code></p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.optimization.Optimization.analyze">
+<span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization.html#Optimization.analyze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization.Optimization.analyze" title="Link to this definition">#</a></dt>
+<dd><p>Report the energy and update the configuration with the optimized
+geometry, plus check that the optimization converged.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.optimization.Optimization.description_text">
+<span class="sig-name descname"><span class="pre">description_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization.html#Optimization.description_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization.Optimization.description_text" title="Link to this definition">#</a></dt>
+<dd><p>Describe what this sub-step will do.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.optimization.Optimization.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization.html#Optimization.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization.Optimization.run" title="Link to this definition">#</a></dt>
+<dd><p>Run the optimization by adding the Opt keyword to the energy run.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.optimization_parameters">
+<span id="orca-step-optimization-parameters-module"></span><h2>orca_step.optimization_parameters module<a class="headerlink" href="#module-orca_step.optimization_parameters" title="Link to this heading">#</a></h2>
+<p>Control parameters for an ORCA geometry optimization.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.optimization_parameters.OptimizationParameters">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.optimization_parameters.</span></span><span class="sig-name descname"><span class="pre">OptimizationParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization_parameters.html#OptimizationParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization_parameters.OptimizationParameters" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orca_step.energy_parameters.EnergyParameters" title="orca_step.energy_parameters.EnergyParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergyParameters</span></code></a></p>
+<p>Optimization parameters: the energy parameters plus optimization controls.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="orca_step.optimization_parameters.OptimizationParameters.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'optimization</span> <span class="pre">convergence':</span> <span class="pre">{'default':</span> <span class="pre">'NormalOpt',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Convergence:',</span> <span class="pre">'enumeration':</span> <span class="pre">('LooseOpt',</span> <span class="pre">'NormalOpt',</span> <span class="pre">'TightOpt',</span> <span class="pre">'VeryTightOpt'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">'The</span> <span class="pre">ORCA</span> <span class="pre">geometry-optimization</span> <span class="pre">convergence</span> <span class="pre">preset.',</span> <span class="pre">'kind':</span> <span class="pre">'enum'}}</span></span><a class="headerlink" href="#orca_step.optimization_parameters.OptimizationParameters.parameters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.optimization_step">
+<span id="orca-step-optimization-step-module"></span><h2>orca_step.optimization_step module<a class="headerlink" href="#module-orca_step.optimization_step" title="Link to this heading">#</a></h2>
+<p>Stevedore helper for the ORCA Optimization sub-step.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.optimization_step.OptimizationStep">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.optimization_step.</span></span><span class="sig-name descname"><span class="pre">OptimizationStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization_step.html#OptimizationStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization_step.OptimizationStep" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.optimization_step.OptimizationStep.create_node">
+<span class="sig-name descname"><span class="pre">create_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization_step.html#OptimizationStep.create_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization_step.OptimizationStep.create_node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.optimization_step.OptimizationStep.create_tk_node">
+<span class="sig-name descname"><span class="pre">create_tk_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization_step.html#OptimizationStep.create_tk_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization_step.OptimizationStep.create_tk_node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.optimization_step.OptimizationStep.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization_step.html#OptimizationStep.description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization_step.OptimizationStep.description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="orca_step.optimization_step.OptimizationStep.my_description">
+<span class="sig-name descname"><span class="pre">my_description</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'description':</span> <span class="pre">'Geometry</span> <span class="pre">optimization</span> <span class="pre">with</span> <span class="pre">ORCA',</span> <span class="pre">'group':</span> <span class="pre">'Calculation',</span> <span class="pre">'name':</span> <span class="pre">'Optimization'}</span></span><a class="headerlink" href="#orca_step.optimization_step.OptimizationStep.my_description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.orca">
+<span id="orca-step-orca-module"></span><h2>orca_step.orca module<a class="headerlink" href="#module-orca_step.orca" title="Link to this heading">#</a></h2>
+<p>The main ORCA node: holds and drives a sub-flowchart of ORCA capabilities.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.orca.ORCA">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.orca.</span></span><span class="sig-name descname"><span class="pre">ORCA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ORCA'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'org.molssi.seamm.orca'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;Logger</span> <span class="pre">orca_step.orca</span> <span class="pre">(WARNING)&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca.html#ORCA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca.ORCA" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orca_step.orca_base.ORCABase" title="orca_step.orca_base.ORCABase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ORCABase</span></code></a></p>
+<p>The main ORCA node. Like the MOPAC and Gaussian nodes, it owns a
+sub-flowchart whose nodes are ORCA capabilities (Energy, Optimization, …).</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TkORCA</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">ORCABase</span></code></p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca.ORCA.description_text">
+<span class="sig-name descname"><span class="pre">description_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca.html#ORCA.description_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca.ORCA.description_text" title="Link to this definition">#</a></dt>
+<dd><p>Describe what the ORCA sub-flowchart will do.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca.ORCA.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca.html#ORCA.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca.ORCA.run" title="Link to this definition">#</a></dt>
+<dd><p>Run the ORCA sub-flowchart, node by node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca.ORCA.set_id">
+<span class="sig-name descname"><span class="pre">set_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca.html#ORCA.set_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca.ORCA.set_id" title="Link to this definition">#</a></dt>
+<dd><p>Set the id of this node and propagate to the sub-flowchart.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.orca_base">
+<span id="orca-step-orca-base-module"></span><h2>orca_step.orca_base module<a class="headerlink" href="#module-orca_step.orca_base" title="Link to this heading">#</a></h2>
+<p>Shared base class for the ORCA step and its sub-steps.</p>
+<p>Holds the command-line/seamm.ini parser, the geometry block, and the routine
+that writes the ORCA input, runs ORCA through the flowchart executor, and parses
+the output. The main <code class="docutils literal notranslate"><span class="pre">ORCA</span></code> node and the <code class="docutils literal notranslate"><span class="pre">Energy</span></code> sub-step both inherit from
+this (<code class="docutils literal notranslate"><span class="pre">Optimization</span></code> inherits from <code class="docutils literal notranslate"><span class="pre">Energy</span></code>), mirroring <code class="docutils literal notranslate"><span class="pre">MOPACBase</span></code> in the
+MOPAC step.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.orca_base.ORCABase">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.orca_base.</span></span><span class="sig-name descname"><span class="pre">ORCABase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;Logger</span> <span class="pre">seamm.node</span> <span class="pre">(WARNING)&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#ORCABase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.ORCABase" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></p>
+<p>Common functionality for ORCA nodes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_base.ORCABase.create_parser">
+<span class="sig-name descname"><span class="pre">create_parser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#ORCABase.create_parser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.ORCABase.create_parser" title="Link to this definition">#</a></dt>
+<dd><p>Set up the command-line / seamm.ini parser for the ORCA step.</p>
+<p>All ORCA nodes share the <code class="docutils literal notranslate"><span class="pre">[orca-step]</span></code> section (step_type), so the
+options are registered once here.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_base.ORCABase.geometry_block">
+<span class="sig-name descname"><span class="pre">geometry_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#ORCABase.geometry_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.ORCABase.geometry_block" title="Link to this definition">#</a></dt>
+<dd><p>Return the ORCA coordinate block for the current configuration.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="orca_step.orca_base.ORCABase.git_revision">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">git_revision</span></span><a class="headerlink" href="#orca_step.orca_base.ORCABase.git_revision" title="Link to this definition">#</a></dt>
+<dd><p>The git version of this module.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="orca_step.orca_base.ORCABase.is_runable">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_runable</span></span><a class="headerlink" href="#orca_step.orca_base.ORCABase.is_runable" title="Link to this definition">#</a></dt>
+<dd><p>Whether this node actually runs (vs. only contributing input).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_base.ORCABase.run_orca">
+<span class="sig-name descname"><span class="pre">run_orca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_blocks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#ORCABase.run_orca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.ORCABase.run_orca" title="Link to this definition">#</a></dt>
+<dd><p>Write the ORCA input, run ORCA, and return the parsed results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keyword_line</strong> (<em>str</em>) – The contents of the ORCA “!” simple-input line (without the “!”).</p></li>
+<li><p><strong>extra_blocks</strong> (<em>str</em>) – Any additional <code class="docutils literal notranslate"><span class="pre">%</span></code> blocks to place before the geometry.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Parsed results, at least <code class="docutils literal notranslate"><span class="pre">{&quot;energy&quot;:</span> <span class="pre">&lt;E_h&gt;,</span> <span class="pre">&quot;success&quot;:</span> <span class="pre">bool}</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="orca_step.orca_base.ORCABase.version">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">version</span></span><a class="headerlink" href="#orca_step.orca_base.ORCABase.version" title="Link to this definition">#</a></dt>
+<dd><p>The semantic version of this module.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.orca_step">
+<span id="orca-step-orca-step-module"></span><h2>orca_step.orca_step module<a class="headerlink" href="#module-orca_step.orca_step" title="Link to this heading">#</a></h2>
+<p>Stevedore helper for the main ORCA node.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">ORCAStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Helper class for the stevedore integration of the ORCA step.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.create_node">
+<span class="sig-name descname"><span class="pre">create_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.create_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.create_node" title="Link to this definition">#</a></dt>
+<dd><p>Return a new ORCA node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.create_tk_node">
+<span class="sig-name descname"><span class="pre">create_tk_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.create_tk_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.create_tk_node" title="Link to this definition">#</a></dt>
+<dd><p>Return a new graphical ORCA node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.description" title="Link to this definition">#</a></dt>
+<dd><p>Return a description of what this step does.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.get_model_chemistry_options">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_model_chemistry_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">periodic_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mdi_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.get_model_chemistry_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.get_model_chemistry_options" title="Link to this definition">#</a></dt>
+<dd><p>Return the model chemistries ORCA can provide.</p>
+<p>ORCA is a molecular quantum-chemistry program: not periodic and not
+(currently) an MDI engine, so it returns nothing when either filter is
+set. Otherwise it advertises <code class="docutils literal notranslate"><span class="pre">ORCA:&lt;type&gt;&#64;&lt;method&gt;/&lt;basis&gt;</span></code> for each
+method in the metadata paired with a curated set of basis sets.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.my_description">
+<span class="sig-name descname"><span class="pre">my_description</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'description':</span> <span class="pre">'An</span> <span class="pre">interface</span> <span class="pre">for</span> <span class="pre">ORCA',</span> <span class="pre">'group':</span> <span class="pre">'Simulations',</span> <span class="pre">'name':</span> <span class="pre">'ORCA'}</span></span><a class="headerlink" href="#orca_step.orca_step.ORCAStep.my_description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.tk_energy">
+<span id="orca-step-tk-energy-module"></span><h2>orca_step.tk_energy module<a class="headerlink" href="#module-orca_step.tk_energy" title="Link to this heading">#</a></h2>
+<p>The graphical part of an ORCA Energy sub-step.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.tk_energy.TkEnergy">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.tk_energy.</span></span><span class="sig-name descname"><span class="pre">TkEnergy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tk_flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_energy.html#TkEnergy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_energy.TkEnergy" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TkNode</span></code></p>
+<p>The graphical part of an ORCA Energy sub-step.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Energy</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">EnergyParameters</span></code></p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.tk_energy.TkEnergy.create_dialog">
+<span class="sig-name descname"><span class="pre">create_dialog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ORCA</span> <span class="pre">Energy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_energy.html#TkEnergy.create_dialog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_energy.TkEnergy.create_dialog" title="Link to this definition">#</a></dt>
+<dd><p>Create the dialog and its widgets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.tk_energy.TkEnergy.reset_dialog">
+<span class="sig-name descname"><span class="pre">reset_dialog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">widget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_energy.html#TkEnergy.reset_dialog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_energy.TkEnergy.reset_dialog" title="Link to this definition">#</a></dt>
+<dd><p>Lay out the widgets, hiding the explicit method/basis controls when
+the model chemistry is used.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.tk_optimization">
+<span id="orca-step-tk-optimization-module"></span><h2>orca_step.tk_optimization module<a class="headerlink" href="#module-orca_step.tk_optimization" title="Link to this heading">#</a></h2>
+<p>The graphical part of an ORCA Optimization sub-step.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.tk_optimization.TkOptimization">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.tk_optimization.</span></span><span class="sig-name descname"><span class="pre">TkOptimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tk_flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_optimization.html#TkOptimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_optimization.TkOptimization" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orca_step.tk_energy.TkEnergy" title="orca_step.tk_energy.TkEnergy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TkEnergy</span></code></a></p>
+<p>Graphical ORCA Optimization sub-step: the energy dialog plus the
+optimization-convergence control.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.tk_optimization.TkOptimization.create_dialog">
+<span class="sig-name descname"><span class="pre">create_dialog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ORCA</span> <span class="pre">Optimization'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_optimization.html#TkOptimization.create_dialog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_optimization.TkOptimization.create_dialog" title="Link to this definition">#</a></dt>
+<dd><p>Create the dialog and its widgets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.tk_optimization.TkOptimization.reset_dialog">
+<span class="sig-name descname"><span class="pre">reset_dialog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">widget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_optimization.html#TkOptimization.reset_dialog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_optimization.TkOptimization.reset_dialog" title="Link to this definition">#</a></dt>
+<dd><p>Lay out the widgets, hiding the explicit method/basis controls when
+the model chemistry is used.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.tk_orca">
+<span id="orca-step-tk-orca-module"></span><h2>orca_step.tk_orca module<a class="headerlink" href="#module-orca_step.tk_orca" title="Link to this heading">#</a></h2>
+<p>The graphical part of the main ORCA node: a sub-flowchart editor.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.tk_orca.TkORCA">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.tk_orca.</span></span><span class="sig-name descname"><span class="pre">TkORCA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tk_flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'org.molssi.seamm.orca.tk'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_orca.html#TkORCA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_orca.TkORCA" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TkNode</span></code></p>
+<p>Graphical ORCA node. Opens a sub-flowchart canvas where ORCA capabilities
+(Energy, Optimization, …) are added, mirroring the Gaussian/MOPAC steps.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.tk_orca.TkORCA.create_dialog">
+<span class="sig-name descname"><span class="pre">create_dialog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_orca.html#TkORCA.create_dialog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_orca.TkORCA.create_dialog" title="Link to this definition">#</a></dt>
+<dd><p>Create the dialog holding the sub-flowchart editor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.tk_orca.TkORCA.right_click">
+<span class="sig-name descname"><span class="pre">right_click</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_orca.html#TkORCA.right_click"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_orca.TkORCA.right_click" title="Link to this definition">#</a></dt>
+<dd><p>Add an ‘Edit…’ entry to the right-click menu.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-orca_step" title="Link to this heading">#</a></h2>
+<p>orca_step
+A SEAMM plug-in for ORCA, with a sub-flowchart of capabilities (Energy,
+Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="modules.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">orca_step</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../authors.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Development Team</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.energy">orca_step.energy module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy"><code class="docutils literal notranslate"><span class="pre">Energy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.analyze"><code class="docutils literal notranslate"><span class="pre">Energy.analyze()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.cleanup"><code class="docutils literal notranslate"><span class="pre">Energy.cleanup()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.description_text"><code class="docutils literal notranslate"><span class="pre">Energy.description_text()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.keyword_line"><code class="docutils literal notranslate"><span class="pre">Energy.keyword_line()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.run"><code class="docutils literal notranslate"><span class="pre">Energy.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.energy_parameters">orca_step.energy_parameters module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_parameters.EnergyParameters"><code class="docutils literal notranslate"><span class="pre">EnergyParameters</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_parameters.EnergyParameters.parameters"><code class="docutils literal notranslate"><span class="pre">EnergyParameters.parameters</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.energy_step">orca_step.energy_step module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_step.EnergyStep"><code class="docutils literal notranslate"><span class="pre">EnergyStep</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_step.EnergyStep.create_node"><code class="docutils literal notranslate"><span class="pre">EnergyStep.create_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_step.EnergyStep.create_tk_node"><code class="docutils literal notranslate"><span class="pre">EnergyStep.create_tk_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_step.EnergyStep.description"><code class="docutils literal notranslate"><span class="pre">EnergyStep.description()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_step.EnergyStep.my_description"><code class="docutils literal notranslate"><span class="pre">EnergyStep.my_description</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#orca-step-installer-module">orca_step.installer module</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.metadata">orca_step.metadata module</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.optimization">orca_step.optimization module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization.Optimization"><code class="docutils literal notranslate"><span class="pre">Optimization</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization.Optimization.analyze"><code class="docutils literal notranslate"><span class="pre">Optimization.analyze()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization.Optimization.description_text"><code class="docutils literal notranslate"><span class="pre">Optimization.description_text()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization.Optimization.run"><code class="docutils literal notranslate"><span class="pre">Optimization.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.optimization_parameters">orca_step.optimization_parameters module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization_parameters.OptimizationParameters"><code class="docutils literal notranslate"><span class="pre">OptimizationParameters</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization_parameters.OptimizationParameters.parameters"><code class="docutils literal notranslate"><span class="pre">OptimizationParameters.parameters</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.optimization_step">orca_step.optimization_step module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization_step.OptimizationStep"><code class="docutils literal notranslate"><span class="pre">OptimizationStep</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization_step.OptimizationStep.create_node"><code class="docutils literal notranslate"><span class="pre">OptimizationStep.create_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization_step.OptimizationStep.create_tk_node"><code class="docutils literal notranslate"><span class="pre">OptimizationStep.create_tk_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization_step.OptimizationStep.description"><code class="docutils literal notranslate"><span class="pre">OptimizationStep.description()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization_step.OptimizationStep.my_description"><code class="docutils literal notranslate"><span class="pre">OptimizationStep.my_description</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.orca">orca_step.orca module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca.ORCA"><code class="docutils literal notranslate"><span class="pre">ORCA</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca.ORCA.description_text"><code class="docutils literal notranslate"><span class="pre">ORCA.description_text()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca.ORCA.run"><code class="docutils literal notranslate"><span class="pre">ORCA.run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca.ORCA.set_id"><code class="docutils literal notranslate"><span class="pre">ORCA.set_id()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.orca_base">orca_step.orca_base module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase"><code class="docutils literal notranslate"><span class="pre">ORCABase</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.create_parser"><code class="docutils literal notranslate"><span class="pre">ORCABase.create_parser()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.geometry_block"><code class="docutils literal notranslate"><span class="pre">ORCABase.geometry_block()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.git_revision"><code class="docutils literal notranslate"><span class="pre">ORCABase.git_revision</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.is_runable"><code class="docutils literal notranslate"><span class="pre">ORCABase.is_runable</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.run_orca"><code class="docutils literal notranslate"><span class="pre">ORCABase.run_orca()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.version"><code class="docutils literal notranslate"><span class="pre">ORCABase.version</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.orca_step">orca_step.orca_step module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep"><code class="docutils literal notranslate"><span class="pre">ORCAStep</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.create_node"><code class="docutils literal notranslate"><span class="pre">ORCAStep.create_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.create_tk_node"><code class="docutils literal notranslate"><span class="pre">ORCAStep.create_tk_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.description"><code class="docutils literal notranslate"><span class="pre">ORCAStep.description()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_model_chemistry_options"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_model_chemistry_options()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.my_description"><code class="docutils literal notranslate"><span class="pre">ORCAStep.my_description</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.tk_energy">orca_step.tk_energy module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_energy.TkEnergy"><code class="docutils literal notranslate"><span class="pre">TkEnergy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_energy.TkEnergy.create_dialog"><code class="docutils literal notranslate"><span class="pre">TkEnergy.create_dialog()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_energy.TkEnergy.reset_dialog"><code class="docutils literal notranslate"><span class="pre">TkEnergy.reset_dialog()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.tk_optimization">orca_step.tk_optimization module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_optimization.TkOptimization"><code class="docutils literal notranslate"><span class="pre">TkOptimization</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_optimization.TkOptimization.create_dialog"><code class="docutils literal notranslate"><span class="pre">TkOptimization.create_dialog()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_optimization.TkOptimization.reset_dialog"><code class="docutils literal notranslate"><span class="pre">TkOptimization.reset_dialog()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.tk_orca">orca_step.tk_orca module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_orca.TkORCA"><code class="docutils literal notranslate"><span class="pre">TkORCA</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_orca.TkORCA.create_dialog"><code class="docutils literal notranslate"><span class="pre">TkORCA.create_dialog()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_orca.TkORCA.right_click"><code class="docutils literal notranslate"><span class="pre">TkORCA.right_click()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step">Module contents</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/api/orca_step.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
