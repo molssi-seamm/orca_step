@@ -11,6 +11,11 @@ dependencies:
   # SEAMM
   - seamm
 
+  # Dependencies
+  - basis_set_exchange
+  - bibtexparser
+  - tabulate
+
   # Testing
   - black
   - codecov

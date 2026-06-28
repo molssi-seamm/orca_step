@@ -38,3 +38,481 @@ See the documentation for the Reference Handler for the other arguments to cite(
 	address = {USA},
 	version = {$version}
 }
+
+# Supporting libraries that ORCA reports using. ORCA's own papers come from the
+# orca.bibtex file it writes for each run; these two are cited in addition.
+
+@Misc{libint2,
+	author = {Valeev, Edward F.},
+	title = {Libint: A library for the evaluation of molecular integrals of many-body operators over Gaussian functions},
+	howpublished = {http://libint.valeyev.net/},
+	year = {2025},
+	note = {version 2}
+}
+
+@Article{libxc,
+	author = {Lehtola, Susi and Steigemann, Conrad and Oliveira, Micael J. T. and Marques, Miguel A. L.},
+	title = {Recent developments in libxc --- A comprehensive library of functionals for density functional theory},
+	journal = {SoftwareX},
+	volume = {7},
+	pages = {1--5},
+	year = {2018},
+	doi = {10.1016/j.softx.2017.11.002}
+}
+
+# The Basis Set Exchange itself -- cited only when a basis is actually fetched
+# from the BSE (not when the BSE is used merely to look up a basis's references).
+
+@Article{bse,
+	author = {Pritchard, Benjamin P. and Altarawy, Doaa and Didier, Brett and Gibson, Tara D. and Windus, Theresa L.},
+	title = {A New Basis Set Exchange: An Open, Up-to-date Resource for the Molecular Sciences Community},
+	journal = {J. Chem. Inf. Model.},
+	volume = {59},
+	pages = {4814--4820},
+	year = {2019},
+	doi = {10.1021/acs.jcim.9b00725}
+}
+
+# --- DFT functional references, mined from the ORCA manual ---
+
+@article{orca_dft_id727,
+    title = {Perdew, John P.; Schmidt, Karla. Jacob’s ladder of density functional approximations for the exchange-correlation energy. AIP Conf. Proc. , 2001 , 577 (1), 1–20. DOI: 10.1063/1.1390175},
+    year = {2001},
+    doi = {10.1063/1.1390175}
+}
+
+@article{orca_dft_id924,
+    title = {Vosko, S. H.; Wilk, L.; Nusair, M. Can. J. Phys. , 1980 , 58, 1200},
+    year = {1980}
+}
+
+@article{orca_dft_id724,
+    title = {Perdew, J. P.; Wang, Y. Phys. Rev. B , 1992 , 45, 13244},
+    year = {1992}
+}
+
+@article{orca_dft_id87,
+    title = {Becke, A. D. Density-functional exchange-energy approximation with correct asymptotic behavior. Phys. Rev. A , 1988 , 38, 3098. DOI: 10.1103/PhysRevA.38.3098},
+    year = {1988},
+    doi = {10.1103/PhysRevA.38.3098}
+}
+
+@article{orca_dft_id718,
+    title = {Perdew, J. P. Phys. Rev. B , 1986 , 33, 8822},
+    year = {1986}
+}
+
+@article{orca_dft_id109,
+    title = {Miehlich, Burkhard; Savin, Andreas; Stoll, Hermann; Preuss, Heinzwerner. Results obtained with the correlation energy density functionals of becke and Lee, Yang and Parr. Chem. Phys. Lett , 1989 , 157 (3), 200–206. DOI: 10.1016/0009-2614(89)87234-3},
+    year = {1989},
+    doi = {10.1016/0009-2614(89)87234-3}
+}
+
+@article{orca_dft_id389,
+    title = {Handy, Nicholas C.; Cohen, Aron J. Left-right correlation energy. Mol. Phys. , 2001 , 99 (5), 403–412. DOI: 10.1080/00268970010018431},
+    year = {2001},
+    doi = {10.1080/00268970010018431}
+}
+
+@article{orca_dft_id317,
+    title = {Gill, P. M. W. Mol. Phys. , 1996 , 89, 433. DOI: 10.1080/002689796173813},
+    year = {1996},
+    doi = {10.1080/002689796173813}
+}
+
+@article{orca_dft_id322,
+    title = {Xu, Xin; Goddard, III, William A. Proc. Nat. Acad. Sci. , 2004 , 101, 2673},
+    year = {2004}
+}
+
+@article{orca_dft_id721,
+    title = {Germany), W. E. Heraeus Seminar (75th 1991 Gaussig. Electronic structure of solids '91: proceedings of the 75. WE-Heraeus-Seminar and 21st Annual International Symposium on Electronic Structure of Solids held in Gaussig (Germany), March 11-15, 1991 . Akademie Verlag, Berlin, 1st ed. edition, 1991 . ISBN 978-3-05-501504-5. Open Library ID: OL1778449M},
+    year = {1991}
+}
+
+@article{orca_dft_id77,
+    title = {Adamo, C.; Barone, V. Exchange functionals with improved long-range behavior and adiabatic connection methods without adjustable parameters: The mPW and mPW1PW models. J. Chem. Phys. , 1998 , 108, 664. DOI: 10.1063/1.475428},
+    year = {1998},
+    doi = {10.1063/1.475428}
+}
+
+@article{orca_dft_id725,
+    title = {Perdew, J. P.; Burke, K.; Ernzerhof, M. Phys. Rev. Lett. , 1996 , 77, 3865},
+    year = {1996}
+}
+
+@article{orca_dft_id382,
+    title = {Hammer, B.; Hansen, L. B.; Nørskov, J. K. Phys. Rev. B , 1999 , 59, 7413},
+    year = {1999}
+}
+
+@article{orca_dft_id964,
+    title = {Zhang, Y.; Yang, W. Phys. Rev. Lett. , 1998 , 80, 890},
+    year = {1998}
+}
+
+@article{orca_dft_id794,
+    title = {Murray, Éamonn D.; Lee, Kyuho; Langreth, David C. Investigation of Exchange Energy Density Functional Accuracy for Interacting Molecules. J. Chem. Theory Comput. , 2009 , 5 (10), 2754–2762. DOI: 10.1021/ct900365q},
+    year = {2009},
+    doi = {10.1021/ct900365q}
+}
+
+@article{orca_dft_id348,
+    title = {Brandenburg, Jan Gerit; Bannwarth, Christoph; Hansen, Andreas; Grimme, Stefan. B97-3c: A Revised Low-Cost Variant of the B97-D Density Functional Method. J. Chem. Phys. , 2018 , 148 (6), 064104. DOI: 10.1063/1.5012601},
+    year = {2018},
+    doi = {10.1063/1.5012601}
+}
+
+@article{orca_dft_id409,
+    title = {Mardirossian, Narbe; Head-Gordon, Martin. Mapping the genome of meta-generalized gradient approximation density functionals: The search for B97M-V. J. Chem. Phys. , 2015 , 142, 074111. DOI: 10.1063/1.4907719},
+    year = {2015},
+    doi = {10.1063/1.4907719}
+}
+
+@article{orca_dft_id327,
+    title = {Najibi, A.; Goerigk, L. J. Chem. Theory Comput. , 2018 , 14, 5725},
+    year = {2018}
+}
+
+@article{orca_dft_id650,
+    title = {Najibi, A.; Goerigk, L. DFT-D4 Counterparts of Leading Meta-Generalized-Gradient Approximation and Hybrid Density Functionals for Energetics and Geometries. J. Comput. Chem. , 2020 , 41, 2562–2572. DOI: 10.1002/jcc.26411},
+    year = {2020},
+    doi = {10.1002/jcc.26411}
+}
+
+@article{orca_dft_id728,
+    title = {Sun, Jianwei; Ruzsinszky, Adrienn; Perdew, John P. Strongly Constrained and Appropriately Normed Semilocal Density Functional. Phys. Rev. Lett. , 2015 , 115 (3), 036402. DOI: 10.1103/PhysRevLett.115.036402},
+    year = {2015},
+    doi = {10.1103/PhysRevLett.115.036402}
+}
+
+@article{orca_dft_id79,
+    title = {Bartók, Albert P; Yates, Jonathan R. Regularized SCAN Functional. J. Chem. Phys. , 2019 , 150 (16), 161101. DOI: 10.1063/1.5094646},
+    year = {2019},
+    doi = {10.1063/1.5094646}
+}
+
+@article{orca_dft_id297,
+    title = {Furness, James W; Kaplan, Aaron D; Ning, Jinliang; Perdew, John P; Sun, Jianwei. Accurate and Numerically Efficient r²SCAN Meta-Generalized Gradient Approximation. J. Phys. Chem. Lett. , 2020 , 11 (19), 8208–8215. DOI: 10.1021/acs.jpclett.0c02405},
+    year = {2020},
+    doi = {10.1021/acs.jpclett.0c02405}
+}
+
+@article{orca_dft_id586,
+    title = {Zhao, Yan; Truhlar, Donald G. A new local density functional for main-group thermochemistry, transition metal bonding, thermochemical kinetics, and noncovalent interactions. J. Chem. Phys. , 2006 , 125 (19), 194101. DOI: 10.1063/1.2370993},
+    year = {2006},
+    doi = {10.1063/1.2370993}
+}
+
+@article{orca_dft_id899,
+    title = {Staroverov, V. N.; Scuseria, G. E.; Tao, J.; Perdew, J. P. J. Chem. Phys. , 2003 , 119, 12129},
+    year = {2003}
+}
+
+@article{orca_dft_id775,
+    title = {Perdew, John P.; Ruzsinszky, Adrienn; Csonka, Gábor I.; Constantin, Lucian A.; Sun, Jianwei. Workhorse Semilocal Density Functional for Condensed Matter Physics and Quantum Chemistry. Phys. Rev. Lett. , 2009 , 103, 026403. DOI: 10.1103/PhysRevLett.103.026403},
+    year = {2009},
+    doi = {10.1103/PhysRevLett.103.026403}
+}
+
+@article{orca_dft_id776,
+    title = {Perdew, John P.; Ruzsinszky, Adrienn; Csonka, Gábor I.; Constantin, Lucian A.; Sun, Jianwei. Erratum: Workhorse Semilocal Density Functional for Condensed Matter Physics and Quantum Chemistry [Phys. Rev. Lett. 103, 026403 (2009)]. Phys. Rev. Lett. , 2011 , 106, 179902. DOI: 10.1103/PhysRevLett.106.179902},
+    year = {2009},
+    doi = {10.1103/PhysRevLett.106.179902}
+}
+
+@article{orca_dft_id354,
+    title = {Grimme, Stefan; Hansen, Andreas; Ehlert, Sebastian; Mewes, Jan-Michael. r2SCAN-3c: A “Swiss Army Knife” Composite Electronic-Structure Method. J. Chem. Phys. , 2021 , 154 (6), 064103. DOI: 10.1063/5.0040021},
+    year = {2021},
+    doi = {10.1063/5.0040021}
+}
+
+@article{orca_dft_id15,
+    title = {Ahlrichs, R.; Bär, M.; Baron, H. P.; Bauernschmitt, R.; Böcker, S.; Ehrig, M.; Eichkorn, K.; Elliott, S.; Furche, F.; Haase, F.; Häser, M.; Horn, H.; Huber, C.; Huniar, U.; Kattanek, M.; Kölmel, C.; Kollwitz, M.; May, K.; Ochsenfeld, C.; Öhm, H.; Schäfer, A.; Schneider, U.; Treutler, O.; von Arnim, M.; Weigend, F.; Weis, P.; Weiss, H. TurboMole - Program System for Ab Initio Electronic Structure Calculations, Version 5.2. Universität Karlsruhe, Karlsruhe, Germany, 2000},
+    year = {2000}
+}
+
+@article{orca_dft_id14,
+    title = {Ahlrichs, R. In Schleyer, P. v. R., editor, Encyclopedia of Computational Chemistry , pages 3123. John Wiley and Sons, 1998 . DOI: 10.1002/0470845015},
+    year = {1998},
+    doi = {10.1002/0470845015}
+}
+
+@article{orca_dft_id13,
+    title = {Ahlrichs, R.; Bär, M.; Häser, M.; Horn, H.; Kölmel, C. Electronic structure calculations on workstation computers: The program system turbomole. Chem. Phys. Lett. , 1989 , 162, 165. DOI: 10.1016/0009-2614(89)85118-8},
+    year = {1989},
+    doi = {10.1016/0009-2614(89)85118-8}
+}
+
+@article{orca_dft_id293,
+    title = {Frisch, M. J.; Trucks, G. W.; Schlegel, H. B.; Scuseria, G. E.; Robb, M. A.; Cheeseman, J. R.; Zakrzewski, V. G.; Montgomery, Jr., J. A.; Stratmann, R. E.; Burant, J. C.; Dapprich, S.; Millam, J. M.; Daniels, A. D.; Kudin, K. N.; Strain, M. C.; Farkas, O.; Tomasi, J.; Barone, V.; Cossi, M.; Cammi, R.; Mennucci, B.; Pomelli, C.; Adamo, C.; Clifford, S.; Ochterski, J.; Petersson, G. A.; Ayala, P. Y.; Cui, Q.; Morokuma, K.; Malick, D. K.; Rabuck, A. D.; Raghavachari, K.; Foresman, J. B.; Cioslowski, J.; Ortiz, J. V.; Baboul, A. G.; Stefanov, B. B.; Liu, G.; Liashenko, A.; Piskorz, P.; Komaromi, I.; Gomperts, R.; Martin, R. L.; Fox, D. J.; Keith, T.; Al-Laham, M. A.; Peng, C. Y.; Nanayakkara, A.; Challacombe, M.; Gill, P. M. W.; Johnson, B.; Chen, W.; Wong, M. W.; Andres, J. L.; Gonzalez, C.; Head-Gordon, M.; Replogle, E. S.; Pople, J. A. Gaussian 98, Revision A.8 . Gaussian, Inc., Pittsburgh PA, 1998},
+    year = {1998}
+}
+
+@article{orca_dft_id547,
+    title = {Lee, C.; Yang, W.; Parr, R. G. Development of the Colle-Salvetti correlation-energy formula into a functional of the electron density. Phys. Rev. B , 1988 , 37 (2), 785–789. DOI: 10.1103/PhysRevB.37.785},
+    year = {1988},
+    doi = {10.1103/PhysRevB.37.785}
+}
+
+@article{orca_dft_id88,
+    title = {Becke, A. D. A new mixing of Hartree-Fock and local density-functional theories. J. Chem. Phys. , 1993 , 98, 1372. DOI: 10.1063/1.464304},
+    year = {1993},
+    doi = {10.1063/1.464304}
+}
+
+@article{orca_dft_id89,
+    title = {Becke, A. D. Density-functional thermochemistry. III. The role of exact exchange. J. Chem. Phys. , 1993 , 98, 5648. DOI: 10.1063/1.464913},
+    year = {1993},
+    doi = {10.1063/1.464913}
+}
+
+@article{orca_dft_id8,
+    title = {Adamo, C.; Barone, V. Toward Reliable Density Functional Methods without Adjustable Parameters: The PBE0 Model. J. Chem. Phys. , 1999 , 110, 6158. DOI: 10.1063/1.478522},
+    year = {1999},
+    doi = {10.1063/1.478522}
+}
+
+@article{orca_dft_id65,
+    title = {Stephens, P. J.; Devlin, F. J.; Chabalowski, C. F.; Frisch, M. J. Ab Initio Calculation of Vibrational Absorption and Circular Dichroism Spectra Using Density Functional Force Fields. J. Phys. Chem. , 1994 , 98, 11623. DOI: 10.1021/j100096a001},
+    year = {1994},
+    doi = {10.1021/j100096a001}
+}
+
+@article{orca_dft_id268,
+    title = {Ernzerhof, M. In Joubert, D. P., editor, Density Functionals: Theory and Applications . Springer Verlag, 1998},
+    year = {1998}
+}
+
+@article{orca_dft_id7,
+    title = {Adamo, C.; Barone, V. Toward reliable adiabatic connection models free from adjustable parameters. Chem. Phys. Lett , 1997 , 274 (1), 242–250. DOI: 10.1016/S0009-2614(97)00651-9},
+    year = {1997},
+    doi = {10.1016/S0009-2614(97)00651-9}
+}
+
+@article{orca_dft_id388,
+    title = {aron J. Cohen; Handy, Nicholas C. Dynamic correlation. Mol. Phys. , 2001 , 99 (7), 607–615. DOI: 10.1080/00268970010023435},
+    year = {2001},
+    doi = {10.1080/00268970010023435}
+}
+
+@article{orca_dft_id342,
+    title = {Goerigk, Lars; Grimme, Stefan. A thorough benchmark of density functional methods for general main group thermochemistry, kinetics, and noncovalent interactions. Phys. Chem. Chem. Phys. , 2011 , 13, 6670–6688. DOI: 10.1039/C0CP02984J},
+    year = {2011},
+    doi = {10.1039/C0CP02984J}
+}
+
+@article{orca_dft_id585,
+    title = {Zhao, Yan; Truhlar, Donald G. The M06 suite of density functionals for main group thermochemistry, thermochemical kinetics, noncovalent interactions, excited states, and transition elements: two new functionals and systematic testing of four M06-class functionals and 12 other functionals. Theor. Chem. Acc. , 2008 , 120 (1-3), 215–241. DOI: 10.1007/s00214-007-0310-x},
+    year = {2008},
+    doi = {10.1007/s00214-007-0310-x}
+}
+
+@article{orca_dft_id965,
+    title = {Zhao, Y.; Truhlar, D. G. J. Phys. Chem. A , 2005 , 109, 5656–5667},
+    year = {2005}
+}
+
+@article{orca_dft_id338,
+    title = {Grimme, Stefan. Accurate Calculation of the Heats of Formation for Large Main Group Compounds with Spin-Component Scaled MP2 Methods. J. Phys. Chem. A , 2005 , 109 (13), 3067–3077. DOI: 10.1021/jp050036j},
+    year = {2005},
+    doi = {10.1021/jp050036j}
+}
+
+@article{orca_dft_id123,
+    title = {Bursch, Markus; Neugebauer, Hagen; Ehlert, Sebastian; Grimme, Stefan. Dispersion corrected r²SCAN based global hybrid functionals: r²SCANh, r²SCAN0, and r²SCAN50. J. Chem. Phys. , 2022 , 156 (13), 134105. DOI: 10.1063/5.0086040},
+    year = {2022},
+    doi = {10.1063/5.0086040}
+}
+
+@article{orca_dft_id362,
+    title = {Grimme, S.; Brandenburg, J. G.; Bannwarth, C.; Hansen, A. Consistent structures and interactions by density functional theory with small atomic orbital basis sets. J. Chem. Phys. , 2015 , 143, 054107. DOI: 10.1063/1.4927476},
+    year = {2015},
+    doi = {10.1063/1.4927476}
+}
+
+@article{orca_dft_id355,
+    title = {Pracht, Philipp; Grant, David F.; Grimme, Stefan. Comprehensive Assessment of GFN Tight-Binding and Composite Density Functional Theory Methods for Calculating Gas-Phase Infrared Spectra. J. Chem. Theory Comput. , 2020 , 16 (11), 7044–7060. DOI: 10.1021/acs.jctc.0c00877},
+    year = {2020},
+    doi = {10.1021/acs.jctc.0c00877}
+}
+
+@article{orca_dft_id437,
+    title = {Iikura, H.; Tsuneda, T.; Yanai, T.; Hirao, K. A long-range correction scheme for generalized-gradient-approximation exchange functionals. J. Chem. Phys. , 2001 , 115, 3540–3544. DOI: 10.1063/1.1383587},
+    year = {2001},
+    doi = {10.1063/1.1383587}
+}
+
+@article{orca_dft_id390,
+    title = {Yanai, T.; Tew, D. P.; Handy, N. C. Chem. Phys. Lett. , 2004 , 393, 51–57},
+    year = {2004}
+}
+
+@article{orca_dft_id407,
+    title = {Chai, J.-D.; Head-Gordon, M. J. Chem. Phys. , 2008 , 128, 084106},
+    year = {2008}
+}
+
+@article{orca_dft_id408,
+    title = {Mardirossian, Narbe; Head-Gordon, Martin. ωB97X-V: A 10-parameter, range-separated hybrid, generalized gradient approximation density functional with nonlocal correlation, designed by a survival-of-the-fittest strategy. Phys. Chem. Chem. Phys. , 2014 , 16 (21), 9904–9924. DOI: 10.1039/C3CP54374A},
+    year = {2014},
+    doi = {10.1039/C3CP54374A}
+}
+
+@article{orca_dft_id152,
+    title = {Lin, Y.-S.; Li, G.-D.; Mao, S.-P.; Chai, J.-D. Long-Range Corrected Hybrid Density Functionals with Improved Dispersion Corrections. J. Chem. Theory Comput. , 2013 , 9, 263–272. DOI: 10.1021/ct300715s},
+    year = {2013},
+    doi = {10.1021/ct300715s}
+}
+
+@article{orca_dft_id358,
+    title = {Müller, Marcel; Hansen, Andreas; Grimme, Stefan. ωB97X-3c: A composite range-separated hybrid DFT method with a molecule-optimized polarized valence double-ζ basis set. J. Chem. Phys. , 2023 , 158 (1), 014103. DOI: 10.1063/5.0133026},
+    year = {2023},
+    doi = {10.1063/5.0133026}
+}
+
+@article{orca_dft_id438,
+    title = {Tawada, Y.; Tsuneda, T.; Yanagisawa, S.; Yanai, T.; Hirao, K. J. Chem. Phys. , 2004 , 120, 8425–8433},
+    year = {2004}
+}
+
+@article{orca_dft_id410,
+    title = {Mardirossian, Narbe; Head-Gordon, Martin. ωB97M-V: A combinatorially optimized, range-separated hybrid, meta-GGA density functional with VV10 nonlocal correlation. J. Chem. Phys. , 2016 , 144, 214110. DOI: 10.1063/1.4952647},
+    year = {2016},
+    doi = {10.1063/1.4952647}
+}
+
+@article{orca_dft_id972,
+    title = {Wittmann, Lukas; Neugebauer, Hagen; Grimme, Stefan; Bursch, Markus. Dispersion-corrected r²SCAN based double-hybrid functionals. J. Chem. Phys. , 2023 , 159 (22), 224103. DOI: 10.1063/5.0174988},
+    year = {2023},
+    doi = {10.1063/5.0174988}
+}
+
+@article{orca_dft_id339,
+    title = {Grimme, S. J. Chem. Phys. , 2006 , 124, 034108},
+    year = {2006}
+}
+
+@article{orca_dft_id325,
+    title = {Goerigk, L.; Grimme, S. J. Chem. Theory Comput. , 2011 , 7, 291–309},
+    year = {2011}
+}
+
+@article{orca_dft_id600,
+    title = {Kozuch, Sebastian; Gruzman, David; Martin, Jan M. L. DSD-BLYP: A General Purpose Double Hybrid Density Functional Including Spin Component Scaling and Dispersion Correction. J. Phys. Chem. C , 2010 , 114 (48), 20801–20808. DOI: 10.1021/jp1070852},
+    year = {2010},
+    doi = {10.1021/jp1070852}
+}
+
+@article{orca_dft_id601,
+    title = {Kozuch, Sebastian; Martin, Jan M. L. DSD-PBEP86: In Search of the Best Double-Hybrid DFT with Spin-Component Scaled MP2 and Dispersion Corrections. Phys. Chem. Chem. Phys. , 2011 , 13 (45), 20104–20107. DOI: 10.1039/C1CP22592H},
+    year = {2011},
+    doi = {10.1039/C1CP22592H}
+}
+
+@article{orca_dft_id602,
+    title = {Kozuch, Sebastian; Martin, Jan M. L. Spin-component-scaled Double Hybrids: An Extensive Search for the Best Fifth-rung Functionals Blending DFT and Perturbation Theory. J. Comput. Chem. , 2013 , 34 (27), 2327–2344. DOI: 10.1002/jcc.23391},
+    year = {2013},
+    doi = {10.1002/jcc.23391}
+}
+
+@article{orca_dft_id603,
+    title = {Santra, Golokesh; Cho, Minsik; Martin, Jan M. L. Exploring Avenues beyond Revised DSD Functionals: I. Range Separation, with xDSD as a Special Case. J. Phys. Chem. A , 2021 , 125 (21), 4614–4627. DOI: 10.1021/acs.jpca.1c01294},
+    year = {2021},
+    doi = {10.1021/acs.jpca.1c01294}
+}
+
+@article{orca_dft_id604,
+    title = {Zhang, Ying; Xu, Xin; Goddard, William A. Doubly hybrid density functional for accurate descriptions of nonbond interactions, thermochemistry, and thermochemical kinetics. Proc. Natl. Acad. Sci. USA , 2009 , 106 (13), 4963–4968. DOI: 10.1073/pnas.0901093106},
+    year = {2009},
+    doi = {10.1073/pnas.0901093106}
+}
+
+@article{orca_dft_id594,
+    title = {Mardirossian, Narbe; Head-Gordon, Martin. Survival of the most transferable at the top of Jacob's ladder: Defining and testing the ωB97M(2) double hybrid density functional. J. Chem. Phys. , 2018 , 148 (24), 241736. DOI: 10.1063/1.5025226},
+    year = {2018},
+    doi = {10.1063/1.5025226}
+}
+
+@article{orca_dft_id126,
+    title = {Neugebauer, Hagen; Pinski, Peter; Grimme, Stefan; Neese, Frank; Bursch, Markus. Assessment of DLPNO-MP2 Approximations in Double-Hybrid DFT. J. Chem. Theory Comput. , 2023 , 19 (21), 7695–7703. DOI: 10.1021/acs.jctc.3c00896},
+    year = {2023},
+    doi = {10.1021/acs.jctc.3c00896}
+}
+
+@article{orca_dft_id661,
+    title = {Neese, F.; Schwabe, T.; Grimme, S. J. Chem. Phys. , 2007 , 126, 124115},
+    year = {2007}
+}
+
+@article{orca_dft_id367,
+    title = {Najibi, A.; Casanova-Páez, M.; Goerigk, L. Analysis of Recent BLYP- and PBE-Based Range-Separated Double-Hybrid Density Functional Approximations for Main-Group Thermochemistry, Kinetics, and Noncovalent Interactions. J. Phys. Chem. A , 2021 , 125, 4026–4035},
+    year = {2021}
+}
+
+@article{orca_dft_id832,
+    title = {Schwabe, T.; Grimme, S. Phys. Chem. Chem. Phys. , 2006 , 8, 4398},
+    year = {2006}
+}
+
+@article{orca_dft_id62,
+    title = {Karton, A.; Tarnopolsky, A; Lamère, J.-F.; Schatz, G. C.; Martin, J. M. L. Highly Accurate First-Principles Benchmark Data Sets for the Parametrization and Validation of Density Functional and Other Approximate Methods. Derivation of a Robust, Generally Applicable, Double-Hybrid Functional for Thermochemistry and Thermochemical Kinetics. J. Phys. Chem. A , 2008 , 112, 12868. DOI: 10.1021/jp801805p},
+    year = {2008},
+    doi = {10.1021/jp801805p}
+}
+
+@article{orca_dft_id63,
+    title = {Tarnopolsky, Alex; Karton, Amir; Sertchook, Rotem; Vuzman, Dana; Martin, Jan M L. Double-Hybrid Functionals for Thermochemical Kinetics. J. Phys. Chem. A , 2008 , 112 (1), 3–8. DOI: 10.1021/jp710179r},
+    year = {2008},
+    doi = {10.1021/jp710179r}
+}
+
+@article{orca_dft_id64,
+    title = {Yu, Feng. Double-Hybrid Density Functionals Free of Dispersion and Counterpoise Corrections for Non-Covalent Interactions. J. Phys. Chem. A , 2014 , 118 (17), 3175–3182. DOI: 10.1021/jp5005506},
+    year = {2014},
+    doi = {10.1021/jp5005506}
+}
+
+@article{orca_dft_id712,
+    title = {Brémond, Éric; Sancho-García, Juan Carlos; Pérez-Jiménez, Ángel José; Adamo, Carlo. J. Chem. Phys. , 2014 , 141, 031101},
+    year = {2014}
+}
+
+@article{orca_dft_id711,
+    title = {Brémond, Éric; Adamo, Carlo. Seeking for Parameter-Free Double-Hybrid Functionals: The PBE0-DH Model. J. Chem. Phys. , 2011 , 135 (2), 024106},
+    year = {2011}
+}
+
+@article{orca_dft_id835,
+    title = {Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput. , 2021 , 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535},
+    year = {2021},
+    doi = {10.1021/acs.jctc.1c00535}
+}
+
+@article{orca_dft_id151,
+    title = {Chai, Jeng-Da; Head-Gordon, Martin. Long-Range Corrected Double-Hybrid Density Functionals. J. Chem. Phys. , 2009 , 131 (17), 174105. DOI: 10.1063/1.3244209},
+    year = {2009},
+    doi = {10.1063/1.3244209}
+}
+
+@article{orca_dft_id796,
+    title = {Brémond, Éric; Savarese, Marika; Pérez-Jiménez, Ángel José; Sancho-García, Juan Carlos; Adamo, Carlo. J. Chem. Theory Comput. , 2018 , 14, 4052–4062},
+    year = {2018}
+}
+
+@article{orca_dft_id795,
+    title = {Brémond, Éric; Pérez-Jiménez, Ángel José; Sancho-García, Juan Carlos; Adamo, Carlo. J. Chem. Phys. , 2019 , 150, 201102},
+    year = {2019}
+}
+
+@article{orca_dft_id328,
+    title = {Casanova-Páez, Marcos; Dardis, Michael B.; Goerigk, Lars. ωB2PLYP & ωB2GPPLYP: The First Two Double-Hybrid Density Functionals with Long-Range Correction Optimized for Excitation Energies. J. Chem. Theory Comput. , 2019 , 15, 4735. DOI: 10.1021/acs.jctc.9b00013},
+    year = {2019},
+    doi = {10.1021/acs.jctc.9b00013}
+}
+
+@article{orca_dft_id560,
+    title = {Lehtola, S.; Steigemann, C.; Oliveira, MJT; Marques, MAL. Recent Developments in Libxc – A Comprehensive Library of Functionals for Density Functional Theory. SoftwareX , 2019 , 7, 1–5. DOI: 10.1016/j.softx.2017.11.002},
+    year = {2019},
+    doi = {10.1016/j.softx.2017.11.002}
+}

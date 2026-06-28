@@ -4,4 +4,6 @@ molsystem
 seamm-util
 seamm-widgets
 seamm-exec
-cclib
+basis_set_exchange
+bibtexparser
+tabulate

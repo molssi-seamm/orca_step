@@ -117,7 +117,7 @@ class ORCABase(seamm.Node):
     # ------------------------------------------------------------------
     # Execution
     # ------------------------------------------------------------------
-    def run_orca(self, keyword_line, extra_blocks=""):
+    def run_orca(self, keyword_line, extra_blocks="", extra_files=None, make_wfx=False):
         """Write the ORCA input, run ORCA, and return the parsed results.
 
         Parameters
@@ -126,6 +126,14 @@ class ORCABase(seamm.Node):
             The contents of the ORCA "!" simple-input line (without the "!").
         extra_blocks : str
             Any additional ``%`` blocks to place before the geometry.
+        extra_files : dict | None
+            Extra input files to write into the run directory (e.g. an external
+            basis file referenced by ``%basis GTOName ... end``).
+        make_wfx : bool
+            After ORCA finishes, run ``orca_2aim`` (shipped alongside ORCA) to
+            convert the density (retained by the ``keepdensity`` keyword) into an
+            AIMPAC ``orca.wfx`` wavefunction file for a following Atomic Charges
+            step. Requires the ORCA input to include ``keepdensity``.
 
         Returns
         -------
@@ -163,6 +171,8 @@ class ORCABase(seamm.Node):
         input_text = "\n".join(lines)
 
         files = {"orca.inp": input_text}
+        if extra_files:
+            files.update(extra_files)
         logger.debug("orca.inp:\n" + input_text)
 
         config = self._orca_config()
@@ -177,12 +187,33 @@ class ORCABase(seamm.Node):
                 env[var] = library_path + (os.pathsep + existing if existing else "")
 
         # ORCA must be invoked by its full path so it can find its sub-programs.
+        # When a wavefunction file is wanted, chain orca_2aim (which lives next
+        # to the orca binary) in the same shell so it runs in this directory
+        # right after ORCA, reading the just-written orca.gbw/orca.densities.
+        cmd = ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
+        return_files = [
+            "orca.out",
+            "orca.err",
+            "orca.gbw",
+            "*.bibtex",
+            "*.txt",
+            "*.engrad",
+        ]
+        if make_wfx:
+            orca_2aim = str(Path(config["code"]).parent / "orca_2aim")
+            cmd += ["&&", orca_2aim, "orca", ">", "orca_2aim.out", "2>&1"]
+            return_files += ["orca.wfx", "orca_2aim.out"]
+
         result = self.flowchart.executor.run(
-            cmd=["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"],
+            cmd=cmd,
             config=config,
             directory=self.directory,
             files=files,
-            return_files=["orca.out", "orca.err", "orca.gbw", "orca.property.txt"],
+            # Wildcards: ORCA writes orca.bibtex (suggested citations) and
+            # orca.property.txt (and other *.txt depending on options); the
+            # executor discards files not requested. orca.engrad appears only
+            # when gradients are requested (! EnGrad).
+            return_files=return_files,
             in_situ=True,
             shell=True,
             env=env,

@@ -1,0 +1,360 @@
+{
+ "B1LYP": [
+  "orca_dft_id7"
+ ],
+ "B1P86": [
+  "orca_dft_id718"
+ ],
+ "B2GP-PLYP": [
+  "orca_dft_id62"
+ ],
+ "B2K-PLYP": [
+  "orca_dft_id63"
+ ],
+ "B2NC-PLYP": [
+  "orca_dft_id64"
+ ],
+ "B2PLYP": [
+  "orca_dft_id339"
+ ],
+ "B2T-PLYP": [
+  "orca_dft_id63"
+ ],
+ "B3LYP": [
+  "orca_dft_id65"
+ ],
+ "B3LYP-3C": [
+  "orca_dft_id355"
+ ],
+ "B3LYP/G": [
+  "orca_dft_id65"
+ ],
+ "B3P86": [
+  "orca_dft_id88"
+ ],
+ "B3PW91": [
+  "orca_dft_id88"
+ ],
+ "B97-3C": [
+  "orca_dft_id348"
+ ],
+ "B97M-D3BJ": [
+  "orca_dft_id327"
+ ],
+ "B97M-D4": [
+  "orca_dft_id650"
+ ],
+ "B97M-V": [
+  "orca_dft_id409"
+ ],
+ "BHANDHLYP": [
+  "orca_dft_id88"
+ ],
+ "BLYP": [
+  "orca_dft_id109"
+ ],
+ "BP86": [
+  "orca_dft_id87",
+  "orca_dft_id718"
+ ],
+ "CAM-B3LYP": [
+  "orca_dft_id390"
+ ],
+ "D3BJ": [
+  "orca_dft_id600",
+  "orca_dft_id602",
+  "orca_dft_id601"
+ ],
+ "DSD-BLYP": [
+  "orca_dft_id600"
+ ],
+ "DSD-BLYP/2013": [
+  "orca_dft_id602"
+ ],
+ "DSD-PBEB95": [
+  "orca_dft_id602"
+ ],
+ "DSD-PBEP86": [
+  "orca_dft_id601"
+ ],
+ "DSD-PBEP86/2013": [
+  "orca_dft_id602"
+ ],
+ "GLYP": [
+  "orca_dft_id317"
+ ],
+ "KPR2SCAN": [
+  "orca_dft_id972"
+ ],
+ "LC-BLYP": [
+  "orca_dft_id438"
+ ],
+ "LC-PBE": [
+  "orca_dft_id437"
+ ],
+ "M06": [
+  "orca_dft_id585"
+ ],
+ "M062X": [
+  "orca_dft_id585"
+ ],
+ "M06L": [
+  "orca_dft_id586"
+ ],
+ "MPW1LYP": [
+  "orca_dft_id77"
+ ],
+ "MPW1PW": [
+  "orca_dft_id77"
+ ],
+ "MPWLYP": [
+  "orca_dft_id77"
+ ],
+ "MPWPW": [
+  "orca_dft_id77"
+ ],
+ "O3LYP": [
+  "orca_dft_id388"
+ ],
+ "OLYP": [
+  "orca_dft_id389"
+ ],
+ "PBE": [
+  "orca_dft_id725"
+ ],
+ "PBE-QIDH": [
+  "orca_dft_id712"
+ ],
+ "PBE0": [
+  "orca_dft_id8"
+ ],
+ "PBE0-DH": [
+  "orca_dft_id711"
+ ],
+ "PBEH-3C": [
+  "orca_dft_id362"
+ ],
+ "PR2SCAN50": [
+  "orca_dft_id972"
+ ],
+ "PR2SCAN69": [
+  "orca_dft_id972"
+ ],
+ "PW1PW": [
+  "orca_dft_id8"
+ ],
+ "PW6B95": [
+  "orca_dft_id965"
+ ],
+ "PW91": [
+  "orca_dft_id721"
+ ],
+ "PWLDA": [
+  "orca_dft_id724"
+ ],
+ "PWP": [
+  "orca_dft_id721"
+ ],
+ "PWPB95": [
+  "orca_dft_id325"
+ ],
+ "R2SCAN": [
+  "orca_dft_id297"
+ ],
+ "R2SCAN-3C": [
+  "orca_dft_id354"
+ ],
+ "R2SCAN-CIDH": [
+  "orca_dft_id972"
+ ],
+ "R2SCAN-QIDH": [
+  "orca_dft_id972"
+ ],
+ "R2SCAN0": [
+  "orca_dft_id123"
+ ],
+ "R2SCAN0-2": [
+  "orca_dft_id972"
+ ],
+ "R2SCAN0-DH": [
+  "orca_dft_id972"
+ ],
+ "R2SCAN50": [
+  "orca_dft_id123"
+ ],
+ "R2SCANH": [
+  "orca_dft_id123"
+ ],
+ "REVDOD-PBEP86-D4/2021": [
+  "orca_dft_id603"
+ ],
+ "REVDOD-PBEP86/2021": [
+  "orca_dft_id603"
+ ],
+ "REVDSD-PBEP86-D4/2021": [
+  "orca_dft_id603"
+ ],
+ "REVDSD-PBEP86/2021": [
+  "orca_dft_id603"
+ ],
+ "REVPBE": [
+  "orca_dft_id964"
+ ],
+ "REVPBE0": [
+  "orca_dft_id342"
+ ],
+ "REVPBE38": [
+  "orca_dft_id342"
+ ],
+ "REVTPSS": [
+  "orca_dft_id775",
+  "orca_dft_id776"
+ ],
+ "RPBE": [
+  "orca_dft_id382"
+ ],
+ "RPW86PBE": [
+  "orca_dft_id794"
+ ],
+ "RSCAN": [
+  "orca_dft_id79"
+ ],
+ "RSX-0DH": [
+  "orca_dft_id795"
+ ],
+ "RSX-QIDH": [
+  "orca_dft_id796"
+ ],
+ "SCANFUNC": [
+  "orca_dft_id728"
+ ],
+ "SCS-B2GP-PLYP21": [
+  "orca_dft_id835"
+ ],
+ "SCS-PBE-QIDH": [
+  "orca_dft_id835"
+ ],
+ "SCS-RSX-QIDH": [
+  "orca_dft_id835"
+ ],
+ "SCS-WB2GP-PLYP": [
+  "orca_dft_id835"
+ ],
+ "SCS-WB88PP86": [
+  "orca_dft_id835"
+ ],
+ "SCS-WPBEPP86": [
+  "orca_dft_id835"
+ ],
+ "SCS/SOS-B2PLYP21": [
+  "orca_dft_id835"
+ ],
+ "SCS/SOS-WB2PLYP": [
+  "orca_dft_id835"
+ ],
+ "SOS-B2GP-PLYP21": [
+  "orca_dft_id835"
+ ],
+ "SOS-PBE-QIDH": [
+  "orca_dft_id835"
+ ],
+ "SOS-RSX-QIDH": [
+  "orca_dft_id835"
+ ],
+ "SOS-WB2GP-PLYP": [
+  "orca_dft_id835"
+ ],
+ "SOS-WB88PP86": [
+  "orca_dft_id835"
+ ],
+ "SOS-WPBEPP86": [
+  "orca_dft_id835"
+ ],
+ "TPSS": [
+  "orca_dft_id899"
+ ],
+ "TPSS0": [
+  "orca_dft_id338"
+ ],
+ "TPSSH": [
+  "orca_dft_id899"
+ ],
+ "VWN": [
+  "orca_dft_id924"
+ ],
+ "VWN3": [
+  "orca_dft_id924"
+ ],
+ "VWN5": [
+  "orca_dft_id924"
+ ],
+ "WB2GP-PLYP": [
+  "orca_dft_id328"
+ ],
+ "WB2PLYP": [
+  "orca_dft_id328"
+ ],
+ "WB88PP86": [
+  "orca_dft_id328"
+ ],
+ "WB97": [
+  "orca_dft_id407"
+ ],
+ "WB97M(2)": [
+  "orca_dft_id594"
+ ],
+ "WB97M-D3BJ": [
+  "orca_dft_id327"
+ ],
+ "WB97M-D4": [
+  "orca_dft_id650"
+ ],
+ "WB97M-D4REV": [
+  "orca_dft_id358"
+ ],
+ "WB97M-V": [
+  "orca_dft_id410"
+ ],
+ "WB97X": [
+  "orca_dft_id407"
+ ],
+ "WB97X-2": [
+  "orca_dft_id151"
+ ],
+ "WB97X-3C": [
+  "orca_dft_id358"
+ ],
+ "WB97X-D3": [
+  "orca_dft_id152"
+ ],
+ "WB97X-D3BJ": [
+  "orca_dft_id327"
+ ],
+ "WB97X-D4": [
+  "orca_dft_id650"
+ ],
+ "WB97X-D4REV": [
+  "orca_dft_id358"
+ ],
+ "WB97X-V": [
+  "orca_dft_id408"
+ ],
+ "WPBEPP86": [
+  "orca_dft_id328"
+ ],
+ "WPR2SCAN50": [
+  "orca_dft_id972"
+ ],
+ "WR2SCAN": [
+  "orca_dft_id972"
+ ],
+ "X3LYP": [
+  "orca_dft_id322"
+ ],
+ "XLYP": [
+  "orca_dft_id322"
+ ],
+ "mPW2PLYP": [
+  "orca_dft_id832"
+ ]
+}

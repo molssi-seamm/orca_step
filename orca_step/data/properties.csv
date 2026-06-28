@@ -1,1 +1,12 @@
 Property,Type,Units,Description,URL
+total energy#ORCA#{model},float,E_h,The total (final single point) energy from {model},
+SCF energy#ORCA#{model},float,E_h,The SCF (HF/DFT reference) energy from {model},
+MP2 energy#ORCA#{model},float,E_h,The MP2 total energy from {model},
+CCSD energy#ORCA#{model},float,E_h,The CCSD total energy from {model},
+CCSD(T) energy#ORCA#{model},float,E_h,The CCSD(T) total energy from {model},
+HOMO energy#ORCA#{model},float,E_h,The HOMO orbital energy from {model},
+LUMO energy#ORCA#{model},float,E_h,The LUMO orbital energy from {model},
+HOMO-LUMO gap#ORCA#{model},float,eV,The HOMO-LUMO gap from {model},
+dipole magnitude#ORCA#{model},float,debye,The dipole moment magnitude from {model},
+isotropic polarizability#ORCA#{model},float,a.u.,The isotropic dipole polarizability from {model},
+S^2#ORCA#{model},float,,Expectation value of the total spin operator from {model},
