@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.6.28 documentation</title>
+    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.6.28.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=0bba250d"></script>
+    <script src="../../_static/documentation_options.js?v=df480c8b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.28" />
+  <meta name="docsearch:version" content="2026.6.28.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -538,14 +538,18 @@
         <span class="p">},</span>
         <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;def2-TZVP&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;special&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;widget&quot;</span><span class="p">:</span> <span class="s2">&quot;seamm_widgets.BasisSetField&quot;</span><span class="p">,</span>
             <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;basis sets&quot;</span><span class="p">]),</span>
             <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Basis set:&quot;</span><span class="p">,</span>
             <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
-                <span class="s2">&quot;The orbital basis set. A valid name may also be typed in. How &quot;</span>
-                <span class="s2">&quot;the name is resolved is set by &#39;Basis set source&#39; below.&quot;</span>
+                <span class="s2">&quot;The orbital basis set. Type a name, pick a common one from the &quot;</span>
+                <span class="s2">&quot;list, or press &#39;...&#39; to choose any basis from the Basis Set &quot;</span>
+                <span class="s2">&quot;Exchange (filtered to the elements you need); a Basis Set &quot;</span>
+                <span class="s2">&quot;Exchange choice is stored as &#39;bse:NAME&#39;. How a typed name is &quot;</span>
+                <span class="s2">&quot;resolved is set by &#39;Basis set source&#39; below.&quot;</span>
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">&quot;basis source&quot;</span><span class="p">:</span> <span class="p">{</span>

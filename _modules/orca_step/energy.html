@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.6.28 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.6.28.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=0bba250d"></script>
+    <script src="../../_static/documentation_options.js?v=df480c8b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.28" />
+  <meta name="docsearch:version" content="2026.6.28.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -561,9 +561,19 @@
                 <span class="s2">&quot;preceding Model Chemistry step.&quot;</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Single-point energy with ORCA at </span><span class="si">{</span><span class="n">P</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">P</span><span class="p">[</span><span class="s1">&#39;basis&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Single-point energy with ORCA at </span><span class="si">{</span><span class="n">P</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_basis_name</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The basis name from the &#39;basis&#39; parameter, which is a</span>
+<span class="sd">        ``{&quot;name&quot;, &quot;elements&quot;}`` dict (from the shared BasisSetField) or, for</span>
+<span class="sd">        older flowcharts, a plain string.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_method_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve (method, basis name) from the model chemistry (if used) or the</span>
@@ -573,7 +583,7 @@
             <span class="n">use_mc</span> <span class="o">=</span> <span class="n">use_mc</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
         <span class="k">if</span> <span class="n">use_mc</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_basis_from_model_chemistry</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">],</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_using_bse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the orbital basis comes from the Basis Set Exchange -- either</span>
@@ -717,7 +727,7 @@
             <span class="p">)</span>
         <span class="c1"># If the model chemistry omits a basis, fall back to this node&#39;s basis.</span>
         <span class="k">if</span> <span class="n">basis</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-            <span class="n">basis</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]</span>
+            <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="n">basis</span>
 
 <div class="viewcode-block" id="Energy.run">
