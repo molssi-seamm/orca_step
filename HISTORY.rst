@@ -2,6 +2,15 @@
 History
 =======
 
+2026.6.28.1 -- A Basis Set Exchange basis-set picker
+    * The basis set now uses the shared Basis Set Exchange picker: type a name,
+      pick a common one from the list, or press '...' to browse any basis from
+      the Exchange, filtered to the elements you select on a periodic table. A
+      choice from the Exchange is stored as 'bse:NAME', and the element selection
+      is remembered so the picker is restored when the flowchart is reopened.
+    * Bugfix: the basis-set source control no longer appears on its own when the
+      model chemistry is used; it is shown only with an explicit method and basis.
+
 2026.6.28 -- Properties, gradients, citations, and wavefunction export
     * Reports many properties from a single calculation: HOMO/LUMO (and the next
       orbitals) and the gap, the dipole moment, rotational constants, <S^2>, the

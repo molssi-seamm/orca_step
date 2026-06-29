@@ -51,6 +51,12 @@ class TkEnergy(seamm.TkNode):
             if key != "results":
                 self[key] = P[key].widget(frame)
 
+        # The basis field is a seamm_widgets.BasisSetField (entry/combobox + a
+        # '...' button to the Basis Set Exchange). Give it the curated quick-pick
+        # names and a way to preselect the current system's elements.
+        self["basis"].config(values=list(orca_step.metadata["basis sets"]))
+        self["basis"].elements_callback = self._current_elements
+
         # React to the model-chemistry toggle.
         for item in ("use model chemistry",):
             w = self[item]
@@ -60,6 +66,15 @@ class TkEnergy(seamm.TkNode):
 
         self.reset_dialog()
         return frame
+
+    def _current_elements(self):
+        """Element symbols in the current configuration, to preselect in the
+        Basis Set Exchange dialog. Best-effort: empty if there is none yet."""
+        try:
+            _, configuration = self.node.get_system_configuration(None)
+            return sorted(set(configuration.atoms.symbols))
+        except Exception:
+            return []
 
     def reset_dialog(self, widget=None):
         """Lay out the widgets, hiding the explicit method/basis controls when
@@ -76,11 +91,11 @@ class TkEnergy(seamm.TkNode):
         row += 1
 
         widgets = [self["use model chemistry"]]
-        # Method and basis name come from the model chemistry when it is used;
-        # the basis source, auxiliary basis, and extra keywords are ORCA run
+        # Method, basis, and the basis source come from the model chemistry when
+        # it is used (a 'bse:' basis there forces the Basis Set Exchange), so they
+        # are hidden in that mode. The auxiliary basis and the rest are ORCA run
         # details that apply either way.
         keys = [
-            "basis source",
             "auxiliary basis",
             "extra keywords",
             "bond orders",
@@ -89,7 +104,7 @@ class TkEnergy(seamm.TkNode):
             "save wavefunction",
         ]
         if not use_mc:
-            keys = ["method", "basis"] + keys
+            keys = ["method", "basis", "basis source"] + keys
         for key in keys:
             self[key].grid(row=row, column=0, sticky=tk.EW)
             widgets.append(self[key])

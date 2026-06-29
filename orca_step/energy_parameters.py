@@ -43,14 +43,18 @@ class EnergyParameters(seamm.Parameters):
         },
         "basis": {
             "default": "def2-TZVP",
-            "kind": "enum",
+            "kind": "special",
+            "widget": "seamm_widgets.BasisSetField",
             "default_units": "",
             "enumeration": tuple(orca_step.metadata["basis sets"]),
             "format_string": "",
             "description": "Basis set:",
             "help_text": (
-                "The orbital basis set. A valid name may also be typed in. How "
-                "the name is resolved is set by 'Basis set source' below."
+                "The orbital basis set. Type a name, pick a common one from the "
+                "list, or press '...' to choose any basis from the Basis Set "
+                "Exchange (filtered to the elements you need); a Basis Set "
+                "Exchange choice is stored as 'bse:NAME'. How a typed name is "
+                "resolved is set by 'Basis set source' below."
             ),
         },
         "basis source": {
