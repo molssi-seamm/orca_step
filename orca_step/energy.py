@@ -64,8 +64,18 @@ class Energy(orca_step.ORCABase):
                 "preceding Model Chemistry step."
             )
         else:
-            text = f"Single-point energy with ORCA at {P['method']}/{P['basis']}."
+            basis = self._basis_name(P["basis"])
+            text = f"Single-point energy with ORCA at {P['method']}/{basis}."
         return self.header + "\n" + __(text, indent=4 * " ").__str__()
+
+    @staticmethod
+    def _basis_name(value):
+        """The basis name from the 'basis' parameter, which is a
+        ``{"name", "elements"}`` dict (from the shared BasisSetField) or, for
+        older flowcharts, a plain string."""
+        if isinstance(value, dict):
+            return value.get("name", "") or ""
+        return value or ""
 
     def _resolve_method_basis(self, P):
         """Resolve (method, basis name) from the model chemistry (if used) or the
@@ -75,7 +85,7 @@ class Energy(orca_step.ORCABase):
             use_mc = use_mc == "yes"
         if use_mc:
             return self._method_basis_from_model_chemistry(P)
-        return P["method"], P["basis"]
+        return P["method"], self._basis_name(P["basis"])
 
     def _using_bse(self, P):
         """Whether the orbital basis comes from the Basis Set Exchange -- either
@@ -213,7 +223,7 @@ class Energy(orca_step.ORCABase):
             )
         # If the model chemistry omits a basis, fall back to this node's basis.
         if basis == "":
-            basis = P["basis"]
+            basis = self._basis_name(P["basis"])
         return method, basis
 
     def run(self, keywords=None):
