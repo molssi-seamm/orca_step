@@ -2,17 +2,30 @@
 History
 =======
 
+2026.7.6.1 -- Bugfix: parallel execution and DFT functionals via Model Chemistry
+    * Bugfix: the library-path (and orca-path) settings were read under the
+      wrong key and so were ignored; they are now applied. The matching OpenMPI
+      'mpirun' (the sibling 'bin' of library-path) is put on PATH so ORCA
+      launches its workers with the correct OpenMPI -- a mismatched one (e.g. a
+      newer system OpenMPI) causes parallel runs to abort with a BLAS-ERROR.
+      The loader variables are also exported inside the run command so they
+      survive macOS System Integrity Protection. (On macOS ORCA does not pass
+      DYLD_* to its MPI sub-processes, so the OpenMPI libraries must additionally
+      be on the default loader path, e.g. symlinked into /usr/local/lib; see the
+      User Guide.)
+    * Bugfix: the DFT functionals are again selectable through the Model
+      Chemistry step (each functional is offered as a method); this regressed
+      when the functionals moved out of the method list. Keywords containing '/'
+      (e.g. REVDSD-PBEP86-D4/2021) appear with '_' in the model-chemistry string,
+      since '/' is reserved there, and are translated back to the real keyword
+      when the calculation runs.
+
 2026.7.6 -- All ORCA functionals, forces, database properties, and parallel execution
     * Density functional theory now offers the complete set of ORCA functionals
       (117 of them), organized by type: pick a functional type (local, GGA,
       meta-GGA, hybrid, range-separated hybrid, or double-hybrid) and then the
       functional itself, including the double hybrids such as
       REVDSD-PBEP86-D4/2021.
-    * The DFT functionals are also selectable through the Model Chemistry step
-      (each functional is offered as a method). Keywords containing '/' (e.g.
-      REVDSD-PBEP86-D4/2021) appear with '_' in the model-chemistry string, since
-      '/' is reserved there, and are translated back to the real keyword when the
-      calculation runs.
     * Gradients (forces) are produced with the correct ORCA method automatically:
       the analytic gradient where ORCA has one, or the numerical gradient where
       it does not (for example DLPNO-CCSD(T), and the non-self-consistent
@@ -32,16 +45,6 @@ History
       [orca-step] section of orca.ini (the ncores and memory options); parallel
       runs need ORCA's OpenMPI runtime, whose location can be given with
       library-path.
-    * Bugfix: the library-path (and orca-path) settings were read under the
-      wrong key and so were ignored; they are now applied. The matching OpenMPI
-      'mpirun' (the sibling 'bin' of library-path) is put on PATH so ORCA
-      launches its workers with the correct OpenMPI -- a mismatched one (e.g. a
-      newer system OpenMPI) causes parallel runs to abort with a BLAS-ERROR.
-      The loader variables are also exported inside the run command so they
-      survive macOS System Integrity Protection. (On macOS ORCA does not pass
-      DYLD_* to its MPI sub-processes, so the OpenMPI libraries must additionally
-      be on the default loader path, e.g. symlinked into /usr/local/lib; see the
-      User Guide.)
     * Documentation: a full User Guide covering methods and functionals, basis
       sets, forces, saving results, and parallel execution.
 
