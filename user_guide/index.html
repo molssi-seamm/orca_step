@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.6.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../_static/documentation_options.js?v=29693f0c"></script>
+    <script src="../_static/documentation_options.js?v=3b31e663"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.6" />
+  <meta name="docsearch:version" content="2026.7.6.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -604,18 +604,38 @@ step reads its resource settings from the <code class="docutils literal notransl
 <span class="na">library-path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/orca/openmpi/lib</span>
 </pre></div>
 </div>
-<ul class="simple">
+<ul>
 <li><p><strong>ncores</strong> — how many processes ORCA may use (its <code class="docutils literal notranslate"><span class="pre">%pal</span></code>). <code class="docutils literal notranslate"><span class="pre">available</span></code>
 (the default) uses all cores the machine/job provides; give an integer to cap
 it, or <code class="docutils literal notranslate"><span class="pre">1</span></code> to force serial.</p></li>
 <li><p><strong>memory</strong> — the per-process memory for ORCA’s <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code>. <code class="docutils literal notranslate"><span class="pre">available</span></code>
 (the default) scales to the memory per core; <code class="docutils literal notranslate"><span class="pre">all</span></code> divides the whole node
 among the processes; or give an explicit amount such as <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">GB</span></code>.</p></li>
-<li><p><strong>library-path</strong> — parallel ORCA needs its matching OpenMPI runtime. If it is
-not already on the (dynamic) library path, point this at the directory holding
-those libraries. <strong>Without a working OpenMPI a parallel run will fail to
-launch</strong> — set <code class="docutils literal notranslate"><span class="pre">ncores</span> <span class="pre">=</span> <span class="pre">1</span></code> if you do not have it.</p></li>
+<li><p><strong>library-path</strong> — the <code class="docutils literal notranslate"><span class="pre">lib</span></code> directory of the OpenMPI that <strong>matches the
+version ORCA was built against</strong>. ORCA 6.1 requires OpenMPI 4.1.x and does
+<em>not</em> support 5.x; mixing versions makes parallel runs abort with a
+<code class="docutils literal notranslate"><span class="pre">BLAS-ERROR</span></code>. A dedicated conda env is the easy way to get the right one:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">orca</span><span class="o">-</span><span class="n">mpi</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="s2">&quot;openmpi=4.1&quot;</span>
+</pre></div>
+</div>
+<p>then set <code class="docutils literal notranslate"><span class="pre">library-path</span></code> to that env’s <code class="docutils literal notranslate"><span class="pre">lib</span></code> directory. The step
+automatically puts the matching <code class="docutils literal notranslate"><span class="pre">mpirun</span></code> (the sibling <code class="docutils literal notranslate"><span class="pre">bin</span></code> directory) on
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code> so ORCA launches its workers with the correct OpenMPI.</p>
+</li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>macOS.</strong> ORCA does not pass the <code class="docutils literal notranslate"><span class="pre">DYLD_*</span></code> loader variables to the MPI
+processes it spawns, so <code class="docutils literal notranslate"><span class="pre">library-path</span></code> alone does not let the dynamic
+loader find <code class="docutils literal notranslate"><span class="pre">libmpi</span></code> on a Mac. Put the OpenMPI libraries on the default
+search path once, for example by symlinking into <code class="docutils literal notranslate"><span class="pre">/usr/local/lib</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ln</span> <span class="o">-</span><span class="n">s</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">orca</span><span class="o">-</span><span class="n">mpi</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">libmpi</span><span class="mf">.40</span><span class="o">.</span><span class="n">dylib</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>On Linux the exported <code class="docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code> is inherited normally, so
+<code class="docutils literal notranslate"><span class="pre">library-path</span></code> is sufficient there.</p>
+</div>
+<p>If you do not have a matching OpenMPI, set <code class="docutils literal notranslate"><span class="pre">ncores</span> <span class="pre">=</span> <span class="pre">1</span></code> to run serially.</p>
 </section>
 <section id="indices-and-tables">
 <h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">#</a></h2>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.7.6.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=29693f0c"></script>
+    <script src="../../_static/documentation_options.js?v=3b31e663"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.6" />
+  <meta name="docsearch:version" content="2026.7.6.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -505,6 +505,38 @@
 <span class="n">_ADVERTISED_BASES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;def2-SVP&quot;</span><span class="p">,</span> <span class="s2">&quot;def2-TZVP&quot;</span><span class="p">,</span> <span class="s2">&quot;def2-QZVP&quot;</span><span class="p">,</span> <span class="s2">&quot;cc-pVTZ&quot;</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="mc_method_alias">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.mc_method_alias">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mc_method_alias</span><span class="p">(</span><span class="n">functional</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A model-chemistry-safe spelling of a DFT functional keyword.</span>
+
+<span class="sd">    The model-chemistry grammar reserves ``/`` (it separates method from basis),</span>
+<span class="sd">    so functionals whose ORCA keyword contains ``/`` -- e.g.</span>
+<span class="sd">    ``REVDSD-PBEP86-D4/2021`` -- cannot appear literally in a model-chemistry</span>
+<span class="sd">    string. They are advertised with ``/`` replaced by ``_`` (no ORCA functional</span>
+<span class="sd">    keyword contains ``_``, so this round-trips) and translated back to the real</span>
+<span class="sd">    keyword when the ORCA step consumes the model chemistry (see</span>
+<span class="sd">    ``Energy._method_basis_from_model_chemistry``).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">functional</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="mc_method_unalias">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.mc_method_unalias">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mc_method_unalias</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inverse of :func:`mc_method_alias`: the real ORCA functional keyword for a</span>
+<span class="sd">    (possibly aliased) model-chemistry method, or the method unchanged if it is</span>
+<span class="sd">    not an aliased functional.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">method</span>
+    <span class="n">candidate</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">candidate</span>
+    <span class="k">return</span> <span class="n">method</span></div>
+
+
+
 <div class="viewcode-block" id="ORCAStep">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.ORCAStep">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ORCAStep</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -536,17 +568,27 @@
         <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;methods&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">mtype</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;QC&quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">basis</span> <span class="ow">in</span> <span class="n">_ADVERTISED_BASES</span><span class="p">:</span>
-                <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ORCA:</span><span class="si">{</span><span class="n">mtype</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s2">&quot;model_chemistry&quot;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">mtype</span><span class="p">,</span>
-                    <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
-                    <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="n">basis</span><span class="p">,</span>
-                    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;description&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">method</span><span class="p">)</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;periodic&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                    <span class="s2">&quot;mdi_capable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                <span class="p">}</span>
+            <span class="c1"># For DFT the specific functional is the &quot;method&quot;; advertise each</span>
+            <span class="c1"># one (aliasing any &#39;/&#39; in the keyword). Other methods are literal.</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;DFT&quot;</span><span class="p">:</span>
+                <span class="n">entries</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">mc_method_alias</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">name</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;note&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;DFT functional&quot;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">entries</span> <span class="o">=</span> <span class="p">[(</span><span class="n">method</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="n">method</span><span class="p">))]</span>
+            <span class="k">for</span> <span class="n">adv_method</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">desc</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">basis</span> <span class="ow">in</span> <span class="n">_ADVERTISED_BASES</span><span class="p">:</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ORCA:</span><span class="si">{</span><span class="n">mtype</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">adv_method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;model_chemistry&quot;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">mtype</span><span class="p">,</span>
+                        <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">adv_method</span><span class="p">,</span>
+                        <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="n">basis</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;periodic&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="s2">&quot;mdi_capable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="p">}</span>
         <span class="k">return</span> <span class="n">options</span></div>
 
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.6.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=29693f0c"></script>
+    <script src="../../_static/documentation_options.js?v=3b31e663"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.6" />
+  <meta name="docsearch:version" content="2026.7.6.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -764,6 +764,10 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;The model chemistry &#39;</span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">&#39; does not name a method ORCA can &quot;</span> <span class="s2">&quot;use.&quot;</span>
             <span class="p">)</span>
+        <span class="c1"># A DFT functional whose ORCA keyword contains &#39;/&#39; is advertised to the</span>
+        <span class="c1"># Model Chemistry step with &#39;/&#39; aliased to &#39;_&#39;; translate it back to the</span>
+        <span class="c1"># real keyword (a no-op for methods that are not aliased functionals).</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">mc_method_unalias</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
         <span class="c1"># If the model chemistry omits a basis, fall back to this node&#39;s basis.</span>
         <span class="k">if</span> <span class="n">basis</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.6.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../_static/documentation_options.js?v=29693f0c"></script>
+    <script src="../_static/documentation_options.js?v=3b31e663"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.6" />
+  <meta name="docsearch:version" content="2026.7.6.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -880,6 +880,27 @@ method in the metadata paired with a curated set of basis sets.</p>
 
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.orca_step.mc_method_alias">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">mc_method_alias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functional</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#mc_method_alias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.mc_method_alias" title="Link to this definition">#</a></dt>
+<dd><p>A model-chemistry-safe spelling of a DFT functional keyword.</p>
+<p>The model-chemistry grammar reserves <code class="docutils literal notranslate"><span class="pre">/</span></code> (it separates method from basis),
+so functionals whose ORCA keyword contains <code class="docutils literal notranslate"><span class="pre">/</span></code> – e.g.
+<code class="docutils literal notranslate"><span class="pre">REVDSD-PBEP86-D4/2021</span></code> – cannot appear literally in a model-chemistry
+string. They are advertised with <code class="docutils literal notranslate"><span class="pre">/</span></code> replaced by <code class="docutils literal notranslate"><span class="pre">_</span></code> (no ORCA functional
+keyword contains <code class="docutils literal notranslate"><span class="pre">_</span></code>, so this round-trips) and translated back to the real
+keyword when the ORCA step consumes the model chemistry (see
+<code class="docutils literal notranslate"><span class="pre">Energy._method_basis_from_model_chemistry</span></code>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.orca_step.mc_method_unalias">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">mc_method_unalias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#mc_method_unalias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.mc_method_unalias" title="Link to this definition">#</a></dt>
+<dd><p>Inverse of <a class="reference internal" href="#orca_step.orca_step.mc_method_alias" title="orca_step.orca_step.mc_method_alias"><code class="xref py py-func docutils literal notranslate"><span class="pre">mc_method_alias()</span></code></a>: the real ORCA functional keyword for a
+(possibly aliased) model-chemistry method, or the method unchanged if it is
+not an aliased functional.</p>
+</dd></dl>
+
 </section>
 <section id="module-orca_step.tk_energy">
 <span id="orca-step-tk-energy-module"></span><h2>orca_step.tk_energy module<a class="headerlink" href="#module-orca_step.tk_energy" title="Link to this heading">#</a></h2>
@@ -1109,6 +1130,8 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.my_description"><code class="docutils literal notranslate"><span class="pre">ORCAStep.my_description</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.mc_method_alias"><code class="docutils literal notranslate"><span class="pre">mc_method_alias()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.mc_method_unalias"><code class="docutils literal notranslate"><span class="pre">mc_method_unalias()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.tk_energy">orca_step.tk_energy module</a><ul class="pst-show_toc_level nav section-nav flex-column">
