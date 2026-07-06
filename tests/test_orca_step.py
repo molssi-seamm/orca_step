@@ -375,3 +375,24 @@ def test_dehumanize_bytes():
 
     with pytest.raises(ValueError):
         _dehumanize_bytes("lots of memory")
+
+
+def test_library_path_vars():
+    """The MPI library path is exported for parallel runs, prepended to any
+    existing value, and skipped for serial runs or when unset."""
+    from orca_step.orca_base import _library_path_vars
+
+    # Serial or no path -> nothing to set.
+    assert _library_path_vars(1, "/opt/openmpi/lib") == []
+    assert _library_path_vars(4, "") == []
+
+    # Parallel with a path -> both loader variables, no prior value.
+    pairs = dict(_library_path_vars(4, "/opt/openmpi/lib", environ={}))
+    assert pairs["DYLD_LIBRARY_PATH"] == "/opt/openmpi/lib"
+    assert pairs["LD_LIBRARY_PATH"] == "/opt/openmpi/lib"
+
+    # An existing value is preserved after the new directory.
+    pairs = dict(
+        _library_path_vars(4, "/opt/openmpi/lib", environ={"DYLD_LIBRARY_PATH": "/x"})
+    )
+    assert pairs["DYLD_LIBRARY_PATH"] == "/opt/openmpi/lib:/x"

@@ -15,6 +15,7 @@ import logging
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 
 import seamm
@@ -59,6 +60,24 @@ def _dehumanize_bytes(text):
     if unit not in _MEMORY_UNITS:
         raise ValueError(f"unknown memory unit '{m.group(2)}'")
     return int(float(m.group(1)) * _MEMORY_UNITS[unit])
+
+
+def _library_path_vars(n_cores, library_path, environ=None):
+    """The dynamic-library search variables to set for a parallel ORCA run.
+
+    Returns a list of ``(name, value)`` pairs prepending ``library_path`` to
+    ``DYLD_LIBRARY_PATH`` and ``LD_LIBRARY_PATH`` (preserving any existing
+    value). Empty for a serial run or when no path is given. ORCA's OpenMPI
+    launcher needs these to find e.g. ``libmpi.40.dylib``.
+    """
+    if n_cores <= 1 or not library_path:
+        return []
+    environ = os.environ if environ is None else environ
+    pairs = []
+    for var in ("DYLD_LIBRARY_PATH", "LD_LIBRARY_PATH"):
+        existing = environ.get(var, "")
+        pairs.append((var, library_path + (os.pathsep + existing if existing else "")))
+    return pairs
 
 
 # Hartree -> the energy unit ORCA reports (E_h); kept explicit for clarity.
@@ -258,18 +277,26 @@ class ORCABase(seamm.Node):
 
         # For parallel runs ORCA's MPI launcher needs the matching OpenMPI
         # libraries on the dynamic-library path.
+        #
+        # macOS System Integrity Protection strips the dynamic-loader variables
+        # (DYLD_*) from the environment whenever a process is exec'd through a
+        # protected binary such as /bin/sh -- which is exactly how the shell
+        # command below is launched. Passing them in `env` is therefore purged
+        # before ORCA ever sees them (dyld then fails to find libmpi). Exporting
+        # them *inside* the shell line -- after /bin/sh is already running --
+        # makes the shell hand them to ORCA, an ordinary user binary that honors
+        # them. We also set `env` for Linux / non-shell paths (harmless there).
         env = {}
-        library_path = options.get("library-path", "") or ""
-        if n_cores > 1 and library_path != "":
-            for var in ("DYLD_LIBRARY_PATH", "LD_LIBRARY_PATH"):
-                existing = os.environ.get(var, "")
-                env[var] = library_path + (os.pathsep + existing if existing else "")
+        lib_prefix = []
+        for var, value in _library_path_vars(n_cores, options.get("library-path", "")):
+            env[var] = value
+            lib_prefix.append(f"export {var}={shlex.quote(value)};")
 
         # ORCA must be invoked by its full path so it can find its sub-programs.
         # When a wavefunction file is wanted, chain orca_2aim (which lives next
         # to the orca binary) in the same shell so it runs in this directory
         # right after ORCA, reading the just-written orca.gbw/orca.densities.
-        cmd = ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
+        cmd = lib_prefix + ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
         return_files = [
             "orca.out",
             "orca.err",
