@@ -262,3 +262,116 @@ def test_metadata_methods_and_bases():
     assert "DLPNO-CCSD(T)" in orca_step.metadata["methods"]
     bases = orca_step.metadata["basis sets"]
     assert "def2-TZVP" in bases and "cc-pVTZ" in bases and "6-311++G**" in bases
+
+
+def test_keyword_line_dft_functional():
+    """With method 'DFT' the '!' keyword is the chosen functional, not 'DFT'."""
+    node = orca_step.Energy()
+    line = node.keyword_line(
+        {
+            "use model chemistry": "no",
+            "method": "DFT",
+            "functional type": "global double-hybrid",
+            "functional": "REVDSD-PBEP86-D4/2021",
+            "basis": "def2-TZVP",
+            "basis source": "ORCA internal",
+            "auxiliary basis": "AutoAux",
+            "extra keywords": "TightSCF",
+        }
+    )
+    assert line == "REVDSD-PBEP86-D4/2021 def2-TZVP AutoAux TightSCF"
+
+
+def test_gradient_keyword_analytic_vs_numeric():
+    """Analytic-gradient functionals get EnGrad; wB97M(2) and (DLPNO-)CCSD(T)
+    have no analytic gradient, so they get NumGrad."""
+    node = orca_step.Energy()
+    base = {
+        "use model chemistry": "no",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "extra keywords": "",
+        "results": {"gradients": {}},
+    }
+    # Analytic double hybrid -> EnGrad.
+    analytic = node.keyword_line(
+        {
+            **base,
+            "method": "DFT",
+            "functional type": "global double-hybrid",
+            "functional": "B2PLYP",
+        }
+    )
+    assert "EnGrad" in analytic and "NumGrad" not in analytic
+    # Non-self-consistent wB97M(2) -> NumGrad.
+    numeric = node.keyword_line(
+        {
+            **base,
+            "method": "DFT",
+            "functional type": "range-separated double-hybrid",
+            "functional": "WB97M(2)",
+        }
+    )
+    assert "NumGrad" in numeric and "EnGrad" not in numeric
+    # DLPNO-CCSD(T): no analytic (T) gradient -> NumGrad.
+    cc = node.keyword_line({**base, "method": "DLPNO-CCSD(T)"})
+    assert "NumGrad" in cc and "EnGrad" not in cc
+
+
+def test_metadata_functionals_catalog():
+    """The functional catalog carries category, gradient availability, and
+    citation keys, and drives the DFT method (no per-functional method entries)."""
+    md = orca_step.metadata
+    funcs = md["functionals"]
+    # The old JSON is gone; the catalog lives in metadata now.
+    assert len(funcs) > 100
+    assert {"B3LYP", "REVDSD-PBEP86-D4/2021", "WB97M(2)"} <= set(funcs)
+    # Every functional's category is one of the declared categories.
+    cats = set(md["functional categories"])
+    assert all(rec["category"] in cats for rec in funcs.values())
+    # Only the non-self-consistent double hybrids are numeric-gradient.
+    numeric = {n for n, r in funcs.items() if r["gradients"] == "numeric"}
+    assert numeric == {"WB97M(2)", "WB97X-2"}
+    # DFT is now a single method; the functional is chosen separately.
+    assert "DFT" in md["methods"]
+    assert "B3LYP" not in md["methods"] and "B3LYP" in funcs
+    # The citation alias still resolves keys that exist in the bibliography.
+    assert funcs["B3LYP"]["citations"] == md["dft functionals"]["B3LYP"]
+
+
+def test_results_have_registered_properties():
+    """Every DB-storable result declares a 'property' whose template is
+    registered in data/properties.csv (so store_results can create it)."""
+    import csv as _csv
+    import importlib.resources
+
+    md = orca_step.metadata
+    csv_path = importlib.resources.files("orca_step") / "data" / "properties.csv"
+    registered = set()
+    with csv_path.open(encoding="utf-8") as fh:
+        for record in _csv.DictReader(fh):
+            registered.add(record["Property"])
+
+    # Results that must now be storable to the database.
+    for key in ("gradients", "dipole moment", "mulliken charges", "energy"):
+        assert "property" in md["results"][key], f"{key} is missing a property"
+
+    # Every declared property template must be registered in the CSV.
+    for key, entry in md["results"].items():
+        if "property" in entry:
+            assert entry["property"] in registered, f"{key}: {entry['property']}"
+
+
+def test_dehumanize_bytes():
+    """The memory-string parser handles SI, binary, bare-number, and bad input."""
+    from orca_step.orca_base import _dehumanize_bytes
+
+    assert _dehumanize_bytes("1000") == 1000
+    assert _dehumanize_bytes("2 GB") == 2_000_000_000
+    assert _dehumanize_bytes("512MB") == 512_000_000
+    assert _dehumanize_bytes("1Gi") == 1024**3
+    import pytest
+
+    with pytest.raises(ValueError):
+        _dehumanize_bytes("lots of memory")

@@ -2,6 +2,34 @@
 History
 =======
 
+2026.7.6 -- All ORCA functionals, forces, database properties, and parallel execution
+    * Density functional theory now offers the complete set of ORCA functionals
+      (117 of them), organized by type: pick a functional type (local, GGA,
+      meta-GGA, hybrid, range-separated hybrid, or double-hybrid) and then the
+      functional itself, including the double hybrids such as
+      REVDSD-PBEP86-D4/2021.
+    * Gradients (forces) are produced with the correct ORCA method automatically:
+      the analytic gradient where ORCA has one, or the numerical gradient where
+      it does not (for example DLPNO-CCSD(T), and the non-self-consistent
+      wB97M(2) and wB97X-2 functionals). A note is printed when the slower
+      numerical gradient is used.
+    * Results can now be saved to the property database, including the gradient,
+      the dipole-moment vector, the Mulliken, Löwdin, and Hirshfeld charges, the
+      Mayer valences, and the rotational constants, in addition to the energies
+      and other scalar results.
+    * The curated basis-set list has been filled out across the Pople, Dunning
+      (correlation-consistent), and Karlsruhe def2 families, including their
+      diffuse and minimally-augmented variants.
+    * Choosing 'Basis Set Exchange' as the basis-set source now opens the picker
+      directly (it remains available from the '...' button as well).
+    * ORCA runs in parallel by default, using the cores the machine or batch job
+      provides. The number of cores and the memory per process can be set in the
+      [orca-step] section of orca.ini (the ncores and memory options); parallel
+      runs need ORCA's OpenMPI runtime, whose location can be given with
+      library-path.
+    * Documentation: a full User Guide covering methods and functionals, basis
+      sets, forces, saving results, and parallel execution.
+
 2026.6.28.1 -- A Basis Set Exchange basis-set picker
     * The basis set now uses the shared Basis Set Exchange picker: type a name,
       pick a common one from the list, or press '...' to browse any basis from

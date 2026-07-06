@@ -57,12 +57,25 @@ class TkEnergy(seamm.TkNode):
         self["basis"].config(values=list(orca_step.metadata["basis sets"]))
         self["basis"].elements_callback = self._current_elements
 
-        # React to the model-chemistry toggle.
-        for item in ("use model chemistry",):
+        # React to the model-chemistry toggle and the method choice (the method
+        # controls whether the DFT functional pulldowns are shown).
+        for item in ("use model chemistry", "method"):
             w = self[item]
             w.combobox.bind("<<ComboboxSelected>>", self.reset_dialog)
             w.combobox.bind("<Return>", self.reset_dialog)
             w.combobox.bind("<FocusOut>", self.reset_dialog)
+
+        # Changing the functional type re-filters the functional list in place.
+        w = self["functional type"]
+        w.combobox.bind("<<ComboboxSelected>>", self.reset_functionals)
+        w.combobox.bind("<Return>", self.reset_functionals)
+        w.combobox.bind("<FocusOut>", self.reset_functionals)
+
+        # Choosing the Basis Set Exchange as the source opens the periodic-table
+        # picker so the user can specify which BSE basis (also on the '...' btn).
+        self["basis source"].combobox.bind(
+            "<<ComboboxSelected>>", self._on_basis_source
+        )
 
         self.reset_dialog()
         return frame
@@ -77,42 +90,98 @@ class TkEnergy(seamm.TkNode):
             return []
 
     def reset_dialog(self, widget=None):
-        """Lay out the widgets, hiding the explicit method/basis controls when
-        the model chemistry is used.
+        """Lay out the widgets. Hide the explicit method/basis controls when the
+        model chemistry is used; for DFT, show the functional-type and functional
+        pulldowns indented one and two levels under Method, mirroring Gaussian.
         """
         frame = self["frame"]
         for slave in frame.grid_slaves():
             slave.grid_forget()
+        # Clear any indentation left from a previous (DFT) layout.
+        frame.columnconfigure(0, minsize=0)
+        frame.columnconfigure(1, minsize=0)
 
         use_mc = self["use model chemistry"].get() == "yes"
+        is_dft = (not use_mc) and self["method"].get() == "DFT"
 
         row = 0
-        self["use model chemistry"].grid(row=row, column=0, sticky=tk.EW)
-        row += 1
+        widgets = []  # full-width (column 0) controls
+        type_widgets = []  # indented one level (column 1): functional type
+        func_widgets = []  # indented two levels (column 2): functional
 
-        widgets = [self["use model chemistry"]]
-        # Method, basis, and the basis source come from the model chemistry when
-        # it is used (a 'bse:' basis there forces the Basis Set Exchange), so they
-        # are hidden in that mode. The auxiliary basis and the rest are ORCA run
-        # details that apply either way.
-        keys = [
+        def add_full(key):
+            nonlocal row
+            self[key].grid(row=row, column=0, columnspan=3, sticky=tk.EW)
+            widgets.append(self[key])
+            row += 1
+
+        add_full("use model chemistry")
+
+        # Method, basis, and basis source come from the model chemistry when it
+        # is used, so they are hidden in that mode. The auxiliary basis and the
+        # rest are ORCA run details that apply either way.
+        if not use_mc:
+            add_full("method")
+            if is_dft:
+                # Functional type indented one level, functional two levels.
+                self._filter_functionals()
+                self["functional type"].grid(
+                    row=row, column=1, columnspan=2, sticky=tk.EW
+                )
+                type_widgets.append(self["functional type"])
+                row += 1
+                self["functional"].grid(row=row, column=2, columnspan=1, sticky=tk.EW)
+                func_widgets.append(self["functional"])
+                row += 1
+            add_full("basis")
+            add_full("basis source")
+
+        for key in (
             "auxiliary basis",
             "extra keywords",
             "bond orders",
             "Hirshfeld charges",
             "polarizability",
             "save wavefunction",
-        ]
-        if not use_mc:
-            keys = ["method", "basis", "basis source"] + keys
-        for key in keys:
-            self[key].grid(row=row, column=0, sticky=tk.EW)
-            widgets.append(self[key])
-            row += 1
+        ):
+            add_full(key)
 
-        sw.align_labels(widgets, sticky=tk.E)
+        # Align the full-width labels; indent the nested widgets by the leftover
+        # label width plus a fixed gap, so each nested combobox sits ~30 px to the
+        # right of its parent's (the Gaussian idiom).
+        width0 = sw.align_labels(widgets, sticky=tk.E)
+        if type_widgets:
+            width1 = sw.align_labels(type_widgets, sticky=tk.E)
+            width2 = sw.align_labels(func_widgets, sticky=tk.E)
+            frame.columnconfigure(0, minsize=max(0, width0 - width1) + 30)
+            frame.columnconfigure(1, minsize=max(0, width1 - width2) + 30)
 
         # Lay out the Results tab from the metadata (energy, gradients, charges,
         # ...). Without this the Results tab is created but stays empty.
         self.setup_results()
         return row
+
+    def _on_basis_source(self, widget=None):
+        """When the user selects the Basis Set Exchange as the source, open the
+        picker so they can specify which basis (writes back as 'bse:NAME')."""
+        if self["basis source"].get() == "Basis Set Exchange":
+            browse = getattr(self["basis"], "_browse", None)
+            if callable(browse):
+                browse()
+
+    def _filter_functionals(self):
+        """Restrict the functional pulldown to the functionals of the currently
+        selected functional type, keeping the selection valid."""
+        ftype = self["functional type"].get()
+        funcs = [
+            name
+            for name, rec in orca_step.metadata["functionals"].items()
+            if rec["category"] == ftype
+        ]
+        self["functional"].combobox.configure(values=funcs)
+        if funcs and self["functional"].get() not in funcs:
+            self["functional"].set(funcs[0])
+
+    def reset_functionals(self, widget=None):
+        """Re-filter the functional list when the functional type changes."""
+        self._filter_functionals()
