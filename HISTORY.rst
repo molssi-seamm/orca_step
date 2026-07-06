@@ -8,6 +8,11 @@ History
       meta-GGA, hybrid, range-separated hybrid, or double-hybrid) and then the
       functional itself, including the double hybrids such as
       REVDSD-PBEP86-D4/2021.
+    * The DFT functionals are also selectable through the Model Chemistry step
+      (each functional is offered as a method). Keywords containing '/' (e.g.
+      REVDSD-PBEP86-D4/2021) appear with '_' in the model-chemistry string, since
+      '/' is reserved there, and are translated back to the real keyword when the
+      calculation runs.
     * Gradients (forces) are produced with the correct ORCA method automatically:
       the analytic gradient where ORCA has one, or the numerical gradient where
       it does not (for example DLPNO-CCSD(T), and the non-self-consistent

@@ -260,6 +260,10 @@ class Energy(orca_step.ORCABase):
             raise RuntimeError(
                 f"The model chemistry '{level}' does not name a method ORCA can " "use."
             )
+        # A DFT functional whose ORCA keyword contains '/' is advertised to the
+        # Model Chemistry step with '/' aliased to '_'; translate it back to the
+        # real keyword (a no-op for methods that are not aliased functionals).
+        method = orca_step.mc_method_unalias(method)
         # If the model chemistry omits a basis, fall back to this node's basis.
         if basis == "":
             basis = self._basis_name(P["basis"])

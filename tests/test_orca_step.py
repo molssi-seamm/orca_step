@@ -212,6 +212,33 @@ def test_consume_model_chemistry():
     assert line == "B3LYP def2-TZVP AutoAux TightSCF"
 
 
+def test_consume_model_chemistry_aliased_functional():
+    """A '/'-aliased DFT functional from the model chemistry is translated back
+    to the real ORCA keyword on the '!' line."""
+    node = orca_step.Energy()
+    _stub_model_chemistry(
+        node,
+        {
+            "level": "ORCA:DFT@REVDSD-PBEP86-D4_2021/def2-TZVP",
+            "owner": "ORCA",
+            "type": "DFT",
+            "method": "REVDSD-PBEP86-D4_2021",  # aliased ('/' -> '_')
+            "basis": "def2-TZVP",
+        },
+    )
+    line = node.keyword_line(
+        {
+            "use model chemistry": "yes",
+            "method": "IGNORED",
+            "basis": "IGNORED",
+            "basis source": "ORCA internal",
+            "auxiliary basis": "AutoAux",
+            "extra keywords": "TightSCF",
+        }
+    )
+    assert line == "REVDSD-PBEP86-D4/2021 def2-TZVP AutoAux TightSCF"
+
+
 def test_consume_rejects_foreign_owner():
     """A model chemistry owned by another program is rejected clearly."""
     node = orca_step.Energy()
@@ -375,6 +402,27 @@ def test_dehumanize_bytes():
 
     with pytest.raises(ValueError):
         _dehumanize_bytes("lots of memory")
+
+
+def test_model_chemistry_advertises_functionals():
+    """DFT functionals are advertised as model chemistries; keywords containing
+    '/' are aliased with '_', and the alias round-trips to the real keyword."""
+    opts = orca_step.ORCAStep.get_model_chemistry_options()
+
+    # A plain functional is advertised under its own name.
+    assert any(k.startswith("ORCA:DFT@B3LYP/") for k in opts)
+    # A '/'-containing functional is aliased (no reserved '/' inside the method).
+    assert any("REVDSD-PBEP86-D4_2021" in k for k in opts)
+    assert not any("@REVDSD-PBEP86-D4/2021/" in k for k in opts)
+    # Non-DFT methods are still advertised.
+    assert any(k.startswith("ORCA:QC@DLPNO-CCSD(T)/") for k in opts)
+
+    # The alias round-trips; non-aliased methods pass through unchanged.
+    assert (
+        orca_step.mc_method_unalias("REVDSD-PBEP86-D4_2021") == "REVDSD-PBEP86-D4/2021"
+    )
+    assert orca_step.mc_method_unalias("B3LYP") == "B3LYP"
+    assert orca_step.mc_method_unalias("DLPNO-CCSD(T)") == "DLPNO-CCSD(T)"
 
 
 def test_library_path_vars():
