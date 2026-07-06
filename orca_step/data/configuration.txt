@@ -3,13 +3,21 @@
 # its full path so it can find its sub-programs.
 # orca-path =
 
-# How many cores/processes ORCA may use (via %pal). Default is serial (1).
-# Parallel ORCA requires a matching OpenMPI runtime (see library-path).
-# ncores = 1
+# How many cores/processes ORCA may use (via %pal). 'available' (the default)
+# uses all the cores the machine/job provides; give an integer to cap it, or 1
+# to force serial. Parallel ORCA needs a matching OpenMPI runtime (library-path).
+# ncores = available
 
-# Directory holding ORCA's required OpenMPI libraries (e.g. libmpi.40.dylib),
-# prepended to (DY)LD_LIBRARY_PATH for parallel runs. On this machine the
-# seamm-orca conda environment provides them.
+# Memory per process for ORCA's %maxcore. 'available' (the default) scales to the
+# memory per core; 'all' divides the whole node among the processes; or give an
+# explicit amount such as '3 GB'.
+# memory = available
+
+# Directory holding ORCA's OpenMPI libraries (e.g. libmpi.40.dylib), prepended to
+# the (DY)LD_LIBRARY_PATH for parallel runs. Use the OpenMPI version ORCA was
+# built against: ORCA 6.1 requires OpenMPI 4.1.x and does NOT support 5.x. A
+# dedicated conda env (e.g. `conda create -n orca-mpi openmpi=4.1`) is an easy
+# way to provide it; then point this at that env's lib directory.
 # library-path =
 
 # Maximum number of atoms for which to print detailed per-atom results.
