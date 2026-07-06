@@ -288,7 +288,9 @@ class ORCABase(seamm.Node):
         # them. We also set `env` for Linux / non-shell paths (harmless there).
         env = {}
         lib_prefix = []
-        for var, value in _library_path_vars(n_cores, options.get("library-path", "")):
+        # Note: option keys use underscores (argparse dest), even though the
+        # seamm.ini / command-line spelling is hyphenated (--library-path).
+        for var, value in _library_path_vars(n_cores, options.get("library_path", "")):
             env[var] = value
             lib_prefix.append(f"export {var}={shlex.quote(value)};")
 
@@ -353,7 +355,7 @@ class ORCABase(seamm.Node):
 
         # Fall back to locating ORCA ourselves.
         options = self.parent.options
-        code = options.get("orca-path", "") or ""
+        code = options.get("orca_path", "") or ""  # dest is underscored
         if code != "":
             code = str(Path(code).expanduser() / "orca")
         else:

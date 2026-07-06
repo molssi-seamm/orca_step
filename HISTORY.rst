@@ -27,10 +27,12 @@ History
       [orca-step] section of orca.ini (the ncores and memory options); parallel
       runs need ORCA's OpenMPI runtime, whose location can be given with
       library-path.
-    * The library-path directory is now exported inside the run command so it
-      survives macOS System Integrity Protection (which strips DYLD_* variables
-      passed through the shell); without this, parallel runs on macOS could not
-      find ORCA's OpenMPI library (libmpi).
+    * Bugfix: the library-path (and orca-path) settings were read under the
+      wrong key and so were ignored; they are now applied. On macOS the
+      library-path is also exported inside the run command so it survives System
+      Integrity Protection (which strips DYLD_* variables passed through the
+      shell). Without these, parallel runs on macOS could not find ORCA's
+      OpenMPI library (libmpi).
     * Documentation: a full User Guide covering methods and functionals, basis
       sets, forces, saving results, and parallel execution.
 
