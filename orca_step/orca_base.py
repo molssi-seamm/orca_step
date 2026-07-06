@@ -14,6 +14,7 @@ import importlib
 import logging
 import os
 from pathlib import Path
+import re
 import shutil
 
 import seamm
@@ -24,6 +25,41 @@ from seamm_util.printing import FormattedText as __
 logger = logging.getLogger(__name__)
 job = printing.getPrinter()
 printer = printing.getPrinter("ORCA")
+
+# Byte multipliers for parsing a memory string (SI 'GB' and binary 'GiB').
+_MEMORY_UNITS = {
+    "": 1,
+    "b": 1,
+    "k": 1000,
+    "kb": 1000,
+    "ki": 1024,
+    "kib": 1024,
+    "m": 1000**2,
+    "mb": 1000**2,
+    "mi": 1024**2,
+    "mib": 1024**2,
+    "g": 1000**3,
+    "gb": 1000**3,
+    "gi": 1024**3,
+    "gib": 1024**3,
+    "t": 1000**4,
+    "tb": 1000**4,
+    "ti": 1024**4,
+    "tib": 1024**4,
+}
+
+
+def _dehumanize_bytes(text):
+    """Parse a memory string ('3 GB', '512MB', '2Gi', or a bare number of bytes)
+    into an integer number of bytes. Raises ValueError on anything unparseable."""
+    m = re.fullmatch(r"\s*([0-9]*\.?[0-9]+)\s*([a-zA-Z]*)\s*", str(text))
+    if not m:
+        raise ValueError(f"cannot parse memory '{text}'")
+    unit = m.group(2).lower()
+    if unit not in _MEMORY_UNITS:
+        raise ValueError(f"unknown memory unit '{m.group(2)}'")
+    return int(float(m.group(1)) * _MEMORY_UNITS[unit])
+
 
 # Hartree -> the energy unit ORCA reports (E_h); kept explicit for clarity.
 
@@ -56,11 +92,23 @@ class ORCABase(seamm.Node):
         parser.add_argument(
             parser_name,
             "--ncores",
-            default="1",
+            default="available",
             help=(
-                "How many cores/processes ORCA may use (via %%pal). Default is "
-                "serial (1); parallel ORCA needs a matching OpenMPI runtime, set "
-                "via --library-path."
+                "How many cores/processes ORCA may use (via %%pal). 'available' "
+                "(the default) uses all cores the job/machine provides; give an "
+                "integer to cap it, or '1' to force serial. Parallel ORCA needs a "
+                "matching OpenMPI runtime, set via --library-path."
+            ),
+        )
+        parser.add_argument(
+            parser_name,
+            "--memory",
+            default="available",
+            help=(
+                "Memory ORCA may use per process (its %%maxcore). 'available' (the "
+                "default) scales to the memory-per-core of the machine; 'all' uses "
+                "the whole node divided among the processes; or give an explicit "
+                "amount such as '3 GB' (per process)."
             ),
         )
         parser.add_argument(
@@ -151,14 +199,45 @@ class ORCABase(seamm.Node):
         # parent (the main ORCA node), mirroring the MOPAC step.
         ce = seamm_exec.computational_environment()
         options = self.parent.options
-        n_cores = ce["NTASKS"]
-        if options.get("ncores", "available") not in ("available", "default"):
+        seamm_options = self.parent.global_options
+
+        # --- Cores/processes (ORCA %pal) ---
+        available_cores = max(1, int(ce.get("NTASKS", 1) or 1))
+        ncores_opt = str(options.get("ncores", "available")).strip().lower()
+        if ncores_opt in ("available", "default", "all", ""):
+            n_cores = available_cores
+        else:
             try:
-                n_cores = min(n_cores, int(options["ncores"]))
+                n_cores = min(available_cores, int(ncores_opt))
+            except ValueError:
+                n_cores = available_cores
+        # Respect a global cap from the SEAMM options, if one is set.
+        global_ncores = str(seamm_options.get("ncores", "available")).strip().lower()
+        if global_ncores not in ("available", "default", "all", ""):
+            try:
+                n_cores = min(n_cores, int(global_ncores))
             except ValueError:
                 pass
         n_cores = max(1, n_cores)
-        memory_mb = 2000  # %maxcore is per-process MB; conservative default
+
+        # --- Memory per process (ORCA %maxcore, in MB) ---
+        mem_per_node = int(ce.get("MEM_PER_NODE", 0) or 0)  # bytes
+        mem_per_cpu = int(ce.get("MEM_PER_CPU", 0) or 0)  # bytes
+        memory_opt = str(options.get("memory", "available")).strip().lower()
+        if memory_opt in ("available", "default", ""):
+            # ~80% of the per-core memory, leaving headroom for the OS/driver.
+            per_proc_bytes = int(0.8 * mem_per_cpu) if mem_per_cpu else 0
+        elif memory_opt == "all":
+            per_proc_bytes = int(mem_per_node / n_cores) if mem_per_node else 0
+        else:
+            try:
+                per_proc_bytes = _dehumanize_bytes(options["memory"])
+            except ValueError:
+                per_proc_bytes = 0
+        # ORCA's %maxcore is per-process MB; fall back to a conservative default
+        # if the machine's memory could not be determined.
+        memory_mb = int(per_proc_bytes / 1_000_000) if per_proc_bytes else 2000
+        memory_mb = max(256, memory_mb)
 
         lines = [f"! {keyword_line.strip()}"]
         if n_cores > 1:

@@ -44,7 +44,11 @@ class Optimization(Energy):
         use_mc = P["use model chemistry"]
         if not isinstance(use_mc, bool):
             use_mc = use_mc == "yes"
-        method = "the model chemistry" if use_mc else f"{P['method']}/{P['basis']}"
+        if use_mc:
+            method = "the model chemistry"
+        else:
+            m, basis = self._resolve_method_basis(P)
+            method = f"{m}/{basis}"
         conv = P["optimization convergence"]
         text = f"Geometry optimization with ORCA at {method} ({conv})."
         return self.header + "\n" + __(text, indent=4 * " ").__str__()

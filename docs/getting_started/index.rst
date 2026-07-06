@@ -24,8 +24,18 @@ will ensure both that it is installed and up-to-date.
 
 .. _SEAMM Installer: https://molssi-seamm.github.io/installation/index.html
 
-Replace this!
-=============
-Put an example or two here....
+A first calculation
+===================
+Add an **ORCA** step to your flowchart and open it to reveal the ORCA
+sub-flowchart, then add an **Energy** (or **Optimization**) sub-step. In that
+sub-step either leave *Use the global model chemistry* on (to take the method
+and basis from a preceding **Model Chemistry** step) or turn it off and choose
+them directly — for example set **Method** to ``DFT``, **Functional type** to
+*global hybrid*, **Functional** to ``B3LYP``, and the basis to ``def2-TZVP``.
+On the **Results** tab, tick the energy (and *gradients* if you want forces) to
+save them. Run the flowchart as usual.
+
+To run ORCA in parallel, set ``ncores`` in the ``[orca-step]`` section of
+``~/SEAMM/orca.ini`` (see the User Guide).
 
 That should be enough to get started. For more detail about the functionality in this plug-in, see the :ref:`User Guide <user-guide>`.

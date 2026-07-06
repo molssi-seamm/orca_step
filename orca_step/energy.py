@@ -64,8 +64,8 @@ class Energy(orca_step.ORCABase):
                 "preceding Model Chemistry step."
             )
         else:
-            basis = self._basis_name(P["basis"])
-            text = f"Single-point energy with ORCA at {P['method']}/{basis}."
+            method, basis = self._resolve_method_basis(P)
+            text = f"Single-point energy with ORCA at {method}/{basis}."
         return self.header + "\n" + __(text, indent=4 * " ").__str__()
 
     @staticmethod
@@ -85,7 +85,11 @@ class Energy(orca_step.ORCABase):
             use_mc = use_mc == "yes"
         if use_mc:
             return self._method_basis_from_model_chemistry(P)
-        return P["method"], self._basis_name(P["basis"])
+        method = P["method"]
+        # For DFT the '!' keyword is the chosen functional, not the word "DFT".
+        if method == "DFT":
+            method = P["functional"]
+        return method, self._basis_name(P["basis"])
 
     def _using_bse(self, P):
         """Whether the orbital basis comes from the Basis Set Exchange -- either
@@ -123,9 +127,11 @@ class Energy(orca_step.ORCABase):
         if aux and aux.lower() != "none":
             keywords.append(aux)
         # Compute the Cartesian gradient when the gradients result is requested
-        # (e.g. by a driver step such as Reaction Path or Thermochemistry).
+        # (e.g. by a driver step such as Reaction Path or Thermochemistry). Use
+        # the analytic gradient (EnGrad) when ORCA has one for this method, else
+        # fall back to the numerical gradient (NumGrad).
         if self._wants_gradients(P):
-            keywords.append("EnGrad")
+            keywords.append(self._gradient_keyword(P))
         # Retain the density so orca_2aim can write a .wfx for a following
         # Atomic Charges step.
         if P.get("save wavefunction", "no") == "yes":
@@ -140,6 +146,39 @@ class Energy(orca_step.ORCABase):
         """Whether the energy gradient was requested in the results."""
         results = P.get("results") or {}
         return "gradients" in results
+
+    def _gradient_availability(self, P):
+        """Whether ORCA has an ANALYTIC nuclear gradient for the resolved
+        method/functional ('analytic') or only a numerical one ('numeric').
+
+        For DFT this is a property of the functional (e.g. wB97M(2)/wB97X-2 are
+        non-self-consistent -> 'numeric'); for the other methods it comes from
+        metadata['methods'] (the (T) in (DLPNO-)CCSD(T) has no analytic
+        gradient). Unknown methods default to 'analytic'.
+        """
+        md = orca_step.metadata
+        if self._is_dft(P):
+            functional, _ = self._resolve_method_basis(P)
+            rec = md["functionals"].get(functional)
+            if rec is None:
+                rec = next(
+                    (
+                        r
+                        for k, r in md["functionals"].items()
+                        if k.upper() == functional.upper()
+                    ),
+                    None,
+                )
+            return (rec or {}).get("gradients", "analytic")
+        method, _ = self._resolve_method_basis(P)
+        return md["methods"].get(method, {}).get("gradients", "analytic")
+
+    def _gradient_keyword(self, P):
+        """The ORCA keyword requesting the gradient: 'EnGrad' when an analytic
+        gradient exists, otherwise 'NumGrad' (numerical, much more expensive)."""
+        if self._gradient_availability(P) == "analytic":
+            return "EnGrad"
+        return "NumGrad"
 
     def extra_input(self, P):
         """Return ``(extra_blocks, extra_files)`` for the ORCA input: the BSE
@@ -243,6 +282,19 @@ class Energy(orca_step.ORCABase):
         keyword_line = self.keyword_line(P)
         if keywords:
             keyword_line += " " + " ".join(keywords)
+
+        # Warn when we had to fall back to a numerical gradient -- it is much
+        # more costly (a displaced single point per degree of freedom).
+        if self._wants_gradients(P) and self._gradient_availability(P) == "numeric":
+            method, _ = self._resolve_method_basis(P)
+            printer.important(
+                __(
+                    f"Note: ORCA has no analytic gradient for {method}, so the "
+                    "gradient is computed numerically (NumGrad). This is much "
+                    "more expensive than an analytic gradient.",
+                    indent=self.indent + 4 * " ",
+                )
+            )
 
         extra_blocks, extra_files = self.extra_input(P)
         data = self.run_orca(
@@ -364,6 +416,12 @@ class Energy(orca_step.ORCABase):
                 return (mc.get("type", "") or "").upper() == "DFT"
             return False
         method = P["method"]
+        if method == "DFT":
+            return True
+        # Legacy flowcharts (pre-catalog) stored the functional keyword directly
+        # as the method; recognize those too.
+        if method in orca_step.metadata["functionals"]:
+            return True
         return orca_step.metadata["methods"].get(method, {}).get("type") == "DFT"
 
     def _cite_basis(self, P):

@@ -39,7 +39,39 @@ class EnergyParameters(seamm.Parameters):
             "enumeration": tuple(orca_step.metadata["methods"].keys()),
             "format_string": "",
             "description": "Method:",
-            "help_text": "The ORCA method (an ORCA '!' keyword).",
+            "help_text": (
+                "The ORCA method. For 'DFT' the exchange-correlation functional "
+                "is chosen with the two controls below; every other choice is an "
+                "ORCA '!' keyword on its own."
+            ),
+        },
+        "functional type": {
+            "default": "global hybrid",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": tuple(orca_step.metadata["functional categories"]),
+            "format_string": "",
+            "description": "Functional type:",
+            "help_text": (
+                "ORCA's classification of the density functional (local, GGA, "
+                "meta-GGA, (range-separated) hybrid, (range-separated) "
+                "double-hybrid). Picking a type filters the functional list. Only "
+                "used when the method is 'DFT'."
+            ),
+        },
+        "functional": {
+            "default": "B3LYP",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": tuple(orca_step.metadata["functionals"].keys()),
+            "format_string": "",
+            "description": "Functional:",
+            "help_text": (
+                "The exchange-correlation functional (an ORCA '!' keyword), "
+                "restricted to the chosen functional type. Only used when the "
+                "method is 'DFT'. Double-hybrid functionals need an auxiliary "
+                "'/C' basis, which 'AutoAux' provides."
+            ),
         },
         "basis": {
             "default": "def2-TZVP",
