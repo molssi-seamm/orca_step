@@ -28,11 +28,15 @@ History
       runs need ORCA's OpenMPI runtime, whose location can be given with
       library-path.
     * Bugfix: the library-path (and orca-path) settings were read under the
-      wrong key and so were ignored; they are now applied. On macOS the
-      library-path is also exported inside the run command so it survives System
-      Integrity Protection (which strips DYLD_* variables passed through the
-      shell). Without these, parallel runs on macOS could not find ORCA's
-      OpenMPI library (libmpi).
+      wrong key and so were ignored; they are now applied. The matching OpenMPI
+      'mpirun' (the sibling 'bin' of library-path) is put on PATH so ORCA
+      launches its workers with the correct OpenMPI -- a mismatched one (e.g. a
+      newer system OpenMPI) causes parallel runs to abort with a BLAS-ERROR.
+      The loader variables are also exported inside the run command so they
+      survive macOS System Integrity Protection. (On macOS ORCA does not pass
+      DYLD_* to its MPI sub-processes, so the OpenMPI libraries must additionally
+      be on the default loader path, e.g. symlinked into /usr/local/lib; see the
+      User Guide.)
     * Documentation: a full User Guide covering methods and functionals, basis
       sets, forces, saving results, and parallel execution.
 

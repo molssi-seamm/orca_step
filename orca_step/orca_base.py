@@ -275,24 +275,38 @@ class ORCABase(seamm.Node):
 
         config = self._orca_config()
 
-        # For parallel runs ORCA's MPI launcher needs the matching OpenMPI
-        # libraries on the dynamic-library path.
+        # Parallel ORCA needs a matching OpenMPI runtime. Two things must line up
+        # and they are handled differently:
         #
-        # macOS System Integrity Protection strips the dynamic-loader variables
-        # (DYLD_*) from the environment whenever a process is exec'd through a
-        # protected binary such as /bin/sh -- which is exactly how the shell
-        # command below is launched. Passing them in `env` is therefore purged
-        # before ORCA ever sees them (dyld then fails to find libmpi). Exporting
-        # them *inside* the shell line -- after /bin/sh is already running --
-        # makes the shell hand them to ORCA, an ordinary user binary that honors
-        # them. We also set `env` for Linux / non-shell paths (harmless there).
+        #   1. mpirun (PATH): ORCA launches its workers with whatever `mpirun` it
+        #      finds on PATH; it MUST be the same OpenMPI as the libraries the
+        #      workers link, or the ranks corrupt each other's data (ORCA aborts
+        #      with a "BLAS-ERROR: incompatible matrices"). We prepend the OpenMPI
+        #      bin (the sibling of the lib dir given by library-path) so a
+        #      different mpirun on PATH (e.g. a newer Homebrew OpenMPI) is not
+        #      used. PATH is an ordinary variable, so it reaches ORCA's children.
+        #
+        #   2. libmpi (dynamic-loader path): on Linux, LD_LIBRARY_PATH is honored
+        #      and inherited, so exporting it (below) is enough. On macOS, ORCA
+        #      does NOT pass DYLD_* to the MPI sub-processes it spawns (and SIP
+        #      strips DYLD_* through /bin/sh anyway), so the OpenMPI libraries
+        #      must instead be on dyld's default search path -- e.g. symlink
+        #      libmpi.*.dylib into /usr/local/lib. That is a one-time machine
+        #      setup, documented in the User Guide; nothing here can substitute
+        #      for it. We still export the loader variables for Linux.
+        #
+        # Option keys use underscores (argparse dest), even though the seamm.ini /
+        # command-line spelling is hyphenated (--library-path).
         env = {}
         lib_prefix = []
-        # Note: option keys use underscores (argparse dest), even though the
-        # seamm.ini / command-line spelling is hyphenated (--library-path).
-        for var, value in _library_path_vars(n_cores, options.get("library_path", "")):
+        library_path = options.get("library_path", "")
+        for var, value in _library_path_vars(n_cores, library_path):
             env[var] = value
             lib_prefix.append(f"export {var}={shlex.quote(value)};")
+        if n_cores > 1 and library_path:
+            bindir = Path(library_path).expanduser().parent / "bin"
+            if bindir.is_dir():
+                lib_prefix.insert(0, f"export PATH={shlex.quote(str(bindir))}:$PATH;")
 
         # ORCA must be invoked by its full path so it can find its sub-programs.
         # When a wavefunction file is wanted, chain orca_2aim (which lives next

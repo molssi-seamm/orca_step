@@ -116,10 +116,30 @@ step reads its resource settings from the ``[orca-step]`` section of
 * **memory** — the per-process memory for ORCA's ``%maxcore``. ``available``
   (the default) scales to the memory per core; ``all`` divides the whole node
   among the processes; or give an explicit amount such as ``3 GB``.
-* **library-path** — parallel ORCA needs its matching OpenMPI runtime. If it is
-  not already on the (dynamic) library path, point this at the directory holding
-  those libraries. **Without a working OpenMPI a parallel run will fail to
-  launch** — set ``ncores = 1`` if you do not have it.
+* **library-path** — the ``lib`` directory of the OpenMPI that **matches the
+  version ORCA was built against**. ORCA 6.1 requires OpenMPI 4.1.x and does
+  *not* support 5.x; mixing versions makes parallel runs abort with a
+  ``BLAS-ERROR``. A dedicated conda env is the easy way to get the right one::
+
+     conda create -n orca-mpi -c conda-forge "openmpi=4.1"
+
+  then set ``library-path`` to that env's ``lib`` directory. The step
+  automatically puts the matching ``mpirun`` (the sibling ``bin`` directory) on
+  ``PATH`` so ORCA launches its workers with the correct OpenMPI.
+
+.. note::
+
+   **macOS.** ORCA does not pass the ``DYLD_*`` loader variables to the MPI
+   processes it spawns, so ``library-path`` alone does not let the dynamic
+   loader find ``libmpi`` on a Mac. Put the OpenMPI libraries on the default
+   search path once, for example by symlinking into ``/usr/local/lib``::
+
+      ln -s /path/to/orca-mpi/lib/libmpi.40.dylib /usr/local/lib/
+
+   On Linux the exported ``LD_LIBRARY_PATH`` is inherited normally, so
+   ``library-path`` is sufficient there.
+
+If you do not have a matching OpenMPI, set ``ncores = 1`` to run serially.
 
 Indices and tables
 ==================

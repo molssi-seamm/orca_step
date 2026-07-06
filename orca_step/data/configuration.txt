@@ -13,11 +13,18 @@
 # explicit amount such as '3 GB'.
 # memory = available
 
-# Directory holding ORCA's OpenMPI libraries (e.g. libmpi.40.dylib), prepended to
-# the (DY)LD_LIBRARY_PATH for parallel runs. Use the OpenMPI version ORCA was
-# built against: ORCA 6.1 requires OpenMPI 4.1.x and does NOT support 5.x. A
-# dedicated conda env (e.g. `conda create -n orca-mpi openmpi=4.1`) is an easy
-# way to provide it; then point this at that env's lib directory.
+# Directory holding ORCA's OpenMPI libraries (the 'lib' dir of the OpenMPI that
+# ORCA was built against). Use the RIGHT version: ORCA 6.1 needs OpenMPI 4.1.x
+# and does NOT support 5.x. A dedicated conda env is an easy way to get it:
+#     conda create -n orca-mpi -c conda-forge "openmpi=4.1"
+# then set library-path to that env's lib directory. The matching 'mpirun' (its
+# sibling 'bin' dir) is automatically put on PATH so ORCA launches workers with
+# the correct OpenMPI.
+#
+# macOS note: ORCA does not pass DYLD_* to the MPI processes it spawns, so the
+# library dir alone is not enough for the dynamic loader. Symlink the OpenMPI
+# libraries onto the default search path once, e.g.:
+#     ln -s <orca-mpi lib>/libmpi.40.dylib /usr/local/lib/
 # library-path =
 
 # Maximum number of atoms for which to print detailed per-atom results.
