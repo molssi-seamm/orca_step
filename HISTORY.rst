@@ -2,6 +2,24 @@
 History
 =======
 
+2026.7.6.1 -- Bugfix: parallel execution and DFT functionals via Model Chemistry
+    * Bugfix: the library-path (and orca-path) settings were read under the
+      wrong key and so were ignored; they are now applied. The matching OpenMPI
+      'mpirun' (the sibling 'bin' of library-path) is put on PATH so ORCA
+      launches its workers with the correct OpenMPI -- a mismatched one (e.g. a
+      newer system OpenMPI) causes parallel runs to abort with a BLAS-ERROR.
+      The loader variables are also exported inside the run command so they
+      survive macOS System Integrity Protection. (On macOS ORCA does not pass
+      DYLD_* to its MPI sub-processes, so the OpenMPI libraries must additionally
+      be on the default loader path, e.g. symlinked into /usr/local/lib; see the
+      User Guide.)
+    * Bugfix: the DFT functionals are again selectable through the Model
+      Chemistry step (each functional is offered as a method); this regressed
+      when the functionals moved out of the method list. Keywords containing '/'
+      (e.g. REVDSD-PBEP86-D4/2021) appear with '_' in the model-chemistry string,
+      since '/' is reserved there, and are translated back to the real keyword
+      when the calculation runs.
+
 2026.7.6 -- All ORCA functionals, forces, database properties, and parallel execution
     * Density functional theory now offers the complete set of ORCA functionals
       (117 of them), organized by type: pick a functional type (local, GGA,

@@ -12,6 +12,32 @@ import orca_step
 _ADVERTISED_BASES = ("def2-SVP", "def2-TZVP", "def2-QZVP", "cc-pVTZ")
 
 
+def mc_method_alias(functional):
+    """A model-chemistry-safe spelling of a DFT functional keyword.
+
+    The model-chemistry grammar reserves ``/`` (it separates method from basis),
+    so functionals whose ORCA keyword contains ``/`` -- e.g.
+    ``REVDSD-PBEP86-D4/2021`` -- cannot appear literally in a model-chemistry
+    string. They are advertised with ``/`` replaced by ``_`` (no ORCA functional
+    keyword contains ``_``, so this round-trips) and translated back to the real
+    keyword when the ORCA step consumes the model chemistry (see
+    ``Energy._method_basis_from_model_chemistry``).
+    """
+    return functional.replace("/", "_")
+
+
+def mc_method_unalias(method):
+    """Inverse of :func:`mc_method_alias`: the real ORCA functional keyword for a
+    (possibly aliased) model-chemistry method, or the method unchanged if it is
+    not an aliased functional."""
+    if method in orca_step.metadata["functionals"]:
+        return method
+    candidate = method.replace("_", "/")
+    if candidate in orca_step.metadata["functionals"]:
+        return candidate
+    return method
+
+
 class ORCAStep(object):
     """Helper class for the stevedore integration of the ORCA step."""
 
@@ -39,17 +65,27 @@ class ORCAStep(object):
         options = {}
         for method, info in orca_step.metadata["methods"].items():
             mtype = info.get("type", "QC")
-            for basis in _ADVERTISED_BASES:
-                key = f"ORCA:{mtype}@{method}/{basis}"
-                options[key] = {
-                    "model_chemistry": key,
-                    "type": mtype,
-                    "method": method,
-                    "basis": basis,
-                    "description": f"{info.get('description', method)} / {basis}",
-                    "periodic": False,
-                    "mdi_capable": False,
-                }
+            # For DFT the specific functional is the "method"; advertise each
+            # one (aliasing any '/' in the keyword). Other methods are literal.
+            if method == "DFT":
+                entries = [
+                    (mc_method_alias(name), name, rec.get("note") or "DFT functional")
+                    for name, rec in orca_step.metadata["functionals"].items()
+                ]
+            else:
+                entries = [(method, method, info.get("description", method))]
+            for adv_method, real, desc in entries:
+                for basis in _ADVERTISED_BASES:
+                    key = f"ORCA:{mtype}@{adv_method}/{basis}"
+                    options[key] = {
+                        "model_chemistry": key,
+                        "type": mtype,
+                        "method": adv_method,
+                        "basis": basis,
+                        "description": f"{real} / {basis}",
+                        "periodic": False,
+                        "mdi_capable": False,
+                    }
         return options
 
     def description(self):

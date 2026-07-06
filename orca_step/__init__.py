@@ -25,6 +25,7 @@ from .optimization_step import OptimizationStep  # noqa: F401
 from .orca import ORCA  # noqa: F401
 from .tk_orca import TkORCA  # noqa: F401
 from .orca_step import ORCAStep  # noqa: F401
+from .orca_step import mc_method_alias, mc_method_unalias  # noqa: F401
 
 # Versioneer
 from ._version import get_versions

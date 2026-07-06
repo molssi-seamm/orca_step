@@ -15,6 +15,7 @@ import logging
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 
 import seamm
@@ -59,6 +60,24 @@ def _dehumanize_bytes(text):
     if unit not in _MEMORY_UNITS:
         raise ValueError(f"unknown memory unit '{m.group(2)}'")
     return int(float(m.group(1)) * _MEMORY_UNITS[unit])
+
+
+def _library_path_vars(n_cores, library_path, environ=None):
+    """The dynamic-library search variables to set for a parallel ORCA run.
+
+    Returns a list of ``(name, value)`` pairs prepending ``library_path`` to
+    ``DYLD_LIBRARY_PATH`` and ``LD_LIBRARY_PATH`` (preserving any existing
+    value). Empty for a serial run or when no path is given. ORCA's OpenMPI
+    launcher needs these to find e.g. ``libmpi.40.dylib``.
+    """
+    if n_cores <= 1 or not library_path:
+        return []
+    environ = os.environ if environ is None else environ
+    pairs = []
+    for var in ("DYLD_LIBRARY_PATH", "LD_LIBRARY_PATH"):
+        existing = environ.get(var, "")
+        pairs.append((var, library_path + (os.pathsep + existing if existing else "")))
+    return pairs
 
 
 # Hartree -> the energy unit ORCA reports (E_h); kept explicit for clarity.
@@ -256,20 +275,44 @@ class ORCABase(seamm.Node):
 
         config = self._orca_config()
 
-        # For parallel runs ORCA's MPI launcher needs the matching OpenMPI
-        # libraries on the dynamic-library path.
+        # Parallel ORCA needs a matching OpenMPI runtime. Two things must line up
+        # and they are handled differently:
+        #
+        #   1. mpirun (PATH): ORCA launches its workers with whatever `mpirun` it
+        #      finds on PATH; it MUST be the same OpenMPI as the libraries the
+        #      workers link, or the ranks corrupt each other's data (ORCA aborts
+        #      with a "BLAS-ERROR: incompatible matrices"). We prepend the OpenMPI
+        #      bin (the sibling of the lib dir given by library-path) so a
+        #      different mpirun on PATH (e.g. a newer Homebrew OpenMPI) is not
+        #      used. PATH is an ordinary variable, so it reaches ORCA's children.
+        #
+        #   2. libmpi (dynamic-loader path): on Linux, LD_LIBRARY_PATH is honored
+        #      and inherited, so exporting it (below) is enough. On macOS, ORCA
+        #      does NOT pass DYLD_* to the MPI sub-processes it spawns (and SIP
+        #      strips DYLD_* through /bin/sh anyway), so the OpenMPI libraries
+        #      must instead be on dyld's default search path -- e.g. symlink
+        #      libmpi.*.dylib into /usr/local/lib. That is a one-time machine
+        #      setup, documented in the User Guide; nothing here can substitute
+        #      for it. We still export the loader variables for Linux.
+        #
+        # Option keys use underscores (argparse dest), even though the seamm.ini /
+        # command-line spelling is hyphenated (--library-path).
         env = {}
-        library_path = options.get("library-path", "") or ""
-        if n_cores > 1 and library_path != "":
-            for var in ("DYLD_LIBRARY_PATH", "LD_LIBRARY_PATH"):
-                existing = os.environ.get(var, "")
-                env[var] = library_path + (os.pathsep + existing if existing else "")
+        lib_prefix = []
+        library_path = options.get("library_path", "")
+        for var, value in _library_path_vars(n_cores, library_path):
+            env[var] = value
+            lib_prefix.append(f"export {var}={shlex.quote(value)};")
+        if n_cores > 1 and library_path:
+            bindir = Path(library_path).expanduser().parent / "bin"
+            if bindir.is_dir():
+                lib_prefix.insert(0, f"export PATH={shlex.quote(str(bindir))}:$PATH;")
 
         # ORCA must be invoked by its full path so it can find its sub-programs.
         # When a wavefunction file is wanted, chain orca_2aim (which lives next
         # to the orca binary) in the same shell so it runs in this directory
         # right after ORCA, reading the just-written orca.gbw/orca.densities.
-        cmd = ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
+        cmd = lib_prefix + ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
         return_files = [
             "orca.out",
             "orca.err",
@@ -326,7 +369,7 @@ class ORCABase(seamm.Node):
 
         # Fall back to locating ORCA ourselves.
         options = self.parent.options
-        code = options.get("orca-path", "") or ""
+        code = options.get("orca_path", "") or ""  # dest is underscored
         if code != "":
             code = str(Path(code).expanduser() / "orca")
         else:
