@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.6.28.1 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=df480c8b"></script>
+    <script src="../../_static/documentation_options.js?v=29693f0c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.28.1" />
+  <meta name="docsearch:version" content="2026.7.6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -561,8 +561,8 @@
                 <span class="s2">&quot;preceding Model Chemistry step.&quot;</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>
-            <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Single-point energy with ORCA at </span><span class="si">{</span><span class="n">P</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Single-point energy with ORCA at </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
 
 
@@ -583,7 +583,11 @@
             <span class="n">use_mc</span> <span class="o">=</span> <span class="n">use_mc</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
         <span class="k">if</span> <span class="n">use_mc</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_basis_from_model_chemistry</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span>
+        <span class="c1"># For DFT the &#39;!&#39; keyword is the chosen functional, not the word &quot;DFT&quot;.</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;DFT&quot;</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;functional&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_using_bse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the orbital basis comes from the Basis Set Exchange -- either</span>
@@ -623,9 +627,11 @@
         <span class="k">if</span> <span class="n">aux</span> <span class="ow">and</span> <span class="n">aux</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
             <span class="n">keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aux</span><span class="p">)</span>
         <span class="c1"># Compute the Cartesian gradient when the gradients result is requested</span>
-        <span class="c1"># (e.g. by a driver step such as Reaction Path or Thermochemistry).</span>
+        <span class="c1"># (e.g. by a driver step such as Reaction Path or Thermochemistry). Use</span>
+        <span class="c1"># the analytic gradient (EnGrad) when ORCA has one for this method, else</span>
+        <span class="c1"># fall back to the numerical gradient (NumGrad).</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wants_gradients</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
-            <span class="n">keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;EnGrad&quot;</span><span class="p">)</span>
+            <span class="n">keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gradient_keyword</span><span class="p">(</span><span class="n">P</span><span class="p">))</span>
         <span class="c1"># Retain the density so orca_2aim can write a .wfx for a following</span>
         <span class="c1"># Atomic Charges step.</span>
         <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save wavefunction&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span><span class="p">:</span>
@@ -641,6 +647,39 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the energy gradient was requested in the results.&quot;&quot;&quot;</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="k">return</span> <span class="s2">&quot;gradients&quot;</span> <span class="ow">in</span> <span class="n">results</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_gradient_availability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether ORCA has an ANALYTIC nuclear gradient for the resolved</span>
+<span class="sd">        method/functional (&#39;analytic&#39;) or only a numerical one (&#39;numeric&#39;).</span>
+
+<span class="sd">        For DFT this is a property of the functional (e.g. wB97M(2)/wB97X-2 are</span>
+<span class="sd">        non-self-consistent -&gt; &#39;numeric&#39;); for the other methods it comes from</span>
+<span class="sd">        metadata[&#39;methods&#39;] (the (T) in (DLPNO-)CCSD(T) has no analytic</span>
+<span class="sd">        gradient). Unknown methods default to &#39;analytic&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dft</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+            <span class="n">functional</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+            <span class="n">rec</span> <span class="o">=</span> <span class="n">md</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">functional</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rec</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">r</span>
+                        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">md</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">functional</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+                    <span class="p">),</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">rec</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gradients&quot;</span><span class="p">,</span> <span class="s2">&quot;analytic&quot;</span><span class="p">)</span>
+        <span class="n">method</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">md</span><span class="p">[</span><span class="s2">&quot;methods&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gradients&quot;</span><span class="p">,</span> <span class="s2">&quot;analytic&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_gradient_keyword</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The ORCA keyword requesting the gradient: &#39;EnGrad&#39; when an analytic</span>
+<span class="sd">        gradient exists, otherwise &#39;NumGrad&#39; (numerical, much more expensive).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradient_availability</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;analytic&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;EnGrad&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;NumGrad&quot;</span>
 
 <div class="viewcode-block" id="Energy.extra_input">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy.Energy.extra_input">[docs]</a>
@@ -749,6 +788,19 @@
         <span class="n">keyword_line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keyword_line</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">keywords</span><span class="p">:</span>
             <span class="n">keyword_line</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">keywords</span><span class="p">)</span>
+
+        <span class="c1"># Warn when we had to fall back to a numerical gradient -- it is much</span>
+        <span class="c1"># more costly (a displaced single point per degree of freedom).</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wants_gradients</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradient_availability</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+            <span class="n">method</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span>
+                <span class="n">__</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Note: ORCA has no analytic gradient for </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">, so the &quot;</span>
+                    <span class="s2">&quot;gradient is computed numerically (NumGrad). This is much &quot;</span>
+                    <span class="s2">&quot;more expensive than an analytic gradient.&quot;</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="n">extra_blocks</span><span class="p">,</span> <span class="n">extra_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_input</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca</span><span class="p">(</span>
@@ -871,6 +923,12 @@
                 <span class="k">return</span> <span class="p">(</span><span class="n">mc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;DFT&quot;</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="n">method</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;DFT&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="c1"># Legacy flowcharts (pre-catalog) stored the functional keyword directly</span>
+        <span class="c1"># as the method; recognize those too.</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;methods&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;DFT&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_cite_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>

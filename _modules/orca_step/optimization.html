@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.optimization &#8212; SEAMM ORCA Plug-in 2026.6.28.1 documentation</title>
+    <title>orca_step.optimization &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=df480c8b"></script>
+    <script src="../../_static/documentation_options.js?v=29693f0c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.28.1" />
+  <meta name="docsearch:version" content="2026.7.6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -541,7 +541,11 @@
         <span class="n">use_mc</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">use_mc</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
             <span class="n">use_mc</span> <span class="o">=</span> <span class="n">use_mc</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
-        <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;the model chemistry&quot;</span> <span class="k">if</span> <span class="n">use_mc</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">P</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">P</span><span class="p">[</span><span class="s1">&#39;basis&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">use_mc</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;the model chemistry&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">m</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">conv</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;optimization convergence&quot;</span><span class="p">]</span>
         <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Geometry optimization with ORCA at </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">conv</span><span class="si">}</span><span class="s2">).&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>

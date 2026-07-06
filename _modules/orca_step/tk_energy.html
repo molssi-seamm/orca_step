@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.6.28.1 documentation</title>
+    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=df480c8b"></script>
+    <script src="../../_static/documentation_options.js?v=29693f0c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.28.1" />
+  <meta name="docsearch:version" content="2026.7.6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -554,12 +554,25 @@
         <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;basis sets&quot;</span><span class="p">]))</span>
         <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">elements_callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_elements</span>
 
-        <span class="c1"># React to the model-chemistry toggle.</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">,):</span>
+        <span class="c1"># React to the model-chemistry toggle and the method choice (the method</span>
+        <span class="c1"># controls whether the DFT functional pulldowns are shown).</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">,</span> <span class="s2">&quot;method&quot;</span><span class="p">):</span>
             <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
             <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;&lt;ComboboxSelected&gt;&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">)</span>
             <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Return&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">)</span>
             <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;FocusOut&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">)</span>
+
+        <span class="c1"># Changing the functional type re-filters the functional list in place.</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional type&quot;</span><span class="p">]</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;&lt;ComboboxSelected&gt;&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_functionals</span><span class="p">)</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Return&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_functionals</span><span class="p">)</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;FocusOut&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_functionals</span><span class="p">)</span>
+
+        <span class="c1"># Choosing the Basis Set Exchange as the source opens the periodic-table</span>
+        <span class="c1"># picker so the user can specify which BSE basis (also on the &#39;...&#39; btn).</span>
+        <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis source&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span>
+            <span class="s2">&quot;&lt;&lt;ComboboxSelected&gt;&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_basis_source</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">frame</span></div>
@@ -577,45 +590,104 @@
 <div class="viewcode-block" id="TkEnergy.reset_dialog">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.tk_energy.TkEnergy.reset_dialog">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_dialog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lay out the widgets, hiding the explicit method/basis controls when</span>
-<span class="sd">        the model chemistry is used.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lay out the widgets. Hide the explicit method/basis controls when the</span>
+<span class="sd">        model chemistry is used; for DFT, show the functional-type and functional</span>
+<span class="sd">        pulldowns indented one and two levels under Method, mirroring Gaussian.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">slave</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">grid_slaves</span><span class="p">():</span>
             <span class="n">slave</span><span class="o">.</span><span class="n">grid_forget</span><span class="p">()</span>
+        <span class="c1"># Clear any indentation left from a previous (DFT) layout.</span>
+        <span class="n">frame</span><span class="o">.</span><span class="n">columnconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">minsize</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">frame</span><span class="o">.</span><span class="n">columnconfigure</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">minsize</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="n">use_mc</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
+        <span class="n">is_dft</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">use_mc</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;DFT&quot;</span>
 
         <span class="n">row</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span><span class="p">)</span>
-        <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">widgets</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># full-width (column 0) controls</span>
+        <span class="n">type_widgets</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># indented one level (column 1): functional type</span>
+        <span class="n">func_widgets</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># indented two levels (column 2): functional</span>
 
-        <span class="n">widgets</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">]]</span>
-        <span class="c1"># Method, basis, and the basis source come from the model chemistry when</span>
-        <span class="c1"># it is used (a &#39;bse:&#39; basis there forces the Basis Set Exchange), so they</span>
-        <span class="c1"># are hidden in that mode. The auxiliary basis and the rest are ORCA run</span>
-        <span class="c1"># details that apply either way.</span>
-        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_full</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="k">nonlocal</span> <span class="n">row</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span><span class="p">)</span>
+            <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Method, basis, and basis source come from the model chemistry when it</span>
+        <span class="c1"># is used, so they are hidden in that mode. The auxiliary basis and the</span>
+        <span class="c1"># rest are ORCA run details that apply either way.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">use_mc</span><span class="p">:</span>
+            <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;method&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_dft</span><span class="p">:</span>
+                <span class="c1"># Functional type indented one level, functional two levels.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_filter_functionals</span><span class="p">()</span>
+                <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span>
+                    <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span>
+                <span class="p">)</span>
+                <span class="n">type_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional type&quot;</span><span class="p">])</span>
+                <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span><span class="p">)</span>
+                <span class="n">func_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional&quot;</span><span class="p">])</span>
+                <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis&quot;</span><span class="p">)</span>
+            <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis source&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
             <span class="s2">&quot;auxiliary basis&quot;</span><span class="p">,</span>
             <span class="s2">&quot;extra keywords&quot;</span><span class="p">,</span>
             <span class="s2">&quot;bond orders&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Hirshfeld charges&quot;</span><span class="p">,</span>
             <span class="s2">&quot;polarizability&quot;</span><span class="p">,</span>
             <span class="s2">&quot;save wavefunction&quot;</span><span class="p">,</span>
-        <span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">use_mc</span><span class="p">:</span>
-            <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="s2">&quot;basis&quot;</span><span class="p">,</span> <span class="s2">&quot;basis source&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">keys</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-            <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span><span class="p">)</span>
-            <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-            <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="n">add_full</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
-        <span class="n">sw</span><span class="o">.</span><span class="n">align_labels</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">E</span><span class="p">)</span>
+        <span class="c1"># Align the full-width labels; indent the nested widgets by the leftover</span>
+        <span class="c1"># label width plus a fixed gap, so each nested combobox sits ~30 px to the</span>
+        <span class="c1"># right of its parent&#39;s (the Gaussian idiom).</span>
+        <span class="n">width0</span> <span class="o">=</span> <span class="n">sw</span><span class="o">.</span><span class="n">align_labels</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">E</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">type_widgets</span><span class="p">:</span>
+            <span class="n">width1</span> <span class="o">=</span> <span class="n">sw</span><span class="o">.</span><span class="n">align_labels</span><span class="p">(</span><span class="n">type_widgets</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">E</span><span class="p">)</span>
+            <span class="n">width2</span> <span class="o">=</span> <span class="n">sw</span><span class="o">.</span><span class="n">align_labels</span><span class="p">(</span><span class="n">func_widgets</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">E</span><span class="p">)</span>
+            <span class="n">frame</span><span class="o">.</span><span class="n">columnconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">minsize</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width0</span> <span class="o">-</span> <span class="n">width1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">30</span><span class="p">)</span>
+            <span class="n">frame</span><span class="o">.</span><span class="n">columnconfigure</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">minsize</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width1</span> <span class="o">-</span> <span class="n">width2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">30</span><span class="p">)</span>
 
         <span class="c1"># Lay out the Results tab from the metadata (energy, gradients, charges,</span>
         <span class="c1"># ...). Without this the Results tab is created but stays empty.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setup_results</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">row</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_basis_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;When the user selects the Basis Set Exchange as the source, open the</span>
+<span class="sd">        picker so they can specify which basis (writes back as &#39;bse:NAME&#39;).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis source&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Basis Set Exchange&quot;</span><span class="p">:</span>
+            <span class="n">browse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">],</span> <span class="s2">&quot;_browse&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">browse</span><span class="p">):</span>
+                <span class="n">browse</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_functionals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restrict the functional pulldown to the functionals of the currently</span>
+<span class="sd">        selected functional type, keeping the selection valid.&quot;&quot;&quot;</span>
+        <span class="n">ftype</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="n">funcs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">name</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">rec</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">ftype</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">funcs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">funcs</span> <span class="ow">and</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">funcs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">funcs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<div class="viewcode-block" id="TkEnergy.reset_functionals">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.tk_energy.TkEnergy.reset_functionals">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_functionals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Re-filter the functional list when the functional type changes.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filter_functionals</span><span class="p">()</span></div>
 </div>
 
 </pre></div>

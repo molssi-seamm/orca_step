@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Getting Started &#8212; SEAMM ORCA Plug-in 2026.6.28.1 documentation</title>
+    <title>Getting Started &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../_static/documentation_options.js?v=df480c8b"></script>
+    <script src="../_static/documentation_options.js?v=29693f0c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Welcome to the documentation for the ORCA SEAMM plug-in" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.28.1" />
+  <meta name="docsearch:version" content="2026.7.6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -529,9 +529,18 @@ selected</cite> as appropriate.</p>
 </div>
 <p>will ensure both that it is installed and up-to-date.</p>
 </section>
-<section id="replace-this">
-<h2>Replace this!<a class="headerlink" href="#replace-this" title="Link to this heading">#</a></h2>
-<p>Put an example or two here….</p>
+<section id="a-first-calculation">
+<h2>A first calculation<a class="headerlink" href="#a-first-calculation" title="Link to this heading">#</a></h2>
+<p>Add an <strong>ORCA</strong> step to your flowchart and open it to reveal the ORCA
+sub-flowchart, then add an <strong>Energy</strong> (or <strong>Optimization</strong>) sub-step. In that
+sub-step either leave <em>Use the global model chemistry</em> on (to take the method
+and basis from a preceding <strong>Model Chemistry</strong> step) or turn it off and choose
+them directly — for example set <strong>Method</strong> to <code class="docutils literal notranslate"><span class="pre">DFT</span></code>, <strong>Functional type</strong> to
+<em>global hybrid</em>, <strong>Functional</strong> to <code class="docutils literal notranslate"><span class="pre">B3LYP</span></code>, and the basis to <code class="docutils literal notranslate"><span class="pre">def2-TZVP</span></code>.
+On the <strong>Results</strong> tab, tick the energy (and <em>gradients</em> if you want forces) to
+save them. Run the flowchart as usual.</p>
+<p>To run ORCA in parallel, set <code class="docutils literal notranslate"><span class="pre">ncores</span></code> in the <code class="docutils literal notranslate"><span class="pre">[orca-step]</span></code> section of
+<code class="docutils literal notranslate"><span class="pre">~/SEAMM/orca.ini</span></code> (see the User Guide).</p>
 <p>That should be enough to get started. For more detail about the functionality in this plug-in, see the <a class="reference internal" href="../user_guide/index.html#user-guide"><span class="std std-ref">User Guide</span></a>.</p>
 </section>
 </section>
@@ -584,7 +593,7 @@ selected</cite> as appropriate.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#replace-this">Replace this!</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-first-calculation">A first calculation</a></li>
 </ul>
   </nav></div>
 

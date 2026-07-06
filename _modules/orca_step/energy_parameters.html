@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.6.28.1 documentation</title>
+    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=df480c8b"></script>
+    <script src="../../_static/documentation_options.js?v=29693f0c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.28.1" />
+  <meta name="docsearch:version" content="2026.7.6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -534,7 +534,39 @@
             <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;methods&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
             <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Method:&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="s2">&quot;The ORCA method (an ORCA &#39;!&#39; keyword).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;The ORCA method. For &#39;DFT&#39; the exchange-correlation functional &quot;</span>
+                <span class="s2">&quot;is chosen with the two controls below; every other choice is an &quot;</span>
+                <span class="s2">&quot;ORCA &#39;!&#39; keyword on its own.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;functional type&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;global hybrid&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functional categories&quot;</span><span class="p">]),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Functional type:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;ORCA&#39;s classification of the density functional (local, GGA, &quot;</span>
+                <span class="s2">&quot;meta-GGA, (range-separated) hybrid, (range-separated) &quot;</span>
+                <span class="s2">&quot;double-hybrid). Picking a type filters the functional list. Only &quot;</span>
+                <span class="s2">&quot;used when the method is &#39;DFT&#39;.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;functional&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;B3LYP&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Functional:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;The exchange-correlation functional (an ORCA &#39;!&#39; keyword), &quot;</span>
+                <span class="s2">&quot;restricted to the chosen functional type. Only used when the &quot;</span>
+                <span class="s2">&quot;method is &#39;DFT&#39;. Double-hybrid functionals need an auxiliary &quot;</span>
+                <span class="s2">&quot;&#39;/C&#39; basis, which &#39;AutoAux&#39; provides.&quot;</span>
+            <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;def2-TZVP&quot;</span><span class="p">,</span>

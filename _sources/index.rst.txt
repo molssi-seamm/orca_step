@@ -1,7 +1,11 @@
 Welcome to the documentation for the ORCA SEAMM plug-in
 =======================================================
 
-ORCA <does what? replace this text>
+This plug-in runs the `ORCA <https://www.faccts.de/orca/>`_ quantum-chemistry
+program from a SEAMM flowchart: single-point energies and geometry
+optimizations at Hartree–Fock, MP2, coupled-cluster (DLPNO-CCSD(T)), and DFT
+(the full range of ORCA functionals, including double hybrids), with energies,
+forces, and a wide set of properties.
 
 .. grid:: 1 1 2 2
 
@@ -41,7 +45,7 @@ ORCA <does what? replace this text>
    .. grid-item-card:: API Reference
       :margin: 0 3 0 0
 
-      The API for the Geometry Analysis Step
+      The API for the ORCA step
 
       .. button-link:: ./api/index.html
 	 :color: primary

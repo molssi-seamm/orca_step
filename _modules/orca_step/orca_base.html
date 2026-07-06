@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.6.28.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.7.6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=df480c8b"></script>
+    <script src="../../_static/documentation_options.js?v=29693f0c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.6.28.1" />
+  <meta name="docsearch:version" content="2026.7.6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -507,6 +507,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">seamm</span>
@@ -517,6 +518,41 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">job</span> <span class="o">=</span> <span class="n">printing</span><span class="o">.</span><span class="n">getPrinter</span><span class="p">()</span>
 <span class="n">printer</span> <span class="o">=</span> <span class="n">printing</span><span class="o">.</span><span class="n">getPrinter</span><span class="p">(</span><span class="s2">&quot;ORCA&quot;</span><span class="p">)</span>
+
+<span class="c1"># Byte multipliers for parsing a memory string (SI &#39;GB&#39; and binary &#39;GiB&#39;).</span>
+<span class="n">_MEMORY_UNITS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;k&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="s2">&quot;kb&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="s2">&quot;ki&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="s2">&quot;kib&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;mb&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;mi&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;mib&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;g&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;gb&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;gi&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;gib&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
+    <span class="s2">&quot;tb&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
+    <span class="s2">&quot;ti&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
+    <span class="s2">&quot;tib&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dehumanize_bytes</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a memory string (&#39;3 GB&#39;, &#39;512MB&#39;, &#39;2Gi&#39;, or a bare number of bytes)</span>
+<span class="sd">    into an integer number of bytes. Raises ValueError on anything unparseable.&quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s*([0-9]*\.?[0-9]+)\s*([a-zA-Z]*)\s*&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cannot parse memory &#39;</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_MEMORY_UNITS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown memory unit &#39;</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">_MEMORY_UNITS</span><span class="p">[</span><span class="n">unit</span><span class="p">])</span>
+
 
 <span class="c1"># Hartree -&gt; the energy unit ORCA reports (E_h); kept explicit for clarity.</span>
 
@@ -553,11 +589,23 @@
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="n">parser_name</span><span class="p">,</span>
             <span class="s2">&quot;--ncores&quot;</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;available&quot;</span><span class="p">,</span>
             <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">&quot;How many cores/processes ORCA may use (via </span><span class="si">%%</span><span class="s2">pal). Default is &quot;</span>
-                <span class="s2">&quot;serial (1); parallel ORCA needs a matching OpenMPI runtime, set &quot;</span>
-                <span class="s2">&quot;via --library-path.&quot;</span>
+                <span class="s2">&quot;How many cores/processes ORCA may use (via </span><span class="si">%%</span><span class="s2">pal). &#39;available&#39; &quot;</span>
+                <span class="s2">&quot;(the default) uses all cores the job/machine provides; give an &quot;</span>
+                <span class="s2">&quot;integer to cap it, or &#39;1&#39; to force serial. Parallel ORCA needs a &quot;</span>
+                <span class="s2">&quot;matching OpenMPI runtime, set via --library-path.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="n">parser_name</span><span class="p">,</span>
+            <span class="s2">&quot;--memory&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;available&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;Memory ORCA may use per process (its </span><span class="si">%%</span><span class="s2">maxcore). &#39;available&#39; (the &quot;</span>
+                <span class="s2">&quot;default) scales to the memory-per-core of the machine; &#39;all&#39; uses &quot;</span>
+                <span class="s2">&quot;the whole node divided among the processes; or give an explicit &quot;</span>
+                <span class="s2">&quot;amount such as &#39;3 GB&#39; (per process).&quot;</span>
             <span class="p">),</span>
         <span class="p">)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -654,14 +702,45 @@
         <span class="c1"># parent (the main ORCA node), mirroring the MOPAC step.</span>
         <span class="n">ce</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">computational_environment</span><span class="p">()</span>
         <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">options</span>
-        <span class="n">n_cores</span> <span class="o">=</span> <span class="n">ce</span><span class="p">[</span><span class="s2">&quot;NTASKS&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ncores&quot;</span><span class="p">,</span> <span class="s2">&quot;available&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;available&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">):</span>
+        <span class="n">seamm_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">global_options</span>
+
+        <span class="c1"># --- Cores/processes (ORCA %pal) ---</span>
+        <span class="n">available_cores</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">ce</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NTASKS&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">ncores_opt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ncores&quot;</span><span class="p">,</span> <span class="s2">&quot;available&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ncores_opt</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;available&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <span class="n">n_cores</span> <span class="o">=</span> <span class="n">available_cores</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">n_cores</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;ncores&quot;</span><span class="p">]))</span>
+                <span class="n">n_cores</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">available_cores</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">ncores_opt</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">n_cores</span> <span class="o">=</span> <span class="n">available_cores</span>
+        <span class="c1"># Respect a global cap from the SEAMM options, if one is set.</span>
+        <span class="n">global_ncores</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">seamm_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ncores&quot;</span><span class="p">,</span> <span class="s2">&quot;available&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">global_ncores</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;available&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">n_cores</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">global_ncores</span><span class="p">))</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="k">pass</span>
         <span class="n">n_cores</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_cores</span><span class="p">)</span>
-        <span class="n">memory_mb</span> <span class="o">=</span> <span class="mi">2000</span>  <span class="c1"># %maxcore is per-process MB; conservative default</span>
+
+        <span class="c1"># --- Memory per process (ORCA %maxcore, in MB) ---</span>
+        <span class="n">mem_per_node</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ce</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;MEM_PER_NODE&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># bytes</span>
+        <span class="n">mem_per_cpu</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ce</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;MEM_PER_CPU&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># bytes</span>
+        <span class="n">memory_opt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;memory&quot;</span><span class="p">,</span> <span class="s2">&quot;available&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">memory_opt</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;available&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <span class="c1"># ~80% of the per-core memory, leaving headroom for the OS/driver.</span>
+            <span class="n">per_proc_bytes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span> <span class="o">*</span> <span class="n">mem_per_cpu</span><span class="p">)</span> <span class="k">if</span> <span class="n">mem_per_cpu</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">memory_opt</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+            <span class="n">per_proc_bytes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">mem_per_node</span> <span class="o">/</span> <span class="n">n_cores</span><span class="p">)</span> <span class="k">if</span> <span class="n">mem_per_node</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">per_proc_bytes</span> <span class="o">=</span> <span class="n">_dehumanize_bytes</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;memory&quot;</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">per_proc_bytes</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># ORCA&#39;s %maxcore is per-process MB; fall back to a conservative default</span>
+        <span class="c1"># if the machine&#39;s memory could not be determined.</span>
+        <span class="n">memory_mb</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">per_proc_bytes</span> <span class="o">/</span> <span class="mi">1_000_000</span><span class="p">)</span> <span class="k">if</span> <span class="n">per_proc_bytes</span> <span class="k">else</span> <span class="mi">2000</span>
+        <span class="n">memory_mb</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="n">memory_mb</span><span class="p">)</span>
 
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;! </span><span class="si">{</span><span class="n">keyword_line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
