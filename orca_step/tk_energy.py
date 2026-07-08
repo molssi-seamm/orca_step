@@ -77,6 +77,12 @@ class TkEnergy(seamm.TkNode):
             "<<ComboboxSelected>>", self._on_basis_source
         )
 
+        # Turning CBS extrapolation on/off swaps the basis controls in and out.
+        w = self["basis set extrapolation"]
+        w.combobox.bind("<<ComboboxSelected>>", self.reset_dialog)
+        w.combobox.bind("<Return>", self.reset_dialog)
+        w.combobox.bind("<FocusOut>", self.reset_dialog)
+
         self.reset_dialog()
         return frame
 
@@ -133,8 +139,14 @@ class TkEnergy(seamm.TkNode):
                 self["functional"].grid(row=row, column=2, columnspan=1, sticky=tk.EW)
                 func_widgets.append(self["functional"])
                 row += 1
-            add_full("basis")
-            add_full("basis source")
+            # CBS extrapolation replaces the fixed basis: show the family instead
+            # of the basis/basis-source controls when it is on.
+            add_full("basis set extrapolation")
+            if self["basis set extrapolation"].get() != "none":
+                add_full("extrapolation family")
+            else:
+                add_full("basis")
+                add_full("basis source")
 
         for key in (
             "auxiliary basis",

@@ -65,6 +65,8 @@ class Energy(orca_step.ORCABase):
             )
         else:
             method, basis = self._resolve_method_basis(P)
+            if self._extrapolating(P):
+                basis = self._extrapolation_keyword(P)
             text = f"Single-point energy with ORCA at {method}/{basis}."
         return self.header + "\n" + __(text, indent=4 * " ").__str__()
 
@@ -94,7 +96,11 @@ class Energy(orca_step.ORCABase):
     def _using_bse(self, P):
         """Whether the orbital basis comes from the Basis Set Exchange -- either
         the 'basis source' toggle is set to it, or the basis name uses the
-        'bse:NAME' shorthand (which forces the BSE regardless of the toggle)."""
+        'bse:NAME' shorthand (which forces the BSE regardless of the toggle).
+        Basis-set extrapolation uses a whole family, not one named basis, so it
+        is never a BSE case."""
+        if self._extrapolating(P):
+            return False
         _, basis = self._resolve_method_basis(P)
         if P.get("basis source") == "Basis Set Exchange":
             return True
@@ -118,10 +124,14 @@ class Energy(orca_step.ORCABase):
         method, basis = self._resolve_method_basis(P)
 
         keywords = [method]
-        # When the basis comes from the Basis Set Exchange (either via the
-        # 'basis source' toggle or a 'bse:NAME' basis), it is embedded as a file
-        # by extra_input, so its name is left off the '!' line.
-        if not self._using_bse(P):
+        # Basis-set extrapolation (CBS) replaces a fixed basis with ORCA's
+        # Extrapolate(...) keyword, which runs both basis sets in one job. When
+        # it is off, the basis name goes on the '!' line -- unless it comes from
+        # the Basis Set Exchange, where it is embedded as a file by extra_input
+        # and left off the line.
+        if self._extrapolating(P):
+            keywords.append(self._extrapolation_keyword(P))
+        elif not self._using_bse(P):
             keywords.append(basis)
         aux = P["auxiliary basis"]
         if aux and aux.lower() != "none":
@@ -131,6 +141,12 @@ class Energy(orca_step.ORCABase):
         # the analytic gradient (EnGrad) when ORCA has one for this method, else
         # fall back to the numerical gradient (NumGrad).
         if self._wants_gradients(P):
+            if self._extrapolating(P):
+                raise RuntimeError(
+                    "ORCA cannot compute a gradient for a basis-set-extrapolated "
+                    "(CBS) energy. Turn off 'Basis-set extrapolation' to request "
+                    "gradients (forces)."
+                )
             keywords.append(self._gradient_keyword(P))
         # Retain the density so orca_2aim can write a .wfx for a following
         # Atomic Charges step.
@@ -146,6 +162,25 @@ class Energy(orca_step.ORCABase):
         """Whether the energy gradient was requested in the results."""
         results = P.get("results") or {}
         return "gradients" in results
+
+    def _extrapolating(self, P):
+        """Whether basis-set (CBS) extrapolation is requested. Only in the
+        explicit path -- with the model chemistry the basis comes from there."""
+        use_mc = P["use model chemistry"]
+        if not isinstance(use_mc, bool):
+            use_mc = use_mc == "yes"
+        if use_mc:
+            return False
+        return P.get("basis set extrapolation", "none") not in (None, "", "none")
+
+    def _extrapolation_keyword(self, P):
+        """ORCA's ``Extrapolate(n/m,family)`` keyword for the requested CBS
+        extrapolation, or '' when none is requested."""
+        if not self._extrapolating(P):
+            return ""
+        steps = P.get("basis set extrapolation", "none")
+        family = P.get("extrapolation family", "cc") or "cc"
+        return f"Extrapolate({steps},{family})"
 
     def _gradient_availability(self, P):
         """Whether ORCA has an ANALYTIC nuclear gradient for the resolved
@@ -432,6 +467,9 @@ class Energy(orca_step.ORCABase):
         """Cite the orbital basis set's own references (always -- the basis is
         used regardless of source). The Basis Set Exchange *tool* citation is
         added only when the basis was actually fetched from the BSE."""
+        # An extrapolation spans a whole family, not one named basis -- skip.
+        if self._extrapolating(P):
+            return
         _, basis = self._resolve_method_basis(P)
         using_bse = self._using_bse(P)
         basis = self._strip_bse(basis)

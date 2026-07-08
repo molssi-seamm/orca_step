@@ -53,7 +53,22 @@ press **...** to browse the `Basis Set Exchange
 elements in your system. Selecting **Basis Set Exchange** as the *Basis set
 source* opens the same picker. A basis chosen from the Exchange is stored as
 ``bse:NAME`` and embedded in the ORCA input, so the definition is identical
-across codes.
+across codes. The list is ordered by family and, within a family, into
+valence / polarization / diffuse ladders that each rise DZ → TZ → QZ → 5Z, so a
+sensible progression is a single ladder read top to bottom.
+
+Complete-basis-set (CBS) extrapolation
+--------------------------------------
+
+Set **Basis-set extrapolation (CBS)** to ``2/3``, ``3/4``, or ``4/5`` to
+extrapolate the energy to the complete-basis-set limit from two successive
+cardinal numbers (double/triple, triple/quadruple, quadruple/quintuple), using
+the **Extrapolation family** (``cc``, ``aug-cc``, ``def2``, or ``ANO``). This
+is a *single* ORCA job (its ``Extrapolate`` keyword): ORCA runs both basis sets
+and extrapolates the SCF and correlation contributions separately. When it is
+on, the fixed basis set above is ignored. Note that an extrapolated energy has
+**no gradient** in ORCA, so extrapolation and the *gradients* result are
+mutually exclusive.
 
 Energies, gradients, and forces
 ===============================
