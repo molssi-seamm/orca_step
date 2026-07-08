@@ -108,6 +108,63 @@ def test_keyword_line_gradients():
     )
 
 
+def test_keyword_line_cbs_extrapolation():
+    """CBS extrapolation replaces the fixed basis with ORCA's Extrapolate(...)."""
+    node = orca_step.Energy()
+    line = node.keyword_line(
+        {
+            "use model chemistry": "no",
+            "method": "DLPNO-CCSD(T)",
+            "basis": "def2-TZVP",  # ignored when extrapolating
+            "basis source": "ORCA internal",
+            "auxiliary basis": "AutoAux",
+            "extra keywords": "",
+            "basis set extrapolation": "2/3",
+            "extrapolation family": "cc",
+        }
+    )
+    assert line == "DLPNO-CCSD(T) Extrapolate(2/3,cc) AutoAux"
+
+
+def test_cbs_extrapolation_blocks_gradients():
+    """Requesting gradients with CBS extrapolation is a clear error -- ORCA has
+    no gradient for an extrapolated energy."""
+    node = orca_step.Energy()
+    P = {
+        "use model chemistry": "no",
+        "method": "HF",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "extra keywords": "",
+        "basis set extrapolation": "3/4",
+        "extrapolation family": "def2",
+        "results": {"gradients": {}},
+    }
+    with pytest.raises(RuntimeError, match="extrapolat"):
+        node.keyword_line(P)
+
+
+def test_optimization_ignores_cbs():
+    """The Optimization step never extrapolates: CBS has no gradient, so even a
+    hand-set extrapolation is ignored (the control is hidden in its GUI)."""
+    node = orca_step.Optimization()
+    line = node.keyword_line(
+        {
+            "use model chemistry": "no",
+            "method": "HF",
+            "basis": "def2-SVP",
+            "basis source": "ORCA internal",
+            "auxiliary basis": "none",
+            "extra keywords": "",
+            "basis set extrapolation": "2/3",  # would extrapolate on an Energy step
+            "extrapolation family": "cc",
+        }
+    )
+    assert "Extrapolate" not in line
+    assert line == "HF def2-SVP"
+
+
 def test_keyword_line_keepdensity():
     """Requesting the wavefunction adds 'keepdensity' (orca_2aim then makes wfx)."""
     node = orca_step.Energy()

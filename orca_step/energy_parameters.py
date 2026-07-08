@@ -105,6 +105,38 @@ class EnergyParameters(seamm.Parameters):
                 "unaffected."
             ),
         },
+        "basis set extrapolation": {
+            "default": "none",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("none", "2/3", "3/4", "4/5"),
+            "format_string": "",
+            "description": "Basis-set extrapolation (CBS):",
+            "help_text": (
+                "Extrapolate the energy to the complete-basis-set limit from two "
+                "successive cardinal numbers (ORCA's Extrapolate keyword): '2/3' "
+                "uses double- and triple-zeta, '3/4' triple/quadruple, '4/5' "
+                "quadruple/quintuple. This is a single ORCA job that runs both "
+                "basis sets and extrapolates the SCF and correlation parts "
+                "separately. When on, the fixed basis set above is ignored, and "
+                "gradients are not available (ORCA has no gradient for an "
+                "extrapolated energy)."
+            ),
+        },
+        "extrapolation family": {
+            "default": "cc",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("cc", "aug-cc", "def2", "ANO"),
+            "format_string": "",
+            "description": "Extrapolation family:",
+            "help_text": (
+                "The basis-set family for the extrapolation: 'cc' (cc-pVnZ), "
+                "'aug-cc' (aug-cc-pVnZ, with diffuse functions), 'def2' (the "
+                "Karlsruhe def2 sets), or 'ANO'. Only used when basis-set "
+                "extrapolation is on."
+            ),
+        },
         "auxiliary basis": {
             "default": "AutoAux",
             "kind": "enum",

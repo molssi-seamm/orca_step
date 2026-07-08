@@ -2,6 +2,19 @@
 History
 =======
 
+2026.7.8 -- Ordered basis-set list and complete-basis-set (CBS) extrapolation
+    * The basis-set list is now ordered by family and, within a family, into
+      valence / polarization / diffuse ladders that each rise DZ -> TZ -> QZ ->
+      5Z, so a sensible progression is a single ladder read top to bottom.
+    * New complete-basis-set (CBS) extrapolation on the Energy step: set
+      'Basis-set extrapolation' to 2/3, 3/4, or 4/5 and pick a family (cc,
+      aug-cc, def2, or ANO). This is a single ORCA job (its Extrapolate keyword)
+      that runs both basis sets and extrapolates the SCF and correlation parts.
+      When it is on, the fixed basis set is ignored, and gradients are not
+      available (ORCA has no gradient for an extrapolated energy).
+    * The CBS control is hidden for the Optimization step, which needs a
+      gradient that an extrapolated energy does not provide.
+
 2026.7.6.1 -- Bugfix: parallel execution and DFT functionals via Model Chemistry
     * Bugfix: the library-path (and orca-path) settings were read under the
       wrong key and so were ignored; they are now applied. The matching OpenMPI
