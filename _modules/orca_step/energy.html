@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.6.1 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=3b31e663"></script>
+    <script src="../../_static/documentation_options.js?v=650b18d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.6.1" />
+  <meta name="docsearch:version" content="2026.7.8" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -562,6 +562,8 @@
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+                <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolation_keyword</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
             <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Single-point energy with ORCA at </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
 
@@ -592,7 +594,11 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_using_bse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the orbital basis comes from the Basis Set Exchange -- either</span>
 <span class="sd">        the &#39;basis source&#39; toggle is set to it, or the basis name uses the</span>
-<span class="sd">        &#39;bse:NAME&#39; shorthand (which forces the BSE regardless of the toggle).&quot;&quot;&quot;</span>
+<span class="sd">        &#39;bse:NAME&#39; shorthand (which forces the BSE regardless of the toggle).</span>
+<span class="sd">        Basis-set extrapolation uses a whole family, not one named basis, so it</span>
+<span class="sd">        is never a BSE case.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;basis source&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;Basis Set Exchange&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
@@ -618,10 +624,14 @@
         <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
 
         <span class="n">keywords</span> <span class="o">=</span> <span class="p">[</span><span class="n">method</span><span class="p">]</span>
-        <span class="c1"># When the basis comes from the Basis Set Exchange (either via the</span>
-        <span class="c1"># &#39;basis source&#39; toggle or a &#39;bse:NAME&#39; basis), it is embedded as a file</span>
-        <span class="c1"># by extra_input, so its name is left off the &#39;!&#39; line.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_using_bse</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+        <span class="c1"># Basis-set extrapolation (CBS) replaces a fixed basis with ORCA&#39;s</span>
+        <span class="c1"># Extrapolate(...) keyword, which runs both basis sets in one job. When</span>
+        <span class="c1"># it is off, the basis name goes on the &#39;!&#39; line -- unless it comes from</span>
+        <span class="c1"># the Basis Set Exchange, where it is embedded as a file by extra_input</span>
+        <span class="c1"># and left off the line.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+            <span class="n">keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extrapolation_keyword</span><span class="p">(</span><span class="n">P</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_using_bse</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
             <span class="n">keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
         <span class="n">aux</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;auxiliary basis&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">aux</span> <span class="ow">and</span> <span class="n">aux</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
@@ -631,6 +641,12 @@
         <span class="c1"># the analytic gradient (EnGrad) when ORCA has one for this method, else</span>
         <span class="c1"># fall back to the numerical gradient (NumGrad).</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wants_gradients</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;ORCA cannot compute a gradient for a basis-set-extrapolated &quot;</span>
+                    <span class="s2">&quot;(CBS) energy. Turn off &#39;Basis-set extrapolation&#39; to request &quot;</span>
+                    <span class="s2">&quot;gradients (forces).&quot;</span>
+                <span class="p">)</span>
             <span class="n">keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gradient_keyword</span><span class="p">(</span><span class="n">P</span><span class="p">))</span>
         <span class="c1"># Retain the density so orca_2aim can write a .wfx for a following</span>
         <span class="c1"># Atomic Charges step.</span>
@@ -647,6 +663,25 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the energy gradient was requested in the results.&quot;&quot;&quot;</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="k">return</span> <span class="s2">&quot;gradients&quot;</span> <span class="ow">in</span> <span class="n">results</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extrapolating</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether basis-set (CBS) extrapolation is requested. Only in the</span>
+<span class="sd">        explicit path -- with the model chemistry the basis comes from there.&quot;&quot;&quot;</span>
+        <span class="n">use_mc</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">use_mc</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">use_mc</span> <span class="o">=</span> <span class="n">use_mc</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
+        <span class="k">if</span> <span class="n">use_mc</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;basis set extrapolation&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extrapolation_keyword</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;ORCA&#39;s ``Extrapolate(n/m,family)`` keyword for the requested CBS</span>
+<span class="sd">        extrapolation, or &#39;&#39; when none is requested.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;basis set extrapolation&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
+        <span class="n">family</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extrapolation family&quot;</span><span class="p">,</span> <span class="s2">&quot;cc&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;cc&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Extrapolate(</span><span class="si">{</span><span class="n">steps</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">family</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_gradient_availability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether ORCA has an ANALYTIC nuclear gradient for the resolved</span>
@@ -939,6 +974,9 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Cite the orbital basis set&#39;s own references (always -- the basis is</span>
 <span class="sd">        used regardless of source). The Basis Set Exchange *tool* citation is</span>
 <span class="sd">        added only when the basis was actually fetched from the BSE.&quot;&quot;&quot;</span>
+        <span class="c1"># An extrapolation spans a whole family, not one named basis -- skip.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+            <span class="k">return</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="n">using_bse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_using_bse</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_bse</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.6.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../_static/documentation_options.js?v=3b31e663"></script>
+    <script src="../_static/documentation_options.js?v=650b18d7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.6.1" />
+  <meta name="docsearch:version" content="2026.7.8" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -553,7 +553,21 @@ press <strong>…</strong> to browse the <a class="reference external" href="htt
 elements in your system. Selecting <strong>Basis Set Exchange</strong> as the <em>Basis set
 source</em> opens the same picker. A basis chosen from the Exchange is stored as
 <code class="docutils literal notranslate"><span class="pre">bse:NAME</span></code> and embedded in the ORCA input, so the definition is identical
-across codes.</p>
+across codes. The list is ordered by family and, within a family, into
+valence / polarization / diffuse ladders that each rise DZ → TZ → QZ → 5Z, so a
+sensible progression is a single ladder read top to bottom.</p>
+</section>
+<section id="complete-basis-set-cbs-extrapolation">
+<h3>Complete-basis-set (CBS) extrapolation<a class="headerlink" href="#complete-basis-set-cbs-extrapolation" title="Link to this heading">#</a></h3>
+<p>Set <strong>Basis-set extrapolation (CBS)</strong> to <code class="docutils literal notranslate"><span class="pre">2/3</span></code>, <code class="docutils literal notranslate"><span class="pre">3/4</span></code>, or <code class="docutils literal notranslate"><span class="pre">4/5</span></code> to
+extrapolate the energy to the complete-basis-set limit from two successive
+cardinal numbers (double/triple, triple/quadruple, quadruple/quintuple), using
+the <strong>Extrapolation family</strong> (<code class="docutils literal notranslate"><span class="pre">cc</span></code>, <code class="docutils literal notranslate"><span class="pre">aug-cc</span></code>, <code class="docutils literal notranslate"><span class="pre">def2</span></code>, or <code class="docutils literal notranslate"><span class="pre">ANO</span></code>). This
+is a <em>single</em> ORCA job (its <code class="docutils literal notranslate"><span class="pre">Extrapolate</span></code> keyword): ORCA runs both basis sets
+and extrapolates the SCF and correlation contributions separately. When it is
+on, the fixed basis set above is ignored. Note that an extrapolated energy has
+<strong>no gradient</strong> in ORCA, so extrapolation and the <em>gradients</em> result are
+mutually exclusive.</p>
 </section>
 </section>
 <section id="energies-gradients-and-forces">
@@ -696,6 +710,7 @@ search path once, for example by symlinking into <code class="docutils literal n
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-the-level-of-theory">Choosing the level of theory</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">Method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basis-set">Basis set</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-basis-set-cbs-extrapolation">Complete-basis-set (CBS) extrapolation</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energies-gradients-and-forces">Energies, gradients, and forces</a></li>

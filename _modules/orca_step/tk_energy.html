@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.7.6.1 documentation</title>
+    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=3b31e663"></script>
+    <script src="../../_static/documentation_options.js?v=650b18d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.6.1" />
+  <meta name="docsearch:version" content="2026.7.8" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -574,6 +574,12 @@
             <span class="s2">&quot;&lt;&lt;ComboboxSelected&gt;&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_basis_source</span>
         <span class="p">)</span>
 
+        <span class="c1"># Turning CBS extrapolation on/off swaps the basis controls in and out.</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis set extrapolation&quot;</span><span class="p">]</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;&lt;ComboboxSelected&gt;&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">)</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Return&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">)</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;FocusOut&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">frame</span></div>
 
@@ -633,8 +639,18 @@
                 <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span><span class="p">)</span>
                 <span class="n">func_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;functional&quot;</span><span class="p">])</span>
                 <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis&quot;</span><span class="p">)</span>
-            <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis source&quot;</span><span class="p">)</span>
+            <span class="c1"># CBS extrapolation replaces the fixed basis: show the family instead</span>
+            <span class="c1"># of the basis/basis-source controls when it is on. It is hidden for</span>
+            <span class="c1"># sub-steps that need a gradient (e.g. Optimization), where an</span>
+            <span class="c1"># extrapolated energy is unusable.</span>
+            <span class="n">show_cbs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_cbs</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">show_cbs</span><span class="p">:</span>
+                <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis set extrapolation&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">show_cbs</span> <span class="ow">and</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis set extrapolation&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+                <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;extrapolation family&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis&quot;</span><span class="p">)</span>
+                <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis source&quot;</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
             <span class="s2">&quot;auxiliary basis&quot;</span><span class="p">,</span>
@@ -661,6 +677,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">setup_results</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">row</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_show_cbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether to show the CBS basis-set-extrapolation controls. Off for</span>
+<span class="sd">        sub-steps that need a gradient (Optimization overrides this): an</span>
+<span class="sd">        extrapolated energy has no gradient, so it cannot drive them.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_basis_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;When the user selects the Basis Set Exchange as the source, open the</span>

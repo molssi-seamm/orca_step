@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.7.6.1 documentation</title>
+    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=3b31e663"></script>
+    <script src="../../_static/documentation_options.js?v=650b18d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.6.1" />
+  <meta name="docsearch:version" content="2026.7.8" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -598,6 +598,38 @@
                 <span class="s2">&quot;Exchange and embeds it, for cross-code-identical definitions or &quot;</span>
                 <span class="s2">&quot;bases ORCA does not ship. The auxiliary basis (AutoAux) is &quot;</span>
                 <span class="s2">&quot;unaffected.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;basis set extrapolation&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;2/3&quot;</span><span class="p">,</span> <span class="s2">&quot;3/4&quot;</span><span class="p">,</span> <span class="s2">&quot;4/5&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Basis-set extrapolation (CBS):&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Extrapolate the energy to the complete-basis-set limit from two &quot;</span>
+                <span class="s2">&quot;successive cardinal numbers (ORCA&#39;s Extrapolate keyword): &#39;2/3&#39; &quot;</span>
+                <span class="s2">&quot;uses double- and triple-zeta, &#39;3/4&#39; triple/quadruple, &#39;4/5&#39; &quot;</span>
+                <span class="s2">&quot;quadruple/quintuple. This is a single ORCA job that runs both &quot;</span>
+                <span class="s2">&quot;basis sets and extrapolates the SCF and correlation parts &quot;</span>
+                <span class="s2">&quot;separately. When on, the fixed basis set above is ignored, and &quot;</span>
+                <span class="s2">&quot;gradients are not available (ORCA has no gradient for an &quot;</span>
+                <span class="s2">&quot;extrapolated energy).&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;extrapolation family&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;cc&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;cc&quot;</span><span class="p">,</span> <span class="s2">&quot;aug-cc&quot;</span><span class="p">,</span> <span class="s2">&quot;def2&quot;</span><span class="p">,</span> <span class="s2">&quot;ANO&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Extrapolation family:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;The basis-set family for the extrapolation: &#39;cc&#39; (cc-pVnZ), &quot;</span>
+                <span class="s2">&quot;&#39;aug-cc&#39; (aug-cc-pVnZ, with diffuse functions), &#39;def2&#39; (the &quot;</span>
+                <span class="s2">&quot;Karlsruhe def2 sets), or &#39;ANO&#39;. Only used when basis-set &quot;</span>
+                <span class="s2">&quot;extrapolation is on.&quot;</span>
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">&quot;auxiliary basis&quot;</span><span class="p">:</span> <span class="p">{</span>
