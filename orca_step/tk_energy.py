@@ -140,9 +140,13 @@ class TkEnergy(seamm.TkNode):
                 func_widgets.append(self["functional"])
                 row += 1
             # CBS extrapolation replaces the fixed basis: show the family instead
-            # of the basis/basis-source controls when it is on.
-            add_full("basis set extrapolation")
-            if self["basis set extrapolation"].get() != "none":
+            # of the basis/basis-source controls when it is on. It is hidden for
+            # sub-steps that need a gradient (e.g. Optimization), where an
+            # extrapolated energy is unusable.
+            show_cbs = self._show_cbs()
+            if show_cbs:
+                add_full("basis set extrapolation")
+            if show_cbs and self["basis set extrapolation"].get() != "none":
                 add_full("extrapolation family")
             else:
                 add_full("basis")
@@ -172,6 +176,12 @@ class TkEnergy(seamm.TkNode):
         # ...). Without this the Results tab is created but stays empty.
         self.setup_results()
         return row
+
+    def _show_cbs(self):
+        """Whether to show the CBS basis-set-extrapolation controls. Off for
+        sub-steps that need a gradient (Optimization overrides this): an
+        extrapolated energy has no gradient, so it cannot drive them."""
+        return True
 
     def _on_basis_source(self, widget=None):
         """When the user selects the Basis Set Exchange as the source, open the

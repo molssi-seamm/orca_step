@@ -145,6 +145,26 @@ def test_cbs_extrapolation_blocks_gradients():
         node.keyword_line(P)
 
 
+def test_optimization_ignores_cbs():
+    """The Optimization step never extrapolates: CBS has no gradient, so even a
+    hand-set extrapolation is ignored (the control is hidden in its GUI)."""
+    node = orca_step.Optimization()
+    line = node.keyword_line(
+        {
+            "use model chemistry": "no",
+            "method": "HF",
+            "basis": "def2-SVP",
+            "basis source": "ORCA internal",
+            "auxiliary basis": "none",
+            "extra keywords": "",
+            "basis set extrapolation": "2/3",  # would extrapolate on an Energy step
+            "extrapolation family": "cc",
+        }
+    )
+    assert "Extrapolate" not in line
+    assert line == "HF def2-SVP"
+
+
 def test_keyword_line_keepdensity():
     """Requesting the wavefunction adds 'keepdensity' (orca_2aim then makes wfx)."""
     node = orca_step.Energy()

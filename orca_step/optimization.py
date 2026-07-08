@@ -38,6 +38,12 @@ class Optimization(Energy):
         self._calculation = "optimization"
         self.parameters = orca_step.OptimizationParameters()
 
+    def _extrapolating(self, P):
+        """Never extrapolate for an optimization: an extrapolated (CBS) energy
+        has no gradient, so ORCA cannot optimize with it. The control is hidden
+        in the GUI; this also ignores it in a hand-edited flowchart."""
+        return False
+
     def description_text(self, P=None):
         if not P:
             P = self.parameters.values_to_dict()

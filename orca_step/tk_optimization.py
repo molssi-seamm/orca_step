@@ -17,6 +17,12 @@ class TkOptimization(TkEnergy):
     optimization-convergence control.
     """
 
+    def _show_cbs(self):
+        """Hide the CBS basis-set-extrapolation controls: a geometry
+        optimization needs a gradient, which an extrapolated energy does not
+        have."""
+        return False
+
     def create_dialog(self, title="ORCA Optimization"):
         frame = super().create_dialog(title=title)
         P = self.node.parameters
