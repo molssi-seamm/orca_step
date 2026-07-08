@@ -156,6 +156,33 @@ step reads its resource settings from the ``[orca-step]`` section of
 
 If you do not have a matching OpenMPI, set ``ncores = 1`` to run serially.
 
+Driving ORCA as an MDI engine
+=============================
+
+Besides running as an ordinary flowchart step, ORCA can act as a persistent
+`MDI <https://molssi-mdi.github.io/MDI_Library/>`_ engine for steps that set up a
+*model chemistry* and then evaluate it at many geometries -- for example the
+**Dimer Builder** step's energy-based contact search. You do not configure this
+in the ORCA step itself: put a **Model Chemistry** step in the flowchart, choose
+an ORCA model chemistry there (e.g. ``ORCA:DFT@B3LYP/def2-SVP``), and the driving
+step launches ORCA as the engine automatically.
+
+Because ORCA has no in-process interface, the engine runs the ``orca`` binary
+once per geometry in a persistent working directory, **reusing the previous
+geometry's orbitals** (``orca.gbw``) as the SCF guess -- the main saving for a
+series of nearby structures. Two consequences:
+
+* **Only methods with an analytic gradient are offered via MDI.** The engine
+  always computes the energy and forces together (``EnGrad``), so
+  ``DLPNO-CCSD(T)``, ``CCSD(T)`` and the non-self-consistent ``wB97M(2)`` /
+  ``wB97X-2`` are *not* MDI-capable; choosing one gives a clear error. Everything
+  else (HF, MP2, and the analytic-gradient functionals) works.
+* **ORCA is not start-up-dominated**, so the per-geometry cost is real -- the MDI
+  benefit here is orbital reuse and a uniform interface, not the large speed-up
+  that cheap engines see. Use an inexpensive functional for jobs that only need
+  the energy surface to guide them (such as contact finding); reserve expensive,
+  high-accuracy calculations for ordinary single-point steps.
+
 Indices and tables
 ==================
 
