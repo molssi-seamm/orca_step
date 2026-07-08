@@ -111,19 +111,28 @@ libraries.
 Running ORCA in parallel
 ========================
 
-By default ORCA now uses all the cores the machine or batch job provides. The
-step reads its resource settings from the ``[orca-step]`` section of
-``~/SEAMM/orca.ini`` (and from command-line options of the same name):
+By default ORCA now uses all the cores the machine or batch job provides.
+Settings come from two files with different jobs:
 
-.. code-block:: ini
+* **How to run ORCA** lives in ``~/SEAMM/orca.ini`` -- the full path to the
+  executable and the OpenMPI ``library-path`` for parallel runs:
 
-   [local]
-   code = /path/to/orca
+  .. code-block:: ini
 
-   [orca-step]
-   ncores = available        # or an integer, or 1 to force serial
-   memory = available        # or 'all', or e.g. '3 GB' (per process)
-   library-path = /path/to/orca/openmpi/lib
+     [local]
+     installation = local
+     code = /path/to/orca
+     library-path = /path/to/orca-mpi/lib
+
+* **User run options** live in the ``[orca-step]`` section of the main SEAMM
+  configuration (``~/.seamm.d/seamm.ini``), and can also be given on the command
+  line:
+
+  .. code-block:: ini
+
+     [orca-step]
+     ncores = available        # or an integer, or 1 to force serial
+     memory = available        # or 'all', or e.g. '3 GB' (per process)
 
 * **ncores** — how many processes ORCA may use (its ``%pal``). ``available``
   (the default) uses all cores the machine/job provides; give an integer to cap
@@ -131,9 +140,10 @@ step reads its resource settings from the ``[orca-step]`` section of
 * **memory** — the per-process memory for ORCA's ``%maxcore``. ``available``
   (the default) scales to the memory per core; ``all`` divides the whole node
   among the processes; or give an explicit amount such as ``3 GB``.
-* **library-path** — the ``lib`` directory of the OpenMPI that **matches the
-  version ORCA was built against**. ORCA 6.1 requires OpenMPI 4.1.x and does
-  *not* support 5.x; mixing versions makes parallel runs abort with a
+* **library-path** (in ``orca.ini``) — the ``lib`` directory of the OpenMPI that
+  **matches the version ORCA was built against**. ORCA 6.1 requires OpenMPI
+  4.1.x and does *not* support 5.x; mixing versions makes parallel runs abort
+  with a
   ``BLAS-ERROR``. A dedicated conda env is the easy way to get the right one::
 
      conda create -n orca-mpi -c conda-forge "openmpi=4.1"
