@@ -3,9 +3,29 @@
 
 """Tests for the `orca_step` package."""
 
+import importlib.resources
+import importlib.util
+import sys
+
 import pytest  # noqa: F401
 
 import orca_step
+
+
+def _load_orca_mdi():
+    """Load the standalone data/orca_mdi.py engine as a module (it is not part
+    of an importable package; `mdi` is imported lazily inside main, so importing
+    the module here does not require it)."""
+    path = importlib.resources.files("orca_step") / "data" / "orca_mdi.py"
+    spec = importlib.util.spec_from_file_location("orca_mdi", str(path))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+class _FakeExecutor:
+    def __init__(self, name):
+        self.name = name
 
 
 def test_main_factory():
@@ -224,7 +244,9 @@ def test_bse_basis_file():
 
 
 def test_get_model_chemistry_options():
-    """ORCA advertises ORCA:<type>@<method>/<basis> and nothing periodic/MDI."""
+    """ORCA advertises ORCA:<type>@<method>/<basis>; nothing for periodic. The
+    full list includes methods without an analytic gradient (e.g.
+    DLPNO-CCSD(T)); mdi_only keeps only the MDI-drivable subset."""
     opts = orca_step.ORCAStep().get_model_chemistry_options()
     key = "ORCA:QC@DLPNO-CCSD(T)/def2-TZVP"
     assert key in opts
@@ -232,7 +254,10 @@ def test_get_model_chemistry_options():
     assert opts[key]["basis"] == "def2-TZVP"
     assert opts[key]["type"] == "QC"
     assert orca_step.ORCAStep().get_model_chemistry_options(periodic_only=True) == {}
-    assert orca_step.ORCAStep().get_model_chemistry_options(mdi_only=True) == {}
+    # mdi_only now returns the analytic-gradient subset (non-empty), and it is a
+    # strict subset of the full list.
+    mdi = orca_step.ORCAStep().get_model_chemistry_options(mdi_only=True)
+    assert 0 < len(mdi) < len(opts)
 
 
 def _stub_model_chemistry(node, mc):
@@ -501,3 +526,86 @@ def test_library_path_vars():
         _library_path_vars(4, "/opt/openmpi/lib", environ={"DYLD_LIBRARY_PATH": "/x"})
     )
     assert pairs["DYLD_LIBRARY_PATH"] == "/opt/openmpi/lib:/x"
+
+
+# --- MDI engine wrapper (data/orca_mdi.py) ---------------------------------
+
+
+def test_orca_mdi_input():
+    """The engine input is a single-point EnGrad job; %pal appears only in
+    parallel; the geometry is written in Angstrom."""
+    mod = _load_orca_mdi()
+    text = mod.orca_input(
+        "B3LYP AutoAux",
+        "def2-SVP",
+        0,
+        1,
+        ["O", "H", "H"],
+        [[0.0, 0.0, 0.0], [0.0, 0.0, 0.96], [0.9, 0.0, -0.3]],
+        ncores=1,
+    )
+    assert text.startswith("! B3LYP AutoAux def2-SVP EnGrad")
+    assert "* xyz 0 1" in text and text.rstrip().endswith("*")
+    assert "%pal" not in text
+    assert "%pal nprocs 4 end" in mod.orca_input(
+        "HF", "def2-SVP", 0, 1, ["H", "H"], [[0, 0, 0], [0, 0, 0.74]], ncores=4
+    )
+
+
+def test_orca_mdi_parse_energy_and_gradient():
+    """Parse the final energy (last match) and the engrad gradient array."""
+    mod = _load_orca_mdi()
+    out = (
+        "FINAL SINGLE POINT ENERGY   -76.100000\n"
+        "...\nFINAL SINGLE POINT ENERGY   -76.400000\n"
+    )
+    assert mod.parse_energy(out) == -76.4
+    assert mod.parse_energy("nothing here") is None
+
+    engrad = (
+        "#\n# Number of atoms\n#\n 2\n"
+        "#\n# The current total energy in Eh\n#\n  -1.500000\n"
+        "#\n# The current gradient in Eh/bohr\n#\n"
+        " 0.1\n 0.2\n 0.3\n -0.1\n -0.2\n -0.3\n"
+        "#\n# coordinates in Bohr\n#\n 8 0.0 0.0 0.0\n 1 0.0 0.0 1.4\n"
+    )
+    grad = mod.parse_engrad(engrad, 2)
+    assert grad.tolist() == [[0.1, 0.2, 0.3], [-0.1, -0.2, -0.3]]
+
+
+def test_get_mdi_engine_command(tmp_path):
+    """The engine command runs orca_mdi.py with the orca binary and the
+    method/basis flags, over TCP with the driver's port."""
+    (tmp_path / "orca.ini").write_text("[local]\ncode = /opt/orca/orca\n")
+    argv = orca_step.ORCAStep.get_mdi_engine_command(
+        _FakeExecutor("local"),
+        {"root": str(tmp_path)},
+        method="B3LYP",
+        basis="def2-TZVP",
+        port=8021,
+        charge=0,
+        multiplicity=1,
+        ncores=2,
+    )
+    assert argv[0] == sys.executable
+    assert any("orca_mdi.py" in a for a in argv)
+    assert argv[argv.index("--orca") + 1] == "/opt/orca/orca"
+    assert argv[argv.index("--method") + 1] == "B3LYP"
+    assert argv[argv.index("--basis") + 1] == "def2-TZVP"
+    assert argv[argv.index("--ncores") + 1] == "2"
+    init = argv[argv.index("-mdi") + 1]
+    assert "-role ENGINE" in init and "-port 8021" in init
+
+
+def test_model_chemistry_mdi_only():
+    """mdi_only keeps analytic-gradient methods (with the real keyword) and
+    drops the ones with no analytic gradient."""
+    opts = orca_step.ORCAStep.get_model_chemistry_options(mdi_only=True)
+    assert all(o["mdi_capable"] for o in opts.values())
+    # An analytic-gradient functional is present.
+    assert any(k.startswith("ORCA:DFT@B3LYP/") for k in opts)
+    # DLPNO-CCSD(T) has no analytic gradient -> not MDI-capable.
+    assert not any("DLPNO-CCSD(T)" in k for k in opts)
+    # An aliased '/' functional carries the real keyword for the engine.
+    revs = [o for k, o in opts.items() if "REVDSD-PBEP86-D4_2021" in k]
+    assert revs and revs[0]["mdi_method_arg"] == "REVDSD-PBEP86-D4/2021"
