@@ -50,57 +50,67 @@ metadata["methods"] = {
 }
 
 # Curated basis-set families (ORCA's built-in names). Free text is also allowed
-# in the GUI; these are the guided choices.
+# in the GUI; these are the guided choices. Ordering matters: it is what the user
+# sees in the dropdown. They are grouped by family, and within a family split into
+# separate "ladders" -- valence, then polarization-augmented, then
+# diffuse-augmented -- each ordered by zeta rung (DZ -> TZ -> QZ -> 5Z), so a
+# sensible progression is a single ladder read top to bottom. Keep this order.
 metadata["basis sets"] = [
-    # Minimal / small Pople
+    # --- Minimal / small ---
     "STO-3G",
     "3-21G",
-    # Pople double-zeta
+    # --- Pople (6-31G = DZ, 6-311G = TZ) ---
+    # valence
     "6-31G",
+    "6-311G",
+    # + polarization
     "6-31G*",
     "6-31G**",
+    "6-311G*",
+    "6-311G**",
+    # + diffuse (and polarization)
     "6-31+G*",
     "6-31+G**",
     "6-31++G**",
-    # Pople triple-zeta
-    "6-311G",
-    "6-311G*",
-    "6-311G**",
     "6-311+G*",
     "6-311++G**",
     "6-311++G(2d,2p)",
     "6-311++G(3df,3pd)",
-    # Dunning correlation-consistent
+    # --- Dunning correlation-consistent ---
+    # valence
     "cc-pVDZ",
     "cc-pVTZ",
     "cc-pVQZ",
     "cc-pV5Z",
+    # + diffuse (augmented)
     "aug-cc-pVDZ",
     "aug-cc-pVTZ",
     "aug-cc-pVQZ",
     "aug-cc-pV5Z",
-    # Dunning core-valence
+    # core-valence
     "cc-pCVDZ",
     "cc-pCVTZ",
     "cc-pCVQZ",
+    # weighted core-valence
     "cc-pwCVDZ",
     "cc-pwCVTZ",
     "cc-pwCVQZ",
-    # Karlsruhe def2
+    # --- Karlsruhe def2 (SVP = DZ, TZVP = TZ, QZVP = QZ) ---
+    # valence (polarization is built in; increasing within each zeta)
     "def2-SV(P)",
     "def2-SVP",
-    "def2-TZVP",
     "def2-TZVP(-f)",
+    "def2-TZVP",
     "def2-TZVPP",
     "def2-QZVP",
     "def2-QZVPP",
-    # Karlsruhe def2 with diffuse functions (property/anion work)
+    # + diffuse (the 'D' sets; property/anion work)
     "def2-SVPD",
     "def2-TZVPD",
     "def2-TZVPPD",
     "def2-QZVPD",
     "def2-QZVPPD",
-    # Minimally augmented def2 (Truhlar)
+    # + diffuse, minimally augmented (Truhlar 'ma-')
     "ma-def2-SVP",
     "ma-def2-TZVP",
     "ma-def2-TZVPP",
