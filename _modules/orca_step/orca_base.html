@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2027.7.9 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=650b18d7"></script>
+    <script src="../../_static/documentation_options.js?v=3c03a388"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.8" />
+  <meta name="docsearch:version" content="2027.7.9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -599,12 +599,10 @@
         <span class="k">if</span> <span class="n">parser_exists</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span>
 
-        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="n">parser_name</span><span class="p">,</span>
-            <span class="s2">&quot;--orca-path&quot;</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;the path to the ORCA executable, if not on the PATH&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="c1"># User-configurable run options (the [orca-step] section of the main</span>
+        <span class="c1"># seamm.ini). How to find/launch ORCA -- its executable path and the</span>
+        <span class="c1"># OpenMPI library directory -- lives in ~/SEAMM/orca.ini instead (see</span>
+        <span class="c1"># data/orca.ini and _orca_config).</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="n">parser_name</span><span class="p">,</span>
             <span class="s2">&quot;--ncores&quot;</span><span class="p">,</span>
@@ -613,7 +611,8 @@
                 <span class="s2">&quot;How many cores/processes ORCA may use (via </span><span class="si">%%</span><span class="s2">pal). &#39;available&#39; &quot;</span>
                 <span class="s2">&quot;(the default) uses all cores the job/machine provides; give an &quot;</span>
                 <span class="s2">&quot;integer to cap it, or &#39;1&#39; to force serial. Parallel ORCA needs a &quot;</span>
-                <span class="s2">&quot;matching OpenMPI runtime, set via --library-path.&quot;</span>
+                <span class="s2">&quot;matching OpenMPI runtime, whose location is set with &quot;</span>
+                <span class="s2">&quot;&#39;library-path&#39; in orca.ini.&quot;</span>
             <span class="p">),</span>
         <span class="p">)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -625,16 +624,6 @@
                 <span class="s2">&quot;default) scales to the memory-per-core of the machine; &#39;all&#39; uses &quot;</span>
                 <span class="s2">&quot;the whole node divided among the processes; or give an explicit &quot;</span>
                 <span class="s2">&quot;amount such as &#39;3 GB&#39; (per process).&quot;</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
-        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="n">parser_name</span><span class="p">,</span>
-            <span class="s2">&quot;--library-path&quot;</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">&quot;Directory containing ORCA&#39;s required OpenMPI libraries &quot;</span>
-                <span class="s2">&quot;(e.g. libmpi.40.dylib). Prepended to the (DY)LD_LIBRARY_PATH &quot;</span>
-                <span class="s2">&quot;when running ORCA in parallel.&quot;</span>
             <span class="p">),</span>
         <span class="p">)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -798,11 +787,12 @@
         <span class="c1">#      setup, documented in the User Guide; nothing here can substitute</span>
         <span class="c1">#      for it. We still export the loader variables for Linux.</span>
         <span class="c1">#</span>
-        <span class="c1"># Option keys use underscores (argparse dest), even though the seamm.ini /</span>
-        <span class="c1"># command-line spelling is hyphenated (--library-path).</span>
+        <span class="c1"># The OpenMPI library directory is part of *how to run ORCA*, so it comes</span>
+        <span class="c1"># from the executor config (~/SEAMM/orca.ini), not the user-facing</span>
+        <span class="c1"># [orca-step] options. configparser lower-cases keys.</span>
         <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">lib_prefix</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">library_path</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;library_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">library_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;library-path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
         <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_library_path_vars</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">library_path</span><span class="p">):</span>
             <span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
             <span class="n">lib_prefix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">)</span>
@@ -852,9 +842,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_orca_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve the ORCA executable configuration.</span>
 
-<span class="sd">        Reads ``&lt;root&gt;/orca.ini`` if present (like mopac.ini); otherwise locates</span>
-<span class="sd">        ORCA on the PATH (or via --orca-path) and uses its full path, which ORCA</span>
-<span class="sd">        requires to launch its sub-programs.</span>
+<span class="sd">        Reads the executor&#39;s section of ``&lt;root&gt;/orca.ini`` (the ``code`` = full</span>
+<span class="sd">        path to ORCA, and the optional ``library-path`` for parallel runs);</span>
+<span class="sd">        falls back to locating ``orca`` on the PATH. ORCA must be invoked by its</span>
+<span class="sd">        full path so it can find its sub-programs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">executor_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">name</span>
         <span class="n">seamm_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">global_options</span>
@@ -871,17 +862,13 @@
         <span class="p">):</span>
             <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">full_config</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">executor_type</span><span class="p">))</span>
 
-        <span class="c1"># Fall back to locating ORCA ourselves.</span>
-        <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">options</span>
-        <span class="n">code</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;orca_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># dest is underscored</span>
-        <span class="k">if</span> <span class="n">code</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-            <span class="n">code</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;orca&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">code</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;orca&quot;</span><span class="p">)</span>
+        <span class="c1"># Fall back to finding ORCA on the PATH.</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;orca&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">code</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Could not find the &#39;orca&#39; executable. Put it on your PATH, set &quot;</span>
-                <span class="s2">&quot;--orca-path, or add it to orca.ini.&quot;</span>
+                <span class="s2">&quot;Could not find the &#39;orca&#39; executable. Put it on your PATH, or &quot;</span>
+                <span class="s2">&quot;set &#39;code&#39; (the full path) in the relevant section of &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ini_path</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s2">&quot;installation&quot;</span><span class="p">:</span> <span class="s2">&quot;local&quot;</span><span class="p">}</span>
 

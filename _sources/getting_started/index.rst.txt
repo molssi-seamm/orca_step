@@ -35,7 +35,9 @@ them directly — for example set **Method** to ``DFT``, **Functional type** to
 On the **Results** tab, tick the energy (and *gradients* if you want forces) to
 save them. Run the flowchart as usual.
 
-To run ORCA in parallel, set ``ncores`` in the ``[orca-step]`` section of
-``~/SEAMM/orca.ini`` (see the User Guide).
+To run ORCA in parallel, set ``ncores`` in the ``[orca-step]`` section of the
+main SEAMM configuration (``~/.seamm.d/seamm.ini``); the path to ORCA and, for
+parallel runs, the OpenMPI ``library-path`` go in ``~/SEAMM/orca.ini`` (see the
+User Guide).
 
 That should be enough to get started. For more detail about the functionality in this plug-in, see the :ref:`User Guide <user-guide>`.

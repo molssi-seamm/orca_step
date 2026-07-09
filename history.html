@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2027.7.9 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="_static/documentation_options.js?v=650b18d7"></script>
+    <script src="_static/documentation_options.js?v=3c03a388"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.8" />
+  <meta name="docsearch:version" content="2027.7.9" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,31 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.7.9 – MDI engine, integration-grid and SCF controls, and config fixes</dt><dd><ul class="simple">
+<li><p>ORCA can now be driven as a persistent MDI engine, so steps that set up a
+model chemistry and evaluate it at many geometries (for example the Dimer
+Builder’s energy-based contact search) can use ORCA – for methods with an
+analytic gradient. Set this up with a Model Chemistry step; the ORCA step
+does not need configuring for it.</p></li>
+<li><p>New <strong>Integration grid</strong> control: choose ORCA’s grid preset (DEFGRID1,
+DEFGRID2, or DEFGRID3), or leave ORCA’s default.</p></li>
+<li><p>New <strong>SCF convergence</strong> control: choose the convergence-tolerance preset
+(SLOPPYSCF … EXTREMESCF), or leave ORCA’s default. It defaults to
+TIGHTSCF for smooth energies and forces (previously this was applied via
+the extra-keywords default, which is now empty).</p></li>
+<li><p>Bugfix: a <code class="docutils literal notranslate"><span class="pre">$variable</span></code> typed into the basis-set field (e.g. to vary the
+basis in a Loop) is now expanded to its value instead of being passed to
+ORCA literally.</p></li>
+<li><p>Bugfix: the pre-run description of a step showed the basis as a raw
+dictionary; it now shows the basis name.</p></li>
+<li><p>How to find and launch ORCA – its executable path and, for parallel runs,
+the OpenMPI library directory – now lives in <code class="docutils literal notranslate"><span class="pre">~/SEAMM/orca.ini</span></code> (a
+template is created on install). The <code class="docutils literal notranslate"><span class="pre">[orca-step]</span></code> section of the main
+SEAMM configuration keeps only the user run options (ncores, memory).
+NOTE: if you previously set <code class="docutils literal notranslate"><span class="pre">library-path</span></code> (or a path) in the
+<code class="docutils literal notranslate"><span class="pre">[orca-step]</span></code> section, move it into <code class="docutils literal notranslate"><span class="pre">~/SEAMM/orca.ini</span></code>.</p></li>
+</ul>
+</dd>
 <dt>2026.7.8 – Ordered basis-set list and complete-basis-set (CBS) extrapolation</dt><dd><ul class="simple">
 <li><p>The basis-set list is now ordered by family and, within a family, into
 valence / polarization / diffuse ladders that each rise DZ -&gt; TZ -&gt; QZ -&gt;

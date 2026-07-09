@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2027.7.9 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=650b18d7"></script>
+    <script src="../../_static/documentation_options.js?v=3c03a388"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.8" />
+  <meta name="docsearch:version" content="2027.7.9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -495,6 +495,7 @@
 
 <span class="sd">&quot;&quot;&quot;An ORCA single-point energy sub-step.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -570,12 +571,43 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_basis_name</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The basis name from the &#39;basis&#39; parameter, which is a</span>
-<span class="sd">        ``{&quot;name&quot;, &quot;elements&quot;}`` dict (from the shared BasisSetField) or, for</span>
-<span class="sd">        older flowcharts, a plain string.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The basis name from the &#39;basis&#39; parameter (from the shared</span>
+<span class="sd">        BasisSetField, a ``{&quot;name&quot;, &quot;elements&quot;}`` dict).</span>
+
+<span class="sd">        Depending on the call path the value arrives either as the dict</span>
+<span class="sd">        (``current_values_to_dict``, at run time) or as its *string repr*</span>
+<span class="sd">        (``values_to_dict``, used for the pre-run description) -- parse the</span>
+<span class="sd">        latter so both give the name, not a dict dump. A plain string (older</span>
+<span class="sd">        flowcharts, or a bare name) passes through.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">SyntaxError</span><span class="p">):</span>
+                <span class="k">pass</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
         <span class="k">return</span> <span class="n">value</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_expand_variables</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate a leading ``$variable`` / ``=expression`` against the</span>
+<span class="sd">        flowchart variables, mirroring ``seamm.Parameter.get``.</span>
+
+<span class="sd">        The basis is a &#39;special&#39; (dict-valued) parameter, so SEAMM does not</span>
+<span class="sd">        expand a ``$basis`` typed into it the way it does for ordinary string</span>
+<span class="sd">        parameters -- the literal ``$basis`` would otherwise reach ORCA. Plain</span>
+<span class="sd">        names pass through unchanged; an unknown/failed expression is returned</span>
+<span class="sd">        as-is so the caller raises a clear downstream error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">text</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;$&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s2">&quot;==&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">text</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">text</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="nb">dict</span><span class="p">(</span><span class="n">seamm</span><span class="o">.</span><span class="n">flowchart_variables</span><span class="o">.</span><span class="n">_data</span><span class="p">)))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">text</span>
+        <span class="k">return</span> <span class="n">text</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_method_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve (method, basis name) from the model chemistry (if used) or the</span>
@@ -589,7 +621,8 @@
         <span class="c1"># For DFT the &#39;!&#39; keyword is the chosen functional, not the word &quot;DFT&quot;.</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;DFT&quot;</span><span class="p">:</span>
             <span class="n">method</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;functional&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>
+        <span class="c1"># Expand a $variable typed into the basis field (see _expand_variables).</span>
+        <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expand_variables</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_using_bse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the orbital basis comes from the Basis Set Exchange -- either</span>
@@ -636,6 +669,16 @@
         <span class="n">aux</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;auxiliary basis&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">aux</span> <span class="ow">and</span> <span class="n">aux</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
             <span class="n">keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aux</span><span class="p">)</span>
+        <span class="c1"># Numerical-integration grid preset (DEFGRID1/2/3); &#39;default&#39; leaves</span>
+        <span class="c1"># ORCA&#39;s own default (DEFGRID2) by emitting nothing.</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;grid&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">grid</span> <span class="ow">and</span> <span class="n">grid</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+        <span class="c1"># SCF convergence-tolerance preset (TIGHTSCF, etc.); &#39;default&#39; leaves</span>
+        <span class="c1"># ORCA&#39;s own default (NORMALSCF, or TIGHTSCF for optimizations).</span>
+        <span class="n">scf</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scf convergence&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scf</span> <span class="ow">and</span> <span class="n">scf</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scf</span><span class="p">)</span>
         <span class="c1"># Compute the Cartesian gradient when the gradients result is requested</span>
         <span class="c1"># (e.g. by a driver step such as Reaction Path or Thermochemistry). Use</span>
         <span class="c1"># the analytic gradient (EnGrad) when ORCA has one for this method, else</span>

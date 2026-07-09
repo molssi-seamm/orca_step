@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Getting Started &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
+    <title>Getting Started &#8212; SEAMM ORCA Plug-in 2027.7.9 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../_static/documentation_options.js?v=650b18d7"></script>
+    <script src="../_static/documentation_options.js?v=3c03a388"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Welcome to the documentation for the ORCA SEAMM plug-in" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.8" />
+  <meta name="docsearch:version" content="2027.7.9" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -539,8 +539,10 @@ them directly — for example set <strong>Method</strong> to <code class="docuti
 <em>global hybrid</em>, <strong>Functional</strong> to <code class="docutils literal notranslate"><span class="pre">B3LYP</span></code>, and the basis to <code class="docutils literal notranslate"><span class="pre">def2-TZVP</span></code>.
 On the <strong>Results</strong> tab, tick the energy (and <em>gradients</em> if you want forces) to
 save them. Run the flowchart as usual.</p>
-<p>To run ORCA in parallel, set <code class="docutils literal notranslate"><span class="pre">ncores</span></code> in the <code class="docutils literal notranslate"><span class="pre">[orca-step]</span></code> section of
-<code class="docutils literal notranslate"><span class="pre">~/SEAMM/orca.ini</span></code> (see the User Guide).</p>
+<p>To run ORCA in parallel, set <code class="docutils literal notranslate"><span class="pre">ncores</span></code> in the <code class="docutils literal notranslate"><span class="pre">[orca-step]</span></code> section of the
+main SEAMM configuration (<code class="docutils literal notranslate"><span class="pre">~/.seamm.d/seamm.ini</span></code>); the path to ORCA and, for
+parallel runs, the OpenMPI <code class="docutils literal notranslate"><span class="pre">library-path</span></code> go in <code class="docutils literal notranslate"><span class="pre">~/SEAMM/orca.ini</span></code> (see the
+User Guide).</p>
 <p>That should be enough to get started. For more detail about the functionality in this plug-in, see the <a class="reference internal" href="../user_guide/index.html#user-guide"><span class="std std-ref">User Guide</span></a>.</p>
 </section>
 </section>

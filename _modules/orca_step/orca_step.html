@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2027.7.9 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=650b18d7"></script>
+    <script src="../../_static/documentation_options.js?v=3c03a388"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.8" />
+  <meta name="docsearch:version" content="2027.7.9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -495,6 +495,12 @@
 
 <span class="sd">&quot;&quot;&quot;Stevedore helper for the main ORCA node.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">configparser</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.resources</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">orca_step</span>
 
 <span class="c1"># Basis sets advertised with each method to the Model Chemistry step. ORCA can</span>
@@ -557,27 +563,43 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_model_chemistry_options</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">periodic_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mdi_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the model chemistries ORCA can provide.</span>
 
-<span class="sd">        ORCA is a molecular quantum-chemistry program: not periodic and not</span>
-<span class="sd">        (currently) an MDI engine, so it returns nothing when either filter is</span>
-<span class="sd">        set. Otherwise it advertises ``ORCA:&lt;type&gt;@&lt;method&gt;/&lt;basis&gt;`` for each</span>
-<span class="sd">        method in the metadata paired with a curated set of basis sets.</span>
+<span class="sd">        Advertises ``ORCA:&lt;type&gt;@&lt;method&gt;/&lt;basis&gt;`` for each method in the</span>
+<span class="sd">        metadata paired with a curated set of basis sets. ORCA is molecular, so</span>
+<span class="sd">        ``periodic_only`` returns nothing. ``mdi_only`` keeps only the methods</span>
+<span class="sd">        drivable through the ``orca_mdi.py`` engine -- those with an analytic</span>
+<span class="sd">        gradient (the engine always requests EnGrad); each such option carries</span>
+<span class="sd">        the real ORCA keyword and basis in ``mdi_method_arg``/``mdi_basis_arg``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">periodic_only</span> <span class="ow">or</span> <span class="n">mdi_only</span><span class="p">:</span>
+        <span class="c1"># ORCA is molecular here, so nothing for a periodic-only request.</span>
+        <span class="k">if</span> <span class="n">periodic_only</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{}</span>
 
         <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;methods&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">mtype</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;QC&quot;</span><span class="p">)</span>
-            <span class="c1"># For DFT the specific functional is the &quot;method&quot;; advertise each</span>
-            <span class="c1"># one (aliasing any &#39;/&#39; in the keyword). Other methods are literal.</span>
+            <span class="c1"># For DFT the specific functional is the &quot;method&quot;; advertise each one</span>
+            <span class="c1"># (aliasing any &#39;/&#39; in the keyword) with its gradient availability.</span>
+            <span class="c1"># Other methods are literal.</span>
             <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;DFT&quot;</span><span class="p">:</span>
                 <span class="n">entries</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="p">(</span><span class="n">mc_method_alias</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">name</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;note&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;DFT functional&quot;</span><span class="p">)</span>
+                    <span class="p">(</span>
+                        <span class="n">mc_method_alias</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+                        <span class="n">name</span><span class="p">,</span>
+                        <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gradients&quot;</span><span class="p">,</span> <span class="s2">&quot;analytic&quot;</span><span class="p">),</span>
+                    <span class="p">)</span>
                     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">entries</span> <span class="o">=</span> <span class="p">[(</span><span class="n">method</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="n">method</span><span class="p">))]</span>
-            <span class="k">for</span> <span class="n">adv_method</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">desc</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+                <span class="n">entries</span> <span class="o">=</span> <span class="p">[(</span><span class="n">method</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gradients&quot;</span><span class="p">,</span> <span class="s2">&quot;analytic&quot;</span><span class="p">))]</span>
+            <span class="k">for</span> <span class="n">adv_method</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">gradients</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+                <span class="c1"># The MDI engine (orca_mdi.py) always requests EnGrad, so a</span>
+                <span class="c1"># method is MDI-capable only if ORCA has an analytic gradient for</span>
+                <span class="c1"># it -- excludes DLPNO-CCSD(T)/CCSD(T) and the non-self-consistent</span>
+                <span class="c1"># wB97M(2)/wB97X-2. (Those remain available through the ordinary</span>
+                <span class="c1"># file-based ORCA step, just not as a persistent MDI engine.)</span>
+                <span class="n">mdi_capable</span> <span class="o">=</span> <span class="n">gradients</span> <span class="o">==</span> <span class="s2">&quot;analytic&quot;</span>
+                <span class="k">if</span> <span class="n">mdi_only</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">mdi_capable</span><span class="p">:</span>
+                    <span class="k">continue</span>
                 <span class="k">for</span> <span class="n">basis</span> <span class="ow">in</span> <span class="n">_ADVERTISED_BASES</span><span class="p">:</span>
                     <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ORCA:</span><span class="si">{</span><span class="n">mtype</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">adv_method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -587,9 +609,110 @@
                         <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="n">basis</span><span class="p">,</span>
                         <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">real</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                         <span class="s2">&quot;periodic&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                        <span class="s2">&quot;mdi_capable&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="s2">&quot;mdi_capable&quot;</span><span class="p">:</span> <span class="n">mdi_capable</span><span class="p">,</span>
+                        <span class="c1"># The real (un-aliased) ORCA keyword + basis the engine</span>
+                        <span class="c1"># needs, or None when not MDI-capable.</span>
+                        <span class="s2">&quot;mdi_method_arg&quot;</span><span class="p">:</span> <span class="n">real</span> <span class="k">if</span> <span class="n">mdi_capable</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;mdi_basis_arg&quot;</span><span class="p">:</span> <span class="n">basis</span> <span class="k">if</span> <span class="n">mdi_capable</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="p">}</span>
         <span class="k">return</span> <span class="n">options</span></div>
+
+
+<div class="viewcode-block" id="ORCAStep.get_executor_config">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.ORCAStep.get_executor_config">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_executor_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">executor</span><span class="p">,</span> <span class="n">seamm_options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;How to launch ORCA (and its MDI engine) on this machine.</span>
+
+<span class="sd">        Reads ``&lt;root&gt;/orca.ini`` for the current executor to find the ``orca``</span>
+<span class="sd">        binary (falling back to the PATH), and adds ``mdi_script`` -- the</span>
+<span class="sd">        absolute path to the bundled ``data/orca_mdi.py`` engine. That script</span>
+<span class="sd">        imports only packages present in the SEAMM environment (pymdi, numpy,</span>
+<span class="sd">        seamm_util) and runs the ``orca`` binary itself, so no separate conda</span>
+<span class="sd">        environment is needed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">executor_type</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">ini_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">seamm_options</span><span class="p">[</span><span class="s2">&quot;root&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;orca.ini&quot;</span>
+        <span class="n">resources</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">&quot;orca_step&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span>
+
+        <span class="n">full_config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ini_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">full_config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">ini_path</span><span class="p">)</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">full_config</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">executor_type</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">executor_type</span> <span class="ow">in</span> <span class="n">full_config</span>
+            <span class="k">else</span> <span class="p">{}</span>
+        <span class="p">)</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;code&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">code</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;orca&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Could not find the &#39;orca&#39; executable for the MDI engine. Set &quot;</span>
+                <span class="s2">&quot;&#39;code&#39; in the relevant section of orca.ini, or put orca on the &quot;</span>
+                <span class="s2">&quot;PATH.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">code</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">__version__</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;mdi_script&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">resources</span> <span class="o">/</span> <span class="s2">&quot;orca_mdi.py&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config</span></div>
+
+
+<div class="viewcode-block" id="ORCAStep.get_mdi_engine_command">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.ORCAStep.get_mdi_engine_command">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_mdi_engine_command</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">executor</span><span class="p">,</span>
+        <span class="n">seamm_options</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-SVP&quot;</span><span class="p">,</span>
+        <span class="n">port</span><span class="p">,</span>
+        <span class="n">hostname</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+        <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">multiplicity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">n_atoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ncores</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">engine_name</span><span class="o">=</span><span class="s2">&quot;ORCA&quot;</span><span class="p">,</span>
+        <span class="n">extra_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the argv that launches the ORCA MDI *engine* over TCP.</span>
+
+<span class="sd">        The transport (TCP, ``port``, ``hostname``) is decided by the driver and</span>
+<span class="sd">        passed in; everything ORCA-specific -- the bundled ``orca_mdi.py``, the</span>
+<span class="sd">        orca binary, and the method/basis/charge/multiplicity flags -- is</span>
+<span class="sd">        supplied here so the driver hardwires no ORCA knowledge. ``method``</span>
+<span class="sd">        should be the real ORCA keyword (the ``mdi_method_arg`` from</span>
+<span class="sd">        :meth:`get_model_chemistry_options`, not an aliased functional name).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_executor_config</span><span class="p">(</span><span class="n">executor</span><span class="p">,</span> <span class="n">seamm_options</span><span class="p">)</span>
+        <span class="n">mdi_init</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;-role ENGINE -name </span><span class="si">{</span><span class="n">engine_name</span><span class="si">}</span><span class="s2"> -method TCP &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;-port </span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2"> -hostname </span><span class="si">{</span><span class="n">hostname</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;mdi_script&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;-mdi&quot;</span><span class="p">,</span>
+            <span class="n">mdi_init</span><span class="p">,</span>
+            <span class="s2">&quot;--orca&quot;</span><span class="p">,</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;--method&quot;</span><span class="p">,</span>
+            <span class="n">method</span><span class="p">,</span>
+            <span class="s2">&quot;--basis&quot;</span><span class="p">,</span>
+            <span class="n">basis</span><span class="p">,</span>
+            <span class="s2">&quot;--charge&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">charge</span><span class="p">),</span>
+            <span class="s2">&quot;--multiplicity&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">multiplicity</span><span class="p">),</span>
+            <span class="s2">&quot;--ncores&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">ncores</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">extra_args</span><span class="p">:</span>
+            <span class="n">argv</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">extra_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">argv</span></div>
 
 
 <div class="viewcode-block" id="ORCAStep.description">

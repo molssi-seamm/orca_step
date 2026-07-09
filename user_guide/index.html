@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2027.7.9 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../_static/documentation_options.js?v=650b18d7"></script>
+    <script src="../_static/documentation_options.js?v=3c03a388"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.8" />
+  <meta name="docsearch:version" content="2027.7.9" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -570,6 +570,35 @@ on, the fixed basis set above is ignored. Note that an extrapolated energy has
 mutually exclusive.</p>
 </section>
 </section>
+<section id="integration-grid">
+<h2>Integration grid<a class="headerlink" href="#integration-grid" title="Link to this heading">#</a></h2>
+<p>The <strong>Integration grid</strong> control sets ORCA’s numerical-integration grid preset
+(used for the DFT exchange-correlation integrals and the RIJCOSX/COSX grids):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> — leave ORCA’s own default (<code class="docutils literal notranslate"><span class="pre">DEFGRID2</span></code>), which is robust for most
+work;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DEFGRID1</span></code> — coarser and faster (roughly the old ORCA-4 default accuracy);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DEFGRID2</span></code> — the current default;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DEFGRID3</span></code> — finer and more conservative, for cases sensitive to the grid
+(e.g. dispersion-dominated energies, tight convergence, or numerical noise in
+forces).</p></li>
+</ul>
+<p>It only affects methods that use a grid (DFT, RIJCOSX) and is ignored otherwise.
+For a machine-learned-force-field training set, a finer grid (<code class="docutils literal notranslate"><span class="pre">DEFGRID3</span></code>) can
+be worth the cost to keep the energy/force surface smooth.</p>
+</section>
+<section id="scf-convergence">
+<h2>SCF convergence<a class="headerlink" href="#scf-convergence" title="Link to this heading">#</a></h2>
+<p>The <strong>SCF convergence</strong> control sets ORCA’s SCF convergence-tolerance preset,
+from loosest to tightest: <code class="docutils literal notranslate"><span class="pre">SLOPPYSCF</span></code> → <code class="docutils literal notranslate"><span class="pre">LOOSESCF</span></code> → <code class="docutils literal notranslate"><span class="pre">NORMALSCF</span></code> →
+<code class="docutils literal notranslate"><span class="pre">STRONGSCF</span></code> → <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code> → <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code> → <code class="docutils literal notranslate"><span class="pre">EXTREMESCF</span></code>. <code class="docutils literal notranslate"><span class="pre">default</span></code>
+leaves ORCA’s own default (<code class="docutils literal notranslate"><span class="pre">NORMALSCF</span></code> for a single point; ORCA already
+tightens it to <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code> for optimizations).</p>
+<p>The step defaults to <strong>``TIGHTSCF``</strong>, which is a good choice for smooth
+energies and forces (and matches what ORCA uses for optimizations). Loosen it
+only to save time when high precision is not needed; tighten it (<code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code>
+/ <code class="docutils literal notranslate"><span class="pre">EXTREMESCF</span></code>) for very-high-accuracy or numerically delicate work.</p>
+</section>
 <section id="energies-gradients-and-forces">
 <h2>Energies, gradients, and forces<a class="headerlink" href="#energies-gradients-and-forces" title="Link to this heading">#</a></h2>
 <p>The <strong>Results</strong> tab lists everything the step can produce. Tick a result to
@@ -606,28 +635,37 @@ libraries.</p>
 </section>
 <section id="running-orca-in-parallel">
 <h2>Running ORCA in parallel<a class="headerlink" href="#running-orca-in-parallel" title="Link to this heading">#</a></h2>
-<p>By default ORCA now uses all the cores the machine or batch job provides. The
-step reads its resource settings from the <code class="docutils literal notranslate"><span class="pre">[orca-step]</span></code> section of
-<code class="docutils literal notranslate"><span class="pre">~/SEAMM/orca.ini</span></code> (and from command-line options of the same name):</p>
+<p>By default ORCA uses all the cores the machine or batch job provides. Settings
+come from two files with different jobs:</p>
+<ul>
+<li><p><strong>How to run ORCA</strong> lives in <code class="docutils literal notranslate"><span class="pre">~/SEAMM/orca.ini</span></code> – the full path to the
+executable and the OpenMPI <code class="docutils literal notranslate"><span class="pre">library-path</span></code> for parallel runs:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[local]</span>
+<span class="na">installation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">local</span>
 <span class="na">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/orca</span>
-
-<span class="k">[orca-step]</span>
-<span class="na">ncores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">available</span><span class="w">        </span><span class="c1"># or an integer, or 1 to force serial</span>
-<span class="na">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">available</span><span class="w">        </span><span class="c1"># or &#39;all&#39;, or e.g. &#39;3 GB&#39; (per process)</span>
-<span class="na">library-path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/orca/openmpi/lib</span>
+<span class="na">library-path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/orca-mpi/lib</span>
 </pre></div>
 </div>
-<ul>
+</li>
+<li><p><strong>User run options</strong> live in the <code class="docutils literal notranslate"><span class="pre">[orca-step]</span></code> section of the main SEAMM
+configuration (<code class="docutils literal notranslate"><span class="pre">~/.seamm.d/seamm.ini</span></code>), and can also be given on the command
+line:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[orca-step]</span>
+<span class="na">ncores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">available</span><span class="w">        </span><span class="c1"># or an integer, or 1 to force serial</span>
+<span class="na">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">available</span><span class="w">        </span><span class="c1"># or &#39;all&#39;, or e.g. &#39;3 GB&#39; (per process)</span>
+</pre></div>
+</div>
+</li>
 <li><p><strong>ncores</strong> — how many processes ORCA may use (its <code class="docutils literal notranslate"><span class="pre">%pal</span></code>). <code class="docutils literal notranslate"><span class="pre">available</span></code>
 (the default) uses all cores the machine/job provides; give an integer to cap
 it, or <code class="docutils literal notranslate"><span class="pre">1</span></code> to force serial.</p></li>
 <li><p><strong>memory</strong> — the per-process memory for ORCA’s <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code>. <code class="docutils literal notranslate"><span class="pre">available</span></code>
 (the default) scales to the memory per core; <code class="docutils literal notranslate"><span class="pre">all</span></code> divides the whole node
 among the processes; or give an explicit amount such as <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">GB</span></code>.</p></li>
-<li><p><strong>library-path</strong> — the <code class="docutils literal notranslate"><span class="pre">lib</span></code> directory of the OpenMPI that <strong>matches the
-version ORCA was built against</strong>. ORCA 6.1 requires OpenMPI 4.1.x and does
-<em>not</em> support 5.x; mixing versions makes parallel runs abort with a
+<li><p><strong>library-path</strong> (in <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code>) — the <code class="docutils literal notranslate"><span class="pre">lib</span></code> directory of the OpenMPI that
+<strong>matches the version ORCA was built against</strong>. ORCA 6.1 requires OpenMPI
+4.1.x and does <em>not</em> support 5.x; mixing versions makes parallel runs abort
+with a
 <code class="docutils literal notranslate"><span class="pre">BLAS-ERROR</span></code>. A dedicated conda env is the easy way to get the right one:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">orca</span><span class="o">-</span><span class="n">mpi</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="s2">&quot;openmpi=4.1&quot;</span>
 </pre></div>
@@ -650,6 +688,32 @@ search path once, for example by symlinking into <code class="docutils literal n
 <code class="docutils literal notranslate"><span class="pre">library-path</span></code> is sufficient there.</p>
 </div>
 <p>If you do not have a matching OpenMPI, set <code class="docutils literal notranslate"><span class="pre">ncores</span> <span class="pre">=</span> <span class="pre">1</span></code> to run serially.</p>
+</section>
+<section id="driving-orca-as-an-mdi-engine">
+<h2>Driving ORCA as an MDI engine<a class="headerlink" href="#driving-orca-as-an-mdi-engine" title="Link to this heading">#</a></h2>
+<p>Besides running as an ordinary flowchart step, ORCA can act as a persistent
+<a class="reference external" href="https://molssi-mdi.github.io/MDI_Library/">MDI</a> engine for steps that set up a
+<em>model chemistry</em> and then evaluate it at many geometries – for example the
+<strong>Dimer Builder</strong> step’s energy-based contact search. You do not configure this
+in the ORCA step itself: put a <strong>Model Chemistry</strong> step in the flowchart, choose
+an ORCA model chemistry there (e.g. <code class="docutils literal notranslate"><span class="pre">ORCA:DFT&#64;B3LYP/def2-SVP</span></code>), and the driving
+step launches ORCA as the engine automatically.</p>
+<p>Because ORCA has no in-process interface, the engine runs the <code class="docutils literal notranslate"><span class="pre">orca</span></code> binary
+once per geometry in a persistent working directory, <strong>reusing the previous
+geometry’s orbitals</strong> (<code class="docutils literal notranslate"><span class="pre">orca.gbw</span></code>) as the SCF guess – the main saving for a
+series of nearby structures. Two consequences:</p>
+<ul class="simple">
+<li><p><strong>Only methods with an analytic gradient are offered via MDI.</strong> The engine
+always computes the energy and forces together (<code class="docutils literal notranslate"><span class="pre">EnGrad</span></code>), so
+<code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)</span></code>, <code class="docutils literal notranslate"><span class="pre">CCSD(T)</span></code> and the non-self-consistent <code class="docutils literal notranslate"><span class="pre">wB97M(2)</span></code> /
+<code class="docutils literal notranslate"><span class="pre">wB97X-2</span></code> are <em>not</em> MDI-capable; choosing one gives a clear error. Everything
+else (HF, MP2, and the analytic-gradient functionals) works.</p></li>
+<li><p><strong>ORCA is not start-up-dominated</strong>, so the per-geometry cost is real – the MDI
+benefit here is orbital reuse and a uniform interface, not the large speed-up
+that cheap engines see. Use an inexpensive functional for jobs that only need
+the energy surface to guide them (such as contact finding); reserve expensive,
+high-accuracy calculations for ordinary single-point steps.</p></li>
+</ul>
 </section>
 <section id="indices-and-tables">
 <h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">#</a></h2>
@@ -713,10 +777,13 @@ search path once, for example by symlinking into <code class="docutils literal n
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-basis-set-cbs-extrapolation">Complete-basis-set (CBS) extrapolation</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-grid">Integration grid</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-convergence">SCF convergence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energies-gradients-and-forces">Energies, gradients, and forces</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-results-to-the-database">Saving results to the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-properties-and-outputs">Other properties and outputs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-orca-in-parallel">Running ORCA in parallel</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#driving-orca-as-an-mdi-engine">Driving ORCA as an MDI engine</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
   </nav></div>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.7.8 documentation</title>
+    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2027.7.9 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=650b18d7"></script>
+    <script src="../../_static/documentation_options.js?v=3c03a388"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.8" />
+  <meta name="docsearch:version" content="2027.7.9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -645,16 +645,57 @@
                 <span class="s2">&quot;(DLPNO, MP2). &#39;none&#39; omits it.&quot;</span>
             <span class="p">),</span>
         <span class="p">},</span>
+        <span class="s2">&quot;grid&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFGRID1&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFGRID2&quot;</span><span class="p">,</span> <span class="s2">&quot;DEFGRID3&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Integration grid:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;ORCA&#39;s numerical integration grid preset (for the DFT &quot;</span>
+                <span class="s2">&quot;exchange-correlation and RIJCOSX/COSX grids). &#39;default&#39; leaves &quot;</span>
+                <span class="s2">&quot;ORCA&#39;s own default (DEFGRID2). DEFGRID1 is coarser/faster, &quot;</span>
+                <span class="s2">&quot;DEFGRID3 is finer/more accurate. Only affects methods that use a &quot;</span>
+                <span class="s2">&quot;grid (DFT, RIJCOSX); ignored otherwise.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;scf convergence&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;TIGHTSCF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SLOPPYSCF&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;LOOSESCF&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;NORMALSCF&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;STRONGSCF&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;TIGHTSCF&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;VERYTIGHTSCF&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;EXTREMESCF&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;SCF convergence:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;ORCA&#39;s SCF convergence-tolerance preset. &#39;default&#39; leaves ORCA&#39;s &quot;</span>
+                <span class="s2">&quot;own default (NORMALSCF for a single point; ORCA tightens it to &quot;</span>
+                <span class="s2">&quot;TIGHTSCF for optimizations). The presets run SLOPPYSCF (loosest) &quot;</span>
+                <span class="s2">&quot;-&gt; LOOSESCF -&gt; NORMALSCF -&gt; STRONGSCF -&gt; TIGHTSCF -&gt; VERYTIGHTSCF &quot;</span>
+                <span class="s2">&quot;-&gt; EXTREMESCF (tightest). TIGHTSCF (the default here) is a good &quot;</span>
+                <span class="s2">&quot;choice for smooth energies/forces.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
         <span class="s2">&quot;extra keywords&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;TightSCF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
             <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
             <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Extra keywords:&quot;</span><span class="p">,</span>
             <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
-                <span class="s2">&quot;Any additional ORCA &#39;!&#39; keywords to append, e.g. &#39;TightSCF&#39;, &quot;</span>
-                <span class="s2">&quot;&#39;RIJCOSX&#39;, &#39;Grid5&#39;.&quot;</span>
+                <span class="s2">&quot;Any additional ORCA &#39;!&#39; keywords to append, e.g. &#39;RIJCOSX&#39;, &quot;</span>
+                <span class="s2">&quot;&#39;NoFrozenCore&#39;, &#39;SlowConv&#39;. The SCF tolerance and integration &quot;</span>
+                <span class="s2">&quot;grid have their own controls above.&quot;</span>
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">&quot;bond orders&quot;</span><span class="p">:</span> <span class="p">{</span>
