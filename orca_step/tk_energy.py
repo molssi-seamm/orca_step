@@ -156,6 +156,7 @@ class TkEnergy(seamm.TkNode):
             "auxiliary basis",
             "grid",
             "scf convergence",
+            "sthresh",
             "extra keywords",
             "bond orders",
             "Hirshfeld charges",

@@ -2,6 +2,15 @@
 History
 =======
 
+2026.7.9.1 -- SCF SThresh control on the Energy step
+    * New **SCF SThresh** control: set ORCA's SCF convergence threshold (the
+      ``%scf SThresh`` value, in E_h). Leave it at ``default`` to let the SCF
+      convergence preset (or ORCA's own default) govern SThresh, or give an
+      explicit value -- e.g. ORCA's nominal ``1.0e-07`` -- to write it out and
+      override whatever the preset would otherwise set. Lower it for a tighter
+      SCF (smoother energies and forces), raise it to converge more loosely.
+      Available on the Energy and Optimization sub-steps.
+
 2026.7.9 -- MDI engine, integration-grid and SCF controls, and config fixes
     * ORCA can now be driven as a persistent MDI engine, so steps that set up a
       model chemistry and evaluate it at many geometries (for example the Dimer
