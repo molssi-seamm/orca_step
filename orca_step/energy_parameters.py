@@ -150,16 +150,57 @@ class EnergyParameters(seamm.Parameters):
                 "(DLPNO, MP2). 'none' omits it."
             ),
         },
+        "grid": {
+            "default": "default",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("default", "DEFGRID1", "DEFGRID2", "DEFGRID3"),
+            "format_string": "",
+            "description": "Integration grid:",
+            "help_text": (
+                "ORCA's numerical integration grid preset (for the DFT "
+                "exchange-correlation and RIJCOSX/COSX grids). 'default' leaves "
+                "ORCA's own default (DEFGRID2). DEFGRID1 is coarser/faster, "
+                "DEFGRID3 is finer/more accurate. Only affects methods that use a "
+                "grid (DFT, RIJCOSX); ignored otherwise."
+            ),
+        },
+        "scf convergence": {
+            "default": "TIGHTSCF",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": (
+                "default",
+                "SLOPPYSCF",
+                "LOOSESCF",
+                "NORMALSCF",
+                "STRONGSCF",
+                "TIGHTSCF",
+                "VERYTIGHTSCF",
+                "EXTREMESCF",
+            ),
+            "format_string": "",
+            "description": "SCF convergence:",
+            "help_text": (
+                "ORCA's SCF convergence-tolerance preset. 'default' leaves ORCA's "
+                "own default (NORMALSCF for a single point; ORCA tightens it to "
+                "TIGHTSCF for optimizations). The presets run SLOPPYSCF (loosest) "
+                "-> LOOSESCF -> NORMALSCF -> STRONGSCF -> TIGHTSCF -> VERYTIGHTSCF "
+                "-> EXTREMESCF (tightest). TIGHTSCF (the default here) is a good "
+                "choice for smooth energies/forces."
+            ),
+        },
         "extra keywords": {
-            "default": "TightSCF",
+            "default": "",
             "kind": "string",
             "default_units": "",
             "enumeration": tuple(),
             "format_string": "",
             "description": "Extra keywords:",
             "help_text": (
-                "Any additional ORCA '!' keywords to append, e.g. 'TightSCF', "
-                "'RIJCOSX', 'Grid5'."
+                "Any additional ORCA '!' keywords to append, e.g. 'RIJCOSX', "
+                "'NoFrozenCore', 'SlowConv'. The SCF tolerance and integration "
+                "grid have their own controls above."
             ),
         },
         "bond orders": {

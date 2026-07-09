@@ -70,6 +70,38 @@ on, the fixed basis set above is ignored. Note that an extrapolated energy has
 **no gradient** in ORCA, so extrapolation and the *gradients* result are
 mutually exclusive.
 
+Integration grid
+================
+
+The **Integration grid** control sets ORCA's numerical-integration grid preset
+(used for the DFT exchange-correlation integrals and the RIJCOSX/COSX grids):
+
+* ``default`` — leave ORCA's own default (``DEFGRID2``), which is robust for most
+  work;
+* ``DEFGRID1`` — coarser and faster (roughly the old ORCA-4 default accuracy);
+* ``DEFGRID2`` — the current default;
+* ``DEFGRID3`` — finer and more conservative, for cases sensitive to the grid
+  (e.g. dispersion-dominated energies, tight convergence, or numerical noise in
+  forces).
+
+It only affects methods that use a grid (DFT, RIJCOSX) and is ignored otherwise.
+For a machine-learned-force-field training set, a finer grid (``DEFGRID3``) can
+be worth the cost to keep the energy/force surface smooth.
+
+SCF convergence
+===============
+
+The **SCF convergence** control sets ORCA's SCF convergence-tolerance preset,
+from loosest to tightest: ``SLOPPYSCF`` → ``LOOSESCF`` → ``NORMALSCF`` →
+``STRONGSCF`` → ``TIGHTSCF`` → ``VERYTIGHTSCF`` → ``EXTREMESCF``. ``default``
+leaves ORCA's own default (``NORMALSCF`` for a single point; ORCA already
+tightens it to ``TIGHTSCF`` for optimizations).
+
+The step defaults to **``TIGHTSCF``**, which is a good choice for smooth
+energies and forces (and matches what ORCA uses for optimizations). Loosen it
+only to save time when high precision is not needed; tighten it (``VERYTIGHTSCF``
+/ ``EXTREMESCF``) for very-high-accuracy or numerically delicate work.
+
 Energies, gradients, and forces
 ===============================
 
@@ -111,19 +143,28 @@ libraries.
 Running ORCA in parallel
 ========================
 
-By default ORCA now uses all the cores the machine or batch job provides. The
-step reads its resource settings from the ``[orca-step]`` section of
-``~/SEAMM/orca.ini`` (and from command-line options of the same name):
+By default ORCA uses all the cores the machine or batch job provides. Settings
+come from two files with different jobs:
 
-.. code-block:: ini
+* **How to run ORCA** lives in ``~/SEAMM/orca.ini`` -- the full path to the
+  executable and the OpenMPI ``library-path`` for parallel runs:
 
-   [local]
-   code = /path/to/orca
+  .. code-block:: ini
 
-   [orca-step]
-   ncores = available        # or an integer, or 1 to force serial
-   memory = available        # or 'all', or e.g. '3 GB' (per process)
-   library-path = /path/to/orca/openmpi/lib
+     [local]
+     installation = local
+     code = /path/to/orca
+     library-path = /path/to/orca-mpi/lib
+
+* **User run options** live in the ``[orca-step]`` section of the main SEAMM
+  configuration (``~/.seamm.d/seamm.ini``), and can also be given on the command
+  line:
+
+  .. code-block:: ini
+
+     [orca-step]
+     ncores = available        # or an integer, or 1 to force serial
+     memory = available        # or 'all', or e.g. '3 GB' (per process)
 
 * **ncores** — how many processes ORCA may use (its ``%pal``). ``available``
   (the default) uses all cores the machine/job provides; give an integer to cap
@@ -131,9 +172,10 @@ step reads its resource settings from the ``[orca-step]`` section of
 * **memory** — the per-process memory for ORCA's ``%maxcore``. ``available``
   (the default) scales to the memory per core; ``all`` divides the whole node
   among the processes; or give an explicit amount such as ``3 GB``.
-* **library-path** — the ``lib`` directory of the OpenMPI that **matches the
-  version ORCA was built against**. ORCA 6.1 requires OpenMPI 4.1.x and does
-  *not* support 5.x; mixing versions makes parallel runs abort with a
+* **library-path** (in ``orca.ini``) — the ``lib`` directory of the OpenMPI that
+  **matches the version ORCA was built against**. ORCA 6.1 requires OpenMPI
+  4.1.x and does *not* support 5.x; mixing versions makes parallel runs abort
+  with a
   ``BLAS-ERROR``. A dedicated conda env is the easy way to get the right one::
 
      conda create -n orca-mpi -c conda-forge "openmpi=4.1"
@@ -155,6 +197,33 @@ step reads its resource settings from the ``[orca-step]`` section of
    ``library-path`` is sufficient there.
 
 If you do not have a matching OpenMPI, set ``ncores = 1`` to run serially.
+
+Driving ORCA as an MDI engine
+=============================
+
+Besides running as an ordinary flowchart step, ORCA can act as a persistent
+`MDI <https://molssi-mdi.github.io/MDI_Library/>`_ engine for steps that set up a
+*model chemistry* and then evaluate it at many geometries -- for example the
+**Dimer Builder** step's energy-based contact search. You do not configure this
+in the ORCA step itself: put a **Model Chemistry** step in the flowchart, choose
+an ORCA model chemistry there (e.g. ``ORCA:DFT@B3LYP/def2-SVP``), and the driving
+step launches ORCA as the engine automatically.
+
+Because ORCA has no in-process interface, the engine runs the ``orca`` binary
+once per geometry in a persistent working directory, **reusing the previous
+geometry's orbitals** (``orca.gbw``) as the SCF guess -- the main saving for a
+series of nearby structures. Two consequences:
+
+* **Only methods with an analytic gradient are offered via MDI.** The engine
+  always computes the energy and forces together (``EnGrad``), so
+  ``DLPNO-CCSD(T)``, ``CCSD(T)`` and the non-self-consistent ``wB97M(2)`` /
+  ``wB97X-2`` are *not* MDI-capable; choosing one gives a clear error. Everything
+  else (HF, MP2, and the analytic-gradient functionals) works.
+* **ORCA is not start-up-dominated**, so the per-geometry cost is real -- the MDI
+  benefit here is orbital reuse and a uniform interface, not the large speed-up
+  that cheap engines see. Use an inexpensive functional for jobs that only need
+  the energy surface to guide them (such as contact finding); reserve expensive,
+  high-accuracy calculations for ordinary single-point steps.
 
 Indices and tables
 ==================

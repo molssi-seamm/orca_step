@@ -102,12 +102,10 @@ class ORCABase(seamm.Node):
         if parser_exists:
             return result
 
-        parser.add_argument(
-            parser_name,
-            "--orca-path",
-            default="",
-            help="the path to the ORCA executable, if not on the PATH",
-        )
+        # User-configurable run options (the [orca-step] section of the main
+        # seamm.ini). How to find/launch ORCA -- its executable path and the
+        # OpenMPI library directory -- lives in ~/SEAMM/orca.ini instead (see
+        # data/orca.ini and _orca_config).
         parser.add_argument(
             parser_name,
             "--ncores",
@@ -116,7 +114,8 @@ class ORCABase(seamm.Node):
                 "How many cores/processes ORCA may use (via %%pal). 'available' "
                 "(the default) uses all cores the job/machine provides; give an "
                 "integer to cap it, or '1' to force serial. Parallel ORCA needs a "
-                "matching OpenMPI runtime, set via --library-path."
+                "matching OpenMPI runtime, whose location is set with "
+                "'library-path' in orca.ini."
             ),
         )
         parser.add_argument(
@@ -128,16 +127,6 @@ class ORCABase(seamm.Node):
                 "default) scales to the memory-per-core of the machine; 'all' uses "
                 "the whole node divided among the processes; or give an explicit "
                 "amount such as '3 GB' (per process)."
-            ),
-        )
-        parser.add_argument(
-            parser_name,
-            "--library-path",
-            default="",
-            help=(
-                "Directory containing ORCA's required OpenMPI libraries "
-                "(e.g. libmpi.40.dylib). Prepended to the (DY)LD_LIBRARY_PATH "
-                "when running ORCA in parallel."
             ),
         )
         parser.add_argument(
@@ -295,11 +284,12 @@ class ORCABase(seamm.Node):
         #      setup, documented in the User Guide; nothing here can substitute
         #      for it. We still export the loader variables for Linux.
         #
-        # Option keys use underscores (argparse dest), even though the seamm.ini /
-        # command-line spelling is hyphenated (--library-path).
+        # The OpenMPI library directory is part of *how to run ORCA*, so it comes
+        # from the executor config (~/SEAMM/orca.ini), not the user-facing
+        # [orca-step] options. configparser lower-cases keys.
         env = {}
         lib_prefix = []
-        library_path = options.get("library_path", "")
+        library_path = config.get("library-path", "") or ""
         for var, value in _library_path_vars(n_cores, library_path):
             env[var] = value
             lib_prefix.append(f"export {var}={shlex.quote(value)};")
@@ -348,9 +338,10 @@ class ORCABase(seamm.Node):
     def _orca_config(self):
         """Resolve the ORCA executable configuration.
 
-        Reads ``<root>/orca.ini`` if present (like mopac.ini); otherwise locates
-        ORCA on the PATH (or via --orca-path) and uses its full path, which ORCA
-        requires to launch its sub-programs.
+        Reads the executor's section of ``<root>/orca.ini`` (the ``code`` = full
+        path to ORCA, and the optional ``library-path`` for parallel runs);
+        falls back to locating ``orca`` on the PATH. ORCA must be invoked by its
+        full path so it can find its sub-programs.
         """
         executor_type = self.flowchart.executor.name
         seamm_options = self.parent.global_options
@@ -367,17 +358,13 @@ class ORCABase(seamm.Node):
         ):
             return dict(full_config.items(executor_type))
 
-        # Fall back to locating ORCA ourselves.
-        options = self.parent.options
-        code = options.get("orca_path", "") or ""  # dest is underscored
-        if code != "":
-            code = str(Path(code).expanduser() / "orca")
-        else:
-            code = shutil.which("orca")
+        # Fall back to finding ORCA on the PATH.
+        code = shutil.which("orca")
         if code is None:
             raise RuntimeError(
-                "Could not find the 'orca' executable. Put it on your PATH, set "
-                "--orca-path, or add it to orca.ini."
+                "Could not find the 'orca' executable. Put it on your PATH, or "
+                "set 'code' (the full path) in the relevant section of "
+                f"{ini_path}."
             )
         return {"code": code, "installation": "local"}
 

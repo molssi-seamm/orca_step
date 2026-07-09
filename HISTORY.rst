@@ -2,6 +2,30 @@
 History
 =======
 
+2026.7.9 -- MDI engine, integration-grid and SCF controls, and config fixes
+    * ORCA can now be driven as a persistent MDI engine, so steps that set up a
+      model chemistry and evaluate it at many geometries (for example the Dimer
+      Builder's energy-based contact search) can use ORCA -- for methods with an
+      analytic gradient. Set this up with a Model Chemistry step; the ORCA step
+      does not need configuring for it.
+    * New **Integration grid** control: choose ORCA's grid preset (DEFGRID1,
+      DEFGRID2, or DEFGRID3), or leave ORCA's default.
+    * New **SCF convergence** control: choose the convergence-tolerance preset
+      (SLOPPYSCF ... EXTREMESCF), or leave ORCA's default. It defaults to
+      TIGHTSCF for smooth energies and forces (previously this was applied via
+      the extra-keywords default, which is now empty).
+    * Bugfix: a ``$variable`` typed into the basis-set field (e.g. to vary the
+      basis in a Loop) is now expanded to its value instead of being passed to
+      ORCA literally.
+    * Bugfix: the pre-run description of a step showed the basis as a raw
+      dictionary; it now shows the basis name.
+    * How to find and launch ORCA -- its executable path and, for parallel runs,
+      the OpenMPI library directory -- now lives in ``~/SEAMM/orca.ini`` (a
+      template is created on install). The ``[orca-step]`` section of the main
+      SEAMM configuration keeps only the user run options (ncores, memory).
+      NOTE: if you previously set ``library-path`` (or a path) in the
+      ``[orca-step]`` section, move it into ``~/SEAMM/orca.ini``.
+
 2026.7.8 -- Ordered basis-set list and complete-basis-set (CBS) extrapolation
     * The basis-set list is now ordered by family and, within a family, into
       valence / polarization / diffuse ladders that each rise DZ -> TZ -> QZ ->
