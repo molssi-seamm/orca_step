@@ -273,6 +273,21 @@ class Energy(orca_step.ORCABase):
             files["basis.bas"] = self._bse_basis_file(basis, znums)
             blocks.append('%basis GTOName "basis.bas" end')
 
+        # SCF convergence threshold (ORCA's '%scf SThresh'). 'default' emits
+        # nothing, so the SCF-convergence preset on the '!' line (or ORCA's own
+        # default) governs SThresh. Any explicit value is written out and
+        # overrides whatever the preset would otherwise set.
+        sthresh = P.get("sthresh", "default")
+        if isinstance(sthresh, str):
+            sthresh = sthresh.strip()
+        if sthresh and sthresh != "default":
+            try:
+                blocks.append(f"%scf SThresh {float(sthresh):.3e} end")
+            except (TypeError, ValueError):
+                raise RuntimeError(
+                    f"ORCA SThresh must be 'default' or a number, not '{sthresh}'."
+                )
+
         if P["Hirshfeld charges"] != "no":
             blocks.append("%output Print[ P_Hirshfeld ] 1 end")
         if P["polarizability"] == "yes":

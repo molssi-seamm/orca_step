@@ -190,6 +190,23 @@ class EnergyParameters(seamm.Parameters):
                 "choice for smooth energies/forces."
             ),
         },
+        "sthresh": {
+            "default": "default",
+            "kind": "string",
+            "default_units": "",
+            "enumeration": ("default", "1.0e-07"),
+            "format_string": "",
+            "description": "SCF SThresh:",
+            "help_text": (
+                "ORCA's SCF convergence threshold ('SThresh' in the '%scf' "
+                "block), in E_h. 'default' emits nothing, so the "
+                "SCF-convergence preset above (or ORCA's own default) governs "
+                "SThresh. Any explicit value -- e.g. ORCA's nominal 1.0e-07 --"
+                " is written to '%scf SThresh', overriding whatever the preset "
+                "would otherwise set. Lower it for a tighter SCF (smoother "
+                "energies/forces), raise it to converge more loosely."
+            ),
+        },
         "extra keywords": {
             "default": "",
             "kind": "string",
