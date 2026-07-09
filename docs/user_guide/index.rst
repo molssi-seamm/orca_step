@@ -143,8 +143,8 @@ libraries.
 Running ORCA in parallel
 ========================
 
-By default ORCA now uses all the cores the machine or batch job provides.
-Settings come from two files with different jobs:
+By default ORCA uses all the cores the machine or batch job provides. Settings
+come from two files with different jobs:
 
 * **How to run ORCA** lives in ``~/SEAMM/orca.ini`` -- the full path to the
   executable and the OpenMPI ``library-path`` for parallel runs:
