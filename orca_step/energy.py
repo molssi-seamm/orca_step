@@ -174,6 +174,11 @@ class Energy(orca_step.ORCABase):
         grid = P.get("grid", "default")
         if grid and grid != "default":
             keywords.append(grid)
+        # SCF convergence-tolerance preset (TIGHTSCF, etc.); 'default' leaves
+        # ORCA's own default (NORMALSCF, or TIGHTSCF for optimizations).
+        scf = P.get("scf convergence", "default")
+        if scf and scf != "default":
+            keywords.append(scf)
         # Compute the Cartesian gradient when the gradients result is requested
         # (e.g. by a driver step such as Reaction Path or Thermochemistry). Use
         # the analytic gradient (EnGrad) when ORCA has one for this method, else

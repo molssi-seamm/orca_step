@@ -88,6 +88,20 @@ It only affects methods that use a grid (DFT, RIJCOSX) and is ignored otherwise.
 For a machine-learned-force-field training set, a finer grid (``DEFGRID3``) can
 be worth the cost to keep the energy/force surface smooth.
 
+SCF convergence
+===============
+
+The **SCF convergence** control sets ORCA's SCF convergence-tolerance preset,
+from loosest to tightest: ``SLOPPYSCF`` → ``LOOSESCF`` → ``NORMALSCF`` →
+``STRONGSCF`` → ``TIGHTSCF`` → ``VERYTIGHTSCF`` → ``EXTREMESCF``. ``default``
+leaves ORCA's own default (``NORMALSCF`` for a single point; ORCA already
+tightens it to ``TIGHTSCF`` for optimizations).
+
+The step defaults to **``TIGHTSCF``**, which is a good choice for smooth
+energies and forces (and matches what ORCA uses for optimizations). Loosen it
+only to save time when high precision is not needed; tighten it (``VERYTIGHTSCF``
+/ ``EXTREMESCF``) for very-high-accuracy or numerically delicate work.
+
 Energies, gradients, and forces
 ===============================
 

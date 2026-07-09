@@ -165,16 +165,42 @@ class EnergyParameters(seamm.Parameters):
                 "grid (DFT, RIJCOSX); ignored otherwise."
             ),
         },
+        "scf convergence": {
+            "default": "TIGHTSCF",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": (
+                "default",
+                "SLOPPYSCF",
+                "LOOSESCF",
+                "NORMALSCF",
+                "STRONGSCF",
+                "TIGHTSCF",
+                "VERYTIGHTSCF",
+                "EXTREMESCF",
+            ),
+            "format_string": "",
+            "description": "SCF convergence:",
+            "help_text": (
+                "ORCA's SCF convergence-tolerance preset. 'default' leaves ORCA's "
+                "own default (NORMALSCF for a single point; ORCA tightens it to "
+                "TIGHTSCF for optimizations). The presets run SLOPPYSCF (loosest) "
+                "-> LOOSESCF -> NORMALSCF -> STRONGSCF -> TIGHTSCF -> VERYTIGHTSCF "
+                "-> EXTREMESCF (tightest). TIGHTSCF (the default here) is a good "
+                "choice for smooth energies/forces."
+            ),
+        },
         "extra keywords": {
-            "default": "TightSCF",
+            "default": "",
             "kind": "string",
             "default_units": "",
             "enumeration": tuple(),
             "format_string": "",
             "description": "Extra keywords:",
             "help_text": (
-                "Any additional ORCA '!' keywords to append, e.g. 'TightSCF', "
-                "'RIJCOSX', 'NoFrozenCore'."
+                "Any additional ORCA '!' keywords to append, e.g. 'RIJCOSX', "
+                "'NoFrozenCore', 'SlowConv'. The SCF tolerance and integration "
+                "grid have their own controls above."
             ),
         },
         "bond orders": {

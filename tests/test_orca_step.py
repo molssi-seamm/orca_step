@@ -216,6 +216,32 @@ def test_keyword_line_grid():
     assert node.keyword_line({**base, "grid": "DEFGRID3"}) == "B3LYP def2-SVP DEFGRID3"
 
 
+def test_keyword_line_scf_convergence():
+    """The SCF convergence preset is appended; 'default' emits nothing."""
+    node = orca_step.Energy()
+    base = {
+        "use model chemistry": "no",
+        "method": "HF",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "extra keywords": "",
+    }
+    assert node.keyword_line({**base, "scf convergence": "default"}) == "HF def2-SVP"
+    assert (
+        node.keyword_line({**base, "scf convergence": "TIGHTSCF"})
+        == "HF def2-SVP TIGHTSCF"
+    )
+
+
+def test_scf_and_extra_keyword_defaults():
+    """The SCF tolerance now has its own control (default TIGHTSCF); the extra-
+    keywords default is empty so they do not double up."""
+    P = orca_step.EnergyParameters()
+    assert P["scf convergence"].value == "TIGHTSCF"
+    assert P["extra keywords"].value == ""
+
+
 def test_basis_name_forms():
     """The basis name is extracted whether the value arrives as the dict (run
     pass), its string repr (the pre-run description pass), or a plain name."""
