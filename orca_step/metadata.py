@@ -255,10 +255,27 @@ metadata["results"] = {
     "gradients": {
         "description": "The gradient of the energy on each atom",
         "dimensionality": ["n_atoms", 3],
-        "calculation": ["energy", "optimization"],
+        "calculation": ["energy", "optimization", "bsse"],
         "property": "gradients#ORCA#{model}",
         "type": "float",
         "units": "E_h/bohr",
+    },
+    "uncorrected energy": {
+        "description": "The uncorrected (raw) total energy of the complex",
+        "dimensionality": "scalar",
+        "calculation": ["bsse"],
+        "property": "uncorrected energy#ORCA#{model}",
+        "type": "float",
+        "units": "E_h",
+    },
+    "bsse correction": {
+        "description": "The counterpoise (BSSE) correction to the energy "
+        "(corrected minus uncorrected)",
+        "dimensionality": "scalar",
+        "calculation": ["bsse"],
+        "property": "BSSE correction#ORCA#{model}",
+        "type": "float",
+        "units": "E_h",
     },
 }
 

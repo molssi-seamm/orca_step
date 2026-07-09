@@ -683,3 +683,177 @@ def test_model_chemistry_mdi_only():
     # An aliased '/' functional carries the real keyword for the engine.
     revs = [o for k, o in opts.items() if "REVDSD-PBEP86-D4_2021" in k]
     assert revs and revs[0]["mdi_method_arg"] == "REVDSD-PBEP86-D4/2021"
+
+
+# --------------------------------------------------------------------------
+# BSSE (counterpoise) sub-step
+# --------------------------------------------------------------------------
+def test_bsse_factory():
+    """The BSSE sub-step helper."""
+    assert orca_step.BSSEStep().description()["name"] == "BSSE"
+
+
+def test_bsse_extends_energy():
+    """BSSE is an Energy with the fragment controls and the 'bsse' calculation."""
+    assert issubclass(orca_step.BSSE, orca_step.Energy)
+    node = orca_step.BSSE()
+    assert node._calculation == "bsse"
+    P = orca_step.BSSEParameters()
+    assert P["fragments"].value == "auto (2 molecules)"
+    assert P["optimize monomers"].value == "no"
+    # Inherits the energy parameters.
+    assert P["method"].value == "DLPNO-CCSD(T)"
+
+
+def test_bsse_never_extrapolates():
+    """CBS extrapolation is off for BSSE (an extrapolated energy has no
+    gradient)."""
+    node = orca_step.BSSE()
+    assert not node._extrapolating(
+        {"use model chemistry": "no", "basis set extrapolation": "3/4"}
+    )
+
+
+def test_bsse_gradients_result_available():
+    """The gradients result is offered for the 'bsse' calculation."""
+    assert "bsse" in orca_step.metadata["results"]["gradients"]["calculation"]
+
+
+def test_bsse_extra_results_registered():
+    """The uncorrected energy and BSSE correction are 'bsse'-only results with
+    registered property templates."""
+    results = orca_step.metadata["results"]
+    for key in ("uncorrected energy", "bsse correction"):
+        assert results[key]["calculation"] == ["bsse"]
+    import importlib.resources
+
+    csv = (
+        importlib.resources.files("orca_step") / "data" / "properties.csv"
+    ).read_text()
+    assert "uncorrected energy#ORCA#{model}" in csv
+    assert "BSSE correction#ORCA#{model}" in csv
+
+
+def test_bsse_parse_compound_energies(tmp_path):
+    """The five sub-calculation totals come from each COMPOUND JOB block's LAST
+    FINAL SINGLE POINT ENERGY (so an optimized monomer's converged value wins)."""
+    (tmp_path / "orca.out").write_text(
+        "COMPOUND JOB MainJOB\n"
+        "COMPOUND JOB  1\nFINAL SINGLE POINT ENERGY      -76.100000\n"  # fragA(AB)
+        "COMPOUND JOB  2\n"  # monomer A -- optimized, two cycles; last wins
+        "FINAL SINGLE POINT ENERGY      -76.040000\n"
+        "FINAL SINGLE POINT ENERGY      -76.050000\n"
+        "COMPOUND JOB  3\nFINAL SINGLE POINT ENERGY      -76.110000\n"  # fragB(AB)
+        "COMPOUND JOB  4\nFINAL SINGLE POINT ENERGY      -76.060000\n"  # monomer B
+        "COMPOUND JOB  5\nFINAL SINGLE POINT ENERGY     -152.220000\n"  # dimer
+        "COMPOUND: System command to be executed: rm ...\n"
+    )
+    node = orca_step.BSSE()
+    e = node._parse_compound_energies(tmp_path)
+    assert e == [-76.10, -76.05, -76.11, -76.06, -152.22]
+    # E_CP = tot - (fragA - monA) - (fragB - monB); the in-dimer-basis fragments
+    # are lower, so the correction raises the energy (BSSE removed).
+    corrected = e[4] - (e[0] - e[1]) - (e[2] - e[3])
+    assert corrected == pytest.approx(-152.22 + 0.05 + 0.05)
+    # Fewer than five jobs -> None (cannot trust the energy).
+    (tmp_path / "short.out").write_text("COMPOUND JOB  1\n")
+    assert node._parse_compound_energies(tmp_path.parent / "missing") is None
+
+
+def test_bsse_parse_indices():
+    """1-based index/range lists parse to unique 0-based indices; out-of-range
+    is an error."""
+    assert orca_step.BSSE._parse_indices("1-3, 5 7", 8) == [0, 1, 2, 4, 6]
+    assert orca_step.BSSE._parse_indices("2 2 3", 5) == [1, 2]  # de-duplicated
+    with pytest.raises(RuntimeError):
+        orca_step.BSSE._parse_indices("9", 8)
+
+
+def test_bsse_compound_input():
+    """The %Compound block injects the level of theory and options via `with`."""
+    node = orca_step.BSSE()
+    P = {
+        "use model chemistry": "no",
+        "method": "B3LYP",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "grid": "DEFGRID3",
+        "scf convergence": "TIGHTSCF",
+        "extra keywords": "D3BJ",
+        "optimize monomers": "no",
+    }
+    block, method, basis = node._compound_input(P, "bsse.xyz")
+    assert method == "B3LYP" and basis == "def2-SVP"
+    assert '%Compound "bssegradient.cmp"' in block
+    assert "with" in block and block.rstrip().endswith("end")
+    assert 'molecule       = "bsse.xyz";' in block
+    assert 'method         = "B3LYP";' in block
+    assert 'basis          = "def2-SVP";' in block
+    # aux 'none' is omitted; grid, scf, and extra flow into restOfInput.
+    assert 'restOfInput    = "DEFGRID3 TIGHTSCF D3BJ";' in block
+    assert "DoOptimization = false;" in block
+
+
+def test_bsse_compound_input_optimize():
+    """'optimize monomers' maps to DoOptimization = true."""
+    node = orca_step.BSSE()
+    P = {
+        "use model chemistry": "no",
+        "method": "HF",
+        "basis": "6-31G*",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "grid": "default",
+        "scf convergence": "default",
+        "extra keywords": "",
+        "optimize monomers": "yes",
+    }
+    block, _, _ = node._compound_input(P, "bsse.xyz")
+    assert "DoOptimization = true;" in block
+    assert 'restOfInput    = "";' in block
+
+
+def test_bsse_rejects_numeric_gradient_method():
+    """BSSE needs an analytic gradient; (DLPNO-)CCSD(T) has only a numerical
+    one, so it is refused. Double hybrids and MP2 (analytic) are NOT refused."""
+    node = orca_step.BSSE()
+    P = {
+        "use model chemistry": "no",
+        "method": "DLPNO-CCSD(T)",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "AutoAux",
+        "extra keywords": "",
+    }
+    with pytest.raises(RuntimeError, match="analytic gradient"):
+        node._check_supported(P, None)
+
+
+def test_bsse_rejects_bse_basis():
+    """BSSE (Phase 1) refuses a Basis Set Exchange basis."""
+    node = orca_step.BSSE()
+    P = {
+        "use model chemistry": "no",
+        "method": "HF",
+        "basis": "bse:cc-pVDZ",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "extra keywords": "",
+    }
+    with pytest.raises(RuntimeError, match="Basis Set Exchange"):
+        node._check_supported(P, None)
+
+
+def test_read_engrad(tmp_path):
+    """The Compound EnGrad file yields (energy, gradient); blank-line separated
+    like the script writes it."""
+    (tmp_path / "result.engrad").write_text(
+        "\n\n\n 2\n\n\n\n   -1.5\n\n\n\n"
+        "   0.1\n   0.2\n   0.3\n  -0.1\n  -0.2\n  -0.3\n"
+    )
+    energy, grad = orca_step.BSSE._read_engrad(tmp_path / "result.engrad")
+    assert energy == -1.5
+    assert grad == [[0.1, 0.2, 0.3], [-0.1, -0.2, -0.3]]
+    # Missing file -> (None, None).
+    assert orca_step.BSSE._read_engrad(tmp_path / "missing.engrad") == (None, None)
