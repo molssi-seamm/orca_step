@@ -102,6 +102,36 @@ energies and forces (and matches what ORCA uses for optimizations). Loosen it
 only to save time when high precision is not needed; tighten it (``VERYTIGHTSCF``
 / ``EXTREMESCF``) for very-high-accuracy or numerically delicate work.
 
+SCF SThresh (linear dependence)
+===============================
+
+The **SCF SThresh** control sets ORCA's ``%scf SThresh`` value — the threshold
+below which an eigenvalue of the overlap matrix is treated as zero, so the
+corresponding (near-)linearly-dependent combination of basis functions is
+dropped from the calculation. Redundant, near-linearly-dependent basis functions
+cause numerical instabilities in the SCF, and diffuse-heavy sets (the augmented
+``aug-cc-pVXZ`` / ``ma-…`` families in particular) are the usual culprits.
+Raising ``SThresh`` above the default removes more of these functions and can
+cure the resulting SCF trouble.
+
+* ``default`` — emit nothing, so the SCF-convergence preset above (or ORCA's own
+  default of ``1.0e-07``) governs ``SThresh``.
+* an explicit value — written to ``%scf SThresh``, overriding whatever the preset
+  would otherwise set. ORCA recommends keeping it between ``1e-8`` and ``1e-5``;
+  raise it toward ``1e-6`` to shed near-dependent functions when a diffuse basis
+  will not converge.
+
+.. caution::
+
+   Values beyond ``1e-6`` must be used carefully in **geometry optimizations**
+   and when **comparing conformers**: because different basis functions can be
+   cut off at different geometries, the final basis set — and hence the energy —
+   can vary discontinuously from one structure to the next.
+
+See the ORCA manual's `basis-set section
+<https://orca-manual.mpi-muelheim.mpg.de/contents/essentialelements/basisset.html>`_
+for the full discussion of linear dependence and its automatic removal.
+
 Energies, gradients, and forces
 ===============================
 
