@@ -152,17 +152,7 @@ class TkEnergy(seamm.TkNode):
                 add_full("basis")
                 add_full("basis source")
 
-        for key in (
-            "auxiliary basis",
-            "grid",
-            "scf convergence",
-            "sthresh",
-            "extra keywords",
-            "bond orders",
-            "Hirshfeld charges",
-            "polarizability",
-            "save wavefunction",
-        ):
+        for key in self._run_detail_keys():
             add_full(key)
 
         # Align the full-width labels; indent the nested widgets by the leftover
@@ -185,6 +175,21 @@ class TkEnergy(seamm.TkNode):
         sub-steps that need a gradient (Optimization overrides this): an
         extrapolated energy has no gradient, so it cannot drive them."""
         return True
+
+    def _run_detail_keys(self):
+        """The full-width 'run detail' controls laid out below the level of
+        theory, in order. Sub-steps override this to add or drop controls."""
+        return (
+            "auxiliary basis",
+            "grid",
+            "scf convergence",
+            "sthresh",
+            "extra keywords",
+            "bond orders",
+            "Hirshfeld charges",
+            "polarizability",
+            "save wavefunction",
+        )
 
     def _on_basis_source(self, widget=None):
         """When the user selects the Basis Set Exchange as the source, open the

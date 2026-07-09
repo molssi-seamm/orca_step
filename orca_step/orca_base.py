@@ -203,8 +203,71 @@ class ORCABase(seamm.Node):
         charge = configuration.charge
         multiplicity = configuration.spin_multiplicity
 
-        # Resources. run_orca is called by a sub-step, whose options live on its
-        # parent (the main ORCA node), mirroring the MOPAC step.
+        # Resources (cores + per-process memory), shared with run_orca_compound.
+        n_cores, memory_mb = self._resources()
+
+        lines = [f"! {keyword_line.strip()}"]
+        if n_cores > 1:
+            lines.append(f"%pal nprocs {n_cores} end")
+        lines.append(f"%maxcore {memory_mb}")
+        if extra_blocks.strip() != "":
+            lines.append(extra_blocks.rstrip())
+        lines.append(self.geometry_block(configuration, charge, multiplicity))
+        lines.append("")
+        input_text = "\n".join(lines)
+
+        files = {"orca.inp": input_text}
+        if extra_files:
+            files.update(extra_files)
+        logger.debug("orca.inp:\n" + input_text)
+
+        config = self._orca_config()
+        env, lib_prefix = self._mpi_env(n_cores, config)
+
+        # ORCA must be invoked by its full path so it can find its sub-programs.
+        # When a wavefunction file is wanted, chain orca_2aim (which lives next
+        # to the orca binary) in the same shell so it runs in this directory
+        # right after ORCA, reading the just-written orca.gbw/orca.densities.
+        cmd = lib_prefix + ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
+        return_files = [
+            "orca.out",
+            "orca.err",
+            "orca.gbw",
+            "*.bibtex",
+            "*.txt",
+            "*.engrad",
+        ]
+        if make_wfx:
+            orca_2aim = str(Path(config["code"]).parent / "orca_2aim")
+            cmd += ["&&", orca_2aim, "orca", ">", "orca_2aim.out", "2>&1"]
+            return_files += ["orca.wfx", "orca_2aim.out"]
+
+        result = self.flowchart.executor.run(
+            cmd=cmd,
+            config=config,
+            directory=self.directory,
+            files=files,
+            # Wildcards: ORCA writes orca.bibtex (suggested citations) and
+            # orca.property.txt (and other *.txt depending on options); the
+            # executor discards files not requested. orca.engrad appears only
+            # when gradients are requested (! EnGrad).
+            return_files=return_files,
+            in_situ=True,
+            shell=True,
+            env=env,
+        )
+        if not result:
+            raise RuntimeError("There was an error running ORCA.")
+
+        return self._parse_output(directory / "orca.out")
+
+    def _resources(self):
+        """Resolve (n_cores, memory_mb) for an ORCA run from the executor's
+        computational environment and the [orca-step] user options.
+
+        run_orca (and run_orca_compound) are called by a sub-step, whose options
+        live on its parent (the main ORCA node), mirroring the MOPAC step.
+        """
         ce = seamm_exec.computational_environment()
         options = self.parent.options
         seamm_options = self.parent.global_options
@@ -246,47 +309,35 @@ class ORCABase(seamm.Node):
         # if the machine's memory could not be determined.
         memory_mb = int(per_proc_bytes / 1_000_000) if per_proc_bytes else 2000
         memory_mb = max(256, memory_mb)
+        return n_cores, memory_mb
 
-        lines = [f"! {keyword_line.strip()}"]
-        if n_cores > 1:
-            lines.append(f"%pal nprocs {n_cores} end")
-        lines.append(f"%maxcore {memory_mb}")
-        if extra_blocks.strip() != "":
-            lines.append(extra_blocks.rstrip())
-        lines.append(self.geometry_block(configuration, charge, multiplicity))
-        lines.append("")
-        input_text = "\n".join(lines)
+    def _mpi_env(self, n_cores, config):
+        """Return ``(env, lib_prefix)`` for launching a (possibly parallel) ORCA.
 
-        files = {"orca.inp": input_text}
-        if extra_files:
-            files.update(extra_files)
-        logger.debug("orca.inp:\n" + input_text)
+        Parallel ORCA needs a matching OpenMPI runtime. Two things must line up
+        and they are handled differently:
 
-        config = self._orca_config()
+          1. mpirun (PATH): ORCA launches its workers with whatever ``mpirun`` it
+             finds on PATH; it MUST be the same OpenMPI as the libraries the
+             workers link, or the ranks corrupt each other's data (ORCA aborts
+             with a "BLAS-ERROR: incompatible matrices"). We prepend the OpenMPI
+             bin (the sibling of the lib dir given by library-path) so a
+             different mpirun on PATH (e.g. a newer Homebrew OpenMPI) is not used.
+             PATH is an ordinary variable, so it reaches ORCA's children.
 
-        # Parallel ORCA needs a matching OpenMPI runtime. Two things must line up
-        # and they are handled differently:
-        #
-        #   1. mpirun (PATH): ORCA launches its workers with whatever `mpirun` it
-        #      finds on PATH; it MUST be the same OpenMPI as the libraries the
-        #      workers link, or the ranks corrupt each other's data (ORCA aborts
-        #      with a "BLAS-ERROR: incompatible matrices"). We prepend the OpenMPI
-        #      bin (the sibling of the lib dir given by library-path) so a
-        #      different mpirun on PATH (e.g. a newer Homebrew OpenMPI) is not
-        #      used. PATH is an ordinary variable, so it reaches ORCA's children.
-        #
-        #   2. libmpi (dynamic-loader path): on Linux, LD_LIBRARY_PATH is honored
-        #      and inherited, so exporting it (below) is enough. On macOS, ORCA
-        #      does NOT pass DYLD_* to the MPI sub-processes it spawns (and SIP
-        #      strips DYLD_* through /bin/sh anyway), so the OpenMPI libraries
-        #      must instead be on dyld's default search path -- e.g. symlink
-        #      libmpi.*.dylib into /usr/local/lib. That is a one-time machine
-        #      setup, documented in the User Guide; nothing here can substitute
-        #      for it. We still export the loader variables for Linux.
-        #
-        # The OpenMPI library directory is part of *how to run ORCA*, so it comes
-        # from the executor config (~/SEAMM/orca.ini), not the user-facing
-        # [orca-step] options. configparser lower-cases keys.
+          2. libmpi (dynamic-loader path): on Linux, LD_LIBRARY_PATH is honored
+             and inherited, so exporting it is enough. On macOS, ORCA does NOT
+             pass DYLD_* to the MPI sub-processes it spawns (and SIP strips DYLD_*
+             through /bin/sh anyway), so the OpenMPI libraries must instead be on
+             dyld's default search path -- e.g. symlink libmpi.*.dylib into
+             /usr/local/lib. That is a one-time machine setup, documented in the
+             User Guide; nothing here can substitute for it. We still export the
+             loader variables for Linux.
+
+        The OpenMPI library directory is part of *how to run ORCA*, so it comes
+        from the executor config (~/SEAMM/orca.ini), not the user-facing
+        [orca-step] options. configparser lower-cases keys.
+        """
         env = {}
         lib_prefix = []
         library_path = config.get("library-path", "") or ""
@@ -297,43 +348,107 @@ class ORCABase(seamm.Node):
             bindir = Path(library_path).expanduser().parent / "bin"
             if bindir.is_dir():
                 lib_prefix.insert(0, f"export PATH={shlex.quote(str(bindir))}:$PATH;")
+        return env, lib_prefix
 
-        # ORCA must be invoked by its full path so it can find its sub-programs.
-        # When a wavefunction file is wanted, chain orca_2aim (which lives next
-        # to the orca binary) in the same shell so it runs in this directory
-        # right after ORCA, reading the just-written orca.gbw/orca.densities.
+    def run_orca_compound(
+        self, compound_block, extra_files=None, engrad="result.engrad"
+    ):
+        """Write and run an ORCA *Compound* job, returning ``(energy, gradient)``.
+
+        Unlike ``run_orca`` (a single ``! keywords`` + inline geometry job), a
+        Compound job runs several calculations from a script and writes its own
+        result. The ``%pal``/``%maxcore`` preamble is emitted here (applying to
+        every sub-calculation); the caller supplies the ``%Compound ... end``
+        block and any files it references (the ``.cmp`` script, the geometry).
+
+        Parameters
+        ----------
+        compound_block : str
+            The ``%Compound "..." ... end`` block for ``orca.inp``.
+        extra_files : dict | None
+            Files the Compound job reads (e.g. ``{"bssegradient.cmp": ...,
+            "bsse.xyz": ...}``), written into the run directory.
+        engrad : str
+            The EnGrad file the Compound writes with the final energy and
+            gradient.
+
+        Returns
+        -------
+        tuple(float | None, list | None)
+            The energy (E_h) and gradient (``[n_atoms][3]``, E_h/bohr) from the
+            Compound's EnGrad file.
+        """
+        directory = Path(self.directory)
+        directory.mkdir(parents=True, exist_ok=True)
+
+        n_cores, memory_mb = self._resources()
+        config = self._orca_config()
+        env, lib_prefix = self._mpi_env(n_cores, config)
+
+        lines = []
+        if n_cores > 1:
+            lines.append(f"%pal nprocs {n_cores} end")
+        lines.append(f"%maxcore {memory_mb}")
+        lines.append(compound_block.rstrip())
+        lines.append("")
+        input_text = "\n".join(lines)
+
+        files = {"orca.inp": input_text}
+        if extra_files:
+            files.update(extra_files)
+        logger.debug("orca.inp (Compound):\n" + input_text)
+
         cmd = lib_prefix + ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
-        return_files = [
-            "orca.out",
-            "orca.err",
-            "orca.gbw",
-            "*.bibtex",
-            "*.txt",
-            "*.engrad",
-        ]
-        if make_wfx:
-            orca_2aim = str(Path(config["code"]).parent / "orca_2aim")
-            cmd += ["&&", orca_2aim, "orca", ">", "orca_2aim.out", "2>&1"]
-            return_files += ["orca.wfx", "orca_2aim.out"]
-
         result = self.flowchart.executor.run(
             cmd=cmd,
             config=config,
             directory=self.directory,
             files=files,
-            # Wildcards: ORCA writes orca.bibtex (suggested citations) and
-            # orca.property.txt (and other *.txt depending on options); the
-            # executor discards files not requested. orca.engrad appears only
-            # when gradients are requested (! EnGrad).
-            return_files=return_files,
+            return_files=[
+                "orca.out",
+                "orca.err",
+                "*.bibtex",
+                "*.txt",
+                "*.engrad",
+                engrad,
+            ],
             in_situ=True,
             shell=True,
             env=env,
         )
         if not result:
-            raise RuntimeError("There was an error running ORCA.")
+            raise RuntimeError("There was an error running the ORCA Compound job.")
 
-        return self._parse_output(directory / "orca.out")
+        # The Compound's orca.out ends with the last sub-calculation, so the
+        # corrected energy and gradient come from the EnGrad file it wrote.
+        return self._read_engrad(directory / engrad)
+
+    @staticmethod
+    def _read_engrad(path):
+        """Read ``(energy, gradient)`` from an ORCA EnGrad file.
+
+        Format (comment lines start with ``#``; blank lines are ignored): the
+        atom count, then the energy (E_h), then ``3*n`` gradient components
+        (E_h/bohr). Returns ``(None, None)`` if it cannot be parsed.
+        """
+        path = Path(path)
+        if not path.exists():
+            return None, None
+        lines = [
+            ln.strip()
+            for ln in path.read_text().splitlines()
+            if ln.strip() and not ln.strip().startswith("#")
+        ]
+        try:
+            n = int(lines[0])
+            energy = float(lines[1])
+            vals = [float(x) for x in lines[2 : 2 + 3 * n]]  # noqa: E203
+        except (ValueError, IndexError):
+            return None, None
+        if len(vals) != 3 * n:
+            return energy, None
+        gradient = [vals[3 * i : 3 * i + 3] for i in range(n)]  # noqa: E203
+        return energy, gradient
 
     def _orca_config(self):
         """Resolve the ORCA executable configuration.

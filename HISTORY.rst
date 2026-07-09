@@ -2,6 +2,21 @@
 History
 =======
 
+2026.7.9.2 -- BSSE (counterpoise) sub-step
+    * New **BSSE** sub-step: the counterpoise-corrected (Boys--Bernardi) energy
+      and gradient of a two-fragment complex, in a single ORCA run, for
+      BSSE-free machine-learned-force-field training data. It drives ORCA's
+      Compound facility (the BSSEGradient script by D. G. Liakos & F. Neese).
+    * Reports the BSSE-corrected energy, the uncorrected (raw) energy, and the
+      correction (in E_h and kcal/mol), plus the corrected gradient; each can be
+      saved from the Results tab.
+    * Fragments are found automatically from the two molecules in the structure
+      (so it works directly on a Dimer Builder dimer) or specified by atom; an
+      option relaxes the free monomers before the correction.
+    * First version: a neutral, closed-shell complex of exactly two fragments
+      with an ORCA-internal basis set. Any analytic-gradient method works,
+      including dispersion-corrected and double-hybrid DFT and MP2.
+
 2026.7.9.1 -- SCF SThresh control on the Energy step
     * New **SCF SThresh** control: set ORCA's SCF convergence threshold (the
       ``%scf SThresh`` value, in E_h). Leave it at ``default`` to let the SCF
