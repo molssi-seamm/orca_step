@@ -201,6 +201,15 @@ def test_keyword_line_keepdensity():
     assert "keepdensity" in line
 
 
+def test_basis_name_forms():
+    """The basis name is extracted whether the value arrives as the dict (run
+    pass), its string repr (the pre-run description pass), or a plain name."""
+    E = orca_step.Energy
+    assert E._basis_name({"name": "$basis", "elements": []}) == "$basis"
+    assert E._basis_name("{'name': '$basis', 'elements': []}") == "$basis"
+    assert E._basis_name("def2-SVP") == "def2-SVP"
+
+
 def test_basis_variable_expansion(monkeypatch):
     """A $variable typed into the basis field is expanded against the flowchart
     variables (the basis is a special dict parameter, so SEAMM does not expand

@@ -2,6 +2,7 @@
 
 """An ORCA single-point energy sub-step."""
 
+import ast
 import csv
 import json
 import logging
@@ -72,9 +73,20 @@ class Energy(orca_step.ORCABase):
 
     @staticmethod
     def _basis_name(value):
-        """The basis name from the 'basis' parameter, which is a
-        ``{"name", "elements"}`` dict (from the shared BasisSetField) or, for
-        older flowcharts, a plain string."""
+        """The basis name from the 'basis' parameter (from the shared
+        BasisSetField, a ``{"name", "elements"}`` dict).
+
+        Depending on the call path the value arrives either as the dict
+        (``current_values_to_dict``, at run time) or as its *string repr*
+        (``values_to_dict``, used for the pre-run description) -- parse the
+        latter so both give the name, not a dict dump. A plain string (older
+        flowcharts, or a bare name) passes through.
+        """
+        if isinstance(value, str) and value.lstrip().startswith("{"):
+            try:
+                value = ast.literal_eval(value)
+            except (ValueError, SyntaxError):
+                pass
         if isinstance(value, dict):
             return value.get("name", "") or ""
         return value or ""
