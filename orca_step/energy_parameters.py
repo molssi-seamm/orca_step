@@ -150,6 +150,21 @@ class EnergyParameters(seamm.Parameters):
                 "(DLPNO, MP2). 'none' omits it."
             ),
         },
+        "grid": {
+            "default": "default",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("default", "DEFGRID1", "DEFGRID2", "DEFGRID3"),
+            "format_string": "",
+            "description": "Integration grid:",
+            "help_text": (
+                "ORCA's numerical integration grid preset (for the DFT "
+                "exchange-correlation and RIJCOSX/COSX grids). 'default' leaves "
+                "ORCA's own default (DEFGRID2). DEFGRID1 is coarser/faster, "
+                "DEFGRID3 is finer/more accurate. Only affects methods that use a "
+                "grid (DFT, RIJCOSX); ignored otherwise."
+            ),
+        },
         "extra keywords": {
             "default": "TightSCF",
             "kind": "string",
@@ -159,7 +174,7 @@ class EnergyParameters(seamm.Parameters):
             "description": "Extra keywords:",
             "help_text": (
                 "Any additional ORCA '!' keywords to append, e.g. 'TightSCF', "
-                "'RIJCOSX', 'Grid5'."
+                "'RIJCOSX', 'NoFrozenCore'."
             ),
         },
         "bond orders": {

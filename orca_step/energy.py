@@ -169,6 +169,11 @@ class Energy(orca_step.ORCABase):
         aux = P["auxiliary basis"]
         if aux and aux.lower() != "none":
             keywords.append(aux)
+        # Numerical-integration grid preset (DEFGRID1/2/3); 'default' leaves
+        # ORCA's own default (DEFGRID2) by emitting nothing.
+        grid = P.get("grid", "default")
+        if grid and grid != "default":
+            keywords.append(grid)
         # Compute the Cartesian gradient when the gradients result is requested
         # (e.g. by a driver step such as Reaction Path or Thermochemistry). Use
         # the analytic gradient (EnGrad) when ORCA has one for this method, else

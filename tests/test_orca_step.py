@@ -201,6 +201,21 @@ def test_keyword_line_keepdensity():
     assert "keepdensity" in line
 
 
+def test_keyword_line_grid():
+    """The integration-grid preset is appended; 'default' emits nothing."""
+    node = orca_step.Energy()
+    base = {
+        "use model chemistry": "no",
+        "method": "B3LYP",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "extra keywords": "",
+    }
+    assert node.keyword_line({**base, "grid": "default"}) == "B3LYP def2-SVP"
+    assert node.keyword_line({**base, "grid": "DEFGRID3"}) == "B3LYP def2-SVP DEFGRID3"
+
+
 def test_basis_name_forms():
     """The basis name is extracted whether the value arrives as the dict (run
     pass), its string repr (the pre-run description pass), or a plain name."""

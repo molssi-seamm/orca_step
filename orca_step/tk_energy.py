@@ -154,6 +154,7 @@ class TkEnergy(seamm.TkNode):
 
         for key in (
             "auxiliary basis",
+            "grid",
             "extra keywords",
             "bond orders",
             "Hirshfeld charges",

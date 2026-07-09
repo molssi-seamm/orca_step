@@ -70,6 +70,24 @@ on, the fixed basis set above is ignored. Note that an extrapolated energy has
 **no gradient** in ORCA, so extrapolation and the *gradients* result are
 mutually exclusive.
 
+Integration grid
+================
+
+The **Integration grid** control sets ORCA's numerical-integration grid preset
+(used for the DFT exchange-correlation integrals and the RIJCOSX/COSX grids):
+
+* ``default`` — leave ORCA's own default (``DEFGRID2``), which is robust for most
+  work;
+* ``DEFGRID1`` — coarser and faster (roughly the old ORCA-4 default accuracy);
+* ``DEFGRID2`` — the current default;
+* ``DEFGRID3`` — finer and more conservative, for cases sensitive to the grid
+  (e.g. dispersion-dominated energies, tight convergence, or numerical noise in
+  forces).
+
+It only affects methods that use a grid (DFT, RIJCOSX) and is ignored otherwise.
+For a machine-learned-force-field training set, a finer grid (``DEFGRID3``) can
+be worth the cost to keep the energy/force surface smooth.
+
 Energies, gradients, and forces
 ===============================
 
