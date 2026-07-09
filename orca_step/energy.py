@@ -79,6 +79,26 @@ class Energy(orca_step.ORCABase):
             return value.get("name", "") or ""
         return value or ""
 
+    @staticmethod
+    def _expand_variables(text):
+        """Evaluate a leading ``$variable`` / ``=expression`` against the
+        flowchart variables, mirroring ``seamm.Parameter.get``.
+
+        The basis is a 'special' (dict-valued) parameter, so SEAMM does not
+        expand a ``$basis`` typed into it the way it does for ordinary string
+        parameters -- the literal ``$basis`` would otherwise reach ORCA. Plain
+        names pass through unchanged; an unknown/failed expression is returned
+        as-is so the caller raises a clear downstream error.
+        """
+        if isinstance(text, str) and len(text) > 0 and text[0] in ("$", "="):
+            if text == "==":
+                return text
+            try:
+                return str(eval(text[1:], dict(seamm.flowchart_variables._data)))
+            except Exception:
+                return text
+        return text
+
     def _resolve_method_basis(self, P):
         """Resolve (method, basis name) from the model chemistry (if used) or the
         explicit method/basis parameters."""
@@ -91,7 +111,8 @@ class Energy(orca_step.ORCABase):
         # For DFT the '!' keyword is the chosen functional, not the word "DFT".
         if method == "DFT":
             method = P["functional"]
-        return method, self._basis_name(P["basis"])
+        # Expand a $variable typed into the basis field (see _expand_variables).
+        return method, self._expand_variables(self._basis_name(P["basis"]))
 
     def _using_bse(self, P):
         """Whether the orbital basis comes from the Basis Set Exchange -- either

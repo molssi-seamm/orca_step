@@ -201,6 +201,30 @@ def test_keyword_line_keepdensity():
     assert "keepdensity" in line
 
 
+def test_basis_variable_expansion(monkeypatch):
+    """A $variable typed into the basis field is expanded against the flowchart
+    variables (the basis is a special dict parameter, so SEAMM does not expand
+    it the way it does ordinary string parameters)."""
+    import seamm
+    from seamm.variables import Variables
+
+    monkeypatch.setattr(seamm, "flowchart_variables", Variables(basis="def2-SVP"))
+    node = orca_step.Energy()
+    assert node._expand_variables("$basis") == "def2-SVP"
+    assert node._expand_variables("def2-TZVP") == "def2-TZVP"  # plain name unchanged
+    line = node.keyword_line(
+        {
+            "use model chemistry": "no",
+            "method": "HF",
+            "basis": {"name": "$basis", "elements": []},
+            "basis source": "ORCA internal",
+            "auxiliary basis": "none",
+            "extra keywords": "",
+        }
+    )
+    assert line == "HF def2-SVP"
+
+
 def test_parse_gradients_engrad(tmp_path):
     """The gradient is read from orca.engrad as an [n_atoms, 3] array (E_h/bohr)."""
     (tmp_path / "orca.engrad").write_text(
