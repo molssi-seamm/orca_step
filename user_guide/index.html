@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.9.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.9.2 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=8d2249e7"></script>
+    <script src="../_static/documentation_options.js?v=badac38d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.9.1" />
+  <meta name="docsearch:version" content="2026.7.9.2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -513,15 +513,17 @@
 <span id="id1"></span><h1>User Guide<a class="headerlink" href="#user-guide" title="Link to this heading">#</a></h1>
 <p>The ORCA plug-in runs <a class="reference external" href="https://www.faccts.de/orca/">ORCA</a> from a SEAMM
 flowchart. It is a <em>sub-flowchart</em> plug-in: dropping an <strong>ORCA</strong> step onto the
-canvas opens a small flowchart of ORCA sub-steps. Two are available:</p>
+canvas opens a small flowchart of ORCA sub-steps. Three are available:</p>
 <ul class="simple">
 <li><p><strong>Energy</strong> — a single-point energy, optionally with the gradient (forces) and
 a range of properties.</p></li>
 <li><p><strong>Optimization</strong> — a geometry optimization (the Energy step plus ORCA’s
 <code class="docutils literal notranslate"><span class="pre">Opt</span></code> keyword).</p></li>
+<li><p><strong>BSSE</strong> — the counterpoise-corrected energy and gradient of a two-fragment
+complex (see below).</p></li>
 </ul>
-<p>Both share the same controls for the level of theory, so the sections below
-apply to either.</p>
+<p>All three share the same controls for the level of theory, so the sections below
+apply to any of them.</p>
 <section id="choosing-the-level-of-theory">
 <h2>Choosing the level of theory<a class="headerlink" href="#choosing-the-level-of-theory" title="Link to this heading">#</a></h2>
 <p>Each sub-step can take its method and basis set either from a preceding
@@ -642,6 +644,51 @@ hybrids. A note is printed when the (more expensive) numerical gradient is used.
 Most functionals — including the standard double hybrids — have analytic
 gradients, so a single-point DFT run yields the energy <strong>and</strong> forces cheaply,
 which is convenient for generating machine-learned force-field training data.</p>
+</section>
+<section id="counterpoise-bsse-corrections">
+<h2>Counterpoise (BSSE) corrections<a class="headerlink" href="#counterpoise-bsse-corrections" title="Link to this heading">#</a></h2>
+<p>The <strong>BSSE</strong> sub-step computes the counterpoise-corrected (Boys–Bernardi)
+energy <strong>and gradient</strong> of a complex of two fragments — removing the basis-set
+superposition error that artificially over-stabilizes the interaction — in a
+single ORCA run. It is aimed at machine-learned-force-field (MLFF) training
+data that is BSSE-free on both the energy surface and the forces. Internally it
+drives ORCA’s <em>Compound</em> facility (the <code class="docutils literal notranslate"><span class="pre">BSSEGradient</span></code> script by D. G. Liakos &amp;
+F. Neese), which runs the five sub-calculations (the dimer, and each fragment
+both in the full dimer basis and in its own basis) and assembles the correction.</p>
+<p>The level-of-theory controls are the same as the Energy step. Two extra controls
+define the correction:</p>
+<ul class="simple">
+<li><p><strong>Fragments</strong> — how to split the complex into the two fragments. <code class="docutils literal notranslate"><span class="pre">auto</span> <span class="pre">(2</span>
+<span class="pre">molecules)</span></code> (the default) uses the two separate molecules in the structure
+(so it works directly on a dimer from the <strong>Dimer Builder</strong> step), and errors
+if there are not exactly two. <code class="docutils literal notranslate"><span class="pre">specified</span></code> takes fragment A from the
+<strong>Fragment A atoms</strong> field, given as <strong>atom numbers</strong> (1-based, as shown in the
+structure) — a comma/space separated list and/or ranges, e.g. <code class="docutils literal notranslate"><span class="pre">1-3,</span> <span class="pre">5</span></code>; the
+remaining atoms form fragment B. The <strong>Fragment A atoms</strong> field is shown only
+when <code class="docutils literal notranslate"><span class="pre">specified</span></code> is selected.</p></li>
+<li><p><strong>Optimize free monomers</strong> — whether to relax each isolated monomer before
+taking the correction. Leave it <code class="docutils literal notranslate"><span class="pre">no</span></code> for a fixed-geometry PES / MLFF target.</p></li>
+</ul>
+<p>The step reports, and offers on the Results tab, the <strong>BSSE-corrected energy</strong>
+(the <code class="docutils literal notranslate"><span class="pre">energy</span></code> result), the <strong>uncorrected</strong> (raw) complex energy, the <strong>BSSE
+correction</strong> (corrected minus uncorrected, also shown in kcal/mol), and the
+corrected <strong>gradient</strong>. Tick any of them on the Results tab to save it to a
+variable, table, or the property database.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Phase-1 limitations.</strong> This first version supports a <strong>neutral,
+closed-shell</strong> complex of <strong>exactly two</strong> fragments, using an
+<strong>ORCA-internal</strong> basis set (not the Basis Set Exchange). Any method with an
+<strong>analytic gradient</strong> works — HF, DFT (including dispersion-corrected and
+<strong>double-hybrid</strong> functionals such as <code class="docutils literal notranslate"><span class="pre">REVDSD-PBEP86-D4/2021</span></code>), and MP2 —
+but not methods with only a numerical gradient (e.g. <code class="docutils literal notranslate"><span class="pre">(DLPNO-)CCSD(T)</span></code>). The
+same charge/multiplicity is applied to each monomer, so charged or open-shell
+fragments are refused with a clear message; the SThresh control and the extra
+property analyses (bond orders, Hirshfeld charges, polarizability, saved
+wavefunction) are not available in the BSSE sub-step. N-fragment and
+code-agnostic counterpoise corrections are planned as a separate, general BSSE
+step.</p>
+</div>
 </section>
 <section id="saving-results-to-the-database">
 <h2>Saving results to the database<a class="headerlink" href="#saving-results-to-the-database" title="Link to this heading">#</a></h2>
@@ -810,6 +857,7 @@ high-accuracy calculations for ordinary single-point steps.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-convergence">SCF convergence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-sthresh-linear-dependence">SCF SThresh (linear dependence)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energies-gradients-and-forces">Energies, gradients, and forces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#counterpoise-bsse-corrections">Counterpoise (BSSE) corrections</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-results-to-the-database">Saving results to the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-properties-and-outputs">Other properties and outputs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-orca-in-parallel">Running ORCA in parallel</a></li>

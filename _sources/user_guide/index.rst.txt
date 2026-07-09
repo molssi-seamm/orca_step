@@ -6,15 +6,17 @@ User Guide
 
 The ORCA plug-in runs `ORCA <https://www.faccts.de/orca/>`_ from a SEAMM
 flowchart. It is a *sub-flowchart* plug-in: dropping an **ORCA** step onto the
-canvas opens a small flowchart of ORCA sub-steps. Two are available:
+canvas opens a small flowchart of ORCA sub-steps. Three are available:
 
 * **Energy** — a single-point energy, optionally with the gradient (forces) and
   a range of properties.
 * **Optimization** — a geometry optimization (the Energy step plus ORCA's
   ``Opt`` keyword).
+* **BSSE** — the counterpoise-corrected energy and gradient of a two-fragment
+  complex (see below).
 
-Both share the same controls for the level of theory, so the sections below
-apply to either.
+All three share the same controls for the level of theory, so the sections below
+apply to any of them.
 
 Choosing the level of theory
 ============================
@@ -148,6 +150,53 @@ hybrids. A note is printed when the (more expensive) numerical gradient is used.
 Most functionals — including the standard double hybrids — have analytic
 gradients, so a single-point DFT run yields the energy **and** forces cheaply,
 which is convenient for generating machine-learned force-field training data.
+
+Counterpoise (BSSE) corrections
+===============================
+
+The **BSSE** sub-step computes the counterpoise-corrected (Boys--Bernardi)
+energy **and gradient** of a complex of two fragments — removing the basis-set
+superposition error that artificially over-stabilizes the interaction — in a
+single ORCA run. It is aimed at machine-learned-force-field (MLFF) training
+data that is BSSE-free on both the energy surface and the forces. Internally it
+drives ORCA's *Compound* facility (the ``BSSEGradient`` script by D. G. Liakos &
+F. Neese), which runs the five sub-calculations (the dimer, and each fragment
+both in the full dimer basis and in its own basis) and assembles the correction.
+
+The level-of-theory controls are the same as the Energy step. Two extra controls
+define the correction:
+
+* **Fragments** — how to split the complex into the two fragments. ``auto (2
+  molecules)`` (the default) uses the two separate molecules in the structure
+  (so it works directly on a dimer from the **Dimer Builder** step), and errors
+  if there are not exactly two. ``specified`` takes fragment A from the
+  **Fragment A atoms** field, given as **atom numbers** (1-based, as shown in the
+  structure) — a comma/space separated list and/or ranges, e.g. ``1-3, 5``; the
+  remaining atoms form fragment B. The **Fragment A atoms** field is shown only
+  when ``specified`` is selected.
+* **Optimize free monomers** — whether to relax each isolated monomer before
+  taking the correction. Leave it ``no`` for a fixed-geometry PES / MLFF target.
+
+The step reports, and offers on the Results tab, the **BSSE-corrected energy**
+(the ``energy`` result), the **uncorrected** (raw) complex energy, the **BSSE
+correction** (corrected minus uncorrected, also shown in kcal/mol), and the
+corrected **gradient**. Tick any of them on the Results tab to save it to a
+variable, table, or the property database.
+
+.. note::
+
+   **Phase-1 limitations.** This first version supports a **neutral,
+   closed-shell** complex of **exactly two** fragments, using an
+   **ORCA-internal** basis set (not the Basis Set Exchange). Any method with an
+   **analytic gradient** works — HF, DFT (including dispersion-corrected and
+   **double-hybrid** functionals such as ``REVDSD-PBEP86-D4/2021``), and MP2 —
+   but not methods with only a numerical gradient (e.g. ``(DLPNO-)CCSD(T)``). The
+   same charge/multiplicity is applied to each monomer, so charged or open-shell
+   fragments are refused with a clear message; the SThresh control and the extra
+   property analyses (bond orders, Hirshfeld charges, polarizability, saved
+   wavefunction) are not available in the BSSE sub-step. N-fragment and
+   code-agnostic counterpoise corrections are planned as a separate, general BSSE
+   step.
 
 Saving results to the database
 ==============================

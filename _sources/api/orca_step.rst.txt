@@ -4,6 +4,30 @@ orca\_step package
 Submodules
 ----------
 
+orca\_step.bsse module
+----------------------
+
+.. automodule:: orca_step.bsse
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+orca\_step.bsse\_parameters module
+----------------------------------
+
+.. automodule:: orca_step.bsse_parameters
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+orca\_step.bsse\_step module
+----------------------------
+
+.. automodule:: orca_step.bsse_step
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 orca\_step.energy module
 ------------------------
 
@@ -88,6 +112,14 @@ orca\_step.orca\_step module
 ----------------------------
 
 .. automodule:: orca_step.orca_step
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+orca\_step.tk\_bsse module
+--------------------------
+
+.. automodule:: orca_step.tk_bsse
    :members:
    :show-inheritance:
    :undoc-members:

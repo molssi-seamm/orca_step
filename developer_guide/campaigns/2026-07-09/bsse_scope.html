@@ -1,0 +1,851 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>BSSE sub-step – scope and design &#8212; SEAMM ORCA Plug-in 2026.7.9.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=c224919a" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../_static/documentation_options.js?v=badac38d"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guide/campaigns/2026-07-09/bsse_scope';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Implementation notes" href="NOTES_implementation.html" />
+    <link rel="prev" title="2026-07-09 BSSE (counterpoise) sub-step" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2026.7.9.2" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/SEAMM logo.png" class="logo__image only-light" alt=""/>
+    <img src="../../../_static/SEAMM Inverted 288x181.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">ORCA</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Developer Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API Documentation
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../authors.html">
+    Development Team
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../history.html">
+    History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi-seamm.github.io">
+    Main SEAMM documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi-seamm.github.io">
+    SEAMM Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/molssi-seamm/geometry_analysis_step" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-twitter fa-lg" aria-hidden="true"></i><span class="visually-hidden">Twitter</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Developer Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../authors.html">
+    Development Team
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../history.html">
+    History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi-seamm.github.io">
+    Main SEAMM documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi-seamm.github.io">
+    SEAMM Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/molssi-seamm/geometry_analysis_step" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-twitter fa-lg" aria-hidden="true"></i><span class="visually-hidden">Twitter</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Campaigns</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">2026-07-09 BSSE (counterpoise) sub-step</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">BSSE sub-step – scope and design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="NOTES_implementation.html">Implementation notes</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../YYYY-MM-DD/index.html">YYYY-MM-DD Initial development campaign</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Developer Documentation</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Campaigns</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">2026-07-09 BSSE (counterpoise) sub-step</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">BSSE sub-step – scope and design</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="bsse-sub-step-scope-and-design">
+<h1>BSSE sub-step – scope and design<a class="headerlink" href="#bsse-sub-step-scope-and-design" title="Link to this heading">#</a></h1>
+<section id="goal">
+<h2>Goal<a class="headerlink" href="#goal" title="Link to this heading">#</a></h2>
+<p>A new <strong>BSSE</strong> sub-step of the ORCA plug-in that computes the
+counterpoise-corrected (Boys–Bernardi) energy <strong>and gradient</strong> of a two-fragment
+complex in a single ORCA run, and stores them exactly like the Energy sub-step’s
+<code class="docutils literal notranslate"><span class="pre">energy</span></code> and <code class="docutils literal notranslate"><span class="pre">gradients</span></code> results. The immediate driver is MLFF training data
+that is free of basis-set superposition error (BSSE) on both the energy surface
+and the forces.</p>
+<p>The heavy lifting is done by the ORCA <em>Compound</em> script <code class="docutils literal notranslate"><span class="pre">BSSEGradient.cmp</span></code>
+(D. G. Liakos &amp; F. Neese, May 2024, updated June 2025). SEAMM’s job is only to
+(1) prepare the ghost-flagged geometry, (2) inject the method/basis/charge/mult
+and options into the Compound block, (3) run ORCA once, and (4) parse the single
+<code class="docutils literal notranslate"><span class="pre">result.engrad</span></code> it writes.</p>
+</section>
+<section id="what-the-compound-script-computes">
+<h2>What the Compound script computes<a class="headerlink" href="#what-the-compound-script-computes" title="Link to this heading">#</a></h2>
+<p>For a complex partitioned into fragments A and B, it runs five calculations and
+assembles the counterpoise-corrected <strong>total</strong> energy and gradient (not merely an
+interaction energy):</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}E_\text{CP}  &amp;= E_{AB}(AB) - \big[E_A(AB) - E_A(A)\big] - \big[E_B(AB) - E_B(B)\big] \\
+\nabla E_\text{CP} &amp;= \nabla E_{AB}(AB) - \big[\nabla E_A(AB) - \nabla E_A(A)\big]
+                    - \big[\nabla E_B(AB) - \nabla E_B(B)\big]\end{split}\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">X(AB)</span></code> means “fragment X evaluated in the <em>full dimer basis</em>” – i.e. the
+other fragment is present as <strong>ghost centres</strong> (basis functions, no nucleus, no
+electrons). The five calculations are: the dimer <code class="docutils literal notranslate"><span class="pre">AB</span></code>; fragment <code class="docutils literal notranslate"><span class="pre">A</span></code> with B as
+ghosts; <code class="docutils literal notranslate"><span class="pre">A</span></code> alone; fragment <code class="docutils literal notranslate"><span class="pre">B</span></code> with A as ghosts; <code class="docutils literal notranslate"><span class="pre">B</span></code> alone.</p>
+<p>The ghost centres carry Pulay forces, so <span class="math notranslate nohighlight">\(\nabla E_A(AB)\)</span> has non-zero
+components on B’s atoms; the script’s per-atom bookkeeping (its <code class="docutils literal notranslate"><span class="pre">CreateBSSE</span></code> +
+the ghost loop) exists precisely to map those back onto the full-complex atom
+list. The final <code class="docutils literal notranslate"><span class="pre">result.engrad</span></code> is a standard ORCA EnGrad file over <strong>all</strong>
+atoms of the complex, holding <span class="math notranslate nohighlight">\(E_\text{CP}\)</span> and <span class="math notranslate nohighlight">\(\nabla E_\text{CP}\)</span>.</p>
+</section>
+<section id="how-it-runs-today-the-raw-script">
+<h2>How it runs today (the raw script)<a class="headerlink" href="#how-it-runs-today-the-raw-script" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Input: an xyz file (<code class="docutils literal notranslate"><span class="pre">molecule</span></code>, default <code class="docutils literal notranslate"><span class="pre">01.xyz</span></code>) containing the <strong>full
+complex with fragment B pre-marked as ghost atoms</strong>. <code class="docutils literal notranslate"><span class="pre">fragA.CreateBSSE()</span></code>
+reads the ghost flags and generates the remaining four geometries in bohr.</p></li>
+<li><p>Adjustable <code class="docutils literal notranslate"><span class="pre">Variable</span></code>s: <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">basis</span></code>, <code class="docutils literal notranslate"><span class="pre">restOfInput</span></code>, <code class="docutils literal notranslate"><span class="pre">charge</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mult</span></code>, <code class="docutils literal notranslate"><span class="pre">DoOptimization</span></code> (relax the <em>free</em> monomers – gives the CP
+correction relative to relaxed monomers), and file/cleanup switches.</p></li>
+<li><p>Output: prints all gradients and, with <code class="docutils literal notranslate"><span class="pre">produceEnGradFile</span> <span class="pre">=</span> <span class="pre">true</span></code> (the
+default), writes <code class="docutils literal notranslate"><span class="pre">result.engrad</span></code>.</p></li>
+</ul>
+</section>
+<section id="design-in-seamm">
+<h2>Design in SEAMM<a class="headerlink" href="#design-in-seamm" title="Link to this heading">#</a></h2>
+<p>Follow the standard per-capability quartet (see <code class="docutils literal notranslate"><span class="pre">mopac_step</span></code> / the existing
+<code class="docutils literal notranslate"><span class="pre">energy</span></code> sub-step). The BSSE node subclasses <strong>Energy</strong> so it inherits the
+model-chemistry, method, basis, grid, SCF-convergence, and SThresh controls
+unchanged.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>File</p></th>
+<th class="head"><p>Role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bsse_step.py</span></code></p></td>
+<td><p>Factory (entry-point target); <code class="docutils literal notranslate"><span class="pre">my_description</span></code> with
+name “BSSE”, group “Calculations”.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bsse.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BSSE(Energy)</span></code> node – overrides the run path to emit
+a <code class="docutils literal notranslate"><span class="pre">%Compound</span></code> block and parse <code class="docutils literal notranslate"><span class="pre">result.engrad</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bsse_parameters.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BSSEParameters(EnergyParameters)</span></code> – adds the
+fragment-definition and BSSE-specific controls.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tk_bsse.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TkBSSE(TkEnergy)</span></code> – adds the fragment controls to
+the dialog.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Register under both entry-point groups so it appears in the ORCA sub-flowchart:
+<code class="docutils literal notranslate"><span class="pre">org.molssi.seamm.orca_step</span></code> (headless) and <code class="docutils literal notranslate"><span class="pre">org.molssi.seamm.orca_step.tk</span></code>
+(GUI), alongside <code class="docutils literal notranslate"><span class="pre">Energy</span></code> and <code class="docutils literal notranslate"><span class="pre">Optimization</span></code>.</p>
+<section id="input-generation-new-path-in-orca-base">
+<h3>Input generation (new path in <code class="docutils literal notranslate"><span class="pre">orca_base</span></code>)<a class="headerlink" href="#input-generation-new-path-in-orca-base" title="Link to this heading">#</a></h3>
+<p>The normal <code class="docutils literal notranslate"><span class="pre">run_orca</span></code> builds a single <code class="docutils literal notranslate"><span class="pre">!</span> <span class="pre">keywords</span></code> + inline geometry input;
+the Compound job is structurally different (a <code class="docutils literal notranslate"><span class="pre">%Compound</span> <span class="pre">&quot;...end&quot;</span></code> block that
+reads an external <code class="docutils literal notranslate"><span class="pre">*xyzfile</span></code>). Add a sibling method, e.g.
+<code class="docutils literal notranslate"><span class="pre">run_orca_compound(compound_text,</span> <span class="pre">xyz_files,</span> <span class="pre">engrad_name=&quot;result.engrad&quot;)</span></code>,
+that writes the <code class="docutils literal notranslate"><span class="pre">%pal</span></code>/<code class="docutils literal notranslate"><span class="pre">%maxcore</span></code> preamble, the Compound block, and the
+ghost-flagged xyz file(s), runs ORCA, and returns the parsed EnGrad. <code class="docutils literal notranslate"><span class="pre">bsse.py</span></code>
+builds <code class="docutils literal notranslate"><span class="pre">compound_text</span></code> from the <code class="docutils literal notranslate"><span class="pre">.cmp</span></code> template (shipped in <code class="docutils literal notranslate"><span class="pre">data/</span></code>) by
+substituting the ORCA <code class="docutils literal notranslate"><span class="pre">with</span></code>-style variables from the resolved parameters
+(reusing <code class="docutils literal notranslate"><span class="pre">Energy.keyword_line</span></code> for <code class="docutils literal notranslate"><span class="pre">method</span></code>/<code class="docutils literal notranslate"><span class="pre">basis</span></code>/<code class="docutils literal notranslate"><span class="pre">restOfInput</span></code>).</p>
+</section>
+<section id="ghost-geometry">
+<h3>Ghost geometry<a class="headerlink" href="#ghost-geometry" title="Link to this heading">#</a></h3>
+<p>The one genuinely new piece of chemistry input is writing the complex with
+fragment B as ghosts. In an ORCA coordinate block a ghost centre is the element
+symbol with a trailing colon, e.g. <code class="docutils literal notranslate"><span class="pre">O:</span></code>  (<strong>verify exact syntax against the
+target ORCA version during implementation</strong> – the design should not hard-code
+it in more than one place). <code class="docutils literal notranslate"><span class="pre">geometry_block</span></code> gains an optional
+<code class="docutils literal notranslate"><span class="pre">ghost_atoms=&lt;set</span> <span class="pre">of</span> <span class="pre">indices&gt;</span></code> argument that appends the colon for those atoms;
+the BSSE node writes the complex once with B’s atoms flagged.</p>
+</section>
+<section id="fragment-definition-the-main-new-ui-question">
+<h3>Fragment definition (the main new UI question)<a class="headerlink" href="#fragment-definition-the-main-new-ui-question" title="Link to this heading">#</a></h3>
+<p>The node must know which atoms are fragment A vs B. Proposed control, defaulting
+to zero-configuration for the common case:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;fragments&quot;</span></code> = <code class="docutils literal notranslate"><span class="pre">&quot;auto</span> <span class="pre">(two</span> <span class="pre">molecules)&quot;</span></code> (default) | <code class="docutils literal notranslate"><span class="pre">&quot;by</span> <span class="pre">atom</span>
+<span class="pre">selection&quot;</span></code>. Auto uses <code class="docutils literal notranslate"><span class="pre">configuration.find_molecules()</span></code> and requires
+exactly two molecules (error otherwise, with a clear message). “By atom
+selection” exposes an atom-index / subset selector for fragment A; the
+remainder is fragment B.</p></li>
+<li><p>Upstream fit: <code class="docutils literal notranslate"><span class="pre">dimer_builder_step</span></code> already produces two-molecule
+configurations, so <code class="docutils literal notranslate"><span class="pre">auto</span></code> will “just work” for the MLFF dimer campaign.</p></li>
+</ul>
+</section>
+<section id="options-to-expose">
+<h3>Options to expose<a class="headerlink" href="#options-to-expose" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DoOptimization</span></code> (default off): relax the free monomers before the
+correction. Off is correct for a rigid-geometry PES/MLFF target; on gives the
+CP correction relative to relaxed monomers.</p></li>
+<li><p>Everything else (method, basis, <code class="docutils literal notranslate"><span class="pre">restOfInput</span></code> = ORCA “extra keywords”,
+grid, SCF convergence, SThresh) is inherited from Energy.</p></li>
+</ul>
+</section>
+<section id="results">
+<h3>Results<a class="headerlink" href="#results" title="Link to this heading">#</a></h3>
+<p>Take the corrected <span class="math notranslate nohighlight">\(\nabla E_\text{CP}\)</span> (E_h/bohr) from <code class="docutils literal notranslate"><span class="pre">result.engrad</span></code>,
+but compute <span class="math notranslate nohighlight">\(E_\text{CP}\)</span> (E_h) in Python from each sub-job’s
+<code class="docutils literal notranslate"><span class="pre">FINAL</span> <span class="pre">SINGLE</span> <span class="pre">POINT</span> <span class="pre">ENERGY</span></code> rather than from <code class="docutils literal notranslate"><span class="pre">result.engrad</span></code> – the script’s
+EnGrad energy uses ORCA’s <code class="docutils literal notranslate"><span class="pre">SCF_Energy</span></code>, which omits the MP2 correlation of a
+double hybrid (see <code class="docutils literal notranslate"><span class="pre">NOTES_implementation.rst</span></code>). Store them through the <strong>same</strong>
+metadata result names the Energy sub-step uses (<code class="docutils literal notranslate"><span class="pre">energy</span></code> and <code class="docutils literal notranslate"><span class="pre">gradients</span></code>),
+plus <code class="docutils literal notranslate"><span class="pre">uncorrected</span> <span class="pre">energy</span></code> and <code class="docutils literal notranslate"><span class="pre">bsse</span> <span class="pre">correction</span></code>, so downstream MLFF tooling
+and the property database treat a BSSE run like any other energy+gradient run.
+Tag stored properties with the level of theory so corrected data is not silently
+mixed with uncorrected data.</p>
+</section>
+</section>
+<section id="known-limitations-scope-boundaries-of-phase-1">
+<h2>Known limitations (scope boundaries of Phase 1)<a class="headerlink" href="#known-limitations-scope-boundaries-of-phase-1" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>ORCA only, two fragments only.</strong> <code class="docutils literal notranslate"><span class="pre">CreateBSSE</span></code> is hard-wired to two
+fragments; N-body needs the general step.</p></li>
+<li><p><strong>One charge / multiplicity for all sub-calculations.</strong> The script passes the
+complex’s <code class="docutils literal notranslate"><span class="pre">charge</span></code>/<code class="docutils literal notranslate"><span class="pre">mult</span></code> to the monomer steps too, so Phase 1 is valid
+only when both monomers share the complex’s charge and spin (the usual
+neutral-singlet-monomer case). Charged or open-shell fragments need
+per-fragment charge/mult – deferred to the general step. <strong>Guard this in the
+node</strong> and refuse other cases with a clear error rather than returning wrong
+numbers.</p></li>
+<li><p><strong>Analytic-gradient methods only</strong> (the script always requests <code class="docutils literal notranslate"><span class="pre">EnGrad</span></code>);
+reuse <code class="docutils literal notranslate"><span class="pre">Energy</span></code>’s existing analytic/numeric gradient check to gate the method.</p></li>
+<li><p><strong>No MDI.</strong> Each configuration is one ORCA Compound job (five internal SCFs);
+cost per config is ~5x a plain single point. Fine for offline training-set
+generation driven by a SEAMM Loop.</p></li>
+</ul>
+</section>
+<section id="validation">
+<h2>Validation<a class="headerlink" href="#validation" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Reproduce the raw script.</strong> Run <code class="docutils literal notranslate"><span class="pre">BSSEGradient.cmp</span></code> by hand on a water dimer
+(BP86 or the campaign method) and confirm the SEAMM sub-step returns the same
+<code class="docutils literal notranslate"><span class="pre">result.engrad</span></code> energy and gradient to full precision.</p></li>
+<li><p><strong>Physical check.</strong> Corrected interaction energy is less negative than the
+uncorrected one; the correction shrinks as the basis grows (e.g. def2-SVP -&gt;
+def2-TZVPP).</p></li>
+<li><p><strong>Gradient consistency.</strong> Finite-difference <span class="math notranslate nohighlight">\(E_\text{CP}\)</span> vs the returned
+<span class="math notranslate nohighlight">\(\nabla E_\text{CP}\)</span> on a few displacements.</p></li>
+<li><p>Add a <code class="docutils literal notranslate"><span class="pre">tests/</span></code> case with a small, fast dimer.</p></li>
+</ul>
+</section>
+<section id="citations">
+<h2>Citations<a class="headerlink" href="#citations" title="Link to this heading">#</a></h2>
+<p>Add to the step’s references: Boys &amp; Bernardi, <em>Mol. Phys.</em> <strong>19</strong>, 553 (1970)
+for the counterpoise method; the ORCA <em>Compound</em> feature and the
+<code class="docutils literal notranslate"><span class="pre">BSSEGradient.cmp</span></code> authors (Liakos &amp; Neese). Keep the existing ORCA / method /
+basis citations.</p>
+</section>
+<section id="implementation-task-list">
+<h2>Implementation task list<a class="headerlink" href="#implementation-task-list" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Ship <code class="docutils literal notranslate"><span class="pre">BSSEGradient.cmp</span></code> as a template in <code class="docutils literal notranslate"><span class="pre">orca_step/data/</span></code> (parameterized
+via ORCA <code class="docutils literal notranslate"><span class="pre">with</span></code> variables).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orca_base</span></code>: <code class="docutils literal notranslate"><span class="pre">geometry_block(...,</span> <span class="pre">ghost_atoms=None)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">run_orca_compound(...)</span></code> + EnGrad parsing reuse.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bsse_parameters.py</span></code> (fragments, DoOptimization) and <code class="docutils literal notranslate"><span class="pre">tk_bsse.py</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bsse.py</span></code>: resolve fragments, build the Compound text, run, parse, store
+<code class="docutils literal notranslate"><span class="pre">energy</span></code>/<code class="docutils literal notranslate"><span class="pre">gradients</span></code>; guard the charge/mult and gradient-availability
+limits.</p></li>
+<li><p>Entry points in <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> (headless + tk) and re-exports in
+<code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>.</p></li>
+<li><p>Citations, <code class="docutils literal notranslate"><span class="pre">tests/</span></code>, user-guide section, HISTORY entry; release via the
+<code class="docutils literal notranslate"><span class="pre">release-seamm-plugin</span></code> skill.</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">2026-07-09 BSSE (counterpoise) sub-step</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="NOTES_implementation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Implementation notes</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#goal">Goal</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-compound-script-computes">What the Compound script computes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-runs-today-the-raw-script">How it runs today (the raw script)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-in-seamm">Design in SEAMM</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#input-generation-new-path-in-orca-base">Input generation (new path in <code class="docutils literal notranslate"><span class="pre">orca_base</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ghost-geometry">Ghost geometry</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fragment-definition-the-main-new-ui-question">Fragment definition (the main new UI question)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options-to-expose">Options to expose</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#results">Results</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#known-limitations-scope-boundaries-of-phase-1">Known limitations (scope boundaries of Phase 1)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validation">Validation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#citations">Citations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementation-task-list">Implementation task list</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../../_sources/developer_guide/campaigns/2026-07-09/bsse_scope.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

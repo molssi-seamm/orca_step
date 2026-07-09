@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.9.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.9.2 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=8d2249e7"></script>
+    <script src="_static/documentation_options.js?v=badac38d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.9.1" />
+  <meta name="docsearch:version" content="2026.7.9.2" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,22 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.7.9.2 – BSSE (counterpoise) sub-step</dt><dd><ul class="simple">
+<li><p>New <strong>BSSE</strong> sub-step: the counterpoise-corrected (Boys–Bernardi) energy
+and gradient of a two-fragment complex, in a single ORCA run, for
+BSSE-free machine-learned-force-field training data. It drives ORCA’s
+Compound facility (the BSSEGradient script by D. G. Liakos &amp; F. Neese).</p></li>
+<li><p>Reports the BSSE-corrected energy, the uncorrected (raw) energy, and the
+correction (in E_h and kcal/mol), plus the corrected gradient; each can be
+saved from the Results tab.</p></li>
+<li><p>Fragments are found automatically from the two molecules in the structure
+(so it works directly on a Dimer Builder dimer) or specified by atom; an
+option relaxes the free monomers before the correction.</p></li>
+<li><p>First version: a neutral, closed-shell complex of exactly two fragments
+with an ORCA-internal basis set. Any analytic-gradient method works,
+including dispersion-corrected and double-hybrid DFT and MP2.</p></li>
+</ul>
+</dd>
 <dt>2026.7.9.1 – SCF SThresh control on the Energy step</dt><dd><ul class="simple">
 <li><p>New <strong>SCF SThresh</strong> control: set ORCA’s SCF convergence threshold (the
 <code class="docutils literal notranslate"><span class="pre">%scf</span> <span class="pre">SThresh</span></code> value, in E_h). Leave it at <code class="docutils literal notranslate"><span class="pre">default</span></code> to let the SCF
