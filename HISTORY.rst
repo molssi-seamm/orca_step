@@ -2,6 +2,20 @@
 History
 =======
 
+2026.7.10.1 -- Explicitly-correlated F12 methods
+    * Added the explicitly-correlated **CCSD(T)-F12D** and **DLPNO-CCSD(T)-F12D**
+      methods to the Method pull-down, and the ``cc-pVDZ-F12`` / ``cc-pVTZ-F12`` /
+      ``cc-pVQZ-F12`` orbital bases to the basis list.
+    * An F12 method now **adds its complementary auxiliary basis (CABS)
+      automatically** -- ``<basis>-CABS`` derived from the chosen F12 basis --
+      unless one is already in the extra keywords.
+    * Selecting an F12 method **narrows the basis-set list to the F12 bases** (and
+      forces the ORCA-internal source) so only a valid basis can be chosen; a
+      hand-edited flowchart that still pairs an F12 method with a non-F12 basis is
+      stopped early with a clear message.
+    * Documented that F12 largely removes basis-set superposition error, so the
+      counterpoise (BSSE) correction is unnecessary for F12 methods.
+
 2026.7.10 -- BSSE: energy-only mode (enables CCSD(T))
     * New **Compute the gradient** control on the BSSE sub-step. With it set to
       ``no`` (energy only), the counterpoise correction runs without a gradient,

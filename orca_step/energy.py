@@ -198,7 +198,57 @@ class Energy(orca_step.ORCABase):
         extra = P["extra keywords"].strip()
         if extra:
             keywords.append(extra)
+        # Explicitly-correlated (F12) methods need a complementary auxiliary
+        # basis set (CABS); add the one matching the F12 orbital basis.
+        cabs = self._cabs_keyword(P)
+        if cabs:
+            keywords.append(cabs)
         return " ".join(k for k in keywords if k)
+
+    def _cabs_keyword(self, P):
+        """The CABS basis keyword to add for an F12 method, or '' if none.
+
+        Explicitly-correlated F12 methods require a complementary auxiliary basis
+        set. ORCA's F12-optimized orbital bases (``cc-pVnZ-F12``) each have a
+        matching ``<basis>-CABS``; derive it from the chosen basis so it tracks
+        DZ/TZ/QZ automatically. Returns '' when the method is not F12, when the
+        user already supplied a CABS in the extra keywords, or when the basis is
+        not an F12 basis (there is no matching CABS -- ORCA will then refuse, and
+        the run-time check below warns about it).
+        """
+        method, basis = self._resolve_method_basis(P)
+        if "F12" not in method.upper():
+            return ""
+        extra = (P.get("extra keywords", "") or "").upper()
+        if "CABS" in extra:
+            return ""
+        basis = self._basis_name(basis)
+        if basis.upper().endswith("-F12"):
+            return f"{basis}-CABS"
+        return ""
+
+    def _is_f12(self, P):
+        """Whether the resolved method is an explicitly-correlated F12 method."""
+        method, _ = self._resolve_method_basis(P)
+        return "F12" in method.upper()
+
+    def _check_f12(self, P):
+        """Fail early (clear message) if an F12 method is chosen without a usable
+        CABS: ORCA requires an F12 orbital basis so the matching CABS can be added
+        (or an explicit CABS in the extra keywords), and aborts otherwise."""
+        if not self._is_f12(P):
+            return
+        if "CABS" in (P.get("extra keywords", "") or "").upper():
+            return  # the user supplied a CABS explicitly
+        method, basis = self._resolve_method_basis(P)
+        if not self._basis_name(basis).upper().endswith("-F12"):
+            raise RuntimeError(
+                f"{method} is an explicitly-correlated F12 method and needs an "
+                "F12 orbital basis (cc-pVDZ-F12 / cc-pVTZ-F12 / cc-pVQZ-F12) so "
+                "the matching '<basis>-CABS' can be added automatically. You "
+                f"chose '{self._basis_name(basis)}'. Pick an F12 basis, or add a "
+                "CABS basis to the extra keywords."
+            )
 
     @staticmethod
     def _wants_gradients(P):
@@ -375,6 +425,8 @@ class Energy(orca_step.ORCABase):
         )
 
         printer.important(__(self.description_text(P), indent=self.indent))
+
+        self._check_f12(P)
 
         keyword_line = self.keyword_line(P)
         if keywords:

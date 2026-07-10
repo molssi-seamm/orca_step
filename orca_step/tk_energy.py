@@ -109,6 +109,7 @@ class TkEnergy(seamm.TkNode):
 
         use_mc = self["use model chemistry"].get() == "yes"
         is_dft = (not use_mc) and self["method"].get() == "DFT"
+        is_f12 = (not use_mc) and "F12" in self["method"].get().upper()
 
         row = 0
         widgets = []  # full-width (column 0) controls
@@ -128,6 +129,8 @@ class TkEnergy(seamm.TkNode):
         # rest are ORCA run details that apply either way.
         if not use_mc:
             add_full("method")
+            # Narrow the basis list to what the method allows (F12 -> F12 bases).
+            self._filter_basis_sets()
             if is_dft:
                 # Functional type indented one level, functional two levels.
                 self._filter_functionals()
@@ -142,8 +145,9 @@ class TkEnergy(seamm.TkNode):
             # CBS extrapolation replaces the fixed basis: show the family instead
             # of the basis/basis-source controls when it is on. It is hidden for
             # sub-steps that need a gradient (e.g. Optimization), where an
-            # extrapolated energy is unusable.
-            show_cbs = self._show_cbs()
+            # extrapolated energy is unusable, and for F12 methods (which fix a
+            # specific F12 basis).
+            show_cbs = self._show_cbs() and not is_f12
             if show_cbs:
                 add_full("basis set extrapolation")
             if show_cbs and self["basis set extrapolation"].get() != "none":
@@ -198,6 +202,25 @@ class TkEnergy(seamm.TkNode):
             browse = getattr(self["basis"], "_browse", None)
             if callable(browse):
                 browse()
+
+    def _filter_basis_sets(self):
+        """Restrict the basis dropdown to the choices valid for the current
+        method, so the user can only pick a usable basis.
+
+        Explicitly-correlated F12 methods work only with the F12-optimized
+        orbital bases (they need a matching CABS), so when one is chosen the list
+        is narrowed to those and the source is forced to ORCA-internal (the Basis
+        Set Exchange has no CABS). Otherwise the full curated list is offered.
+        """
+        all_bases = list(orca_step.metadata["basis sets"])
+        if "F12" in self["method"].get().upper():
+            f12 = [b for b in all_bases if b.upper().endswith("-F12")]
+            self["basis"].config(values=f12)
+            if self["basis"].get() not in f12:
+                self["basis"].set("cc-pVTZ-F12" if "cc-pVTZ-F12" in f12 else f12[0])
+            self["basis source"].set("ORCA internal")
+        else:
+            self["basis"].config(values=all_bases)
 
     def _filter_functionals(self):
         """Restrict the functional pulldown to the functionals of the currently
