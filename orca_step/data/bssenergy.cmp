@@ -1,0 +1,83 @@
+#----------------------------------------------------------
+# Energy-only BSSE (counterpoise) driver.
+#
+# A gradient-free companion to BSSEGradient.cmp (D. G. Liakos & F. Neese):
+# it runs the five sub-calculations of the Boys-Bernardi counterpoise scheme
+# but does NOT request EnGrad or read any gradient, so it also works for
+# methods that have no analytic gradient in ORCA (e.g. CCSD(T)/DLPNO-CCSD(T)).
+#
+# It does no arithmetic itself: SEAMM assembles the counterpoise-corrected
+# energy from the FINAL SINGLE POINT ENERGY of each 'COMPOUND JOB' (in the
+# order fragmentA(AB), monomerA, fragmentB(AB), monomerB, dimer). The input
+# geometry must be the whole complex with one fragment flagged as ghost atoms.
+#
+# NOTE: the xyz files that 'CreateBSSE' creates contain the geometries in BOHRS.
+# ---------------------------------------------------------
+Variable molecule       = "01.xyz";        # xyz of the complex (one frag as ghosts)
+Variable method         = "HF";            # Method
+Variable basis          = " ";             # Basis set
+Variable restOfInput    = "";              # The rest of the simple input
+Variable charge         = 0;               # Charge
+Variable mult           = 1;               # Spin multiplicity
+Variable myFilename     = "compoundBSSE";  # Name used for the created xyz files
+Variable DoOptimization = false;           # Optimize the free monomers
+Variable removeFiles    = true;            # Remove *_Compound_*, *bas* files
+
+Geometry fragA;
+Variable optimization;
+
+if (DoOptimization) then
+  optimization = "opt";
+else
+  optimization = " ";
+endif
+
+# -------------------------------------
+# Fragment A (A real, B as ghost atoms)
+# -------------------------------------
+NewStep
+  !&{method} &{basis} &{restOfInput}
+  *xyzfile &{charge} &{mult} &{molecule}
+StepEnd
+
+# Read the geometry of Fragment A and create the other four xyz files.
+fragA.Read();
+fragA.CreateBSSE(filename=myFilename);
+
+# -------------------------------------
+# Monomer A (own basis, optionally optimized)
+# -------------------------------------
+NewStep
+  !&{method} &{basis} &{restOfInput} &{optimization} Bohrs
+  *xyzFile &{charge} &{mult} &{myFilename}_MonomerA.xyz
+StepEnd
+
+# -------------------------------------
+# Fragment B (B real, A as ghost atoms)
+# -------------------------------------
+NewStep
+  !&{method} &{basis} &{restOfInput} Bohrs
+  *xyzFile &{charge} &{mult} &{myFilename}_FragmentB.xyz
+StepEnd
+
+# -------------------------------------
+# Monomer B (own basis, optionally optimized)
+# -------------------------------------
+NewStep
+  !&{method} &{basis} &{restOfInput} &{optimization} Bohrs
+  *xyzFile &{charge} &{mult} &{myFilename}_MonomerB.xyz
+StepEnd
+
+# -------------------------------------
+# Dimer (the whole complex)
+# -------------------------------------
+NewStep
+  !&{method} &{basis} &{restOfInput} Bohrs
+  *xyzFile &{charge} &{mult} &{myFilename}_Total.xyz
+StepEnd
+
+if (removeFiles) then
+  sys_cmd("rm *_Compound_* *.bas*");
+endif
+
+End

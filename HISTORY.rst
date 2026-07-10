@@ -2,6 +2,14 @@
 History
 =======
 
+2026.7.10 -- BSSE: energy-only mode (enables CCSD(T))
+    * New **Compute the gradient** control on the BSSE sub-step. With it set to
+      ``no`` (energy only), the counterpoise correction runs without a gradient,
+      which is cheaper and works for methods that have no analytic gradient in
+      ORCA -- notably ``CCSD(T)`` / ``DLPNO-CCSD(T)`` -- for gold-standard
+      counterpoise interaction energies. The default (``yes``) is unchanged and
+      still produces the corrected energy and gradient for MLFF training.
+
 2026.7.9.2 -- BSSE (counterpoise) sub-step
     * New **BSSE** sub-step: the counterpoise-corrected (Boys--Bernardi) energy
       and gradient of a two-fragment complex, in a single ORCA run, for

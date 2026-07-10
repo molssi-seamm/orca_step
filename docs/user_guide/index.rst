@@ -163,8 +163,8 @@ drives ORCA's *Compound* facility (the ``BSSEGradient`` script by D. G. Liakos &
 F. Neese), which runs the five sub-calculations (the dimer, and each fragment
 both in the full dimer basis and in its own basis) and assembles the correction.
 
-The level-of-theory controls are the same as the Energy step. Two extra controls
-define the correction:
+The level-of-theory controls are the same as the Energy step. Three extra
+controls define the correction:
 
 * **Fragments** — how to split the complex into the two fragments. ``auto (2
   molecules)`` (the default) uses the two separate molecules in the structure
@@ -174,29 +174,35 @@ define the correction:
   structure) — a comma/space separated list and/or ranges, e.g. ``1-3, 5``; the
   remaining atoms form fragment B. The **Fragment A atoms** field is shown only
   when ``specified`` is selected.
+* **Compute the gradient** — ``yes`` (the default) computes the
+  counterpoise-corrected gradient (forces) as well as the energy, which is what
+  MLFF training needs. ``no`` (energy only) is cheaper and, importantly, allows
+  methods that have **no analytic gradient** in ORCA — notably ``CCSD(T)`` and
+  ``DLPNO-CCSD(T)`` — for gold-standard counterpoise *interaction energies*.
 * **Optimize free monomers** — whether to relax each isolated monomer before
   taking the correction. Leave it ``no`` for a fixed-geometry PES / MLFF target.
 
 The step reports, and offers on the Results tab, the **BSSE-corrected energy**
 (the ``energy`` result), the **uncorrected** (raw) complex energy, the **BSSE
-correction** (corrected minus uncorrected, also shown in kcal/mol), and the
-corrected **gradient**. Tick any of them on the Results tab to save it to a
-variable, table, or the property database.
+correction** (corrected minus uncorrected, also shown in kcal/mol), and — when
+requested — the corrected **gradient**. Tick any of them on the Results tab to
+save it to a variable, table, or the property database.
 
 .. note::
 
    **Phase-1 limitations.** This first version supports a **neutral,
    closed-shell** complex of **exactly two** fragments, using an
-   **ORCA-internal** basis set (not the Basis Set Exchange). Any method with an
-   **analytic gradient** works — HF, DFT (including dispersion-corrected and
-   **double-hybrid** functionals such as ``REVDSD-PBEP86-D4/2021``), and MP2 —
-   but not methods with only a numerical gradient (e.g. ``(DLPNO-)CCSD(T)``). The
-   same charge/multiplicity is applied to each monomer, so charged or open-shell
-   fragments are refused with a clear message; the SThresh control and the extra
-   property analyses (bond orders, Hirshfeld charges, polarizability, saved
-   wavefunction) are not available in the BSSE sub-step. N-fragment and
-   code-agnostic counterpoise corrections are planned as a separate, general BSSE
-   step.
+   **ORCA-internal** basis set (not the Basis Set Exchange). For the **energy**,
+   any method works — HF, DFT (including dispersion-corrected and
+   **double-hybrid** functionals such as ``REVDSD-PBEP86-D4/2021``), MP2, and
+   ``(DLPNO-)CCSD(T)``. Computing the **gradient** additionally requires an
+   **analytic** gradient, so the numerical-gradient methods (``(DLPNO-)CCSD(T)``)
+   are available in *energy-only* mode only. The same charge/multiplicity is
+   applied to each monomer, so charged or open-shell fragments are refused with a
+   clear message; the SThresh control and the extra property analyses (bond
+   orders, Hirshfeld charges, polarizability, saved wavefunction) are not
+   available in the BSSE sub-step. N-fragment and code-agnostic counterpoise
+   corrections are planned as a separate, general BSSE step.
 
 Saving results to the database
 ==============================

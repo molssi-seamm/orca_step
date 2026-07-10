@@ -49,6 +49,22 @@ class BSSEParameters(EnergyParameters):
                 "when the fragments are found automatically."
             ),
         },
+        "compute gradient": {
+            "default": "yes",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("yes", "no"),
+            "format_string": "",
+            "description": "Compute the gradient:",
+            "help_text": (
+                "Whether to compute the counterpoise-corrected gradient (forces) "
+                "as well as the energy. 'yes' (the default) is what MLFF training "
+                "needs. 'no' (energy only) is cheaper and, importantly, allows "
+                "methods that have no analytic gradient in ORCA -- notably "
+                "CCSD(T) / DLPNO-CCSD(T) -- for gold-standard counterpoise "
+                "interaction energies."
+            ),
+        },
         "optimize monomers": {
             "default": "no",
             "kind": "enum",
