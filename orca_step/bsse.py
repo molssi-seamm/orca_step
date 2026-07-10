@@ -82,10 +82,12 @@ class BSSE(Energy):
         else:
             m, basis = self._resolve_method_basis(P)
             method = f"{m}/{basis}"
-        text = (
-            f"Counterpoise (BSSE) corrected energy and gradient with ORCA at "
-            f"{method}."
+        what = (
+            "energy and gradient"
+            if P.get("compute gradient", "yes") == "yes"
+            else "energy"
         )
+        text = f"Counterpoise (BSSE) corrected {what} with ORCA at {method}."
         return self.header + "\n" + __(text, indent=4 * " ").__str__()
 
     # ------------------------------------------------------------------
@@ -160,10 +162,10 @@ class BSSE(Energy):
             lines.append(f"{label:4s} {x:15.8f} {y:15.8f} {z:15.8f}")
         return "\n".join(lines) + "\n"
 
-    def _compound_input(self, P, xyz_filename):
+    def _compound_input(self, P, xyz_filename, script_name):
         """Return ``(compound_block, method, basis)`` -- the ``%Compound`` block
-        that runs ``bssegradient.cmp`` with the resolved level of theory injected
-        via a ``with`` clause."""
+        that runs ``script_name`` with the resolved level of theory injected via
+        a ``with`` clause."""
         method, basis = self._resolve_method_basis(P)
 
         # "rest of input": the ! keywords the Compound sub-steps also use. SThresh
@@ -188,7 +190,7 @@ class BSSE(Energy):
 
         block = "\n".join(
             [
-                '%Compound "bssegradient.cmp"',
+                f'%Compound "{script_name}"',
                 "  with",
                 f'    molecule       = "{xyz_filename}";',
                 f'    method         = "{method}";',
@@ -204,9 +206,9 @@ class BSSE(Energy):
         )
         return block, method, basis
 
-    def _compound_script(self):
-        """The shipped ``bssegradient.cmp`` Compound script (as text)."""
-        path = importlib.resources.files("orca_step") / "data" / "bssegradient.cmp"
+    def _compound_script(self, script_name):
+        """The shipped Compound script `script_name` (as text)."""
+        path = importlib.resources.files("orca_step") / "data" / script_name
         return path.read_text()
 
     # ------------------------------------------------------------------
@@ -237,25 +239,37 @@ class BSSE(Energy):
             )
         )
 
+        # Energy-only mode uses a gradient-free Compound script, so a method with
+        # no analytic gradient (e.g. CCSD(T)) still runs; otherwise the gradient
+        # script is used and the corrected gradient comes from its EnGrad file.
+        want_gradient = P.get("compute gradient", "yes") == "yes"
+        script_name = "bssegradient.cmp" if want_gradient else "bssenergy.cmp"
+
         xyz_filename = "bsse.xyz"
         xyz_text = self._ghost_xyz(configuration, ghost_atoms=fragmentB)
-        compound_block, method, basis = self._compound_input(P, xyz_filename)
+        compound_block, method, basis = self._compound_input(
+            P, xyz_filename, script_name
+        )
+        extra_files = {
+            script_name: self._compound_script(script_name),
+            xyz_filename: xyz_text,
+        }
 
         # The counterpoise-corrected GRADIENT comes from the script's EnGrad file
         # (its ghost-atom bookkeeping is done on the full-method Nuclear_Gradient,
         # so it is correct for every method). Its ENERGY is not used -- see below.
-        _, gradient = self.run_orca_compound(
-            compound_block,
-            extra_files={
-                "bssegradient.cmp": self._compound_script(),
-                xyz_filename: xyz_text,
-            },
-        )
-        if gradient is None:
-            raise RuntimeError(
-                "The ORCA BSSE Compound job produced no result.engrad gradient; "
-                "see orca.out and orca.err."
+        gradient = None
+        if want_gradient:
+            _, gradient = self.run_orca_compound(
+                compound_block, extra_files=extra_files
             )
+            if gradient is None:
+                raise RuntimeError(
+                    "The ORCA BSSE Compound job produced no result.engrad "
+                    "gradient; see orca.out and orca.err."
+                )
+        else:
+            self.run_orca_compound(compound_block, extra_files=extra_files, engrad=None)
 
         # Compute the corrected ENERGY here from the five sub-calculations' total
         # energies (each step's FINAL SINGLE POINT ENERGY), NOT from the script's
@@ -280,10 +294,11 @@ class BSSE(Energy):
         data = {
             "success": True,
             "energy": corrected,
-            "gradients": gradient,
             "uncorrected energy": e_total,
             "bsse correction": corrected - e_total,
         }
+        if gradient is not None:
+            data["gradients"] = gradient
         self._data = data
         self._cite_references(P)
         self._cite_bsse()
@@ -300,14 +315,19 @@ class BSSE(Energy):
                 "bases; choose an ORCA-internal basis set."
             )
         # The energy is taken from each step's FINAL SINGLE POINT ENERGY (the
-        # full-method total), so double hybrids and MP2 are fine; only an
-        # analytic gradient is required (the script always requests EnGrad).
+        # full-method total), so double hybrids and MP2 are fine. When the
+        # gradient is also requested, the method must have an analytic gradient
+        # (the gradient script requests EnGrad); energy-only lifts that.
         method, _ = self._resolve_method_basis(P)
-        if self._gradient_availability(P) != "analytic":
+        if (
+            P.get("compute gradient", "yes") == "yes"
+            and self._gradient_availability(P) != "analytic"
+        ):
             raise RuntimeError(
                 f"The ORCA BSSE sub-step needs an analytic gradient, but {method} "
-                "has only a numerical one (e.g. (DLPNO-)CCSD(T)). Choose a method "
-                "or functional with an analytic gradient."
+                "has only a numerical one (e.g. (DLPNO-)CCSD(T)). Set 'Compute "
+                "the gradient' to 'no' for an energy-only correction, or choose a "
+                "method/functional with an analytic gradient."
             )
         # The Compound script applies the complex's charge/multiplicity to the
         # monomer sub-calculations too, so it is only valid when each neutral

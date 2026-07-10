@@ -368,15 +368,17 @@ class ORCABase(seamm.Node):
         extra_files : dict | None
             Files the Compound job reads (e.g. ``{"bssegradient.cmp": ...,
             "bsse.xyz": ...}``), written into the run directory.
-        engrad : str
+        engrad : str | None
             The EnGrad file the Compound writes with the final energy and
-            gradient.
+            gradient. Pass ``None`` for an energy-only job that writes no EnGrad
+            (e.g. a method with no analytic gradient); then ``(None, None)`` is
+            returned and the caller gets the energy elsewhere.
 
         Returns
         -------
         tuple(float | None, list | None)
             The energy (E_h) and gradient (``[n_atoms][3]``, E_h/bohr) from the
-            Compound's EnGrad file.
+            Compound's EnGrad file, or ``(None, None)`` when ``engrad`` is None.
         """
         directory = Path(self.directory)
         directory.mkdir(parents=True, exist_ok=True)
@@ -398,20 +400,16 @@ class ORCABase(seamm.Node):
             files.update(extra_files)
         logger.debug("orca.inp (Compound):\n" + input_text)
 
+        return_files = ["orca.out", "orca.err", "*.bibtex", "*.txt", "*.engrad"]
+        if engrad:
+            return_files.append(engrad)
         cmd = lib_prefix + ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
         result = self.flowchart.executor.run(
             cmd=cmd,
             config=config,
             directory=self.directory,
             files=files,
-            return_files=[
-                "orca.out",
-                "orca.err",
-                "*.bibtex",
-                "*.txt",
-                "*.engrad",
-                engrad,
-            ],
+            return_files=return_files,
             in_situ=True,
             shell=True,
             env=env,
@@ -419,9 +417,11 @@ class ORCABase(seamm.Node):
         if not result:
             raise RuntimeError("There was an error running the ORCA Compound job.")
 
-        # The Compound's orca.out ends with the last sub-calculation, so the
-        # corrected energy and gradient come from the EnGrad file it wrote.
-        return self._read_engrad(directory / engrad)
+        # Read the corrected gradient from the EnGrad file the Compound wrote,
+        # when one was requested (energy-only jobs pass engrad=None).
+        if engrad:
+            return self._read_engrad(directory / engrad)
+        return None, None
 
     @staticmethod
     def _read_engrad(path):

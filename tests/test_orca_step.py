@@ -783,7 +783,7 @@ def test_bsse_compound_input():
         "extra keywords": "D3BJ",
         "optimize monomers": "no",
     }
-    block, method, basis = node._compound_input(P, "bsse.xyz")
+    block, method, basis = node._compound_input(P, "bsse.xyz", "bssegradient.cmp")
     assert method == "B3LYP" and basis == "def2-SVP"
     assert '%Compound "bssegradient.cmp"' in block
     assert "with" in block and block.rstrip().endswith("end")
@@ -809,14 +809,41 @@ def test_bsse_compound_input_optimize():
         "extra keywords": "",
         "optimize monomers": "yes",
     }
-    block, _, _ = node._compound_input(P, "bsse.xyz")
+    block, _, _ = node._compound_input(P, "bsse.xyz", "bssenergy.cmp")
+    assert '%Compound "bssenergy.cmp"' in block
     assert "DoOptimization = true;" in block
     assert 'restOfInput    = "";' in block
 
 
+def test_bsse_energy_only_script_shipped():
+    """The gradient-free Compound script is shipped and requests no EnGrad."""
+    import importlib.resources
+
+    text = (
+        importlib.resources.files("orca_step") / "data" / "bssenergy.cmp"
+    ).read_text()
+    # Look only at the active directives, not the explanatory comments.
+    active = "\n".join(
+        ln for ln in text.splitlines() if not ln.lstrip().startswith("#")
+    )
+    assert "CreateBSSE" in active  # still splits the fragments
+    assert "EnGrad" not in active  # but never asks for a gradient
+    assert "Nuclear_Gradient" not in active
+
+
+def _neutral_singlet():
+    """A minimal stand-in configuration for _check_supported."""
+
+    class _Cfg:
+        charge = 0
+        spin_multiplicity = 1
+
+    return _Cfg()
+
+
 def test_bsse_rejects_numeric_gradient_method():
-    """BSSE needs an analytic gradient; (DLPNO-)CCSD(T) has only a numerical
-    one, so it is refused. Double hybrids and MP2 (analytic) are NOT refused."""
+    """With the gradient requested, (DLPNO-)CCSD(T) is refused (numerical
+    gradient only). Double hybrids and MP2 (analytic) are NOT refused."""
     node = orca_step.BSSE()
     P = {
         "use model chemistry": "no",
@@ -825,9 +852,27 @@ def test_bsse_rejects_numeric_gradient_method():
         "basis source": "ORCA internal",
         "auxiliary basis": "AutoAux",
         "extra keywords": "",
+        "compute gradient": "yes",
     }
     with pytest.raises(RuntimeError, match="analytic gradient"):
-        node._check_supported(P, None)
+        node._check_supported(P, _neutral_singlet())
+
+
+def test_bsse_energy_only_allows_ccsdt():
+    """Energy-only lifts the analytic-gradient requirement, so CCSD(T) is
+    accepted (for gold-standard counterpoise interaction energies)."""
+    node = orca_step.BSSE()
+    P = {
+        "use model chemistry": "no",
+        "method": "DLPNO-CCSD(T)",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "AutoAux",
+        "extra keywords": "",
+        "compute gradient": "no",
+    }
+    # Should not raise.
+    node._check_supported(P, _neutral_singlet())
 
 
 def test_bsse_rejects_bse_basis():

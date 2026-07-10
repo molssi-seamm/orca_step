@@ -46,5 +46,6 @@ class TkBSSE(TkEnergy):
         # 'Fragment A atoms' only applies when defining the fragments by hand.
         if self["fragments"].get() == "specified":
             keys.append("fragment A atoms")
+        keys.append("compute gradient")
         keys.append("optimize monomers")
         return tuple(keys)
