@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.9.2 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.10 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=badac38d"></script>
+    <script src="_static/documentation_options.js?v=97bf5ad4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.9.2" />
+  <meta name="docsearch:version" content="2026.7.10" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,15 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.7.10 – BSSE: energy-only mode (enables CCSD(T))</dt><dd><ul class="simple">
+<li><p>New <strong>Compute the gradient</strong> control on the BSSE sub-step. With it set to
+<code class="docutils literal notranslate"><span class="pre">no</span></code> (energy only), the counterpoise correction runs without a gradient,
+which is cheaper and works for methods that have no analytic gradient in
+ORCA – notably <code class="docutils literal notranslate"><span class="pre">CCSD(T)</span></code> / <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)</span></code> – for gold-standard
+counterpoise interaction energies. The default (<code class="docutils literal notranslate"><span class="pre">yes</span></code>) is unchanged and
+still produces the corrected energy and gradient for MLFF training.</p></li>
+</ul>
+</dd>
 <dt>2026.7.9.2 – BSSE (counterpoise) sub-step</dt><dd><ul class="simple">
 <li><p>New <strong>BSSE</strong> sub-step: the counterpoise-corrected (Boys–Bernardi) energy
 and gradient of a two-fragment complex, in a single ORCA run, for

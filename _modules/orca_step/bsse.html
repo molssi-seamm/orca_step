@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.7.9.2 documentation</title>
+    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.7.10 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=badac38d"></script>
+    <script src="../../_static/documentation_options.js?v=97bf5ad4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.9.2" />
+  <meta name="docsearch:version" content="2026.7.10" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -579,10 +579,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">m</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
             <span class="n">method</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Counterpoise (BSSE) corrected energy and gradient with ORCA at &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="n">what</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;energy and gradient&quot;</span>
+            <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
+            <span class="k">else</span> <span class="s2">&quot;energy&quot;</span>
         <span class="p">)</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Counterpoise (BSSE) corrected </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> with ORCA at </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
 
 
@@ -658,10 +660,10 @@
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">4s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compound_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">xyz_filename</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compound_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">xyz_filename</span><span class="p">,</span> <span class="n">script_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``(compound_block, method, basis)`` -- the ``%Compound`` block</span>
-<span class="sd">        that runs ``bssegradient.cmp`` with the resolved level of theory injected</span>
-<span class="sd">        via a ``with`` clause.&quot;&quot;&quot;</span>
+<span class="sd">        that runs ``script_name`` with the resolved level of theory injected via</span>
+<span class="sd">        a ``with`` clause.&quot;&quot;&quot;</span>
         <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
 
         <span class="c1"># &quot;rest of input&quot;: the ! keywords the Compound sub-steps also use. SThresh</span>
@@ -686,7 +688,7 @@
 
         <span class="n">block</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="p">[</span>
-                <span class="s1">&#39;%Compound &quot;bssegradient.cmp&quot;&#39;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">&#39;%Compound &quot;</span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">,</span>
                 <span class="s2">&quot;  with&quot;</span><span class="p">,</span>
                 <span class="sa">f</span><span class="s1">&#39;    molecule       = &quot;</span><span class="si">{</span><span class="n">xyz_filename</span><span class="si">}</span><span class="s1">&quot;;&#39;</span><span class="p">,</span>
                 <span class="sa">f</span><span class="s1">&#39;    method         = &quot;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s1">&quot;;&#39;</span><span class="p">,</span>
@@ -702,9 +704,9 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">block</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">basis</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compound_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The shipped ``bssegradient.cmp`` Compound script (as text).&quot;&quot;&quot;</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">&quot;orca_step&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;bssegradient.cmp&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compound_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The shipped Compound script `script_name` (as text).&quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">&quot;orca_step&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="n">script_name</span>
         <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
 
     <span class="c1"># ------------------------------------------------------------------</span>
@@ -737,25 +739,37 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
+        <span class="c1"># Energy-only mode uses a gradient-free Compound script, so a method with</span>
+        <span class="c1"># no analytic gradient (e.g. CCSD(T)) still runs; otherwise the gradient</span>
+        <span class="c1"># script is used and the corrected gradient comes from its EnGrad file.</span>
+        <span class="n">want_gradient</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
+        <span class="n">script_name</span> <span class="o">=</span> <span class="s2">&quot;bssegradient.cmp&quot;</span> <span class="k">if</span> <span class="n">want_gradient</span> <span class="k">else</span> <span class="s2">&quot;bssenergy.cmp&quot;</span>
+
         <span class="n">xyz_filename</span> <span class="o">=</span> <span class="s2">&quot;bsse.xyz&quot;</span>
         <span class="n">xyz_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ghost_xyz</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">fragmentB</span><span class="p">)</span>
-        <span class="n">compound_block</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compound_input</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">xyz_filename</span><span class="p">)</span>
+        <span class="n">compound_block</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compound_input</span><span class="p">(</span>
+            <span class="n">P</span><span class="p">,</span> <span class="n">xyz_filename</span><span class="p">,</span> <span class="n">script_name</span>
+        <span class="p">)</span>
+        <span class="n">extra_files</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">script_name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compound_script</span><span class="p">(</span><span class="n">script_name</span><span class="p">),</span>
+            <span class="n">xyz_filename</span><span class="p">:</span> <span class="n">xyz_text</span><span class="p">,</span>
+        <span class="p">}</span>
 
         <span class="c1"># The counterpoise-corrected GRADIENT comes from the script&#39;s EnGrad file</span>
         <span class="c1"># (its ghost-atom bookkeeping is done on the full-method Nuclear_Gradient,</span>
         <span class="c1"># so it is correct for every method). Its ENERGY is not used -- see below.</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_compound</span><span class="p">(</span>
-            <span class="n">compound_block</span><span class="p">,</span>
-            <span class="n">extra_files</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;bssegradient.cmp&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compound_script</span><span class="p">(),</span>
-                <span class="n">xyz_filename</span><span class="p">:</span> <span class="n">xyz_text</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">gradient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;The ORCA BSSE Compound job produced no result.engrad gradient; &quot;</span>
-                <span class="s2">&quot;see orca.out and orca.err.&quot;</span>
+        <span class="n">gradient</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">want_gradient</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_compound</span><span class="p">(</span>
+                <span class="n">compound_block</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="n">gradient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;The ORCA BSSE Compound job produced no result.engrad &quot;</span>
+                    <span class="s2">&quot;gradient; see orca.out and orca.err.&quot;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_compound</span><span class="p">(</span><span class="n">compound_block</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span> <span class="n">engrad</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
         <span class="c1"># Compute the corrected ENERGY here from the five sub-calculations&#39; total</span>
         <span class="c1"># energies (each step&#39;s FINAL SINGLE POINT ENERGY), NOT from the script&#39;s</span>
@@ -780,10 +794,11 @@
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
             <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">corrected</span><span class="p">,</span>
-            <span class="s2">&quot;gradients&quot;</span><span class="p">:</span> <span class="n">gradient</span><span class="p">,</span>
             <span class="s2">&quot;uncorrected energy&quot;</span><span class="p">:</span> <span class="n">e_total</span><span class="p">,</span>
             <span class="s2">&quot;bsse correction&quot;</span><span class="p">:</span> <span class="n">corrected</span> <span class="o">-</span> <span class="n">e_total</span><span class="p">,</span>
         <span class="p">}</span>
+        <span class="k">if</span> <span class="n">gradient</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gradients&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gradient</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cite_references</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cite_bsse</span><span class="p">()</span>
@@ -801,14 +816,19 @@
                 <span class="s2">&quot;bases; choose an ORCA-internal basis set.&quot;</span>
             <span class="p">)</span>
         <span class="c1"># The energy is taken from each step&#39;s FINAL SINGLE POINT ENERGY (the</span>
-        <span class="c1"># full-method total), so double hybrids and MP2 are fine; only an</span>
-        <span class="c1"># analytic gradient is required (the script always requests EnGrad).</span>
+        <span class="c1"># full-method total), so double hybrids and MP2 are fine. When the</span>
+        <span class="c1"># gradient is also requested, the method must have an analytic gradient</span>
+        <span class="c1"># (the gradient script requests EnGrad); energy-only lifts that.</span>
         <span class="n">method</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradient_availability</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;analytic&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradient_availability</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;analytic&quot;</span>
+        <span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;The ORCA BSSE sub-step needs an analytic gradient, but </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="s2">&quot;has only a numerical one (e.g. (DLPNO-)CCSD(T)). Choose a method &quot;</span>
-                <span class="s2">&quot;or functional with an analytic gradient.&quot;</span>
+                <span class="s2">&quot;has only a numerical one (e.g. (DLPNO-)CCSD(T)). Set &#39;Compute &quot;</span>
+                <span class="s2">&quot;the gradient&#39; to &#39;no&#39; for an energy-only correction, or choose a &quot;</span>
+                <span class="s2">&quot;method/functional with an analytic gradient.&quot;</span>
             <span class="p">)</span>
         <span class="c1"># The Compound script applies the complex&#39;s charge/multiplicity to the</span>
         <span class="c1"># monomer sub-calculations too, so it is only valid when each neutral</span>
