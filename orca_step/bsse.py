@@ -176,6 +176,8 @@ class BSSE(Energy):
         if aux and aux.lower() != "none":
             rest.append(aux)
         grid = P.get("grid", "default")
+        if grid == "default":
+            grid = self._auto_grid(P)
         if grid and grid != "default":
             rest.append(grid)
         scf = P.get("scf convergence", "default")

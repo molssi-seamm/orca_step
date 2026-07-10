@@ -121,6 +121,13 @@ It only affects methods that use a grid (DFT, RIJCOSX) and is ignored otherwise.
 For a machine-learned-force-field training set, a finer grid (``DEFGRID3``) can
 be worth the cost to keep the energy/force surface smooth.
 
+When the control is left on ``default``, the step **automatically switches to
+``DEFGRID3`` for basis sets with high angular momentum** — h functions or above,
+such as ``cc-pV5Z`` — which the default ``DEFGRID2`` integrates less accurately.
+The angular momentum is read from the Basis Set Exchange (which also covers
+ORCA's internal basis names), so it works for both internal and BSE bases;
+choosing a grid explicitly always overrides this.
+
 SCF convergence
 ===============
 

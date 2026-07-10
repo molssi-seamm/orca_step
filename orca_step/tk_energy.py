@@ -86,6 +86,16 @@ class TkEnergy(seamm.TkNode):
         self.reset_dialog()
         return frame
 
+    def right_click(self, event):
+        """Post the node's popup menu. The base class builds the menu (with the
+        Delete command) but only shows it for the bare TkNode, so each sub-step
+        must add its own items and pop it up -- without this, right-clicking a
+        sub-step in the ORCA sub-flowchart shows no menu (so it can't be
+        deleted). Inherited by the Optimization and BSSE sub-steps."""
+        super().right_click(event)
+        self.popup_menu.add_command(label="Edit..", command=self.edit)
+        self.popup_menu.tk_popup(event.x_root, event.y_root, 0)
+
     def _current_elements(self):
         """Element symbols in the current configuration, to preselect in the
         Basis Set Exchange dialog. Best-effort: empty if there is none yet."""
@@ -154,7 +164,10 @@ class TkEnergy(seamm.TkNode):
                 add_full("extrapolation family")
             else:
                 add_full("basis")
-                add_full("basis source")
+                # The source is forced to ORCA-internal for F12 (no BSE CABS),
+                # so hide the control in that case.
+                if not is_f12:
+                    add_full("basis source")
 
         for key in self._run_detail_keys():
             add_full(key)

@@ -766,6 +766,20 @@ def test_bsse_compound_input_adds_f12_cabs():
     assert "cc-pVTZ-F12-CABS" in block
 
 
+def test_max_am_from_bse():
+    """Angular momentum is read from the Basis Set Exchange (offline)."""
+    assert orca_step.Energy._max_am_from_bse("cc-pVTZ", [8]) == 3  # f
+    assert orca_step.Energy._max_am_from_bse("cc-pV5Z", [8]) == 5  # h
+
+
+def test_auto_grid_threshold():
+    """cc-pV5Z (h) reaches the auto-DEFGRID3 threshold; cc-pVTZ (f) does not."""
+    from orca_step.energy import _HIGH_ANGULAR_MOMENTUM
+
+    assert orca_step.Energy._max_am_from_bse("cc-pV5Z", [8]) >= _HIGH_ANGULAR_MOMENTUM
+    assert orca_step.Energy._max_am_from_bse("cc-pVTZ", [8]) < _HIGH_ANGULAR_MOMENTUM
+
+
 def test_bsse_factory():
     """The BSSE sub-step helper."""
     assert orca_step.BSSEStep().description()["name"] == "BSSE"

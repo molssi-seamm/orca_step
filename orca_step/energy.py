@@ -25,6 +25,11 @@ logger = logging.getLogger(__name__)
 job = printing.getPrinter()
 printer = printing.getPrinter("ORCA")
 
+# Basis sets whose highest angular momentum is at least this (h functions and
+# above, e.g. cc-pV5Z) integrate poorly on ORCA's default grid (DEFGRID2), so
+# when the grid is left on 'default' the step bumps it to DEFGRID3.
+_HIGH_ANGULAR_MOMENTUM = 5
+
 
 class Energy(orca_step.ORCABase):
     """A single-point energy with ORCA.
@@ -170,8 +175,11 @@ class Energy(orca_step.ORCABase):
         if aux and aux.lower() != "none":
             keywords.append(aux)
         # Numerical-integration grid preset (DEFGRID1/2/3); 'default' leaves
-        # ORCA's own default (DEFGRID2) by emitting nothing.
+        # ORCA's own default (DEFGRID2) by emitting nothing -- except that a
+        # high-angular-momentum basis is auto-bumped to DEFGRID3 (see _auto_grid).
         grid = P.get("grid", "default")
+        if grid == "default":
+            grid = self._auto_grid(P)
         if grid and grid != "default":
             keywords.append(grid)
         # SCF convergence-tolerance preset (TIGHTSCF, etc.); 'default' leaves
@@ -231,6 +239,41 @@ class Energy(orca_step.ORCABase):
         """Whether the resolved method is an explicitly-correlated F12 method."""
         method, _ = self._resolve_method_basis(P)
         return "F12" in method.upper()
+
+    def _auto_grid(self, P):
+        """Grid to use when the control is on 'default': ``DEFGRID3`` for a
+        high-angular-momentum basis (h functions or above, e.g. cc-pV5Z), which
+        ORCA's default DEFGRID2 integrates less accurately; otherwise 'default'
+        (emit nothing). The angular momentum is read from the Basis Set Exchange,
+        which also covers ORCA-internal names; any failure leaves 'default'."""
+        try:
+            _, basis = self._resolve_method_basis(P)
+            basis = self._strip_bse(basis)
+            if not basis:
+                return "default"
+            _, configuration = self.get_system_configuration(None)
+            znums = sorted(set(configuration.atoms.atomic_numbers))
+            lmax = self._max_am_from_bse(basis, znums)
+        except Exception as e:
+            logger.debug(f"Could not determine the basis angular momentum: {e}")
+            return "default"
+        if lmax is not None and lmax >= _HIGH_ANGULAR_MOMENTUM:
+            return "DEFGRID3"
+        return "default"
+
+    @staticmethod
+    def _max_am_from_bse(basis, atomic_numbers):
+        """The highest angular momentum (s=0, p=1, ...) in `basis` for the given
+        atomic numbers, from the Basis Set Exchange, or None if unavailable."""
+        import basis_set_exchange as bse
+
+        bdict = bse.get_basis(basis, elements=list(atomic_numbers), header=False)
+        lmax = None
+        for element in bdict.get("elements", {}).values():
+            for shell in element.get("electron_shells", []):
+                for am in shell.get("angular_momentum", []):
+                    lmax = am if lmax is None else max(lmax, am)
+        return lmax
 
     def _check_f12(self, P):
         """Fail early (clear message) if an F12 method is chosen without a usable
