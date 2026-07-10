@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.7.10 documentation</title>
+    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.7.10.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=97bf5ad4"></script>
+    <script src="../../_static/documentation_options.js?v=4f088275"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.10" />
+  <meta name="docsearch:version" content="2026.7.10.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -584,6 +584,19 @@
         <span class="k">return</span> <span class="n">frame</span></div>
 
 
+<div class="viewcode-block" id="TkEnergy.right_click">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.tk_energy.TkEnergy.right_click">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">right_click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Post the node&#39;s popup menu. The base class builds the menu (with the</span>
+<span class="sd">        Delete command) but only shows it for the bare TkNode, so each sub-step</span>
+<span class="sd">        must add its own items and pop it up -- without this, right-clicking a</span>
+<span class="sd">        sub-step in the ORCA sub-flowchart shows no menu (so it can&#39;t be</span>
+<span class="sd">        deleted). Inherited by the Optimization and BSSE sub-steps.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">right_click</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">popup_menu</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Edit..&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">edit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">popup_menu</span><span class="o">.</span><span class="n">tk_popup</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">x_root</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">y_root</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_current_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Element symbols in the current configuration, to preselect in the</span>
 <span class="sd">        Basis Set Exchange dialog. Best-effort: empty if there is none yet.&quot;&quot;&quot;</span>
@@ -609,6 +622,7 @@
 
         <span class="n">use_mc</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
         <span class="n">is_dft</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">use_mc</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;DFT&quot;</span>
+        <span class="n">is_f12</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">use_mc</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;F12&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
 
         <span class="n">row</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">widgets</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># full-width (column 0) controls</span>
@@ -628,6 +642,8 @@
         <span class="c1"># rest are ORCA run details that apply either way.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">use_mc</span><span class="p">:</span>
             <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;method&quot;</span><span class="p">)</span>
+            <span class="c1"># Narrow the basis list to what the method allows (F12 -&gt; F12 bases).</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filter_basis_sets</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">is_dft</span><span class="p">:</span>
                 <span class="c1"># Functional type indented one level, functional two levels.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_filter_functionals</span><span class="p">()</span>
@@ -642,15 +658,19 @@
             <span class="c1"># CBS extrapolation replaces the fixed basis: show the family instead</span>
             <span class="c1"># of the basis/basis-source controls when it is on. It is hidden for</span>
             <span class="c1"># sub-steps that need a gradient (e.g. Optimization), where an</span>
-            <span class="c1"># extrapolated energy is unusable.</span>
-            <span class="n">show_cbs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_cbs</span><span class="p">()</span>
+            <span class="c1"># extrapolated energy is unusable, and for F12 methods (which fix a</span>
+            <span class="c1"># specific F12 basis).</span>
+            <span class="n">show_cbs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_cbs</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_f12</span>
             <span class="k">if</span> <span class="n">show_cbs</span><span class="p">:</span>
                 <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis set extrapolation&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">show_cbs</span> <span class="ow">and</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis set extrapolation&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
                 <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;extrapolation family&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis&quot;</span><span class="p">)</span>
-                <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis source&quot;</span><span class="p">)</span>
+                <span class="c1"># The source is forced to ORCA-internal for F12 (no BSE CABS),</span>
+                <span class="c1"># so hide the control in that case.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">is_f12</span><span class="p">:</span>
+                    <span class="n">add_full</span><span class="p">(</span><span class="s2">&quot;basis source&quot;</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_detail_keys</span><span class="p">():</span>
             <span class="n">add_full</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -699,6 +719,25 @@
             <span class="n">browse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">],</span> <span class="s2">&quot;_browse&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">browse</span><span class="p">):</span>
                 <span class="n">browse</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_basis_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restrict the basis dropdown to the choices valid for the current</span>
+<span class="sd">        method, so the user can only pick a usable basis.</span>
+
+<span class="sd">        Explicitly-correlated F12 methods work only with the F12-optimized</span>
+<span class="sd">        orbital bases (they need a matching CABS), so when one is chosen the list</span>
+<span class="sd">        is narrowed to those and the source is forced to ORCA-internal (the Basis</span>
+<span class="sd">        Set Exchange has no CABS). Otherwise the full curated list is offered.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_bases</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;basis sets&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;F12&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
+            <span class="n">f12</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">all_bases</span> <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;-F12&quot;</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">f12</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f12</span><span class="p">:</span>
+                <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;cc-pVTZ-F12&quot;</span> <span class="k">if</span> <span class="s2">&quot;cc-pVTZ-F12&quot;</span> <span class="ow">in</span> <span class="n">f12</span> <span class="k">else</span> <span class="n">f12</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis source&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;ORCA internal&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">all_bases</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_filter_functionals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Restrict the functional pulldown to the functionals of the currently</span>

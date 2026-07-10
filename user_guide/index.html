@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.10 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.10.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=97bf5ad4"></script>
+    <script src="../_static/documentation_options.js?v=4f088275"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.10" />
+  <meta name="docsearch:version" content="2026.7.10.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -533,9 +533,10 @@ them in the step itself.</p>
 <section id="method">
 <h3>Method<a class="headerlink" href="#method" title="Link to this heading">#</a></h3>
 <p>The <strong>Method</strong> pull-down offers Hartree–Fock, MP2/RI-MP2, coupled cluster
-(<code class="docutils literal notranslate"><span class="pre">CCSD(T)</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)</span></code>), and <strong>DFT</strong>. For everything except DFT the
-method <em>is</em> the ORCA keyword. Choosing <strong>DFT</strong> reveals two further, indented
-controls:</p>
+(<code class="docutils literal notranslate"><span class="pre">CCSD(T)</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)</span></code>), the explicitly-correlated <strong>F12</strong> variants
+(<code class="docutils literal notranslate"><span class="pre">CCSD(T)-F12D</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)-F12D</span></code>), and <strong>DFT</strong>. For everything except
+DFT the method <em>is</em> the ORCA keyword. Choosing <strong>DFT</strong> reveals two further,
+indented controls:</p>
 <ul class="simple">
 <li><p><strong>Functional type</strong> — ORCA’s own classification of the functional: local,
 GGA, meta-GGA, (range-separated) hybrid, and (range-separated) double-hybrid.</p></li>
@@ -559,6 +560,34 @@ source</em> opens the same picker. A basis chosen from the Exchange is stored as
 across codes. The list is ordered by family and, within a family, into
 valence / polarization / diffuse ladders that each rise DZ → TZ → QZ → 5Z, so a
 sensible progression is a single ladder read top to bottom.</p>
+</section>
+<section id="explicitly-correlated-f12-methods">
+<h3>Explicitly-correlated (F12) methods<a class="headerlink" href="#explicitly-correlated-f12-methods" title="Link to this heading">#</a></h3>
+<p>The F12 methods (<code class="docutils literal notranslate"><span class="pre">CCSD(T)-F12D</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)-F12D</span></code>) reach near
+complete-basis-set accuracy from a modest basis, but they <strong>must</strong> be paired
+with one of ORCA’s F12-optimized orbital bases — <code class="docutils literal notranslate"><span class="pre">cc-pVDZ-F12</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cc-pVTZ-F12</span></code>, or <code class="docutils literal notranslate"><span class="pre">cc-pVQZ-F12</span></code> — and each of those needs a matching
+<em>complementary auxiliary basis set</em> (CABS). The step <strong>adds the CABS
+automatically</strong>: it derives <code class="docutils literal notranslate"><span class="pre">&lt;basis&gt;-CABS</span></code> from the F12 basis you choose (so
+<code class="docutils literal notranslate"><span class="pre">cc-pVTZ-F12</span></code> → <code class="docutils literal notranslate"><span class="pre">cc-pVTZ-F12-CABS</span></code>, and likewise for DZ/QZ), unless you have
+already put a CABS in the extra keywords. Leave the auxiliary basis on
+<code class="docutils literal notranslate"><span class="pre">AutoAux</span></code> — it supplies the remaining RI fitting bases; the CABS is separate
+and is not something AutoAux can generate.</p>
+<p>To keep this foolproof, <strong>selecting an F12 method narrows the basis-set list to
+just the F12 bases</strong> (and forces the ORCA-internal source), so you can only pick
+a valid one; switching back to a non-F12 method restores the full list. If a
+hand-edited flowchart still pairs an F12 method with a non-F12 basis (and no
+CABS in the extra keywords), the run is stopped early with a clear message.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>F12 methods largely <strong>eliminate basis-set superposition error</strong>, so the
+counterpoise (BSSE) correction is essentially zero for them (often a few
+thousandths of a kcal/mol — at the numerical-noise level). With F12 you can
+skip the <strong>BSSE</strong> sub-step and take the interaction energy directly from a
+plain <strong>Energy</strong> run, which is ~5× cheaper. Reserve the BSSE step for
+conventional finite-basis methods (HF, DFT, MP2, canonical CCSD(T)), where the
+correction is real.</p>
+</div>
 </section>
 <section id="complete-basis-set-cbs-extrapolation">
 <h3>Complete-basis-set (CBS) extrapolation<a class="headerlink" href="#complete-basis-set-cbs-extrapolation" title="Link to this heading">#</a></h3>
@@ -589,6 +618,12 @@ forces).</p></li>
 <p>It only affects methods that use a grid (DFT, RIJCOSX) and is ignored otherwise.
 For a machine-learned-force-field training set, a finer grid (<code class="docutils literal notranslate"><span class="pre">DEFGRID3</span></code>) can
 be worth the cost to keep the energy/force surface smooth.</p>
+<p>When the control is left on <code class="docutils literal notranslate"><span class="pre">default</span></code>, the step <strong>automatically switches to
+``DEFGRID3`` for basis sets with high angular momentum</strong> — h functions or above,
+such as <code class="docutils literal notranslate"><span class="pre">cc-pV5Z</span></code> — which the default <code class="docutils literal notranslate"><span class="pre">DEFGRID2</span></code> integrates less accurately.
+The angular momentum is read from the Basis Set Exchange (which also covers
+ORCA’s internal basis names), so it works for both internal and BSE bases;
+choosing a grid explicitly always overrides this.</p>
 </section>
 <section id="scf-convergence">
 <h2>SCF convergence<a class="headerlink" href="#scf-convergence" title="Link to this heading">#</a></h2>
@@ -655,6 +690,12 @@ data that is BSSE-free on both the energy surface and the forces. Internally it
 drives ORCA’s <em>Compound</em> facility (the <code class="docutils literal notranslate"><span class="pre">BSSEGradient</span></code> script by D. G. Liakos &amp;
 F. Neese), which runs the five sub-calculations (the dimer, and each fragment
 both in the full dimer basis and in its own basis) and assembles the correction.</p>
+<p>Use it with the conventional finite-basis methods (HF, DFT, MP2, canonical
+CCSD(T)), where BSSE is a real effect. For <strong>explicitly-correlated F12 methods</strong>
+the superposition error is already negligible, so the counterpoise correction is
+essentially zero and this step is unnecessary — take the interaction energy
+directly from a plain <strong>Energy</strong> run instead (see <em>Explicitly-correlated (F12)
+methods</em> above).</p>
 <p>The level-of-theory controls are the same as the Energy step. Three extra
 controls define the correction:</p>
 <ul class="simple">
@@ -856,6 +897,7 @@ high-accuracy calculations for ordinary single-point steps.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-the-level-of-theory">Choosing the level of theory</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">Method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basis-set">Basis set</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explicitly-correlated-f12-methods">Explicitly-correlated (F12) methods</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-basis-set-cbs-extrapolation">Complete-basis-set (CBS) extrapolation</a></li>
 </ul>
 </li>
