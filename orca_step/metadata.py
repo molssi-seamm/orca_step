@@ -43,6 +43,19 @@ metadata["methods"] = {
         # No analytic gradient for the (T) triples -> ORCA needs NUMGRAD.
         "gradients": "numeric",
     },
+    "CCSD(T)-F12D": {
+        "type": "QC",
+        "description": "explicitly-correlated CCSD(T)-F12D (needs an F12 basis)",
+        "needs_aux": True,
+        # F12 + (T) has no analytic gradient in ORCA.
+        "gradients": "numeric",
+    },
+    "DLPNO-CCSD(T)-F12D": {
+        "type": "QC",
+        "description": "DLPNO-CCSD(T)-F12D (explicitly correlated; F12 basis)",
+        "needs_aux": True,
+        "gradients": "numeric",
+    },
     "DFT": {
         "type": "DFT",
         "description": "Kohn-Sham density functional theory (choose a functional)",
@@ -95,6 +108,11 @@ metadata["basis sets"] = [
     "cc-pwCVDZ",
     "cc-pwCVTZ",
     "cc-pwCVQZ",
+    # explicitly-correlated (F12): use ONLY with an F12 method; the step adds the
+    # matching '<basis>-CABS' complementary basis automatically.
+    "cc-pVDZ-F12",
+    "cc-pVTZ-F12",
+    "cc-pVQZ-F12",
     # --- Karlsruhe def2 (SVP = DZ, TZVP = TZ, QZVP = QZ) ---
     # valence (polarization is built in; increasing within each zeta)
     "def2-SV(P)",

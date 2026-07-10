@@ -2,6 +2,25 @@
 History
 =======
 
+2026.7.10.1 -- F12 methods, automatic grid for high-L bases, and GUI fixes
+    * Added the explicitly-correlated **CCSD(T)-F12D** and **DLPNO-CCSD(T)-F12D**
+      methods to the Method pull-down, and the ``cc-pVDZ-F12`` / ``cc-pVTZ-F12`` /
+      ``cc-pVQZ-F12`` orbital bases to the basis list.
+    * An F12 method now **adds its complementary auxiliary basis (CABS)
+      automatically** -- ``<basis>-CABS`` derived from the chosen F12 basis --
+      unless one is already in the extra keywords.
+    * Selecting an F12 method **narrows the basis-set list to the F12 bases** and
+      **hides the Basis-set source** control (forced to ORCA-internal, as the
+      Basis Set Exchange has no CABS), so only a valid basis can be chosen.
+    * When the integration grid is left on ``default``, it is **automatically set
+      to ``DEFGRID3`` for high-angular-momentum basis sets** (h functions or
+      above, e.g. cc-pV5Z), determined from the Basis Set Exchange.
+    * Bugfix: **sub-steps can now be deleted** -- right-clicking a sub-step in the
+      ORCA sub-flowchart now shows the popup menu (Edit / Delete); the menu code
+      was missing.
+    * Documented that F12 largely removes basis-set superposition error, so the
+      counterpoise (BSSE) correction is unnecessary for F12 methods.
+
 2026.7.10 -- BSSE: energy-only mode (enables CCSD(T))
     * New **Compute the gradient** control on the BSSE sub-step. With it set to
       ``no`` (energy only), the counterpoise correction runs without a gradient,

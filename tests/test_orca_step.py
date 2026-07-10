@@ -688,6 +688,98 @@ def test_model_chemistry_mdi_only():
 # --------------------------------------------------------------------------
 # BSSE (counterpoise) sub-step
 # --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# Explicitly-correlated (F12) methods
+# --------------------------------------------------------------------------
+def _f12_P(method, basis, extra=""):
+    return {
+        "use model chemistry": "no",
+        "method": method,
+        "basis": basis,
+        "basis source": "ORCA internal",
+        "auxiliary basis": "AutoAux",
+        "extra keywords": extra,
+    }
+
+
+def test_f12_methods_and_bases_in_metadata():
+    """The F12 methods and their orbital bases are offered, with numeric
+    gradients (no analytic gradient in ORCA)."""
+    m = orca_step.metadata["methods"]
+    assert "CCSD(T)-F12D" in m and "DLPNO-CCSD(T)-F12D" in m
+    assert m["DLPNO-CCSD(T)-F12D"]["gradients"] == "numeric"
+    bases = orca_step.metadata["basis sets"]
+    assert {"cc-pVDZ-F12", "cc-pVTZ-F12", "cc-pVQZ-F12"} <= set(bases)
+
+
+def test_cabs_keyword_derivation():
+    """The CABS is derived from the F12 basis (tracking DZ/TZ/QZ), skipped for
+    non-F12 methods/bases, and not duplicated if the user supplied one."""
+    node = orca_step.Energy()
+    assert (
+        node._cabs_keyword(_f12_P("DLPNO-CCSD(T)-F12D", "cc-pVTZ-F12"))
+        == "cc-pVTZ-F12-CABS"
+    )
+    assert (
+        node._cabs_keyword(_f12_P("CCSD(T)-F12D", "cc-pVDZ-F12")) == "cc-pVDZ-F12-CABS"
+    )
+    assert node._cabs_keyword(_f12_P("DLPNO-CCSD(T)", "cc-pVTZ")) == ""  # not F12
+    assert node._cabs_keyword(_f12_P("CCSD(T)-F12D", "cc-pVTZ")) == ""  # non-F12 basis
+    # Already supplied by the user -> not added twice.
+    assert (
+        node._cabs_keyword(_f12_P("CCSD(T)-F12D", "cc-pVTZ-F12", "cc-pVTZ-F12-CABS"))
+        == ""
+    )
+
+
+def test_keyword_line_f12_adds_cabs():
+    """keyword_line puts both the F12 basis and its CABS on the '!' line."""
+    line = orca_step.Energy().keyword_line(_f12_P("DLPNO-CCSD(T)-F12D", "cc-pVTZ-F12"))
+    assert "cc-pVTZ-F12" in line and "cc-pVTZ-F12-CABS" in line
+
+
+def test_check_f12_rejects_non_f12_basis():
+    """An F12 method with a non-F12 basis (and no manual CABS) fails early."""
+    node = orca_step.Energy()
+    with pytest.raises(RuntimeError, match="F12"):
+        node._check_f12(_f12_P("CCSD(T)-F12D", "cc-pVTZ"))
+    # OK with an F12 basis, or with a hand-supplied CABS.
+    node._check_f12(_f12_P("CCSD(T)-F12D", "cc-pVTZ-F12"))
+    node._check_f12(_f12_P("CCSD(T)-F12D", "cc-pVQZ", "cc-pVQZ-F12-CABS"))
+
+
+def test_bsse_compound_input_adds_f12_cabs():
+    """The BSSE compound input also injects the CABS for an F12 method."""
+    node = orca_step.BSSE()
+    P = {
+        "use model chemistry": "no",
+        "method": "DLPNO-CCSD(T)-F12D",
+        "basis": "cc-pVTZ-F12",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "AutoAux",
+        "grid": "default",
+        "scf convergence": "default",
+        "extra keywords": "TightPNO",
+        "optimize monomers": "no",
+    }
+    block, _, _ = node._compound_input(P, "bsse.xyz", "bssenergy.cmp")
+    assert "cc-pVTZ-F12-CABS" in block
+
+
+def test_max_am_from_bse():
+    """Angular momentum is read from the Basis Set Exchange (offline)."""
+    assert orca_step.Energy._max_am_from_bse("cc-pVTZ", [8]) == 3  # f
+    assert orca_step.Energy._max_am_from_bse("cc-pV5Z", [8]) == 5  # h
+
+
+def test_auto_grid_threshold():
+    """cc-pV5Z (h) reaches the auto-DEFGRID3 threshold; cc-pVTZ (f) does not."""
+    from orca_step.energy import _HIGH_ANGULAR_MOMENTUM
+
+    assert orca_step.Energy._max_am_from_bse("cc-pV5Z", [8]) >= _HIGH_ANGULAR_MOMENTUM
+    assert orca_step.Energy._max_am_from_bse("cc-pVTZ", [8]) < _HIGH_ANGULAR_MOMENTUM
+
+
 def test_bsse_factory():
     """The BSSE sub-step helper."""
     assert orca_step.BSSEStep().description()["name"] == "BSSE"

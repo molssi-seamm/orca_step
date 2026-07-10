@@ -176,6 +176,8 @@ class BSSE(Energy):
         if aux and aux.lower() != "none":
             rest.append(aux)
         grid = P.get("grid", "default")
+        if grid == "default":
+            grid = self._auto_grid(P)
         if grid and grid != "default":
             rest.append(grid)
         scf = P.get("scf convergence", "default")
@@ -184,6 +186,10 @@ class BSSE(Energy):
         extra = P["extra keywords"].strip()
         if extra:
             rest.append(extra)
+        # Explicitly-correlated (F12) methods need the matching CABS basis.
+        cabs = self._cabs_keyword(P)
+        if cabs:
+            rest.append(cabs)
         rest_of_input = " ".join(rest)
 
         do_opt = "true" if P.get("optimize monomers", "no") == "yes" else "false"
@@ -314,6 +320,8 @@ class BSSE(Energy):
                 "The ORCA BSSE sub-step does not yet support Basis Set Exchange "
                 "bases; choose an ORCA-internal basis set."
             )
+        # F12 methods need an F12 basis (matching CABS) -- fail early if not.
+        self._check_f12(P)
         # The energy is taken from each step's FINAL SINGLE POINT ENERGY (the
         # full-method total), so double hybrids and MP2 are fine. When the
         # gradient is also requested, the method must have an analytic gradient

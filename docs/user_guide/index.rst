@@ -30,9 +30,10 @@ Method
 ------
 
 The **Method** pull-down offers Hartree–Fock, MP2/RI-MP2, coupled cluster
-(``CCSD(T)``, ``DLPNO-CCSD(T)``), and **DFT**. For everything except DFT the
-method *is* the ORCA keyword. Choosing **DFT** reveals two further, indented
-controls:
+(``CCSD(T)``, ``DLPNO-CCSD(T)``), the explicitly-correlated **F12** variants
+(``CCSD(T)-F12D``, ``DLPNO-CCSD(T)-F12D``), and **DFT**. For everything except
+DFT the method *is* the ORCA keyword. Choosing **DFT** reveals two further,
+indented controls:
 
 * **Functional type** — ORCA's own classification of the functional: local,
   GGA, meta-GGA, (range-separated) hybrid, and (range-separated) double-hybrid.
@@ -58,6 +59,36 @@ source* opens the same picker. A basis chosen from the Exchange is stored as
 across codes. The list is ordered by family and, within a family, into
 valence / polarization / diffuse ladders that each rise DZ → TZ → QZ → 5Z, so a
 sensible progression is a single ladder read top to bottom.
+
+Explicitly-correlated (F12) methods
+-----------------------------------
+
+The F12 methods (``CCSD(T)-F12D``, ``DLPNO-CCSD(T)-F12D``) reach near
+complete-basis-set accuracy from a modest basis, but they **must** be paired
+with one of ORCA's F12-optimized orbital bases — ``cc-pVDZ-F12``,
+``cc-pVTZ-F12``, or ``cc-pVQZ-F12`` — and each of those needs a matching
+*complementary auxiliary basis set* (CABS). The step **adds the CABS
+automatically**: it derives ``<basis>-CABS`` from the F12 basis you choose (so
+``cc-pVTZ-F12`` → ``cc-pVTZ-F12-CABS``, and likewise for DZ/QZ), unless you have
+already put a CABS in the extra keywords. Leave the auxiliary basis on
+``AutoAux`` — it supplies the remaining RI fitting bases; the CABS is separate
+and is not something AutoAux can generate.
+
+To keep this foolproof, **selecting an F12 method narrows the basis-set list to
+just the F12 bases** (and forces the ORCA-internal source), so you can only pick
+a valid one; switching back to a non-F12 method restores the full list. If a
+hand-edited flowchart still pairs an F12 method with a non-F12 basis (and no
+CABS in the extra keywords), the run is stopped early with a clear message.
+
+.. tip::
+
+   F12 methods largely **eliminate basis-set superposition error**, so the
+   counterpoise (BSSE) correction is essentially zero for them (often a few
+   thousandths of a kcal/mol — at the numerical-noise level). With F12 you can
+   skip the **BSSE** sub-step and take the interaction energy directly from a
+   plain **Energy** run, which is ~5× cheaper. Reserve the BSSE step for
+   conventional finite-basis methods (HF, DFT, MP2, canonical CCSD(T)), where the
+   correction is real.
 
 Complete-basis-set (CBS) extrapolation
 --------------------------------------
@@ -89,6 +120,13 @@ The **Integration grid** control sets ORCA's numerical-integration grid preset
 It only affects methods that use a grid (DFT, RIJCOSX) and is ignored otherwise.
 For a machine-learned-force-field training set, a finer grid (``DEFGRID3``) can
 be worth the cost to keep the energy/force surface smooth.
+
+When the control is left on ``default``, the step **automatically switches to
+``DEFGRID3`` for basis sets with high angular momentum** — h functions or above,
+such as ``cc-pV5Z`` — which the default ``DEFGRID2`` integrates less accurately.
+The angular momentum is read from the Basis Set Exchange (which also covers
+ORCA's internal basis names), so it works for both internal and BSE bases;
+choosing a grid explicitly always overrides this.
 
 SCF convergence
 ===============
@@ -162,6 +200,13 @@ data that is BSSE-free on both the energy surface and the forces. Internally it
 drives ORCA's *Compound* facility (the ``BSSEGradient`` script by D. G. Liakos &
 F. Neese), which runs the five sub-calculations (the dimer, and each fragment
 both in the full dimer basis and in its own basis) and assembles the correction.
+
+Use it with the conventional finite-basis methods (HF, DFT, MP2, canonical
+CCSD(T)), where BSSE is a real effect. For **explicitly-correlated F12 methods**
+the superposition error is already negligible, so the counterpoise correction is
+essentially zero and this step is unnecessary — take the interaction energy
+directly from a plain **Energy** run instead (see *Explicitly-correlated (F12)
+methods* above).
 
 The level-of-theory controls are the same as the Energy step. Three extra
 controls define the correction:

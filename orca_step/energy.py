@@ -25,6 +25,11 @@ logger = logging.getLogger(__name__)
 job = printing.getPrinter()
 printer = printing.getPrinter("ORCA")
 
+# Basis sets whose highest angular momentum is at least this (h functions and
+# above, e.g. cc-pV5Z) integrate poorly on ORCA's default grid (DEFGRID2), so
+# when the grid is left on 'default' the step bumps it to DEFGRID3.
+_HIGH_ANGULAR_MOMENTUM = 5
+
 
 class Energy(orca_step.ORCABase):
     """A single-point energy with ORCA.
@@ -170,8 +175,11 @@ class Energy(orca_step.ORCABase):
         if aux and aux.lower() != "none":
             keywords.append(aux)
         # Numerical-integration grid preset (DEFGRID1/2/3); 'default' leaves
-        # ORCA's own default (DEFGRID2) by emitting nothing.
+        # ORCA's own default (DEFGRID2) by emitting nothing -- except that a
+        # high-angular-momentum basis is auto-bumped to DEFGRID3 (see _auto_grid).
         grid = P.get("grid", "default")
+        if grid == "default":
+            grid = self._auto_grid(P)
         if grid and grid != "default":
             keywords.append(grid)
         # SCF convergence-tolerance preset (TIGHTSCF, etc.); 'default' leaves
@@ -198,7 +206,92 @@ class Energy(orca_step.ORCABase):
         extra = P["extra keywords"].strip()
         if extra:
             keywords.append(extra)
+        # Explicitly-correlated (F12) methods need a complementary auxiliary
+        # basis set (CABS); add the one matching the F12 orbital basis.
+        cabs = self._cabs_keyword(P)
+        if cabs:
+            keywords.append(cabs)
         return " ".join(k for k in keywords if k)
+
+    def _cabs_keyword(self, P):
+        """The CABS basis keyword to add for an F12 method, or '' if none.
+
+        Explicitly-correlated F12 methods require a complementary auxiliary basis
+        set. ORCA's F12-optimized orbital bases (``cc-pVnZ-F12``) each have a
+        matching ``<basis>-CABS``; derive it from the chosen basis so it tracks
+        DZ/TZ/QZ automatically. Returns '' when the method is not F12, when the
+        user already supplied a CABS in the extra keywords, or when the basis is
+        not an F12 basis (there is no matching CABS -- ORCA will then refuse, and
+        the run-time check below warns about it).
+        """
+        method, basis = self._resolve_method_basis(P)
+        if "F12" not in method.upper():
+            return ""
+        extra = (P.get("extra keywords", "") or "").upper()
+        if "CABS" in extra:
+            return ""
+        basis = self._basis_name(basis)
+        if basis.upper().endswith("-F12"):
+            return f"{basis}-CABS"
+        return ""
+
+    def _is_f12(self, P):
+        """Whether the resolved method is an explicitly-correlated F12 method."""
+        method, _ = self._resolve_method_basis(P)
+        return "F12" in method.upper()
+
+    def _auto_grid(self, P):
+        """Grid to use when the control is on 'default': ``DEFGRID3`` for a
+        high-angular-momentum basis (h functions or above, e.g. cc-pV5Z), which
+        ORCA's default DEFGRID2 integrates less accurately; otherwise 'default'
+        (emit nothing). The angular momentum is read from the Basis Set Exchange,
+        which also covers ORCA-internal names; any failure leaves 'default'."""
+        try:
+            _, basis = self._resolve_method_basis(P)
+            basis = self._strip_bse(basis)
+            if not basis:
+                return "default"
+            _, configuration = self.get_system_configuration(None)
+            znums = sorted(set(configuration.atoms.atomic_numbers))
+            lmax = self._max_am_from_bse(basis, znums)
+        except Exception as e:
+            logger.debug(f"Could not determine the basis angular momentum: {e}")
+            return "default"
+        if lmax is not None and lmax >= _HIGH_ANGULAR_MOMENTUM:
+            return "DEFGRID3"
+        return "default"
+
+    @staticmethod
+    def _max_am_from_bse(basis, atomic_numbers):
+        """The highest angular momentum (s=0, p=1, ...) in `basis` for the given
+        atomic numbers, from the Basis Set Exchange, or None if unavailable."""
+        import basis_set_exchange as bse
+
+        bdict = bse.get_basis(basis, elements=list(atomic_numbers), header=False)
+        lmax = None
+        for element in bdict.get("elements", {}).values():
+            for shell in element.get("electron_shells", []):
+                for am in shell.get("angular_momentum", []):
+                    lmax = am if lmax is None else max(lmax, am)
+        return lmax
+
+    def _check_f12(self, P):
+        """Fail early (clear message) if an F12 method is chosen without a usable
+        CABS: ORCA requires an F12 orbital basis so the matching CABS can be added
+        (or an explicit CABS in the extra keywords), and aborts otherwise."""
+        if not self._is_f12(P):
+            return
+        if "CABS" in (P.get("extra keywords", "") or "").upper():
+            return  # the user supplied a CABS explicitly
+        method, basis = self._resolve_method_basis(P)
+        if not self._basis_name(basis).upper().endswith("-F12"):
+            raise RuntimeError(
+                f"{method} is an explicitly-correlated F12 method and needs an "
+                "F12 orbital basis (cc-pVDZ-F12 / cc-pVTZ-F12 / cc-pVQZ-F12) so "
+                "the matching '<basis>-CABS' can be added automatically. You "
+                f"chose '{self._basis_name(basis)}'. Pick an F12 basis, or add a "
+                "CABS basis to the extra keywords."
+            )
 
     @staticmethod
     def _wants_gradients(P):
@@ -375,6 +468,8 @@ class Energy(orca_step.ORCABase):
         )
 
         printer.important(__(self.description_text(P), indent=self.indent))
+
+        self._check_f12(P)
 
         keyword_line = self.keyword_line(P)
         if keywords:
