@@ -706,10 +706,19 @@ def test_f12_methods_and_bases_in_metadata():
     """The F12 methods and their orbital bases are offered, with numeric
     gradients (no analytic gradient in ORCA)."""
     m = orca_step.metadata["methods"]
-    assert "CCSD(T)-F12D" in m and "DLPNO-CCSD(T)-F12D" in m
+    # Canonical F12 needs the '/RI' suffix; DLPNO-F12 must not have it.
+    assert "CCSD(T)-F12D/RI" in m and "DLPNO-CCSD(T)-F12D" in m
+    assert "CCSD(T)-F12D" not in m
     assert m["DLPNO-CCSD(T)-F12D"]["gradients"] == "numeric"
     bases = orca_step.metadata["basis sets"]
     assert {"cc-pVDZ-F12", "cc-pVTZ-F12", "cc-pVQZ-F12"} <= set(bases)
+
+
+def test_f12_methods_excluded_from_model_chemistry():
+    """F12 methods need F12-specific bases, so they are not advertised as
+    generic model chemistries (which pair with non-F12 bases)."""
+    opts = orca_step.ORCAStep.get_model_chemistry_options()
+    assert not any("F12" in k.upper() for k in opts)
 
 
 def test_cabs_keyword_derivation():
@@ -721,13 +730,16 @@ def test_cabs_keyword_derivation():
         == "cc-pVTZ-F12-CABS"
     )
     assert (
-        node._cabs_keyword(_f12_P("CCSD(T)-F12D", "cc-pVDZ-F12")) == "cc-pVDZ-F12-CABS"
+        node._cabs_keyword(_f12_P("CCSD(T)-F12D/RI", "cc-pVDZ-F12"))
+        == "cc-pVDZ-F12-CABS"
     )
     assert node._cabs_keyword(_f12_P("DLPNO-CCSD(T)", "cc-pVTZ")) == ""  # not F12
-    assert node._cabs_keyword(_f12_P("CCSD(T)-F12D", "cc-pVTZ")) == ""  # non-F12 basis
+    assert (
+        node._cabs_keyword(_f12_P("CCSD(T)-F12D/RI", "cc-pVTZ")) == ""
+    )  # non-F12 basis
     # Already supplied by the user -> not added twice.
     assert (
-        node._cabs_keyword(_f12_P("CCSD(T)-F12D", "cc-pVTZ-F12", "cc-pVTZ-F12-CABS"))
+        node._cabs_keyword(_f12_P("CCSD(T)-F12D/RI", "cc-pVTZ-F12", "cc-pVTZ-F12-CABS"))
         == ""
     )
 
@@ -742,10 +754,10 @@ def test_check_f12_rejects_non_f12_basis():
     """An F12 method with a non-F12 basis (and no manual CABS) fails early."""
     node = orca_step.Energy()
     with pytest.raises(RuntimeError, match="F12"):
-        node._check_f12(_f12_P("CCSD(T)-F12D", "cc-pVTZ"))
+        node._check_f12(_f12_P("CCSD(T)-F12D/RI", "cc-pVTZ"))
     # OK with an F12 basis, or with a hand-supplied CABS.
-    node._check_f12(_f12_P("CCSD(T)-F12D", "cc-pVTZ-F12"))
-    node._check_f12(_f12_P("CCSD(T)-F12D", "cc-pVQZ", "cc-pVQZ-F12-CABS"))
+    node._check_f12(_f12_P("CCSD(T)-F12D/RI", "cc-pVTZ-F12"))
+    node._check_f12(_f12_P("CCSD(T)-F12D/RI", "cc-pVQZ", "cc-pVQZ-F12-CABS"))
 
 
 def test_bsse_compound_input_adds_f12_cabs():
