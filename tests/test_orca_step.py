@@ -792,6 +792,36 @@ def test_auto_grid_threshold():
     assert orca_step.Energy._max_am_from_bse("cc-pVTZ", [8]) < _HIGH_ANGULAR_MOMENTUM
 
 
+def test_bsse_compound_input_wavefunction():
+    """'save wavefunction' toggles ProduceWavefunction in the Compound block."""
+    node = orca_step.BSSE()
+    base = {
+        "use model chemistry": "no",
+        "method": "B3LYP",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "grid": "default",
+        "scf convergence": "default",
+        "extra keywords": "",
+        "optimize monomers": "no",
+    }
+    off, _, _ = node._compound_input({**base, "save wavefunction": "no"}, "b.xyz", "s")
+    on, _, _ = node._compound_input({**base, "save wavefunction": "yes"}, "b.xyz", "s")
+    assert "ProduceWavefunction = false;" in off
+    assert "ProduceWavefunction = true;" in on
+
+
+def test_bsse_cmp_scripts_support_wavefunction():
+    """Both shipped Compound scripts keep the dimer density on request."""
+    import importlib.resources
+
+    for name in ("bssenergy.cmp", "bssegradient.cmp"):
+        text = (importlib.resources.files("orca_step") / "data" / name).read_text()
+        assert "ProduceWavefunction" in text
+        assert "KeepDensity" in text
+
+
 def test_bsse_factory():
     """The BSSE sub-step helper."""
     assert orca_step.BSSEStep().description()["name"] == "BSSE"

@@ -40,7 +40,8 @@ Variable mult               = 1;               # Spin multiplicity
 Variable myPropName         = "SCF_Energy";    # The name of the property for the SCFenergy
 variable myFilename         = "compoundBSSE";  # Name used for the created xyz files
 Variable DoOptimization     = false;           # Optimize the monomers
-Variable produceEnGradFile  = true;            # Produce an ORCA engrad file   
+Variable ProduceWavefunction = false;          # Keep the dimer density for a .wfx
+Variable produceEnGradFile  = true;            # Produce an ORCA engrad file
 Variable enGradFilename     = "result.engrad"; # Filename of the ORCA engrad file
 Variable removeFiles        = true;            # Remove *_Compound_*, *bas* files
 # ---------------------------------------------------------------------
@@ -126,12 +127,21 @@ enMonB.readProperty(propertyName = myPropName);
 gradMonomerB.readProperty(propertyName = "Nuclear_Gradient", Property_Base=true);
 
 # -------------------------------------
-# Calculation of Dimer
+# Calculation of Dimer. With ProduceWavefunction, keep the dimer density
+# (KeepDensity) so SEAMM can run orca_2aim on this step (the last COMPOUND JOB)
+# to write a .wfx for a following Atomic Charges (DDEC6) step.
 # -------------------------------------
-New_Step
-  !&{method} &{basis} &{restOfInput} EnGrad Bohrs
-  *xyzFile &{charge} &{mult} &{myFilename}_Total.xyz
-Step_End
+if (ProduceWavefunction) then
+  New_Step
+    !&{method} &{basis} &{restOfInput} EnGrad Bohrs KeepDensity
+    *xyzFile &{charge} &{mult} &{myFilename}_Total.xyz
+  Step_End
+else
+  New_Step
+    !&{method} &{basis} &{restOfInput} EnGrad Bohrs
+    *xyzFile &{charge} &{mult} &{myFilename}_Total.xyz
+  Step_End
+endif
 enTotal.readProperty(propertyName = myPropName);
 gradTotal.readProperty(propertyName = "Nuclear_Gradient", Property_Base=true);
 myGeom.Read();
@@ -259,7 +269,11 @@ EndIf
 #  Maybe remove unneccesary files
 # ---------------------------------------------------
 if (removeFiles) then
-  sys_cmd("rm *_Compound_* *.bas*");
+  if (ProduceWavefunction) then
+    sys_cmd("rm *.bas*");
+  else
+    sys_cmd("rm *_Compound_* *.bas*");
+  endif
 EndIf
 
 End

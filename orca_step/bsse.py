@@ -193,6 +193,7 @@ class BSSE(Energy):
         rest_of_input = " ".join(rest)
 
         do_opt = "true" if P.get("optimize monomers", "no") == "yes" else "false"
+        make_wfx = "true" if P.get("save wavefunction", "no") == "yes" else "false"
 
         block = "\n".join(
             [
@@ -207,6 +208,7 @@ class BSSE(Energy):
                 "    charge         = 0;",
                 "    mult           = 1;",
                 f"    DoOptimization = {do_opt};",
+                f"    ProduceWavefunction = {make_wfx};",
                 "  end",
             ]
         )
@@ -264,10 +266,13 @@ class BSSE(Energy):
         # The counterpoise-corrected GRADIENT comes from the script's EnGrad file
         # (its ghost-atom bookkeeping is done on the full-method Nuclear_Gradient,
         # so it is correct for every method). Its ENERGY is not used -- see below.
+        # Optionally write a .wfx from the dimer (the last COMPOUND JOB, step 5)
+        # for a following Atomic Charges (DDEC6) step, mirroring the Energy step.
+        make_wfx = P.get("save wavefunction", "no") == "yes"
         gradient = None
         if want_gradient:
             _, gradient = self.run_orca_compound(
-                compound_block, extra_files=extra_files
+                compound_block, extra_files=extra_files, make_wfx=make_wfx
             )
             if gradient is None:
                 raise RuntimeError(
@@ -275,7 +280,9 @@ class BSSE(Energy):
                     "gradient; see orca.out and orca.err."
                 )
         else:
-            self.run_orca_compound(compound_block, extra_files=extra_files, engrad=None)
+            self.run_orca_compound(
+                compound_block, extra_files=extra_files, engrad=None, make_wfx=make_wfx
+            )
 
         # Compute the corrected ENERGY here from the five sub-calculations' total
         # energies (each step's FINAL SINGLE POINT ENERGY), NOT from the script's
