@@ -21,6 +21,7 @@ Variable charge         = 0;               # Charge
 Variable mult           = 1;               # Spin multiplicity
 Variable myFilename     = "compoundBSSE";  # Name used for the created xyz files
 Variable DoOptimization = false;           # Optimize the free monomers
+Variable ProduceWavefunction = false;      # Keep the dimer density for a .wfx
 Variable removeFiles    = true;            # Remove *_Compound_*, *bas* files
 
 Geometry fragA;
@@ -69,15 +70,30 @@ NewStep
 StepEnd
 
 # -------------------------------------
-# Dimer (the whole complex)
+# Dimer (the whole complex). With ProduceWavefunction, keep its density
+# (KeepDensity) so SEAMM can run orca_2aim on this step's files (the last
+# COMPOUND JOB) to write a .wfx for a following Atomic Charges (DDEC6) step.
 # -------------------------------------
-NewStep
-  !&{method} &{basis} &{restOfInput} Bohrs
-  *xyzFile &{charge} &{mult} &{myFilename}_Total.xyz
-StepEnd
+if (ProduceWavefunction) then
+  NewStep
+    !&{method} &{basis} &{restOfInput} Bohrs KeepDensity
+    *xyzFile &{charge} &{mult} &{myFilename}_Total.xyz
+  StepEnd
+else
+  NewStep
+    !&{method} &{basis} &{restOfInput} Bohrs
+    *xyzFile &{charge} &{mult} &{myFilename}_Total.xyz
+  StepEnd
+endif
 
+# Keep the *_Compound_* files when a wavefunction is wanted (orca_2aim needs the
+# dimer step's density/gbw); otherwise clean them up.
 if (removeFiles) then
-  sys_cmd("rm *_Compound_* *.bas*");
+  if (ProduceWavefunction) then
+    sys_cmd("rm *.bas*");
+  else
+    sys_cmd("rm *_Compound_* *.bas*");
+  endif
 endif
 
 End

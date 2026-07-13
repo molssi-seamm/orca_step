@@ -351,7 +351,12 @@ class ORCABase(seamm.Node):
         return env, lib_prefix
 
     def run_orca_compound(
-        self, compound_block, extra_files=None, engrad="result.engrad"
+        self,
+        compound_block,
+        extra_files=None,
+        engrad="result.engrad",
+        make_wfx=False,
+        wfx_step="orca_Compound_5",
     ):
         """Write and run an ORCA *Compound* job, returning ``(energy, gradient)``.
 
@@ -404,6 +409,24 @@ class ORCABase(seamm.Node):
         if engrad:
             return_files.append(engrad)
         cmd = lib_prefix + ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
+        # Convert the dimer step's retained density into a .wfx (as run_orca does
+        # for the Energy substep), for a following Atomic Charges (DDEC6) step.
+        # wfx_step is the Compound sub-job that kept its density (the dimer).
+        if make_wfx:
+            orca_2aim = str(Path(config["code"]).parent / "orca_2aim")
+            cmd += [
+                "&&",
+                orca_2aim,
+                wfx_step,
+                ">",
+                "orca_2aim.out",
+                "2>&1",
+                "&&",
+                "cp",
+                f"{wfx_step}.wfx",
+                "orca.wfx",
+            ]
+            return_files += ["orca.wfx", "orca_2aim.out"]
         result = self.flowchart.executor.run(
             cmd=cmd,
             config=config,

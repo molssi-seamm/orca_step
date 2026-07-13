@@ -48,4 +48,6 @@ class TkBSSE(TkEnergy):
             keys.append("fragment A atoms")
         keys.append("compute gradient")
         keys.append("optimize monomers")
+        # For a following Atomic Charges (DDEC6) step: write the dimer's .wfx.
+        keys.append("save wavefunction")
         return tuple(keys)

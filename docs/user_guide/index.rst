@@ -226,6 +226,10 @@ controls define the correction:
   ``DLPNO-CCSD(T)`` — for gold-standard counterpoise *interaction energies*.
 * **Optimize free monomers** — whether to relax each isolated monomer before
   taking the correction. Leave it ``no`` for a fixed-geometry PES / MLFF target.
+* **Write the wavefunction (wfx) file** — default ``no``. When ``yes``, the
+  dimer's density is kept and converted (via ``orca_2aim``) to an ``orca.wfx``,
+  so a following **Atomic Charges** step can partition it into DDEC6 charges on
+  the CP complex — exactly as after an Energy step.
 
 The step reports, and offers on the Results tab, the **BSSE-corrected energy**
 (the ``energy`` result), the **uncorrected** (raw) complex energy, the **BSSE

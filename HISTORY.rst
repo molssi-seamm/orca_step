@@ -2,6 +2,13 @@
 History
 =======
 
+2026.7.13.1 -- BSSE: optionally write the wavefunction for DDEC6 charges
+    * New **Write the wavefunction (wfx) file** option on the BSSE sub-step
+      (default off). When on, the dimer's density is retained and converted to
+      an ``orca.wfx`` (via orca_2aim), so a following Atomic Charges step can
+      compute DDEC6 charges on the counterpoise complex -- just as after an
+      Energy step.
+
 2026.7.13 -- Bugfix: correct the canonical CCSD(T)-F12 keyword
     * The canonical F12 method keyword was ``CCSD(T)-F12D``, which ORCA rejects;
       it is now ``CCSD(T)-F12D/RI`` (canonical F12 uses the RI approximation for
