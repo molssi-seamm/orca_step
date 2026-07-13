@@ -2,6 +2,14 @@
 History
 =======
 
+2026.7.13 -- Bugfix: correct the canonical CCSD(T)-F12 keyword
+    * The canonical F12 method keyword was ``CCSD(T)-F12D``, which ORCA rejects;
+      it is now ``CCSD(T)-F12D/RI`` (canonical F12 uses the RI approximation for
+      the F12 integrals). ``DLPNO-CCSD(T)-F12D`` is unchanged (DLPNO implies RI,
+      and ORCA rejects a ``/RI`` on it).
+    * F12 methods are no longer advertised as generic model chemistries -- they
+      need a specific F12 orbital basis, not the generic advertised bases.
+
 2026.7.10.1 -- F12 methods, automatic grid for high-L bases, and GUI fixes
     * Added the explicitly-correlated **CCSD(T)-F12D** and **DLPNO-CCSD(T)-F12D**
       methods to the Method pull-down, and the ``cc-pVDZ-F12`` / ``cc-pVTZ-F12`` /

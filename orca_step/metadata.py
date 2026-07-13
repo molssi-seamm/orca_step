@@ -43,11 +43,14 @@ metadata["methods"] = {
         # No analytic gradient for the (T) triples -> ORCA needs NUMGRAD.
         "gradients": "numeric",
     },
-    "CCSD(T)-F12D": {
+    "CCSD(T)-F12D/RI": {
         "type": "QC",
         "description": "explicitly-correlated CCSD(T)-F12D (needs an F12 basis)",
         "needs_aux": True,
-        # F12 + (T) has no analytic gradient in ORCA.
+        # F12 + (T) has no analytic gradient in ORCA. The '/RI' is required --
+        # canonical F12 uses the RI approximation for the F12 integrals; ORCA
+        # rejects the bare 'CCSD(T)-F12D'. (DLPNO-CCSD(T)-F12D implies RI, and
+        # ORCA conversely rejects a '/RI' on it.)
         "gradients": "numeric",
     },
     "DLPNO-CCSD(T)-F12D": {

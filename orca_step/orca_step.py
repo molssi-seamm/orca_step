@@ -73,6 +73,12 @@ class ORCAStep(object):
 
         options = {}
         for method, info in orca_step.metadata["methods"].items():
+            # F12 methods need a specific F12 orbital basis (+CABS), not the
+            # generic advertised bases, so they are not sensible generic model
+            # chemistries; skip them (this also keeps the '/RI' out of the
+            # model-chemistry grammar, which reserves '/').
+            if "F12" in method.upper():
+                continue
             mtype = info.get("type", "QC")
             # For DFT the specific functional is the "method"; advertise each one
             # (aliasing any '/' in the keyword) with its gradient availability.
