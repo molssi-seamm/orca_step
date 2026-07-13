@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.13 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.13.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=a047d0be"></script>
+    <script src="../_static/documentation_options.js?v=dd775c9e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.13" />
+  <meta name="docsearch:version" content="2026.7.13.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -931,7 +931,7 @@ step. Requires the ORCA input to include <code class="docutils literal notransla
 
 <dl class="py method">
 <dt class="sig sig-object py" id="orca_step.orca_base.ORCABase.run_orca_compound">
-<span class="sig-name descname"><span class="pre">run_orca_compound</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compound_block</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">engrad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'result.engrad'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#ORCABase.run_orca_compound"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.ORCABase.run_orca_compound" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">run_orca_compound</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compound_block</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">engrad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'result.engrad'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_wfx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wfx_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'orca_Compound_5'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#ORCABase.run_orca_compound"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.ORCABase.run_orca_compound" title="Link to this definition">#</a></dt>
 <dd><p>Write and run an ORCA <em>Compound</em> job, returning <code class="docutils literal notranslate"><span class="pre">(energy,</span> <span class="pre">gradient)</span></code>.</p>
 <p>Unlike <code class="docutils literal notranslate"><span class="pre">run_orca</span></code> (a single <code class="docutils literal notranslate"><span class="pre">!</span> <span class="pre">keywords</span></code> + inline geometry job), a
 Compound job runs several calculations from a script and writes its own

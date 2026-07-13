@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.7.13 documentation</title>
+    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.7.13.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=a047d0be"></script>
+    <script src="../../_static/documentation_options.js?v=dd775c9e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.13" />
+  <meta name="docsearch:version" content="2026.7.13.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -691,6 +691,7 @@
         <span class="n">rest_of_input</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
 
         <span class="n">do_opt</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimize monomers&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span>
+        <span class="n">make_wfx</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save wavefunction&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span>
 
         <span class="n">block</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="p">[</span>
@@ -705,6 +706,7 @@
                 <span class="s2">&quot;    charge         = 0;&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;    mult           = 1;&quot;</span><span class="p">,</span>
                 <span class="sa">f</span><span class="s2">&quot;    DoOptimization = </span><span class="si">{</span><span class="n">do_opt</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;    ProduceWavefunction = </span><span class="si">{</span><span class="n">make_wfx</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;  end&quot;</span><span class="p">,</span>
             <span class="p">]</span>
         <span class="p">)</span>
@@ -764,10 +766,13 @@
         <span class="c1"># The counterpoise-corrected GRADIENT comes from the script&#39;s EnGrad file</span>
         <span class="c1"># (its ghost-atom bookkeeping is done on the full-method Nuclear_Gradient,</span>
         <span class="c1"># so it is correct for every method). Its ENERGY is not used -- see below.</span>
+        <span class="c1"># Optionally write a .wfx from the dimer (the last COMPOUND JOB, step 5)</span>
+        <span class="c1"># for a following Atomic Charges (DDEC6) step, mirroring the Energy step.</span>
+        <span class="n">make_wfx</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save wavefunction&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
         <span class="n">gradient</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">want_gradient</span><span class="p">:</span>
             <span class="n">_</span><span class="p">,</span> <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_compound</span><span class="p">(</span>
-                <span class="n">compound_block</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span>
+                <span class="n">compound_block</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span> <span class="n">make_wfx</span><span class="o">=</span><span class="n">make_wfx</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">gradient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
@@ -775,7 +780,9 @@
                     <span class="s2">&quot;gradient; see orca.out and orca.err.&quot;</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_compound</span><span class="p">(</span><span class="n">compound_block</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span> <span class="n">engrad</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_compound</span><span class="p">(</span>
+                <span class="n">compound_block</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span> <span class="n">engrad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">make_wfx</span><span class="o">=</span><span class="n">make_wfx</span>
+            <span class="p">)</span>
 
         <span class="c1"># Compute the corrected ENERGY here from the five sub-calculations&#39; total</span>
         <span class="c1"># energies (each step&#39;s FINAL SINGLE POINT ENERGY), NOT from the script&#39;s</span>

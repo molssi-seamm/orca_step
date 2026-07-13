@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.7.13 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.7.13.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=a047d0be"></script>
+    <script src="../../_static/documentation_options.js?v=dd775c9e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.13" />
+  <meta name="docsearch:version" content="2026.7.13.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -857,7 +857,12 @@
 <div class="viewcode-block" id="ORCABase.run_orca_compound">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.run_orca_compound">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run_orca_compound</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">compound_block</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">engrad</span><span class="o">=</span><span class="s2">&quot;result.engrad&quot;</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">compound_block</span><span class="p">,</span>
+        <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">engrad</span><span class="o">=</span><span class="s2">&quot;result.engrad&quot;</span><span class="p">,</span>
+        <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">wfx_step</span><span class="o">=</span><span class="s2">&quot;orca_Compound_5&quot;</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write and run an ORCA *Compound* job, returning ``(energy, gradient)``.</span>
 
@@ -910,6 +915,24 @@
         <span class="k">if</span> <span class="n">engrad</span><span class="p">:</span>
             <span class="n">return_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">engrad</span><span class="p">)</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="n">lib_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{code}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.inp&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.out&quot;</span><span class="p">,</span> <span class="s2">&quot;2&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.err&quot;</span><span class="p">]</span>
+        <span class="c1"># Convert the dimer step&#39;s retained density into a .wfx (as run_orca does</span>
+        <span class="c1"># for the Energy substep), for a following Atomic Charges (DDEC6) step.</span>
+        <span class="c1"># wfx_step is the Compound sub-job that kept its density (the dimer).</span>
+        <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
+            <span class="n">orca_2aim</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;orca_2aim&quot;</span><span class="p">)</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="s2">&quot;&amp;&amp;&quot;</span><span class="p">,</span>
+                <span class="n">orca_2aim</span><span class="p">,</span>
+                <span class="n">wfx_step</span><span class="p">,</span>
+                <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;orca_2aim.out&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;2&gt;&amp;1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&amp;&amp;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;cp&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">wfx_step</span><span class="si">}</span><span class="s2">.wfx&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;orca.wfx&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;orca.wfx&quot;</span><span class="p">,</span> <span class="s2">&quot;orca_2aim.out&quot;</span><span class="p">]</span>
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span>
             <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
