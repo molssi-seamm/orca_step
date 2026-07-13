@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.10.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.13 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=4f088275"></script>
+    <script src="_static/documentation_options.js?v=a047d0be"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.10.1" />
+  <meta name="docsearch:version" content="2026.7.13" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,15 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.7.13 – Bugfix: correct the canonical CCSD(T)-F12 keyword</dt><dd><ul class="simple">
+<li><p>The canonical F12 method keyword was <code class="docutils literal notranslate"><span class="pre">CCSD(T)-F12D</span></code>, which ORCA rejects;
+it is now <code class="docutils literal notranslate"><span class="pre">CCSD(T)-F12D/RI</span></code> (canonical F12 uses the RI approximation for
+the F12 integrals). <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)-F12D</span></code> is unchanged (DLPNO implies RI,
+and ORCA rejects a <code class="docutils literal notranslate"><span class="pre">/RI</span></code> on it).</p></li>
+<li><p>F12 methods are no longer advertised as generic model chemistries – they
+need a specific F12 orbital basis, not the generic advertised bases.</p></li>
+</ul>
+</dd>
 <dt>2026.7.10.1 – F12 methods, automatic grid for high-L bases, and GUI fixes</dt><dd><ul class="simple">
 <li><p>Added the explicitly-correlated <strong>CCSD(T)-F12D</strong> and <strong>DLPNO-CCSD(T)-F12D</strong>
 methods to the Method pull-down, and the <code class="docutils literal notranslate"><span class="pre">cc-pVDZ-F12</span></code> / <code class="docutils literal notranslate"><span class="pre">cc-pVTZ-F12</span></code> /

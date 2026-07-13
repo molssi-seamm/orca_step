@@ -31,7 +31,7 @@ Method
 
 The **Method** pull-down offers Hartree–Fock, MP2/RI-MP2, coupled cluster
 (``CCSD(T)``, ``DLPNO-CCSD(T)``), the explicitly-correlated **F12** variants
-(``CCSD(T)-F12D``, ``DLPNO-CCSD(T)-F12D``), and **DFT**. For everything except
+(``CCSD(T)-F12D/RI``, ``DLPNO-CCSD(T)-F12D``), and **DFT**. For everything except
 DFT the method *is* the ORCA keyword. Choosing **DFT** reveals two further,
 indented controls:
 
