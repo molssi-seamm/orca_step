@@ -2,6 +2,17 @@
 History
 =======
 
+2026.7.15 -- Frequencies sub-step and an MDI Hessian command
+    * New **Frequencies** sub-step: the Hessian and harmonic vibrational
+      frequencies, IR intensities, and thermochemistry (zero-point energy,
+      enthalpy, entropy, Gibbs free energy) via ORCA's analytic (``AnFreq``) or
+      numerical (``NumFreq``) second derivatives, at a chosen temperature.
+      Imaginary frequencies are reported and flagged.
+    * The ORCA **MDI engine** now answers a custom **``<HESSIAN``** command,
+      returning the analytic Cartesian Hessian (via ``AnFreq``). A driver (e.g.
+      the Normal Mode Sampling step) can pull the analytic Hessian over a warm
+      MDI connection, or finite-difference the forces when it is not available.
+
 2026.7.13.1 -- BSSE: optionally write the wavefunction for DDEC6 charges
     * New **Write the wavefunction (wfx) file** option on the BSSE sub-step
       (default off). When on, the dimer's density is retained and converted to

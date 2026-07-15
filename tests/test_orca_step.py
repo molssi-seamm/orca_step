@@ -647,6 +647,38 @@ def test_orca_mdi_parse_energy_and_gradient():
     assert grad.tolist() == [[0.1, 0.2, 0.3], [-0.1, -0.2, -0.3]]
 
 
+def test_orca_mdi_hessian_input():
+    """The MDI Hessian input requests an analytic Hessian (AnFreq)."""
+    mod = _load_orca_mdi()
+    text = mod.orca_hessian_input(
+        "HF", "def2-SVP", 0, 1, ["H", "H"], [[0, 0, 0], [0, 0, 0.74]], ncores=1
+    )
+    assert text.startswith("! HF def2-SVP AnFreq")
+    assert "* xyz 0 1" in text
+
+
+def test_orca_mdi_parse_hessian():
+    """Parse the ORCA .hess $hessian block, including its 5-column blocking."""
+    mod = _load_orca_mdi()
+    hess = (
+        "$orca_hessian_file\n\n$hessian\n6\n"
+        "        0      1      2      3      4\n"
+        "  0   1.0    0.1    0.0    0.0    0.0\n"
+        "  1   0.1    2.0    0.0    0.0    0.0\n"
+        "  2   0.0    0.0    3.0    0.0    0.0\n"
+        "  3   0.0    0.0    0.0    4.0    0.0\n"
+        "  4   0.0    0.0    0.0    0.0    5.0\n"
+        "  5   0.0    0.0    0.0    0.0    0.0\n"
+        "        5\n"
+        "  0   0.0\n  1   0.0\n  2   0.0\n  3   0.0\n  4   0.0\n  5   6.0\n"
+        "$end\n"
+    )
+    H = mod.parse_hessian(hess, 2)  # 2 atoms -> 6x6
+    assert H.shape == (6, 6)
+    assert H[0, 0] == 1.0 and H[5, 5] == 6.0
+    assert H[0, 1] == 0.1 and H[1, 0] == 0.1  # off-diagonal, both blocks
+
+
 def test_get_mdi_engine_command(tmp_path):
     """The engine command runs orca_mdi.py with the orca binary and the
     method/basis flags, over TCP with the driver's port."""
@@ -820,6 +852,95 @@ def test_bsse_cmp_scripts_support_wavefunction():
         text = (importlib.resources.files("orca_step") / "data" / name).read_text()
         assert "ProduceWavefunction" in text
         assert "KeepDensity" in text
+
+
+# --------------------------------------------------------------------------
+# Frequencies (Hessian / vibrational) sub-step
+# --------------------------------------------------------------------------
+_FREQ_OUT = """
+VIBRATIONAL FREQUENCIES
+-----------------------
+
+Scaling factor for frequencies =  1.000000000  (already applied!)
+
+     0:       0.00 cm**-1
+     5:       0.00 cm**-1
+     6:     -50.00 cm**-1
+     7:    1790.72 cm**-1
+     8:    4062.03 cm**-1
+
+IR SPECTRUM
+-----------
+
+ Mode   freq       eps      Int      T**2
+       cm**-1   L/(mol*cm) km/mol    a.u.
+------------------------------------------------------------
+  7:   1790.72   0.015824   79.97  0.002758  ( 0.0  0.0  0.05)
+  8:   4062.03   0.013551   68.48  0.001041  ( 0.0  0.03 0.0)
+
+Zero point energy                ...      0.02238377 Eh      14.05 kcal/mol
+Total Enthalpy                    ...    -75.93482201 Eh
+Final Gibbs free energy         ...    -75.95623266 Eh
+"""
+
+
+def test_frequencies_factory():
+    """The Frequencies sub-step helper."""
+    assert orca_step.FrequenciesStep().description()["name"] == "Frequencies"
+
+
+def test_frequencies_extends_energy():
+    """Frequencies is an Energy with the second-derivative + temperature controls."""
+    assert issubclass(orca_step.Frequencies, orca_step.Energy)
+    node = orca_step.Frequencies()
+    assert node._calculation == "frequencies"
+    P = orca_step.FrequenciesParameters()
+    assert P["second derivatives"].value == "analytic"
+    assert P["temperature"].value == "298.15"
+    assert P["method"].value == "DLPNO-CCSD(T)"  # inherits the energy params
+
+
+def test_frequencies_extra_input_temperature():
+    """extra_input adds the '%freq Temp' thermochemistry block."""
+    node = orca_step.Frequencies()
+    P = {
+        "use model chemistry": "no",
+        "method": "HF",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "grid": "default",
+        "scf convergence": "default",
+        "extra keywords": "",
+        "Hirshfeld charges": "no",
+        "polarizability": "no",
+        "temperature": 350.0,
+    }
+    blocks, _ = node.extra_input(P)
+    assert "%freq Temp 350.0000 end" in blocks
+
+
+def test_frequencies_parsers():
+    """Frequencies, IR intensities, and thermochemistry parse from ORCA output."""
+    node = orca_step.Frequencies()
+    # The near-zero translations/rotations are dropped; the imaginary mode is kept.
+    assert node._parse_frequencies(_FREQ_OUT) == [-50.00, 1790.72, 4062.03]
+    assert node._parse_ir_intensities(_FREQ_OUT) == [79.97, 68.48]
+    thermo = node._parse_thermochemistry(_FREQ_OUT)
+    assert thermo == pytest.approx(
+        {
+            "zero point energy": 0.02238377,
+            "enthalpy": -75.93482201,
+            "gibbs energy": -75.95623266,
+        }
+    )
+
+
+def test_frequencies_results_in_metadata():
+    """The frequency/thermochemistry results are 'frequencies'-only."""
+    results = orca_step.metadata["results"]
+    for key in ("frequencies", "IR intensities", "zero point energy", "gibbs energy"):
+        assert results[key]["calculation"] == ["frequencies"]
 
 
 def test_bsse_factory():

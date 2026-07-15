@@ -26,6 +26,11 @@ from .bsse import BSSE  # noqa: F401
 from .tk_bsse import TkBSSE  # noqa: F401
 from .bsse_step import BSSEStep  # noqa: F401
 
+from .frequencies_parameters import FrequenciesParameters  # noqa: F401
+from .frequencies import Frequencies  # noqa: F401
+from .tk_frequencies import TkFrequencies  # noqa: F401
+from .frequencies_step import FrequenciesStep  # noqa: F401
+
 # Main node, Tk, and factory.
 from .orca import ORCA  # noqa: F401
 from .tk_orca import TkORCA  # noqa: F401

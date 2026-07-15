@@ -298,6 +298,51 @@ metadata["results"] = {
         "type": "float",
         "units": "E_h",
     },
+    "frequencies": {
+        "description": "The harmonic vibrational frequencies",
+        "dimensionality": ["n_dof"],
+        "calculation": ["frequencies"],
+        "type": "float",
+        "units": "1/cm",
+    },
+    "IR intensities": {
+        "description": "The IR intensities of the vibrational modes",
+        "dimensionality": ["n_dof"],
+        "calculation": ["frequencies"],
+        "type": "float",
+        "units": "km/mol",
+    },
+    "n imaginary frequencies": {
+        "description": "The number of imaginary vibrational frequencies",
+        "dimensionality": "scalar",
+        "calculation": ["frequencies"],
+        "property": "number of imaginary frequencies#ORCA#{model}",
+        "type": "integer",
+    },
+    "zero point energy": {
+        "description": "The zero-point vibrational energy",
+        "dimensionality": "scalar",
+        "calculation": ["frequencies"],
+        "property": "zero point energy#ORCA#{model}",
+        "type": "float",
+        "units": "E_h",
+    },
+    "enthalpy": {
+        "description": "The total enthalpy (H) from the thermochemistry",
+        "dimensionality": "scalar",
+        "calculation": ["frequencies"],
+        "property": "enthalpy#ORCA#{model}",
+        "type": "float",
+        "units": "E_h",
+    },
+    "gibbs energy": {
+        "description": "The Gibbs free energy (G) from the thermochemistry",
+        "dimensionality": "scalar",
+        "calculation": ["frequencies"],
+        "property": "Gibbs energy#ORCA#{model}",
+        "type": "float",
+        "units": "E_h",
+    },
 }
 
 # Placeholder for the model-chemistry protocol; populated in the Model Chemistry

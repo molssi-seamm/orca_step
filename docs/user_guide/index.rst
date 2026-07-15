@@ -6,16 +6,18 @@ User Guide
 
 The ORCA plug-in runs `ORCA <https://www.faccts.de/orca/>`_ from a SEAMM
 flowchart. It is a *sub-flowchart* plug-in: dropping an **ORCA** step onto the
-canvas opens a small flowchart of ORCA sub-steps. Three are available:
+canvas opens a small flowchart of ORCA sub-steps. Four are available:
 
 * **Energy** — a single-point energy, optionally with the gradient (forces) and
   a range of properties.
 * **Optimization** — a geometry optimization (the Energy step plus ORCA's
   ``Opt`` keyword).
+* **Frequencies** — the Hessian and harmonic vibrational frequencies, with
+  thermochemistry (see below).
 * **BSSE** — the counterpoise-corrected energy and gradient of a two-fragment
   complex (see below).
 
-All three share the same controls for the level of theory, so the sections below
+All four share the same controls for the level of theory, so the sections below
 apply to any of them.
 
 Choosing the level of theory
@@ -188,6 +190,35 @@ hybrids. A note is printed when the (more expensive) numerical gradient is used.
 Most functionals — including the standard double hybrids — have analytic
 gradients, so a single-point DFT run yields the energy **and** forces cheaply,
 which is convenient for generating machine-learned force-field training data.
+
+Frequencies (Hessian and thermochemistry)
+==========================================
+
+The **Frequencies** sub-step computes the Hessian and the harmonic vibrational
+frequencies, the IR intensities, and the thermochemistry (zero-point energy,
+thermal enthalpy, entropy, and Gibbs free energy). The level-of-theory controls
+are the same as the Energy step, plus two extra controls:
+
+* **Second derivatives** — ``analytic`` (ORCA's ``AnFreq``; much faster, needs
+  an analytic second derivative for the method — HF, most DFT functionals, MP2)
+  or ``numerical`` (``NumFreq``; finite-differences the gradient, works for any
+  method with a gradient but is considerably more expensive).
+* **Temperature** — the temperature for the thermochemistry (the pressure is
+  ORCA's default of 1 atm).
+
+Tick the results you want on the Results tab: the **frequencies**, the **IR
+intensities**, the **zero-point energy**, the **enthalpy**, the **Gibbs free
+energy**, and the **number of imaginary frequencies**. Imaginary (negative)
+frequencies are reported and flagged — a minimum has none, a transition state
+has one.
+
+.. note::
+
+   The same analytic second derivative also backs the ORCA **MDI engine**: it
+   answers a custom ``<HESSIAN`` command (``AnFreq``) so a driver — e.g. the
+   Normal Mode Sampling step — can pull the analytic Hessian over a warm MDI
+   connection, or finite-difference the forces itself when the engine does not
+   provide one.
 
 Counterpoise (BSSE) corrections
 ===============================

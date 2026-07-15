@@ -19,3 +19,7 @@ Mayer valences#ORCA#{model},json,,The Mayer total valence of each atom from {mod
 gradients#ORCA#{model},json,E_h/bohr,The energy gradient on each atom from {model},
 uncorrected energy#ORCA#{model},float,E_h,The uncorrected (raw) total energy of the complex from {model},
 BSSE correction#ORCA#{model},float,E_h,The counterpoise (BSSE) correction to the energy from {model},
+number of imaginary frequencies#ORCA#{model},int,,The number of imaginary vibrational frequencies from {model},
+zero point energy#ORCA#{model},float,E_h,The zero-point vibrational energy from {model},
+enthalpy#ORCA#{model},float,E_h,The total enthalpy from the thermochemistry from {model},
+Gibbs energy#ORCA#{model},float,E_h,The Gibbs free energy from the thermochemistry from {model},
