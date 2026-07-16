@@ -823,14 +823,17 @@ class Energy(orca_step.ORCABase):
         if not occ or occ[-1] + 1 >= len(rows):
             return
         h, lu = occ[-1], occ[-1] + 1
-        p["HOMO energy"] = float(rows[h][1])
-        p["LUMO energy"] = float(rows[lu][1])
+        # Orbital energies are reported in eV, not E_h: eV is the conventional
+        # unit for orbital energies (volts are physically meaningful). ORCA
+        # prints both; column 2 (0-based) of the table is the eV value.
+        p["HOMO energy"] = float(rows[h][2])
+        p["LUMO energy"] = float(rows[lu][2])
         p["HOMO-LUMO gap"] = round(float(rows[lu][2]) - float(rows[h][2]), 4)  # eV
         p["HOMO index"], p["LUMO index"] = h, lu
         if h - 1 >= 0:
-            p["nHOMO energy"] = float(rows[h - 1][1])
+            p["nHOMO energy"] = float(rows[h - 1][2])
         if lu + 1 < len(rows):
-            p["nLUMO energy"] = float(rows[lu + 1][1])
+            p["nLUMO energy"] = float(rows[lu + 1][2])
 
     def _parse_atom_charges(self, text, header):
         # Block runs from the header to the next blank line. (Mulliken ends with
@@ -897,14 +900,10 @@ class Energy(orca_step.ORCABase):
         add("CCSD energy", p.get("ccsd energy"), "E_h", "{:.8f}")
         add("CCSD(T) energy", p.get("ccsd(t) energy"), "E_h", "{:.8f}")
         if "HOMO energy" in p:
-            add(
-                f"HOMO energy (MO {p['HOMO index']})", p["HOMO energy"], "E_h", "{:.5f}"
-            )
-            add(
-                f"LUMO energy (MO {p['LUMO index']})", p["LUMO energy"], "E_h", "{:.5f}"
-            )
-        add("HOMO-1 energy", p.get("nHOMO energy"), "E_h", "{:.5f}")
-        add("LUMO+1 energy", p.get("nLUMO energy"), "E_h", "{:.5f}")
+            add(f"HOMO energy (MO {p['HOMO index']})", p["HOMO energy"], "eV", "{:.4f}")
+            add(f"LUMO energy (MO {p['LUMO index']})", p["LUMO energy"], "eV", "{:.4f}")
+        add("HOMO-1 energy", p.get("nHOMO energy"), "eV", "{:.4f}")
+        add("LUMO+1 energy", p.get("nLUMO energy"), "eV", "{:.4f}")
         add("HOMO-LUMO gap", p.get("HOMO-LUMO gap"), "eV", "{:.3f}")
         if "dipole moment" in p:  # 3-vector -> one row per component
             for comp, v in zip("XYZ", p["dipole moment"]):

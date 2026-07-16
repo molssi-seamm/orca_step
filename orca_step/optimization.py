@@ -70,9 +70,13 @@ class Optimization(Energy):
         return super().run(keywords=opt_keywords)
 
     def analyze(self, indent="", P=None, data=None, **kwargs):
-        """Report the energy and update the configuration with the optimized
-        geometry, plus check that the optimization converged.
+        """Report the energy, store the optimized geometry according to the
+        structure-handling options, and check that the optimization converged.
         """
+        if P is None:
+            P = self.parameters.current_values_to_dict(
+                context=seamm.flowchart_variables._data
+            )
         super().analyze(indent=indent, P=P, data=data)
 
         directory = Path(self.directory)
@@ -92,25 +96,39 @@ class Optimization(Energy):
                 )
             )
 
-        # Update the configuration with the optimized geometry (ORCA writes it
-        # to orca.xyz).
+        # Store the optimized geometry (ORCA writes it to orca.xyz) according to
+        # the standard structure-handling options.
         xyz = directory / "orca.xyz"
-        if xyz.exists():
-            coords = self._read_xyz_coordinates(xyz)
-            _, configuration = self.get_system_configuration(None)
-            if len(coords) == configuration.n_atoms:
-                configuration.atoms.set_coordinates(coords, fractionals=False)
-                printer.normal(
-                    __(
-                        "Updated the structure with the optimized geometry.",
-                        indent=self.indent + 4 * " ",
-                    )
+        if not xyz.exists():
+            logger.warning("No orca.xyz found; cannot store the optimized geometry.")
+            return
+        coords = self._read_xyz_coordinates(xyz)
+
+        _, initial_configuration = self.get_system_configuration(None)
+        if len(coords) != initial_configuration.n_atoms:
+            logger.warning(
+                f"orca.xyz has {len(coords)} atoms, configuration has "
+                f"{initial_configuration.n_atoms}; not storing the geometry."
+            )
+            return
+
+        handling = P.get("structure handling", "Overwrite the current configuration")
+        if handling == "Discard the structure":
+            printer.normal(
+                __(
+                    "The optimized structure was discarded; the current "
+                    "configuration is unchanged.",
+                    indent=self.indent + 4 * " ",
                 )
-            else:
-                logger.warning(
-                    f"orca.xyz has {len(coords)} atoms, configuration has "
-                    f"{configuration.n_atoms}; not updating geometry."
-                )
+            )
+            return
+
+        system, configuration = self.get_system_configuration(
+            P, same_as=initial_configuration
+        )
+        configuration.atoms.set_coordinates(coords, fractionals=False)
+        text = seamm.standard_parameters.set_names(system, configuration, P)
+        printer.normal(__(text, indent=self.indent + 4 * " "))
 
     @staticmethod
     def _read_xyz_coordinates(path):

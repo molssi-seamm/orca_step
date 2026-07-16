@@ -8,17 +8,19 @@ frequencies, IR intensities, and the thermochemistry (zero-point energy, thermal
 enthalpy, entropy, and Gibbs free energy) at a chosen temperature.
 """
 
+import csv
 import logging
 from pathlib import Path
 import re
 import textwrap
 
+import numpy as np
 from tabulate import tabulate
 
 import orca_step
 from .energy import Energy
 import seamm
-from seamm_util import Q_  # noqa: F401
+from seamm_util import Q_
 from seamm_util.printing import FormattedText as __
 import seamm_util.printing as printing
 
@@ -92,7 +94,7 @@ class Frequencies(Energy):
     # ------------------------------------------------------------------
     def analyze(self, indent="", P=None, data=None, **kwargs):
         """Store and report the energy plus the frequencies, IR intensities, and
-        thermochemistry."""
+        thermochemistry, honoring the standard structure-handling options."""
         if P is None:
             P = self.parameters.current_values_to_dict(
                 context=seamm.flowchart_variables._data
@@ -107,18 +109,37 @@ class Frequencies(Energy):
             if (directory / "orca.out").exists()
             else ""
         )
-        freqs = self._parse_frequencies(text)
-        if freqs is not None:
-            props["frequencies"] = freqs
-            n_imag = sum(1 for f in freqs if f < 0.0)
-            props["n imaginary frequencies"] = n_imag
+
+        _, initial_configuration = self.get_system_configuration(None)
+
+        all_freqs = self._parse_frequencies(text)
         ir = self._parse_ir_intensities(text)
-        if ir is not None:
-            props["IR intensities"] = ir
+        if all_freqs is not None:
+            vibrational, max_zero = self._classify_frequencies(
+                all_freqs, initial_configuration
+            )
+            props["frequencies"] = vibrational
+            props["n imaginary frequencies"] = sum(1 for f in vibrational if f < 0.0)
+            if max_zero is not None:
+                props["largest zero-mode frequency"] = max_zero
+            if ir is not None:
+                props["IR intensities"] = ir
+            # Write the frequencies (and IR intensities) to a CSV for easy access.
+            self._write_frequencies_csv(directory, vibrational, ir)
+
         props.update(self._parse_thermochemistry(text))
         props = {k: v for k, v in props.items() if v not in (None, [], {})}
 
-        _, configuration = self.get_system_configuration(None)
+        # Store the results/properties per the structure-handling options. A
+        # frequency calculation does not change the geometry, so a new
+        # configuration simply carries a copy of the current structure.
+        handling = P.get("structure handling", "Overwrite the current configuration")
+        if handling == "Discard the structure":
+            system, configuration = None, initial_configuration
+        else:
+            system, configuration = self.get_system_configuration(
+                P, same_as=initial_configuration
+            )
         try:
             self.store_results(configuration=configuration, data=props)
         except Exception as e:  # pragma: no cover
@@ -126,17 +147,75 @@ class Frequencies(Energy):
 
         self._print_scalar_summary(props)
         self._report_frequencies(props)
+        if handling != "Discard the structure":
+            printer.normal(
+                __(
+                    seamm.standard_parameters.set_names(system, configuration, P),
+                    indent=self.indent + 4 * " ",
+                )
+            )
 
     def _parse_frequencies(self, text):
-        """The vibrational frequencies (cm^-1) from ORCA's VIBRATIONAL
-        FREQUENCIES block, dropping the ~zero translations/rotations. Imaginary
-        modes are reported by ORCA as negative and kept as such."""
+        """All 3N harmonic frequencies (cm^-1) from ORCA's VIBRATIONAL
+        FREQUENCIES block, in ascending order (including the ~zero
+        translations/rotations). Imaginary modes are reported by ORCA as
+        negative and kept as such."""
         freqs = [
             float(v)
             for v in re.findall(r"^\s*\d+:\s+(-?\d+\.\d+)\s+cm\*\*-1", text, re.M)
         ]
-        vibrational = [f for f in freqs if abs(f) > 1.0]
-        return vibrational or None
+        return freqs or None
+
+    def _classify_frequencies(self, all_freqs, configuration):
+        """Split ORCA's 3N frequencies into the true vibrational modes and the 5
+        (linear) or 6 (non-linear) nominally-zero translations/rotations.
+
+        Returns ``(vibrational, max_zero)`` where ``vibrational`` are the
+        remaining modes (ascending, imaginary modes kept negative) and
+        ``max_zero`` is the largest ``|frequency|`` among the trans/rot modes --
+        a gauge of the numerical accuracy of the Hessian (it should be near
+        zero).
+        """
+        n_tr = 5 if self._is_linear(configuration) else 6
+        n_tr = min(n_tr, len(all_freqs))
+        if n_tr == 0:
+            return list(all_freqs), None
+        # The translations/rotations are the n_tr modes closest to zero, so a
+        # genuine imaginary mode (a transition state) stays with the vibrations.
+        order = sorted(range(len(all_freqs)), key=lambda i: abs(all_freqs[i]))
+        tr = set(order[:n_tr])
+        vibrational = [f for i, f in enumerate(all_freqs) if i not in tr]
+        max_zero = max(abs(all_freqs[i]) for i in tr)
+        return vibrational, max_zero
+
+    @staticmethod
+    def _is_linear(configuration):
+        """Whether the molecule is linear (so it has 5 rather than 6 zero
+        modes), from the rank of the centered coordinates."""
+        pts = np.asarray(
+            configuration.atoms.get_coordinates(fractionals=False), dtype=float
+        )
+        if len(pts) <= 2:
+            return True
+        s = np.linalg.svd(pts - pts.mean(axis=0), compute_uv=False)
+        return bool(s[1] < 1.0e-3 * s[0])
+
+    @staticmethod
+    def _write_frequencies_csv(directory, frequencies, intensities):
+        """Write the vibrational frequencies (and IR intensities, if available)
+        to ``frequencies.csv`` in the step directory."""
+        have_ir = intensities is not None and len(intensities) == len(frequencies)
+        with open(Path(directory) / "frequencies.csv", "w", newline="") as fd:
+            w = csv.writer(fd)
+            header = ["Mode", "Frequency (cm^-1)"]
+            if have_ir:
+                header.append("IR intensity (km/mol)")
+            w.writerow(header)
+            for i, f in enumerate(frequencies, start=1):
+                row = [i, f"{f:.2f}"]
+                if have_ir:
+                    row.append(f"{intensities[i - 1]:.2f}")
+                w.writerow(row)
 
     def _parse_ir_intensities(self, text):
         """The IR intensities (km/mol) from the IR SPECTRUM block, in mode order
@@ -153,7 +232,8 @@ class Frequencies(Energy):
         return intensities or None
 
     def _parse_thermochemistry(self, text):
-        """Zero-point energy, total enthalpy, and Gibbs free energy (all E_h)."""
+        """Zero-point energy, total enthalpy, and Gibbs free energy, converted
+        from ORCA's E_h to kJ/mol (SEAMM's SI-based default energy unit)."""
         out = {}
         for key, pattern in (
             ("zero point energy", r"Zero point energy\s+\.\.\.\s+(-?\d+\.\d+)"),
@@ -162,7 +242,7 @@ class Frequencies(Energy):
         ):
             m = re.findall(pattern, text)
             if m:
-                out[key] = float(m[-1])
+                out[key] = Q_(float(m[-1]), "E_h").m_as("kJ/mol")
         return out
 
     def _report_frequencies(self, p):
@@ -170,13 +250,13 @@ class Frequencies(Energy):
         frequencies for small systems."""
         rows = []
 
-        def add(label, value, units, fmt="{:.8f}"):
+        def add(label, value, units, fmt="{:.3f}"):
             if value is not None:
                 rows.append([label, fmt.format(value), units])
 
-        add("Zero-point energy", p.get("zero point energy"), "E_h")
-        add("Total enthalpy", p.get("enthalpy"), "E_h")
-        add("Gibbs free energy", p.get("gibbs energy"), "E_h")
+        add("Zero-point energy", p.get("zero point energy"), "kJ/mol")
+        add("Total enthalpy", p.get("enthalpy"), "kJ/mol")
+        add("Gibbs free energy", p.get("gibbs energy"), "kJ/mol")
         if rows:
             tmp = tabulate(
                 rows,
@@ -201,6 +281,17 @@ class Frequencies(Energy):
                         if n_imag
                         else " (all real; the structure is a minimum)."
                     ),
+                    indent=self.indent + 4 * " ",
+                )
+            )
+
+        max_zero = p.get("largest zero-mode frequency")
+        if max_zero is not None:
+            printer.normal(
+                __(
+                    "The largest of the nominally-zero translation/rotation "
+                    f"frequencies is {max_zero:.2f} cm**-1, a gauge of the "
+                    "numerical accuracy of the Hessian (it should be near zero).",
                     indent=self.indent + 4 * " ",
                 )
             )

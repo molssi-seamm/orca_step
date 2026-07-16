@@ -955,17 +955,61 @@ def test_frequencies_extra_input_temperature():
 def test_frequencies_parsers():
     """Frequencies, IR intensities, and thermochemistry parse from ORCA output."""
     node = orca_step.Frequencies()
-    # The near-zero translations/rotations are dropped; the imaginary mode is kept.
-    assert node._parse_frequencies(_FREQ_OUT) == [-50.00, 1790.72, 4062.03]
+    # _parse_frequencies returns all 3N modes in order (classification is separate).
+    assert node._parse_frequencies(_FREQ_OUT) == [0.0, 0.0, -50.0, 1790.72, 4062.03]
     assert node._parse_ir_intensities(_FREQ_OUT) == [79.97, 68.48]
+    # Thermochemistry is converted from E_h to kJ/mol (SEAMM's SI default).
     thermo = node._parse_thermochemistry(_FREQ_OUT)
     assert thermo == pytest.approx(
         {
-            "zero point energy": 0.02238377,
-            "enthalpy": -75.93482201,
-            "gibbs energy": -75.95623266,
+            "zero point energy": 58.76858,
+            "enthalpy": -199366.84781,
+            "gibbs energy": -199423.06147,
         }
     )
+
+
+def test_frequencies_classify():
+    """The 6 nominally-zero modes (non-linear) are split off; the imaginary mode
+    stays, and the largest zero-mode magnitude is reported."""
+
+    class _Atoms:
+        def get_coordinates(self, fractionals=False):
+            # A bent (non-linear) 3-atom geometry -> 6 zero modes expected.
+            return [[0.0, 0.4, 0.0], [-0.8, -0.2, 0.0], [0.8, -0.2, 0.0]]
+
+    class _Config:
+        n_atoms = 3
+        atoms = _Atoms()
+
+    node = orca_step.Frequencies()
+    # 9 modes: an imaginary (-50), 6 near-zero (incl. a 7.3 residual), 2 real.
+    all_freqs = [-50.0, -7.3, -0.1, 0.0, 0.0, 0.2, 5.0, 1790.72, 4062.03]
+    vibrational, max_zero = node._classify_frequencies(all_freqs, _Config())
+    # The 6 smallest-|f| are the trans/rot; -50 (imaginary) and the two real
+    # stretches remain as vibrational.
+    assert vibrational == [-50.0, 1790.72, 4062.03]
+    assert max_zero == pytest.approx(7.3)
+
+
+def test_frequencies_is_linear():
+    """A diatomic / collinear geometry is detected as linear (5 zero modes)."""
+
+    class _Atoms:
+        def __init__(self, xyz):
+            self._xyz = xyz
+
+        def get_coordinates(self, fractionals=False):
+            return self._xyz
+
+    class _Config:
+        def __init__(self, xyz):
+            self.atoms = _Atoms(xyz)
+
+    linear = _Config([[0.0, 0.0, 0.0], [0.0, 0.0, 1.1], [0.0, 0.0, 2.2]])
+    bent = _Config([[0.0, 0.4, 0.0], [-0.8, -0.2, 0.0], [0.8, -0.2, 0.0]])
+    assert orca_step.Frequencies._is_linear(linear) is True
+    assert orca_step.Frequencies._is_linear(bent) is False
 
 
 def test_frequencies_results_in_metadata():

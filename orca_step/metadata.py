@@ -195,14 +195,14 @@ metadata["results"] = {
         "dimensionality": "scalar",
         "property": "HOMO energy#ORCA#{model}",
         "type": "float",
-        "units": "E_h",
+        "units": "eV",
     },
     "LUMO energy": {
         "description": "Energy of the lowest unoccupied molecular orbital",
         "dimensionality": "scalar",
         "property": "LUMO energy#ORCA#{model}",
         "type": "float",
-        "units": "E_h",
+        "units": "eV",
     },
     "HOMO-LUMO gap": {
         "description": "The HOMO-LUMO gap",
@@ -312,6 +312,18 @@ metadata["results"] = {
         "type": "float",
         "units": "km/mol",
     },
+    "largest zero-mode frequency": {
+        "description": (
+            "The largest in magnitude of the 5 or 6 nominally-zero "
+            "translational/rotational frequencies -- a gauge of the numerical "
+            "accuracy of the Hessian (should be near zero)"
+        ),
+        "dimensionality": "scalar",
+        "calculation": ["frequencies"],
+        "property": "largest zero-mode frequency#ORCA#{model}",
+        "type": "float",
+        "units": "1/cm",
+    },
     "n imaginary frequencies": {
         "description": "The number of imaginary vibrational frequencies",
         "dimensionality": "scalar",
@@ -325,7 +337,7 @@ metadata["results"] = {
         "calculation": ["frequencies"],
         "property": "zero point energy#ORCA#{model}",
         "type": "float",
-        "units": "E_h",
+        "units": "kJ/mol",
     },
     "enthalpy": {
         "description": "The total enthalpy (H) from the thermochemistry",
@@ -333,7 +345,7 @@ metadata["results"] = {
         "calculation": ["frequencies"],
         "property": "enthalpy#ORCA#{model}",
         "type": "float",
-        "units": "E_h",
+        "units": "kJ/mol",
     },
     "gibbs energy": {
         "description": "The Gibbs free energy (G) from the thermochemistry",
@@ -341,7 +353,7 @@ metadata["results"] = {
         "calculation": ["frequencies"],
         "property": "Gibbs energy#ORCA#{model}",
         "type": "float",
-        "units": "E_h",
+        "units": "kJ/mol",
     },
 }
 

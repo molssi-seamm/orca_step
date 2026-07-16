@@ -233,6 +233,8 @@ class ORCABase(seamm.Node):
             "orca.out",
             "orca.err",
             "orca.gbw",
+            "orca.xyz",
+            "orca.hess",
             "*.bibtex",
             "*.txt",
             "*.engrad",

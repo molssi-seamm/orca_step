@@ -2,6 +2,26 @@
 History
 =======
 
+2026.7.16 -- Structure handling for Optimization/Frequencies, and unit fixes
+    * **Bugfix:** the optimized geometry from an **Optimization** sub-step is now
+      correctly carried forward, so a following sub-step (e.g. **Frequencies**)
+      runs at the optimized structure. Previously ORCA's ``orca.xyz`` was
+      discarded before it could be read, so the frequencies were computed at the
+      original, un-optimized geometry.
+    * The **Optimization** and **Frequencies** sub-steps now have the standard
+      **Structure handling** options -- overwrite the current configuration
+      (default), create a new configuration, create a new system and
+      configuration, or discard the structure -- to control where the resulting
+      structure and its properties are stored.
+    * **Units:** the zero-point energy, enthalpy, and Gibbs free energy are now
+      reported in **kJ/mol** (SEAMM's SI-based default), and the HOMO/LUMO
+      orbital energies in **eV** (the conventional unit for orbital energies)
+      throughout the ORCA step.
+    * The **Frequencies** step now also reports the **largest of the 5 or 6
+      nominally-zero translation/rotation frequencies** -- a gauge of the
+      numerical accuracy of the Hessian -- and writes the frequencies (and IR
+      intensities) to ``frequencies.csv`` in the step directory.
+
 2026.7.15 -- Frequencies sub-step and an MDI Hessian command
     * New **Frequencies** sub-step: the Hessian and harmonic vibrational
       frequencies, IR intensities, and thermochemistry (zero-point energy,

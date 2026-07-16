@@ -8,6 +8,8 @@ analytic vs numerical second derivatives and the thermochemistry temperature.
 
 import logging
 
+import seamm
+
 from .energy_parameters import EnergyParameters
 
 logger = logging.getLogger(__name__)
@@ -51,5 +53,16 @@ class FrequenciesParameters(EnergyParameters):
     def __init__(self, defaults={}, data=None):
         logger.debug("FrequenciesParameters.__init__")
         super().__init__(
-            defaults={**FrequenciesParameters.parameters, **defaults}, data=data
+            defaults={
+                **FrequenciesParameters.parameters,
+                **seamm.standard_parameters.structure_handling_parameters,
+                **defaults,
+            },
+            data=data,
         )
+
+        # A frequency calculation does not change the geometry, so default to
+        # overwriting the current configuration (storing the results/properties
+        # there) and keeping its name.
+        self["structure handling"].description = "Structure handling:"
+        self["configuration name"].default = "keep current name"

@@ -191,6 +191,21 @@ Most functionals — including the standard double hybrids — have analytic
 gradients, so a single-point DFT run yields the energy **and** forces cheaply,
 which is convenient for generating machine-learned force-field training data.
 
+Geometry optimization
+=====================
+
+The **Optimization** sub-step adds ORCA's ``Opt`` keyword to the energy run and,
+when it finishes, stores the optimized geometry. A **Convergence** control
+selects ORCA's optimization preset (``LooseOpt`` … ``VeryTightOpt``).
+
+A **Structure handling** control chooses where the optimized geometry goes. It
+defaults to *Overwrite the current configuration*, so the optimized structure
+flows straight into any following sub-step — for example a **Frequencies**
+calculation runs at the optimized geometry without any extra wiring. You can
+instead create a new configuration (or a new system and configuration) to keep
+the starting structure alongside the optimized one, or discard the optimized
+structure entirely.
+
 Frequencies (Hessian and thermochemistry)
 ==========================================
 
@@ -205,12 +220,32 @@ are the same as the Energy step, plus two extra controls:
   method with a gradient but is considerably more expensive).
 * **Temperature** — the temperature for the thermochemistry (the pressure is
   ORCA's default of 1 atm).
+* **Structure handling** — where to store the structure and its properties. A
+  frequency calculation does not change the geometry, so this defaults to
+  *Overwrite the current configuration*; you can instead create a new
+  configuration (or a new system and configuration) to hold the results, or
+  discard the structure.
 
 Tick the results you want on the Results tab: the **frequencies**, the **IR
 intensities**, the **zero-point energy**, the **enthalpy**, the **Gibbs free
-energy**, and the **number of imaginary frequencies**. Imaginary (negative)
-frequencies are reported and flagged — a minimum has none, a transition state
-has one.
+energy**, the **number of imaginary frequencies**, and the **largest zero-mode
+frequency**. Imaginary (negative) frequencies are reported and flagged — a
+minimum has none, a transition state has one.
+
+The frequencies (and IR intensities) are also written to ``frequencies.csv`` in
+the step's directory for easy access.
+
+.. note::
+
+   **Units.** Following SEAMM's SI-based convention, the zero-point energy,
+   enthalpy, and Gibbs free energy are reported in **kJ/mol**. (Orbital energies
+   — HOMO/LUMO — are reported in **eV** throughout ORCA, the conventional unit
+   for orbital energies.)
+
+The report also lists the **largest of the 5 or 6 nominally-zero
+translation/rotation frequencies**. These should be zero; how far the largest
+one departs from zero is a convenient gauge of the numerical accuracy of the
+Hessian (with the analytic Hessian ORCA projects them to exactly ``0.00``).
 
 .. note::
 
