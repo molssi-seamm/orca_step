@@ -1021,6 +1021,34 @@ def test_level_of_theory_text():
     )
 
 
+def test_level_of_theory_resolved_basis(monkeypatch):
+    """With the model chemistry resolved, the level shows the resolved basis --
+    appended when the spec omits it, and not duplicated when it already has it."""
+    node = orca_step.Frequencies()
+    monkeypatch.setattr(node, "variable_exists", lambda name: True)
+    P = {"use model chemistry": "yes"}
+
+    # Spec omits the basis -> the resolved (node) basis is appended.
+    monkeypatch.setattr(
+        node, "get_variable", lambda name: {"level": "ORCA:QC@DLPNO-CCSD(T)"}
+    )
+    monkeypatch.setattr(
+        node,
+        "_method_basis_from_model_chemistry",
+        lambda P: ("DLPNO-CCSD(T)", "def2-TZVP"),
+    )
+    assert node._level_of_theory_text(P) == "ORCA:QC@DLPNO-CCSD(T)/def2-TZVP"
+
+    # Spec already names the basis -> not duplicated.
+    monkeypatch.setattr(
+        node, "get_variable", lambda name: {"level": "ORCA:DFT@B3LYP/def2-SVP"}
+    )
+    monkeypatch.setattr(
+        node, "_method_basis_from_model_chemistry", lambda P: ("B3LYP", "def2-SVP")
+    )
+    assert node._level_of_theory_text(P) == "ORCA:DFT@B3LYP/def2-SVP"
+
+
 def test_frequencies_parse_hess_file(tmp_path):
     """The .hess Cartesian Hessian and atomic masses parse correctly."""
     path = tmp_path / "orca.hess"

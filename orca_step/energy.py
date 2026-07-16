@@ -78,13 +78,23 @@ class Energy(orca_step.ORCABase):
 
         if use_mc:
             # At run time the model chemistry is resolved, so show the actual
-            # level spec. In the flowchart editor (or tests) the flowchart
-            # variables are not set up, so fall back to a generic phrase.
+            # level spec plus the resolved basis (the spec may omit the basis,
+            # in which case this node's basis fills in). In the flowchart editor
+            # (or tests) the flowchart variables are not set up, so fall back to
+            # a generic phrase.
             try:
                 if self.variable_exists("_model_chemistry"):
                     mc = self.get_variable("_model_chemistry")
                     level = (mc.get("level") or "").strip()
                     if level:
+                        try:
+                            _, basis = self._method_basis_from_model_chemistry(P)
+                        except Exception:
+                            basis = ""
+                        # Append the resolved basis unless the spec already
+                        # names it (avoid "…/def2-SVP/def2-SVP").
+                        if basis and f"/{basis}" not in level:
+                            level = f"{level}/{basis}"
                         return level
             except Exception:
                 pass
