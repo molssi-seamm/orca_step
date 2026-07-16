@@ -30,6 +30,9 @@ class TkOptimization(TkEnergy):
             self["optimization convergence"] = P["optimization convergence"].widget(
                 frame
             )
+        for key in ("structure handling", "system name", "configuration name"):
+            if key not in self:
+                self[key] = P[key].widget(frame)
         self.reset_dialog()
         return frame
 
@@ -38,4 +41,8 @@ class TkOptimization(TkEnergy):
         if "optimization convergence" in self:
             self["optimization convergence"].grid(row=row, column=0, sticky=tk.EW)
             row += 1
+        for key in ("structure handling", "system name", "configuration name"):
+            if key in self:
+                self[key].grid(row=row, column=0, sticky=tk.EW)
+                row += 1
         return row

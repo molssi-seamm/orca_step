@@ -2,6 +2,55 @@
 History
 =======
 
+2026.7.16 -- Structure handling for Optimization/Frequencies, and unit fixes
+    * **Bugfix:** the optimized geometry from an **Optimization** sub-step is now
+      correctly carried forward, so a following sub-step (e.g. **Frequencies**)
+      runs at the optimized structure. Previously ORCA's ``orca.xyz`` was
+      discarded before it could be read, so the frequencies were computed at the
+      original, un-optimized geometry.
+    * The **Optimization** and **Frequencies** sub-steps now have the standard
+      **Structure handling** options -- overwrite the current configuration
+      (default), create a new configuration, create a new system and
+      configuration, or discard the structure -- to control where the resulting
+      structure and its properties are stored.
+    * **Units:** the zero-point energy, enthalpy, and Gibbs free energy are now
+      reported in **kJ/mol** (SEAMM's SI-based default), and the HOMO/LUMO
+      orbital energies in **eV** (the conventional unit for orbital energies)
+      throughout the ORCA step.
+    * The **Frequencies** step now also reports the **largest of the 5 or 6
+      nominally-zero translation/rotation frequencies** -- a gauge of the
+      numerical accuracy of the Hessian -- and writes the frequencies (and IR
+      intensities) to ``frequencies.csv`` in the step directory. Because ORCA
+      projects the translations/rotations to exactly ``0.00`` in its printed
+      frequencies, this residual is computed from the raw, un-projected
+      mass-weighted Hessian (``orca.hess``), so it shows the true numerical
+      value rather than zero.
+    * The Frequencies output now includes a **table of the frequencies and IR
+      intensities**, and the step writes an **``IR_spectrum.graph``** file with
+      the IR spectrum as a stick trace plus a Lorentzian-broadened trace that
+      mimics an experimental spectrum.
+    * Each ORCA sub-step's output is now followed by a blank line, so the
+      sub-steps are visually separated in the output.
+    * When a sub-step runs, its output now names the **actual level of theory** --
+      the resolved model-chemistry level spec **including the resolved basis**
+      (e.g. ``ORCA:DFT@B3LYP/def2-SVP``; the basis is appended when the spec
+      itself omits it and the step fills in its own), or the explicit
+      method/basis -- instead of the generic "the model chemistry".
+
+2026.7.15 -- Frequencies sub-step and an MDI Hessian command
+    * New **Frequencies** sub-step: the Hessian and harmonic vibrational
+      frequencies, IR intensities, and thermochemistry (zero-point energy,
+      enthalpy, entropy, Gibbs free energy) via ORCA's analytic (``AnFreq``) or
+      numerical (``NumFreq``) second derivatives, at a chosen temperature.
+      Imaginary frequencies are reported and flagged.
+    * The ORCA **MDI engine** now answers a custom **``<HESSIAN``** command,
+      returning the analytic Cartesian Hessian (via ``AnFreq``). It advertises
+      ``<HESSIAN`` only when ORCA has an analytic Hessian for the method (HF, MP2,
+      ordinary DFT) -- not double hybrids or ``(DLPNO-)CCSD(T)`` -- so a driver's
+      capability check is truthful. A driver (e.g. the Normal Mode Sampling step)
+      pulls the analytic Hessian over a warm MDI connection when offered, or
+      finite-differences the forces otherwise.
+
 2026.7.13.1 -- BSSE: optionally write the wavefunction for DDEC6 charges
     * New **Write the wavefunction (wfx) file** option on the BSSE sub-step
       (default off). When on, the dimer's density is retained and converted to

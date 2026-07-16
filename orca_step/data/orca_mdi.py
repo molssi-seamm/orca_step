@@ -80,6 +80,56 @@ def parse_energy(out_text):
     return float(matches[-1]) if matches else None
 
 
+def orca_hessian_input(
+    method, basis, charge, multiplicity, symbols, coords_ang, ncores=1
+):
+    """ORCA input for an analytic Hessian (``! AnFreq``), which writes an
+    ``orca.hess`` file. Same geometry/charge/multiplicity handling as the
+    energy+gradient input; ``AnFreq`` needs an analytic second derivative for the
+    method (HF, most DFT, MP2). Methods without one should fall back to
+    finite-differencing the gradient on the driver side."""
+    lines = [f"! {method} {basis} AnFreq"]
+    if ncores and ncores > 1:
+        lines.append(f"%pal nprocs {ncores} end")
+    lines.append(f"* xyz {charge} {multiplicity}")
+    for sym, (x, y, z) in zip(symbols, coords_ang):
+        lines.append(f"{sym:2s} {x:18.10f} {y:18.10f} {z:18.10f}")
+    lines.append("*")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def parse_hessian(hess_text, natoms):
+    """The Cartesian Hessian (hartree/bohr^2) as a (3n, 3n) array from an
+    ``orca.hess`` file's ``$hessian`` block.
+
+    The block is: the dimension on its own line, then column-blocks (5 columns
+    each) -- a header line of column indices followed by one line per row that
+    begins with the row index and lists that row's values for those columns."""
+    n = 3 * natoms
+    lines = hess_text.splitlines()
+    start = next((i for i, ln in enumerate(lines) if ln.strip() == "$hessian"), None)
+    if start is None:
+        raise RuntimeError("no $hessian block in the ORCA .hess file")
+    dim = int(lines[start + 1].split()[0])
+    if dim != n:
+        raise RuntimeError(f".hess dimension {dim} != 3*natoms ({n}).")
+    H = np.zeros((n, n))
+    j = start + 2
+    cols_done = 0
+    while cols_done < n:
+        col_idx = [int(c) for c in lines[j].split()]
+        j += 1
+        for _ in range(n):
+            parts = lines[j].split()
+            row = int(parts[0])
+            for k, c in enumerate(col_idx):
+                H[row, c] = float(parts[1 + k])
+            j += 1
+        cols_done += len(col_idx)
+    return H
+
+
 def parse_engrad(engrad_text, natoms):
     """The Cartesian gradient (hartree/bohr) as an (natoms, 3) array from the
     contents of an ``orca.engrad`` file."""
@@ -140,6 +190,15 @@ def parse_args():
         help="Cores/processes for ORCA's %%pal (default 1, serial).",
     )
     p.add_argument(
+        "--hessian",
+        choices=["yes", "no"],
+        default="no",
+        help="Advertise the custom <HESSIAN command (analytic Hessian via "
+        "AnFreq). Only set 'yes' for a method ORCA has an analytic Hessian for "
+        "(HF, MP2, ordinary DFT) -- NOT double hybrids or (DLPNO-)CCSD(T). The "
+        "default 'no' is truthful: a driver then finite-differences the forces.",
+    )
+    p.add_argument(
         "--scratch",
         default=None,
         help="Working directory for the ORCA runs (default: a fresh temp dir). "
@@ -183,7 +242,11 @@ def main():
     mdi.MDI_Init(args.mdi)
     comm = mdi.MDI_Accept_Communicator()
     mdi.MDI_Register_node("@DEFAULT")
-    for _cmd in [
+    # <HESSIAN is advertised only when ORCA can compute an analytic Hessian for
+    # this method, so a driver's capability check is truthful: it uses the
+    # analytic Hessian if offered, else finite-differences the forces.
+    hessian_capable = args.hessian == "yes"
+    commands = [
         "<NATOMS",
         ">NATOMS",
         "<NAME",
@@ -195,7 +258,10 @@ def main():
         "<ENERGY",
         "<FORCES",
         "EXIT",
-    ]:
+    ]
+    if hessian_capable:
+        commands.insert(commands.index("<FORCES") + 1, "<HESSIAN")
+    for _cmd in commands:
         mdi.MDI_Register_command("@DEFAULT", _cmd)
 
     natoms = None
@@ -208,6 +274,7 @@ def main():
     recompute = True
     energy = None
     gradient = None
+    hessian = None
 
     def run_calculation():
         """Write the ORCA input for the current geometry, run the orca binary
@@ -240,6 +307,34 @@ def main():
         gradient = parse_engrad((workdir / "orca.engrad").read_text(), natoms)
         logger.debug(f"orca run: E = {energy:.8f} Ha in {elapsed:.2f} s")
 
+    def run_hessian():
+        """Compute the analytic Hessian for the current geometry (``! AnFreq``)
+        and parse orca.hess. Separate from run_calculation because it is much
+        more expensive; the result is cached until the geometry changes."""
+        nonlocal hessian
+        symbols = [_Z_TO_SYMBOL[int(z)] for z in atomic_numbers]
+        coords_ang = coords_bohr.reshape(natoms, 3) * ANG_PER_BOHR
+        text = orca_hessian_input(
+            method, args.basis, charge, multiplicity, symbols, coords_ang, args.ncores
+        )
+        (workdir / "orca.inp").write_text(text)
+        t0 = time.perf_counter()
+        with (workdir / "orca.out").open("w") as out:
+            result = subprocess.run(
+                [args.orca, "orca.inp"],
+                cwd=workdir,
+                stdout=out,
+                stderr=subprocess.STDOUT,
+            )
+        elapsed = time.perf_counter() - t0
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"orca (AnFreq) exited with code {result.returncode}; see "
+                f"{workdir}/orca.out"
+            )
+        hessian = parse_hessian((workdir / "orca.hess").read_text(), natoms)
+        logger.debug(f"orca Hessian: {3 * natoms}x{3 * natoms} in {elapsed:.2f} s")
+
     logger.debug("Entering MDI event loop ...")
     while True:
         command = mdi.MDI_Recv_Command(comm)
@@ -259,19 +354,23 @@ def main():
             atomic_numbers[:] = np.asarray(raw)
             have_elements = True
             recompute = True
+            hessian = None
         elif command == ">COORDS":
             raw = mdi.MDI_Recv(3 * natoms, mdi.MDI_DOUBLE, comm)
             coords_bohr[:] = np.asarray(raw)
             have_coords = True
             recompute = True
+            hessian = None
         elif command == ">TOTCHARGE":
             raw = mdi.MDI_Recv(1, mdi.MDI_DOUBLE, comm)
             charge = int(round(float(np.asarray(raw).flat[0])))
             recompute = True
+            hessian = None
         elif command == ">ELEC_MULT":
             raw = mdi.MDI_Recv(1, mdi.MDI_INT, comm)
             multiplicity = int(np.asarray(raw).flat[0])
             recompute = True
+            hessian = None
         elif command in ("SCF", "<ENERGY", "<FORCES"):
             if recompute:
                 if not (have_elements and have_coords):
@@ -286,6 +385,29 @@ def main():
             elif command == "<FORCES":
                 forces = (-gradient).ravel()  # force = -dE/dx, in hartree/bohr
                 mdi.MDI_Send(forces, 3 * natoms, mdi.MDI_DOUBLE, comm)
+        elif command == "<HESSIAN":
+            # The analytic Cartesian Hessian (hartree/bohr^2), 3N x 3N row-major.
+            # Custom command, advertised only when hessian_capable; a compliant
+            # driver introspects @COMMANDS and uses it when present, else
+            # finite-differences <FORCES itself.
+            if not hessian_capable:
+                raise RuntimeError(
+                    "<HESSIAN received but this engine has no analytic Hessian "
+                    "for the method (it was not advertised); the driver should "
+                    "finite-difference the forces instead."
+                )
+            if not (have_elements and have_coords):
+                raise RuntimeError(
+                    "<HESSIAN requested before >ELEMENTS and >COORDS were received."
+                )
+            if hessian is None:
+                run_hessian()
+            mdi.MDI_Send(
+                np.asarray(hessian).ravel(),
+                9 * natoms * natoms,
+                mdi.MDI_DOUBLE,
+                comm,
+            )
         elif command == "EXIT":
             logger.debug("EXIT -- shutting down.")
             break

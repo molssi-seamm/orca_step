@@ -74,20 +74,15 @@ class BSSE(Energy):
     def description_text(self, P=None):
         if not P:
             P = self.parameters.values_to_dict()
-        use_mc = P["use model chemistry"]
-        if not isinstance(use_mc, bool):
-            use_mc = use_mc == "yes"
-        if use_mc:
-            method = "the model chemistry"
-        else:
-            m, basis = self._resolve_method_basis(P)
-            method = f"{m}/{basis}"
         what = (
             "energy and gradient"
             if P.get("compute gradient", "yes") == "yes"
             else "energy"
         )
-        text = f"Counterpoise (BSSE) corrected {what} with ORCA at {method}."
+        text = (
+            f"Counterpoise (BSSE) corrected {what} with ORCA at "
+            f"{self._level_of_theory_text(P)}."
+        )
         return self.header + "\n" + __(text, indent=4 * " ").__str__()
 
     # ------------------------------------------------------------------

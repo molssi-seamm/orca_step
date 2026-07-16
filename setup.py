@@ -90,11 +90,13 @@ setup(
             'Energy = orca_step:EnergyStep',
             'Optimization = orca_step:OptimizationStep',
             'BSSE = orca_step:BSSEStep',
+            'Frequencies = orca_step:FrequenciesStep',
         ],
         'org.molssi.seamm.orca.tk': [
             'Energy = orca_step:EnergyStep',
             'Optimization = orca_step:OptimizationStep',
             'BSSE = orca_step:BSSEStep',
+            'Frequencies = orca_step:FrequenciesStep',
         ],
     }
 )

@@ -59,22 +59,51 @@ class Energy(orca_step.ORCABase):
         """Describe what this sub-step will do."""
         if not P:
             P = self.parameters.values_to_dict()
+        text = f"Single-point energy with ORCA at {self._level_of_theory_text(P)}."
+        return self.header + "\n" + __(text, indent=4 * " ").__str__()
 
+    def _level_of_theory_text(self, P):
+        """A human-readable level of theory for the run description.
+
+        When the global model chemistry is used, this is the resolved level spec
+        (e.g. ``ORCA:DFT@B3LYP/def2-SVP``) once a Model Chemistry step has
+        defined it -- so the actual level appears in the output when the step
+        runs. Before that (in the flowchart editor, where nothing is resolved
+        yet) it falls back to a generic phrase. For an explicit calculation it
+        is the chosen ``method/basis`` (or the CBS extrapolation family).
+        """
         use_mc = P["use model chemistry"]
         if not isinstance(use_mc, bool):
             use_mc = use_mc == "yes"
 
         if use_mc:
-            text = (
-                "Single-point energy with ORCA using the model chemistry from a "
-                "preceding Model Chemistry step."
-            )
-        else:
-            method, basis = self._resolve_method_basis(P)
-            if self._extrapolating(P):
-                basis = self._extrapolation_keyword(P)
-            text = f"Single-point energy with ORCA at {method}/{basis}."
-        return self.header + "\n" + __(text, indent=4 * " ").__str__()
+            # At run time the model chemistry is resolved, so show the actual
+            # level spec plus the resolved basis (the spec may omit the basis,
+            # in which case this node's basis fills in). In the flowchart editor
+            # (or tests) the flowchart variables are not set up, so fall back to
+            # a generic phrase.
+            try:
+                if self.variable_exists("_model_chemistry"):
+                    mc = self.get_variable("_model_chemistry")
+                    level = (mc.get("level") or "").strip()
+                    if level:
+                        try:
+                            _, basis = self._method_basis_from_model_chemistry(P)
+                        except Exception:
+                            basis = ""
+                        # Append the resolved basis unless the spec already
+                        # names it (avoid "…/def2-SVP/def2-SVP").
+                        if basis and f"/{basis}" not in level:
+                            level = f"{level}/{basis}"
+                        return level
+            except Exception:
+                pass
+            return "the model chemistry (from a preceding Model Chemistry step)"
+
+        method, basis = self._resolve_method_basis(P)
+        if self._extrapolating(P):
+            basis = self._extrapolation_keyword(P)
+        return f"{method}/{basis}"
 
     @staticmethod
     def _basis_name(value):
@@ -823,14 +852,17 @@ class Energy(orca_step.ORCABase):
         if not occ or occ[-1] + 1 >= len(rows):
             return
         h, lu = occ[-1], occ[-1] + 1
-        p["HOMO energy"] = float(rows[h][1])
-        p["LUMO energy"] = float(rows[lu][1])
+        # Orbital energies are reported in eV, not E_h: eV is the conventional
+        # unit for orbital energies (volts are physically meaningful). ORCA
+        # prints both; column 2 (0-based) of the table is the eV value.
+        p["HOMO energy"] = float(rows[h][2])
+        p["LUMO energy"] = float(rows[lu][2])
         p["HOMO-LUMO gap"] = round(float(rows[lu][2]) - float(rows[h][2]), 4)  # eV
         p["HOMO index"], p["LUMO index"] = h, lu
         if h - 1 >= 0:
-            p["nHOMO energy"] = float(rows[h - 1][1])
+            p["nHOMO energy"] = float(rows[h - 1][2])
         if lu + 1 < len(rows):
-            p["nLUMO energy"] = float(rows[lu + 1][1])
+            p["nLUMO energy"] = float(rows[lu + 1][2])
 
     def _parse_atom_charges(self, text, header):
         # Block runs from the header to the next blank line. (Mulliken ends with
@@ -897,14 +929,10 @@ class Energy(orca_step.ORCABase):
         add("CCSD energy", p.get("ccsd energy"), "E_h", "{:.8f}")
         add("CCSD(T) energy", p.get("ccsd(t) energy"), "E_h", "{:.8f}")
         if "HOMO energy" in p:
-            add(
-                f"HOMO energy (MO {p['HOMO index']})", p["HOMO energy"], "E_h", "{:.5f}"
-            )
-            add(
-                f"LUMO energy (MO {p['LUMO index']})", p["LUMO energy"], "E_h", "{:.5f}"
-            )
-        add("HOMO-1 energy", p.get("nHOMO energy"), "E_h", "{:.5f}")
-        add("LUMO+1 energy", p.get("nLUMO energy"), "E_h", "{:.5f}")
+            add(f"HOMO energy (MO {p['HOMO index']})", p["HOMO energy"], "eV", "{:.4f}")
+            add(f"LUMO energy (MO {p['LUMO index']})", p["LUMO energy"], "eV", "{:.4f}")
+        add("HOMO-1 energy", p.get("nHOMO energy"), "eV", "{:.4f}")
+        add("LUMO+1 energy", p.get("nLUMO energy"), "eV", "{:.4f}")
         add("HOMO-LUMO gap", p.get("HOMO-LUMO gap"), "eV", "{:.3f}")
         if "dipole moment" in p:  # 3-vector -> one row per component
             for comp, v in zip("XYZ", p["dipole moment"]):
