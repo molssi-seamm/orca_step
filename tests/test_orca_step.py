@@ -993,6 +993,52 @@ def test_frequencies_classify():
     assert max_zero == pytest.approx(7.3)
 
 
+_HESS = """
+$atoms
+1
+ X     4.00000      0.000000000000     0.000000000000     0.000000000000
+
+$hessian
+3
+                    0                  1                  2
+    0       1.0000000000E+00   0.0000000000E+00   0.0000000000E+00
+    1       0.0000000000E+00   1.0000000000E+00   0.0000000000E+00
+    2       0.0000000000E+00   0.0000000000E+00   1.0000000000E+00
+
+$end
+"""
+
+
+def test_frequencies_parse_hess_file(tmp_path):
+    """The .hess Cartesian Hessian and atomic masses parse correctly."""
+    path = tmp_path / "orca.hess"
+    path.write_text(_HESS)
+    hessian, masses = orca_step.Frequencies._parse_hess_file(path)
+    assert hessian.shape == (3, 3)
+    assert masses.tolist() == [4.0]
+    assert hessian[0][0] == 1.0 and hessian[1][2] == 0.0
+
+
+def test_frequencies_zero_mode_residual_from_raw_hessian(tmp_path):
+    """The zero-mode residual comes from diagonalizing the raw (un-projected)
+    mass-weighted Hessian, not from ORCA's projected (zeroed) frequencies."""
+    (tmp_path / "orca.hess").write_text(_HESS)
+
+    class _Atoms:
+        def get_coordinates(self, fractionals=False):
+            return [[0.0, 0.0, 0.0]]
+
+    class _Config:
+        atoms = _Atoms()
+
+    node = orca_step.Frequencies()
+    residual = node._zero_mode_residual(tmp_path, _Config())
+    # H = I, mass = 4 -> eigenvalue 0.25 -> freq = 0.5 * 5140.49 cm**-1.
+    assert residual == pytest.approx(2570.24, abs=0.05)
+    # No orca.hess -> no residual (rather than a misleading 0.0).
+    assert node._zero_mode_residual(tmp_path / "empty", _Config()) is None
+
+
 def test_frequencies_ir_spectrum_graph(tmp_path):
     """The IR-spectrum graph has a broadened trace and a stick trace (with gaps
     between the sticks), and skips imaginary modes."""

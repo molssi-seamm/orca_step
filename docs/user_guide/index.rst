@@ -250,7 +250,11 @@ interactively.
 The report also lists the **largest of the 5 or 6 nominally-zero
 translation/rotation frequencies**. These should be zero; how far the largest
 one departs from zero is a convenient gauge of the numerical accuracy of the
-Hessian (with the analytic Hessian ORCA projects them to exactly ``0.00``).
+Hessian. ORCA *projects* the translations and rotations out of its printed
+frequencies (it reports them as exactly ``0.00``), so this residual is instead
+obtained by diagonalizing the **raw, un-projected** mass-weighted Cartesian
+Hessian from ``orca.hess`` — the value you see is therefore the true numerical
+residual, not zero.
 
 .. note::
 

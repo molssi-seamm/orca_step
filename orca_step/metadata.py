@@ -315,8 +315,9 @@ metadata["results"] = {
     "largest zero-mode frequency": {
         "description": (
             "The largest in magnitude of the 5 or 6 nominally-zero "
-            "translational/rotational frequencies -- a gauge of the numerical "
-            "accuracy of the Hessian (should be near zero)"
+            "translational/rotational frequencies, from the raw un-projected "
+            "Hessian -- a gauge of the numerical accuracy of the Hessian "
+            "(should be small)"
         ),
         "dimensionality": "scalar",
         "calculation": ["frequencies"],

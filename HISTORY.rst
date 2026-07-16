@@ -20,7 +20,11 @@ History
     * The **Frequencies** step now also reports the **largest of the 5 or 6
       nominally-zero translation/rotation frequencies** -- a gauge of the
       numerical accuracy of the Hessian -- and writes the frequencies (and IR
-      intensities) to ``frequencies.csv`` in the step directory.
+      intensities) to ``frequencies.csv`` in the step directory. Because ORCA
+      projects the translations/rotations to exactly ``0.00`` in its printed
+      frequencies, this residual is computed from the raw, un-projected
+      mass-weighted Hessian (``orca.hess``), so it shows the true numerical
+      value rather than zero.
     * The Frequencies output now includes a **table of the frequencies and IR
       intensities**, and the step writes an **``IR_spectrum.graph``** file with
       the IR spectrum as a stick trace plus a Lorentzian-broadened trace that

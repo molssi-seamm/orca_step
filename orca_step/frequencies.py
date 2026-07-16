@@ -10,6 +10,7 @@ enthalpy, entropy, and Gibbs free energy) at a chosen temperature.
 
 import csv
 import logging
+import math
 from pathlib import Path
 import re
 import textwrap
@@ -26,6 +27,16 @@ import seamm_util.printing as printing
 
 logger = logging.getLogger(__name__)
 printer = printing.getPrinter("ORCA")
+
+# Conversion from a mass-weighted Cartesian force constant, in
+# Hartree/(bohr**2 * u), to a harmonic wavenumber in cm**-1:
+#     nu = sqrt(lambda) * _CM_PER_SQRT_AU
+# Derived from CODATA constants as sqrt(E_h / (a0**2 * u)) / (2*pi*c) ~ 5140.49.
+_E_H = 4.3597447222071e-18  # Hartree, J
+_A0 = 5.29177210903e-11  # Bohr radius, m
+_AMU = 1.66053906660e-27  # atomic mass unit, kg
+_C_CM = 2.99792458e10  # speed of light, cm/s
+_CM_PER_SQRT_AU = math.sqrt(_E_H / (_A0**2 * _AMU)) / (2 * math.pi * _C_CM)
 
 
 class Frequencies(Energy):
@@ -115,13 +126,18 @@ class Frequencies(Energy):
         all_freqs = self._parse_frequencies(text)
         ir = self._parse_ir_intensities(text)
         if all_freqs is not None:
-            vibrational, max_zero = self._classify_frequencies(
+            vibrational, _ = self._classify_frequencies(
                 all_freqs, initial_configuration
             )
             props["frequencies"] = vibrational
             props["n imaginary frequencies"] = sum(1 for f in vibrational if f < 0.0)
-            if max_zero is not None:
-                props["largest zero-mode frequency"] = max_zero
+            # ORCA projects the translations/rotations to exactly 0.00 in its
+            # printed frequencies, so the genuine numerical residual (a gauge of
+            # the Hessian's accuracy) is obtained by diagonalizing the raw,
+            # un-projected mass-weighted Hessian from orca.hess.
+            residual = self._zero_mode_residual(directory, initial_configuration)
+            if residual is not None:
+                props["largest zero-mode frequency"] = residual
             if ir is not None:
                 props["IR intensities"] = ir
             # Write the frequencies (and IR intensities) to a CSV for easy access.
@@ -205,6 +221,79 @@ class Frequencies(Energy):
             return True
         s = np.linalg.svd(pts - pts.mean(axis=0), compute_uv=False)
         return bool(s[1] < 1.0e-3 * s[0])
+
+    def _zero_mode_residual(self, directory, configuration):
+        """The largest ``|frequency|`` (cm**-1) among the 5 (linear) or 6
+        (non-linear) translational/rotational modes, from the **raw,
+        un-projected** mass-weighted Hessian in ``orca.hess``.
+
+        ORCA projects these modes to exactly ``0.00`` in its printed
+        frequencies, so this diagonalization is the only way to see the genuine
+        numerical residual -- a useful gauge of the Hessian's accuracy. Returns
+        ``None`` when ``orca.hess`` is not available.
+        """
+        parsed = self._parse_hess_file(Path(directory) / "orca.hess")
+        if parsed is None:
+            return None
+        hessian, masses = parsed
+        # Mass-weight the Cartesian Hessian: divide each element by
+        # sqrt(m_i * m_j) with the mass repeated over the three coordinates.
+        m = np.repeat(masses, 3)
+        if hessian.shape != (m.size, m.size):
+            return None
+        mass_weighted = hessian / np.sqrt(np.outer(m, m))
+        evals = np.linalg.eigvalsh(mass_weighted)
+        # A negative eigenvalue is an imaginary mode; keep the sign so the
+        # magnitude (not the sign) drives the "closest to zero" selection.
+        freqs = np.sign(evals) * np.sqrt(np.abs(evals)) * _CM_PER_SQRT_AU
+        n_tr = 5 if self._is_linear(configuration) else 6
+        n_tr = min(n_tr, len(freqs))
+        if n_tr == 0:
+            return None
+        residual = sorted(freqs, key=abs)[:n_tr]
+        return max(abs(float(f)) for f in residual)
+
+    @staticmethod
+    def _parse_hess_file(path):
+        """Read ORCA's ``.hess`` file: the Cartesian Hessian (Hartree/bohr**2,
+        as a ``(3N, 3N)`` array) and the atomic masses (u). Returns
+        ``(hessian, masses)`` or ``None`` if the file or a block is missing."""
+        if not Path(path).exists():
+            return None
+        lines = Path(path).read_text().splitlines()
+
+        def find(tag):
+            for k, line in enumerate(lines):
+                if line.strip() == tag:
+                    return k
+            return None
+
+        # Masses from the $atoms block: "<symbol> <mass> <x> <y> <z>".
+        i = find("$atoms")
+        j = find("$hessian")
+        if i is None or j is None:
+            return None
+        n_atoms = int(lines[i + 1].split()[0])
+        masses = np.array([float(lines[i + 2 + k].split()[1]) for k in range(n_atoms)])
+
+        # The Hessian is written in blocks of (up to) 5 columns: a header line
+        # of column indices, then one line per row ("<row> v0 v1 ... v4").
+        dim = int(lines[j + 1].split()[0])
+        hessian = np.zeros((dim, dim))
+        p = j + 2
+        while p < len(lines):
+            header = lines[p].split()
+            if not header or not all(x.lstrip("-").isdigit() for x in header):
+                break
+            cols = [int(x) for x in header]
+            p += 1
+            for _ in range(dim):
+                row = lines[p].split()
+                r = int(row[0])
+                for c, value in zip(cols, row[1:]):
+                    hessian[r][c] = float(value)
+                p += 1
+        return hessian, masses
 
     @staticmethod
     def _write_frequencies_csv(directory, frequencies, intensities):
@@ -408,8 +497,10 @@ class Frequencies(Energy):
             printer.normal(
                 __(
                     "The largest of the nominally-zero translation/rotation "
-                    f"frequencies is {max_zero:.2f} cm**-1, a gauge of the "
-                    "numerical accuracy of the Hessian (it should be near zero).",
+                    f"frequencies is {max_zero:.2f} cm**-1 (from the raw, "
+                    "un-projected Hessian; ORCA zeroes these in its printed "
+                    "frequencies). It should be small -- it gauges the numerical "
+                    "accuracy of the Hessian.",
                     indent=self.indent + 4 * " ",
                 )
             )
