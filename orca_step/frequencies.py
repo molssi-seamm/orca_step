@@ -126,6 +126,12 @@ class Frequencies(Energy):
                 props["IR intensities"] = ir
             # Write the frequencies (and IR intensities) to a CSV for easy access.
             self._write_frequencies_csv(directory, vibrational, ir)
+            # Write a graph of the IR spectrum (sticks + a broadened trace).
+            if ir is not None and len(ir) == len(vibrational):
+                try:
+                    self._plot_ir_spectrum(directory, vibrational, ir)
+                except Exception as e:  # pragma: no cover
+                    logger.warning(f"Could not create the IR-spectrum graph: {e}")
 
         props.update(self._parse_thermochemistry(text))
         props = {k: v for k, v in props.items() if v not in (None, [], {})}
@@ -217,6 +223,94 @@ class Frequencies(Energy):
                     row.append(f"{intensities[i - 1]:.2f}")
                 w.writerow(row)
 
+    def _plot_ir_spectrum(self, directory, frequencies, intensities, fwhm=15.0):
+        """Write ``IR_spectrum.graph`` with the IR spectrum as a stick trace plus
+        a Lorentzian-broadened trace (FWHM ``fwhm`` cm^-1) that mimics an
+        experimental spectrum. Only the real (positive) modes are plotted."""
+        modes = [
+            (f, a)
+            for f, a in zip(frequencies, intensities)
+            if f > 0.0 and a is not None
+        ]
+        if not modes:
+            return
+        freqs = np.array([f for f, _ in modes], dtype=float)
+        ints = np.array([a for _, a in modes], dtype=float)
+
+        # A wavenumber grid spanning the modes with a little padding.
+        lo = max(0.0, float(freqs.min()) - 200.0)
+        hi = float(freqs.max()) + 200.0
+        grid = np.arange(lo, hi + 1.0, 1.0)
+
+        # Sum of Lorentzians, each normalized so its peak height is the mode's
+        # intensity (so the broadened curve is on the same scale as the sticks).
+        half = fwhm / 2.0
+        broadened = np.zeros_like(grid)
+        for f, a in zip(freqs, ints):
+            broadened += a * half**2 / ((grid - f) ** 2 + half**2)
+
+        figure = self.create_figure(
+            module_path=(self.__module__.split(".")[0], "seamm"),
+            template="line.graph_template",
+            title="IR spectrum",
+        )
+        plot = figure.add_plot("IR")
+        x_axis = plot.add_axis("x", label="Wavenumber (cm<sup>-1</sup>)")
+        y_axis = plot.add_axis("y", label="IR intensity (km/mol)", anchor=x_axis)
+        x_axis.anchor = y_axis
+
+        # The broadened trace first so the sticks sit on top.
+        plot.add_trace(
+            x_axis=x_axis,
+            y_axis=y_axis,
+            name="broadened",
+            x=grid.tolist(),
+            xlabel="wavenumber",
+            xunits="1/cm",
+            y=broadened.tolist(),
+            ylabel="intensity",
+            yunits="km/mol",
+            color="#4dbd74",
+        )
+
+        # The stick spectrum: a vertical segment (0 -> intensity) per mode,
+        # drawn as one line trace broken by None between sticks.
+        xs = []
+        ys = []
+        for f, a in zip(freqs, ints):
+            xs += [float(f), float(f), None]
+            ys += [0.0, float(a), None]
+        plot.add_trace(
+            x_axis=x_axis,
+            y_axis=y_axis,
+            name="sticks",
+            x=xs,
+            xlabel="wavenumber",
+            xunits="1/cm",
+            y=ys,
+            ylabel="intensity",
+            yunits="km/mol",
+            color="black",
+        )
+
+        figure.grid_plots("IR")
+        figure.write_file(Path(directory) / "IR_spectrum.graph")
+
+        # Extra formats (png, etc.) if the parent step's options request them.
+        options = getattr(getattr(self, "parent", None), "options", None) or {}
+        formats = options.get("graph_formats")
+        if formats:
+            if isinstance(formats, str):
+                import shlex
+
+                formats = shlex.split(formats)
+            for _format in formats:
+                figure.write_file(
+                    Path(directory) / f"IR_spectrum.{_format}",
+                    width=int(options.get("graph_width", 1024)),
+                    height=int(options.get("graph_height", 1024)),
+                )
+
     def _parse_ir_intensities(self, text):
         """The IR intensities (km/mol) from the IR SPECTRUM block, in mode order
         (aligned with the vibrational frequencies)."""
@@ -284,6 +378,30 @@ class Frequencies(Energy):
                     indent=self.indent + 4 * " ",
                 )
             )
+
+            # A table of the frequencies (and IR intensities, if available).
+            ir = p.get("IR intensities")
+            have_ir = ir is not None and len(ir) == len(freqs)
+            headers = ["Mode", "Frequency (cm^-1)"]
+            colalign = ["right", "right"]
+            if have_ir:
+                headers.append("IR intensity (km/mol)")
+                colalign.append("right")
+            table = []
+            for i, f in enumerate(freqs, start=1):
+                row = [i, f"{f:.2f}"]
+                if have_ir:
+                    row.append(f"{ir[i - 1]:.2f}")
+                table.append(row)
+            tmp = tabulate(
+                table,
+                headers=headers,
+                tablefmt="rounded_outline",
+                colalign=colalign,
+                disable_numparse=True,
+            )
+            printer.normal("")
+            printer.normal(textwrap.indent(tmp, self.indent + 7 * " "))
 
         max_zero = p.get("largest zero-mode frequency")
         if max_zero is not None:

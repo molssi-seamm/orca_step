@@ -98,6 +98,8 @@ class ORCA(orca_step.ORCABase):
         while node is not None:
             if node.is_runable:
                 node.run()
+                # Separate each sub-step's output with a blank line.
+                printer.normal("")
             node = node.next()
 
         return next_node

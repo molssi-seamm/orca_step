@@ -21,6 +21,12 @@ History
       nominally-zero translation/rotation frequencies** -- a gauge of the
       numerical accuracy of the Hessian -- and writes the frequencies (and IR
       intensities) to ``frequencies.csv`` in the step directory.
+    * The Frequencies output now includes a **table of the frequencies and IR
+      intensities**, and the step writes an **``IR_spectrum.graph``** file with
+      the IR spectrum as a stick trace plus a Lorentzian-broadened trace that
+      mimics an experimental spectrum.
+    * Each ORCA sub-step's output is now followed by a blank line, so the
+      sub-steps are visually separated in the output.
 
 2026.7.15 -- Frequencies sub-step and an MDI Hessian command
     * New **Frequencies** sub-step: the Hessian and harmonic vibrational

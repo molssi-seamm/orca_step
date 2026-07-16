@@ -232,8 +232,13 @@ energy**, the **number of imaginary frequencies**, and the **largest zero-mode
 frequency**. Imaginary (negative) frequencies are reported and flagged — a
 minimum has none, a transition state has one.
 
-The frequencies (and IR intensities) are also written to ``frequencies.csv`` in
-the step's directory for easy access.
+The output lists the vibrational frequencies and their IR intensities in a
+table. The frequencies (and IR intensities) are also written to
+``frequencies.csv`` in the step's directory for easy access, and an
+``IR_spectrum.graph`` file is written with the IR spectrum as a stick trace plus
+a Lorentzian-broadened trace (FWHM ≈ 15 cm⁻¹) that mimics an experimental
+spectrum. Open the ``.graph`` file in the SEAMM dashboard to view it
+interactively.
 
 .. note::
 

@@ -5,6 +5,7 @@
 
 import importlib.resources
 import importlib.util
+import json
 import sys
 
 import pytest  # noqa: F401
@@ -990,6 +991,26 @@ def test_frequencies_classify():
     # stretches remain as vibrational.
     assert vibrational == [-50.0, 1790.72, 4062.03]
     assert max_zero == pytest.approx(7.3)
+
+
+def test_frequencies_ir_spectrum_graph(tmp_path):
+    """The IR-spectrum graph has a broadened trace and a stick trace (with gaps
+    between the sticks), and skips imaginary modes."""
+    node = orca_step.Frequencies()
+    node._plot_ir_spectrum(
+        tmp_path,
+        [-200.0, 1637.79, 3787.97, 3883.27],  # the imaginary mode is skipped
+        [0.0, 55.32, 4.77, 26.58],
+    )
+    path = tmp_path / "IR_spectrum.graph"
+    assert path.exists()
+    figure = json.loads(path.read_text())
+    names = [t["name"] for t in figure["data"]]
+    assert names == ["broadened", "sticks"]
+    sticks = next(t for t in figure["data"] if t["name"] == "sticks")
+    # 3 real modes -> 3 sticks, each "0 -> intensity" plus a None gap => 9 points.
+    assert len(sticks["x"]) == 9
+    assert None in sticks["x"]
 
 
 def test_frequencies_is_linear():
