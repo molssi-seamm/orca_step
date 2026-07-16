@@ -32,6 +32,30 @@ def mc_method_alias(functional):
     return functional.replace("/", "_")
 
 
+def method_has_analytic_hessian(method):
+    """Whether ORCA has an *analytic* Hessian for `method` (a functional or a QC
+    method keyword).
+
+    Double hybrids have an analytic gradient but NO analytic Hessian (they need
+    NumFreq); (DLPNO-)CCSD(T) and the non-self-consistent double hybrids have
+    neither. Everything else with an analytic gradient (HF, MP2, the ordinary
+    DFT functionals) has an analytic Hessian. Used to decide whether the MDI
+    engine should advertise ``<HESSIAN``.
+    """
+    functionals = orca_step.metadata["functionals"]
+    rec = functionals.get(method) or next(
+        (r for k, r in functionals.items() if k.upper() == method.upper()), None
+    )
+    if rec is not None:
+        category = rec.get("category", "")
+        if "double-hybrid" in category or rec.get("gradients") == "numeric":
+            return False
+        return True
+    # A non-DFT QC method: analytic Hessian iff it has an analytic gradient.
+    grad = orca_step.metadata["methods"].get(method, {}).get("gradients", "analytic")
+    return grad == "analytic"
+
+
 def mc_method_unalias(method):
     """Inverse of :func:`mc_method_alias`: the real ORCA functional keyword for a
     (possibly aliased) model-chemistry method, or the method unchanged if it is
@@ -206,6 +230,12 @@ class ORCAStep(object):
             str(multiplicity),
             "--ncores",
             str(ncores),
+            # Advertise <HESSIAN only when ORCA can compute an analytic Hessian
+            # for this method, so a driver's capability check is truthful (it
+            # finite-differences the forces otherwise). Double hybrids and
+            # (DLPNO-)CCSD(T) have an analytic gradient but no analytic Hessian.
+            "--hessian",
+            "yes" if method_has_analytic_hessian(method) else "no",
         ]
         if extra_args:
             argv.extend(extra_args)

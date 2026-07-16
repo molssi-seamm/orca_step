@@ -190,6 +190,15 @@ def parse_args():
         help="Cores/processes for ORCA's %%pal (default 1, serial).",
     )
     p.add_argument(
+        "--hessian",
+        choices=["yes", "no"],
+        default="no",
+        help="Advertise the custom <HESSIAN command (analytic Hessian via "
+        "AnFreq). Only set 'yes' for a method ORCA has an analytic Hessian for "
+        "(HF, MP2, ordinary DFT) -- NOT double hybrids or (DLPNO-)CCSD(T). The "
+        "default 'no' is truthful: a driver then finite-differences the forces.",
+    )
+    p.add_argument(
         "--scratch",
         default=None,
         help="Working directory for the ORCA runs (default: a fresh temp dir). "
@@ -233,7 +242,11 @@ def main():
     mdi.MDI_Init(args.mdi)
     comm = mdi.MDI_Accept_Communicator()
     mdi.MDI_Register_node("@DEFAULT")
-    for _cmd in [
+    # <HESSIAN is advertised only when ORCA can compute an analytic Hessian for
+    # this method, so a driver's capability check is truthful: it uses the
+    # analytic Hessian if offered, else finite-differences the forces.
+    hessian_capable = args.hessian == "yes"
+    commands = [
         "<NATOMS",
         ">NATOMS",
         "<NAME",
@@ -244,9 +257,11 @@ def main():
         "SCF",
         "<ENERGY",
         "<FORCES",
-        "<HESSIAN",
         "EXIT",
-    ]:
+    ]
+    if hessian_capable:
+        commands.insert(commands.index("<FORCES") + 1, "<HESSIAN")
+    for _cmd in commands:
         mdi.MDI_Register_command("@DEFAULT", _cmd)
 
     natoms = None
@@ -372,8 +387,15 @@ def main():
                 mdi.MDI_Send(forces, 3 * natoms, mdi.MDI_DOUBLE, comm)
         elif command == "<HESSIAN":
             # The analytic Cartesian Hessian (hartree/bohr^2), 3N x 3N row-major.
-            # Custom command: a driver introspects @COMMANDS and uses this when
-            # present, else finite-differences <FORCES itself.
+            # Custom command, advertised only when hessian_capable; a compliant
+            # driver introspects @COMMANDS and uses it when present, else
+            # finite-differences <FORCES itself.
+            if not hessian_capable:
+                raise RuntimeError(
+                    "<HESSIAN received but this engine has no analytic Hessian "
+                    "for the method (it was not advertised); the driver should "
+                    "finite-difference the forces instead."
+                )
             if not (have_elements and have_coords):
                 raise RuntimeError(
                     "<HESSIAN requested before >ELEMENTS and >COORDS were received."

@@ -9,9 +9,12 @@ History
       numerical (``NumFreq``) second derivatives, at a chosen temperature.
       Imaginary frequencies are reported and flagged.
     * The ORCA **MDI engine** now answers a custom **``<HESSIAN``** command,
-      returning the analytic Cartesian Hessian (via ``AnFreq``). A driver (e.g.
-      the Normal Mode Sampling step) can pull the analytic Hessian over a warm
-      MDI connection, or finite-difference the forces when it is not available.
+      returning the analytic Cartesian Hessian (via ``AnFreq``). It advertises
+      ``<HESSIAN`` only when ORCA has an analytic Hessian for the method (HF, MP2,
+      ordinary DFT) -- not double hybrids or ``(DLPNO-)CCSD(T)`` -- so a driver's
+      capability check is truthful. A driver (e.g. the Normal Mode Sampling step)
+      pulls the analytic Hessian over a warm MDI connection when offered, or
+      finite-differences the forces otherwise.
 
 2026.7.13.1 -- BSSE: optionally write the wavefunction for DDEC6 charges
     * New **Write the wavefunction (wfx) file** option on the BSSE sub-step

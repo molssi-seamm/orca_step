@@ -679,6 +679,38 @@ def test_orca_mdi_parse_hessian():
     assert H[0, 1] == 0.1 and H[1, 0] == 0.1  # off-diagonal, both blocks
 
 
+def test_method_has_analytic_hessian():
+    """Analytic Hessian: yes for HF/MP2/ordinary DFT; no for double hybrids and
+    (DLPNO-)CCSD(T) (which have an analytic gradient but no analytic Hessian)."""
+    from orca_step.orca_step import method_has_analytic_hessian as has
+
+    assert has("HF") is True
+    assert has("MP2") is True
+    assert has("B3LYP") is True
+    assert has("REVDSD-PBEP86-D4/2021") is False  # double hybrid
+    assert has("DLPNO-CCSD(T)") is False
+    assert has("CCSD(T)-F12D/RI") is False
+
+
+def test_mdi_engine_command_advertises_hessian(tmp_path):
+    """The launcher passes --hessian yes only for analytic-Hessian methods."""
+    (tmp_path / "orca.ini").write_text("[local]\ncode = /opt/orca/orca\n")
+
+    def argv(method):
+        return orca_step.ORCAStep.get_mdi_engine_command(
+            _FakeExecutor("local"),
+            {"root": str(tmp_path)},
+            method=method,
+            basis="def2-TZVP",
+            port=8021,
+        )
+
+    hf = argv("HF")
+    assert hf[hf.index("--hessian") + 1] == "yes"
+    rev = argv("REVDSD-PBEP86-D4/2021")
+    assert rev[rev.index("--hessian") + 1] == "no"
+
+
 def test_get_mdi_engine_command(tmp_path):
     """The engine command runs orca_mdi.py with the orca binary and the
     method/basis flags, over TCP with the driver's port."""

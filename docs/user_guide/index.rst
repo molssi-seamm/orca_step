@@ -217,8 +217,11 @@ has one.
    The same analytic second derivative also backs the ORCA **MDI engine**: it
    answers a custom ``<HESSIAN`` command (``AnFreq``) so a driver — e.g. the
    Normal Mode Sampling step — can pull the analytic Hessian over a warm MDI
-   connection, or finite-difference the forces itself when the engine does not
-   provide one.
+   connection. The engine advertises ``<HESSIAN`` **only when ORCA has an
+   analytic Hessian for the method** (HF, MP2, ordinary DFT) and not for double
+   hybrids or ``(DLPNO-)CCSD(T)``, so the driver's capability check is truthful:
+   it uses the analytic Hessian when offered and finite-differences the forces
+   otherwise.
 
 Counterpoise (BSSE) corrections
 ===============================
