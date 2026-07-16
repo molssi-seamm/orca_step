@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.13.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.16 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=dd775c9e"></script>
+    <script src="../_static/documentation_options.js?v=f84e4e00"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.13.1" />
+  <meta name="docsearch:version" content="2026.7.16" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -513,16 +513,18 @@
 <span id="id1"></span><h1>User Guide<a class="headerlink" href="#user-guide" title="Link to this heading">#</a></h1>
 <p>The ORCA plug-in runs <a class="reference external" href="https://www.faccts.de/orca/">ORCA</a> from a SEAMM
 flowchart. It is a <em>sub-flowchart</em> plug-in: dropping an <strong>ORCA</strong> step onto the
-canvas opens a small flowchart of ORCA sub-steps. Three are available:</p>
+canvas opens a small flowchart of ORCA sub-steps. Four are available:</p>
 <ul class="simple">
 <li><p><strong>Energy</strong> — a single-point energy, optionally with the gradient (forces) and
 a range of properties.</p></li>
 <li><p><strong>Optimization</strong> — a geometry optimization (the Energy step plus ORCA’s
 <code class="docutils literal notranslate"><span class="pre">Opt</span></code> keyword).</p></li>
+<li><p><strong>Frequencies</strong> — the Hessian and harmonic vibrational frequencies, with
+thermochemistry (see below).</p></li>
 <li><p><strong>BSSE</strong> — the counterpoise-corrected energy and gradient of a two-fragment
 complex (see below).</p></li>
 </ul>
-<p>All three share the same controls for the level of theory, so the sections below
+<p>All four share the same controls for the level of theory, so the sections below
 apply to any of them.</p>
 <section id="choosing-the-level-of-theory">
 <h2>Choosing the level of theory<a class="headerlink" href="#choosing-the-level-of-theory" title="Link to this heading">#</a></h2>
@@ -679,6 +681,77 @@ hybrids. A note is printed when the (more expensive) numerical gradient is used.
 Most functionals — including the standard double hybrids — have analytic
 gradients, so a single-point DFT run yields the energy <strong>and</strong> forces cheaply,
 which is convenient for generating machine-learned force-field training data.</p>
+</section>
+<section id="geometry-optimization">
+<h2>Geometry optimization<a class="headerlink" href="#geometry-optimization" title="Link to this heading">#</a></h2>
+<p>The <strong>Optimization</strong> sub-step adds ORCA’s <code class="docutils literal notranslate"><span class="pre">Opt</span></code> keyword to the energy run and,
+when it finishes, stores the optimized geometry. A <strong>Convergence</strong> control
+selects ORCA’s optimization preset (<code class="docutils literal notranslate"><span class="pre">LooseOpt</span></code> … <code class="docutils literal notranslate"><span class="pre">VeryTightOpt</span></code>).</p>
+<p>A <strong>Structure handling</strong> control chooses where the optimized geometry goes. It
+defaults to <em>Overwrite the current configuration</em>, so the optimized structure
+flows straight into any following sub-step — for example a <strong>Frequencies</strong>
+calculation runs at the optimized geometry without any extra wiring. You can
+instead create a new configuration (or a new system and configuration) to keep
+the starting structure alongside the optimized one, or discard the optimized
+structure entirely.</p>
+</section>
+<section id="frequencies-hessian-and-thermochemistry">
+<h2>Frequencies (Hessian and thermochemistry)<a class="headerlink" href="#frequencies-hessian-and-thermochemistry" title="Link to this heading">#</a></h2>
+<p>The <strong>Frequencies</strong> sub-step computes the Hessian and the harmonic vibrational
+frequencies, the IR intensities, and the thermochemistry (zero-point energy,
+thermal enthalpy, entropy, and Gibbs free energy). The level-of-theory controls
+are the same as the Energy step, plus two extra controls:</p>
+<ul class="simple">
+<li><p><strong>Second derivatives</strong> — <code class="docutils literal notranslate"><span class="pre">analytic</span></code> (ORCA’s <code class="docutils literal notranslate"><span class="pre">AnFreq</span></code>; much faster, needs
+an analytic second derivative for the method — HF, most DFT functionals, MP2)
+or <code class="docutils literal notranslate"><span class="pre">numerical</span></code> (<code class="docutils literal notranslate"><span class="pre">NumFreq</span></code>; finite-differences the gradient, works for any
+method with a gradient but is considerably more expensive).</p></li>
+<li><p><strong>Temperature</strong> — the temperature for the thermochemistry (the pressure is
+ORCA’s default of 1 atm).</p></li>
+<li><p><strong>Structure handling</strong> — where to store the structure and its properties. A
+frequency calculation does not change the geometry, so this defaults to
+<em>Overwrite the current configuration</em>; you can instead create a new
+configuration (or a new system and configuration) to hold the results, or
+discard the structure.</p></li>
+</ul>
+<p>Tick the results you want on the Results tab: the <strong>frequencies</strong>, the <strong>IR
+intensities</strong>, the <strong>zero-point energy</strong>, the <strong>enthalpy</strong>, the <strong>Gibbs free
+energy</strong>, the <strong>number of imaginary frequencies</strong>, and the <strong>largest zero-mode
+frequency</strong>. Imaginary (negative) frequencies are reported and flagged — a
+minimum has none, a transition state has one.</p>
+<p>The output lists the vibrational frequencies and their IR intensities in a
+table. The frequencies (and IR intensities) are also written to
+<code class="docutils literal notranslate"><span class="pre">frequencies.csv</span></code> in the step’s directory for easy access, and an
+<code class="docutils literal notranslate"><span class="pre">IR_spectrum.graph</span></code> file is written with the IR spectrum as a stick trace plus
+a Lorentzian-broadened trace (FWHM ≈ 15 cm⁻¹) that mimics an experimental
+spectrum. Open the <code class="docutils literal notranslate"><span class="pre">.graph</span></code> file in the SEAMM dashboard to view it
+interactively.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Units.</strong> Following SEAMM’s SI-based convention, the zero-point energy,
+enthalpy, and Gibbs free energy are reported in <strong>kJ/mol</strong>. (Orbital energies
+— HOMO/LUMO — are reported in <strong>eV</strong> throughout ORCA, the conventional unit
+for orbital energies.)</p>
+</div>
+<p>The report also lists the <strong>largest of the 5 or 6 nominally-zero
+translation/rotation frequencies</strong>. These should be zero; how far the largest
+one departs from zero is a convenient gauge of the numerical accuracy of the
+Hessian. ORCA <em>projects</em> the translations and rotations out of its printed
+frequencies (it reports them as exactly <code class="docutils literal notranslate"><span class="pre">0.00</span></code>), so this residual is instead
+obtained by diagonalizing the <strong>raw, un-projected</strong> mass-weighted Cartesian
+Hessian from <code class="docutils literal notranslate"><span class="pre">orca.hess</span></code> — the value you see is therefore the true numerical
+residual, not zero.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The same analytic second derivative also backs the ORCA <strong>MDI engine</strong>: it
+answers a custom <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> command (<code class="docutils literal notranslate"><span class="pre">AnFreq</span></code>) so a driver — e.g. the
+Normal Mode Sampling step — can pull the analytic Hessian over a warm MDI
+connection. The engine advertises <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> <strong>only when ORCA has an
+analytic Hessian for the method</strong> (HF, MP2, ordinary DFT) and not for double
+hybrids or <code class="docutils literal notranslate"><span class="pre">(DLPNO-)CCSD(T)</span></code>, so the driver’s capability check is truthful:
+it uses the analytic Hessian when offered and finite-differences the forces
+otherwise.</p>
+</div>
 </section>
 <section id="counterpoise-bsse-corrections">
 <h2>Counterpoise (BSSE) corrections<a class="headerlink" href="#counterpoise-bsse-corrections" title="Link to this heading">#</a></h2>
@@ -909,6 +982,8 @@ high-accuracy calculations for ordinary single-point steps.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-convergence">SCF convergence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-sthresh-linear-dependence">SCF SThresh (linear dependence)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energies-gradients-and-forces">Energies, gradients, and forces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#geometry-optimization">Geometry optimization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#frequencies-hessian-and-thermochemistry">Frequencies (Hessian and thermochemistry)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#counterpoise-bsse-corrections">Counterpoise (BSSE) corrections</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-results-to-the-database">Saving results to the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-properties-and-outputs">Other properties and outputs</a></li>

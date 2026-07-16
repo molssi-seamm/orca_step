@@ -52,6 +52,30 @@ orca\_step.energy\_step module
    :show-inheritance:
    :undoc-members:
 
+orca\_step.frequencies module
+-----------------------------
+
+.. automodule:: orca_step.frequencies
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+orca\_step.frequencies\_parameters module
+-----------------------------------------
+
+.. automodule:: orca_step.frequencies_parameters
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+orca\_step.frequencies\_step module
+-----------------------------------
+
+.. automodule:: orca_step.frequencies_step
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 orca\_step.installer module
 ---------------------------
 
@@ -128,6 +152,14 @@ orca\_step.tk\_energy module
 ----------------------------
 
 .. automodule:: orca_step.tk_energy
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+orca\_step.tk\_frequencies module
+---------------------------------
+
+.. automodule:: orca_step.tk_frequencies
    :members:
    :show-inheritance:
    :undoc-members:

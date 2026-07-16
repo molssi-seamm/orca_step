@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.7.13.1 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.7.16 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=dd775c9e"></script>
+    <script src="../../_static/documentation_options.js?v=f84e4e00"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.13.1" />
+  <meta name="docsearch:version" content="2026.7.16" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -528,6 +528,33 @@
 
 
 
+<div class="viewcode-block" id="method_has_analytic_hessian">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.method_has_analytic_hessian">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">method_has_analytic_hessian</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether ORCA has an *analytic* Hessian for `method` (a functional or a QC</span>
+<span class="sd">    method keyword).</span>
+
+<span class="sd">    Double hybrids have an analytic gradient but NO analytic Hessian (they need</span>
+<span class="sd">    NumFreq); (DLPNO-)CCSD(T) and the non-self-consistent double hybrids have</span>
+<span class="sd">    neither. Everything else with an analytic gradient (HF, MP2, the ordinary</span>
+<span class="sd">    DFT functionals) has an analytic Hessian. Used to decide whether the MDI</span>
+<span class="sd">    engine should advertise ``&lt;HESSIAN``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">functionals</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]</span>
+    <span class="n">rec</span> <span class="o">=</span> <span class="n">functionals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">next</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">r</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">functionals</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()),</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">rec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;double-hybrid&quot;</span> <span class="ow">in</span> <span class="n">category</span> <span class="ow">or</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gradients&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;numeric&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="c1"># A non-DFT QC method: analytic Hessian iff it has an analytic gradient.</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;methods&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gradients&quot;</span><span class="p">,</span> <span class="s2">&quot;analytic&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">grad</span> <span class="o">==</span> <span class="s2">&quot;analytic&quot;</span></div>
+
+
+
 <div class="viewcode-block" id="mc_method_unalias">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.mc_method_unalias">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">mc_method_unalias</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
@@ -715,6 +742,12 @@
             <span class="nb">str</span><span class="p">(</span><span class="n">multiplicity</span><span class="p">),</span>
             <span class="s2">&quot;--ncores&quot;</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">ncores</span><span class="p">),</span>
+            <span class="c1"># Advertise &lt;HESSIAN only when ORCA can compute an analytic Hessian</span>
+            <span class="c1"># for this method, so a driver&#39;s capability check is truthful (it</span>
+            <span class="c1"># finite-differences the forces otherwise). Double hybrids and</span>
+            <span class="c1"># (DLPNO-)CCSD(T) have an analytic gradient but no analytic Hessian.</span>
+            <span class="s2">&quot;--hessian&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;yes&quot;</span> <span class="k">if</span> <span class="n">method_has_analytic_hessian</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;no&quot;</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">extra_args</span><span class="p">:</span>
             <span class="n">argv</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">extra_args</span><span class="p">)</span>

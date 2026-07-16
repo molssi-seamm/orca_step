@@ -6,16 +6,18 @@ User Guide
 
 The ORCA plug-in runs `ORCA <https://www.faccts.de/orca/>`_ from a SEAMM
 flowchart. It is a *sub-flowchart* plug-in: dropping an **ORCA** step onto the
-canvas opens a small flowchart of ORCA sub-steps. Three are available:
+canvas opens a small flowchart of ORCA sub-steps. Four are available:
 
 * **Energy** — a single-point energy, optionally with the gradient (forces) and
   a range of properties.
 * **Optimization** — a geometry optimization (the Energy step plus ORCA's
   ``Opt`` keyword).
+* **Frequencies** — the Hessian and harmonic vibrational frequencies, with
+  thermochemistry (see below).
 * **BSSE** — the counterpoise-corrected energy and gradient of a two-fragment
   complex (see below).
 
-All three share the same controls for the level of theory, so the sections below
+All four share the same controls for the level of theory, so the sections below
 apply to any of them.
 
 Choosing the level of theory
@@ -188,6 +190,82 @@ hybrids. A note is printed when the (more expensive) numerical gradient is used.
 Most functionals — including the standard double hybrids — have analytic
 gradients, so a single-point DFT run yields the energy **and** forces cheaply,
 which is convenient for generating machine-learned force-field training data.
+
+Geometry optimization
+=====================
+
+The **Optimization** sub-step adds ORCA's ``Opt`` keyword to the energy run and,
+when it finishes, stores the optimized geometry. A **Convergence** control
+selects ORCA's optimization preset (``LooseOpt`` … ``VeryTightOpt``).
+
+A **Structure handling** control chooses where the optimized geometry goes. It
+defaults to *Overwrite the current configuration*, so the optimized structure
+flows straight into any following sub-step — for example a **Frequencies**
+calculation runs at the optimized geometry without any extra wiring. You can
+instead create a new configuration (or a new system and configuration) to keep
+the starting structure alongside the optimized one, or discard the optimized
+structure entirely.
+
+Frequencies (Hessian and thermochemistry)
+==========================================
+
+The **Frequencies** sub-step computes the Hessian and the harmonic vibrational
+frequencies, the IR intensities, and the thermochemistry (zero-point energy,
+thermal enthalpy, entropy, and Gibbs free energy). The level-of-theory controls
+are the same as the Energy step, plus two extra controls:
+
+* **Second derivatives** — ``analytic`` (ORCA's ``AnFreq``; much faster, needs
+  an analytic second derivative for the method — HF, most DFT functionals, MP2)
+  or ``numerical`` (``NumFreq``; finite-differences the gradient, works for any
+  method with a gradient but is considerably more expensive).
+* **Temperature** — the temperature for the thermochemistry (the pressure is
+  ORCA's default of 1 atm).
+* **Structure handling** — where to store the structure and its properties. A
+  frequency calculation does not change the geometry, so this defaults to
+  *Overwrite the current configuration*; you can instead create a new
+  configuration (or a new system and configuration) to hold the results, or
+  discard the structure.
+
+Tick the results you want on the Results tab: the **frequencies**, the **IR
+intensities**, the **zero-point energy**, the **enthalpy**, the **Gibbs free
+energy**, the **number of imaginary frequencies**, and the **largest zero-mode
+frequency**. Imaginary (negative) frequencies are reported and flagged — a
+minimum has none, a transition state has one.
+
+The output lists the vibrational frequencies and their IR intensities in a
+table. The frequencies (and IR intensities) are also written to
+``frequencies.csv`` in the step's directory for easy access, and an
+``IR_spectrum.graph`` file is written with the IR spectrum as a stick trace plus
+a Lorentzian-broadened trace (FWHM ≈ 15 cm⁻¹) that mimics an experimental
+spectrum. Open the ``.graph`` file in the SEAMM dashboard to view it
+interactively.
+
+.. note::
+
+   **Units.** Following SEAMM's SI-based convention, the zero-point energy,
+   enthalpy, and Gibbs free energy are reported in **kJ/mol**. (Orbital energies
+   — HOMO/LUMO — are reported in **eV** throughout ORCA, the conventional unit
+   for orbital energies.)
+
+The report also lists the **largest of the 5 or 6 nominally-zero
+translation/rotation frequencies**. These should be zero; how far the largest
+one departs from zero is a convenient gauge of the numerical accuracy of the
+Hessian. ORCA *projects* the translations and rotations out of its printed
+frequencies (it reports them as exactly ``0.00``), so this residual is instead
+obtained by diagonalizing the **raw, un-projected** mass-weighted Cartesian
+Hessian from ``orca.hess`` — the value you see is therefore the true numerical
+residual, not zero.
+
+.. note::
+
+   The same analytic second derivative also backs the ORCA **MDI engine**: it
+   answers a custom ``<HESSIAN`` command (``AnFreq``) so a driver — e.g. the
+   Normal Mode Sampling step — can pull the analytic Hessian over a warm MDI
+   connection. The engine advertises ``<HESSIAN`` **only when ORCA has an
+   analytic Hessian for the method** (HF, MP2, ordinary DFT) and not for double
+   hybrids or ``(DLPNO-)CCSD(T)``, so the driver's capability check is truthful:
+   it uses the analytic Hessian when offered and finite-differences the forces
+   otherwise.
 
 Counterpoise (BSSE) corrections
 ===============================

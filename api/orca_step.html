@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.13.1 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.16 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=dd775c9e"></script>
+    <script src="../_static/documentation_options.js?v=f84e4e00"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.13.1" />
+  <meta name="docsearch:version" content="2026.7.16" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -737,6 +737,100 @@ the Gaussian step). The explicit choices are driven by the step’s metadata.</p
 </dd></dl>
 
 </section>
+<section id="module-orca_step.frequencies">
+<span id="orca-step-frequencies-module"></span><h2>orca_step.frequencies module<a class="headerlink" href="#module-orca_step.frequencies" title="Link to this heading">#</a></h2>
+<p>An ORCA Frequencies (Hessian / vibrational analysis) sub-step.</p>
+<p>Extends the Energy sub-step with ORCA’s <code class="docutils literal notranslate"><span class="pre">Freq</span></code> (analytic, <code class="docutils literal notranslate"><span class="pre">AnFreq</span></code>) or
+<code class="docutils literal notranslate"><span class="pre">NumFreq</span></code> (numerical) frequency calculation: the Hessian, harmonic vibrational
+frequencies, IR intensities, and the thermochemistry (zero-point energy, thermal
+enthalpy, entropy, and Gibbs free energy) at a chosen temperature.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.frequencies.Frequencies">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.frequencies.</span></span><span class="sig-name descname"><span class="pre">Frequencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Frequencies'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;Logger</span> <span class="pre">orca_step.frequencies</span> <span class="pre">(WARNING)&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies.html#Frequencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies.Frequencies" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orca_step.energy.Energy" title="orca_step.energy.Energy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Energy</span></code></a></p>
+<p>A vibrational-frequency (Hessian) calculation with ORCA.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TkFrequencies</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">FrequenciesParameters</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Energy</span></code></p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.frequencies.Frequencies.analyze">
+<span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies.html#Frequencies.analyze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies.Frequencies.analyze" title="Link to this definition">#</a></dt>
+<dd><p>Store and report the energy plus the frequencies, IR intensities, and
+thermochemistry, honoring the standard structure-handling options.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.frequencies.Frequencies.description_text">
+<span class="sig-name descname"><span class="pre">description_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies.html#Frequencies.description_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies.Frequencies.description_text" title="Link to this definition">#</a></dt>
+<dd><p>Describe what this sub-step will do.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.frequencies.Frequencies.extra_input">
+<span class="sig-name descname"><span class="pre">extra_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies.html#Frequencies.extra_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies.Frequencies.extra_input" title="Link to this definition">#</a></dt>
+<dd><p>Add the <code class="docutils literal notranslate"><span class="pre">%freq</span> <span class="pre">Temp</span></code> block (thermochemistry temperature) to the
+Energy sub-step’s extra ORCA input.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.frequencies.Frequencies.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies.html#Frequencies.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies.Frequencies.run" title="Link to this definition">#</a></dt>
+<dd><p>Add ORCA’s Freq/NumFreq keyword to the energy run.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.frequencies_parameters">
+<span id="orca-step-frequencies-parameters-module"></span><h2>orca_step.frequencies_parameters module<a class="headerlink" href="#module-orca_step.frequencies_parameters" title="Link to this heading">#</a></h2>
+<p>Control parameters for the ORCA Frequencies (Hessian) sub-step.</p>
+<p>Extends the Energy parameters (level of theory, basis, …) with the choice of
+analytic vs numerical second derivatives and the thermochemistry temperature.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.frequencies_parameters.FrequenciesParameters">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.frequencies_parameters.</span></span><span class="sig-name descname"><span class="pre">FrequenciesParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies_parameters.html#FrequenciesParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies_parameters.FrequenciesParameters" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orca_step.energy_parameters.EnergyParameters" title="orca_step.energy_parameters.EnergyParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergyParameters</span></code></a></p>
+<p>The Frequencies parameters: the Energy parameters plus the second-
+derivative method and the thermochemistry temperature.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="orca_step.frequencies_parameters.FrequenciesParameters.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'second</span> <span class="pre">derivatives':</span> <span class="pre">{'default':</span> <span class="pre">'analytic',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Second</span> <span class="pre">derivatives:',</span> <span class="pre">'enumeration':</span> <span class="pre">('analytic',</span> <span class="pre">'numerical'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;How</span> <span class="pre">to</span> <span class="pre">compute</span> <span class="pre">the</span> <span class="pre">Hessian.</span> <span class="pre">'analytic'</span> <span class="pre">(ORCA's</span> <span class="pre">AnFreq)</span> <span class="pre">is</span> <span class="pre">much</span> <span class="pre">faster</span> <span class="pre">but</span> <span class="pre">requires</span> <span class="pre">an</span> <span class="pre">analytic</span> <span class="pre">second</span> <span class="pre">derivative</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">method</span> <span class="pre">(available</span> <span class="pre">for</span> <span class="pre">HF,</span> <span class="pre">most</span> <span class="pre">DFT</span> <span class="pre">functionals,</span> <span class="pre">and</span> <span class="pre">MP2).</span> <span class="pre">'numerical'</span> <span class="pre">(NumFreq)</span> <span class="pre">finite-differences</span> <span class="pre">the</span> <span class="pre">gradient</span> <span class="pre">--</span> <span class="pre">it</span> <span class="pre">works</span> <span class="pre">for</span> <span class="pre">any</span> <span class="pre">method</span> <span class="pre">that</span> <span class="pre">has</span> <span class="pre">a</span> <span class="pre">gradient,</span> <span class="pre">but</span> <span class="pre">is</span> <span class="pre">considerably</span> <span class="pre">more</span> <span class="pre">expensive.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'enum'},</span> <span class="pre">'temperature':</span> <span class="pre">{'default':</span> <span class="pre">'298.15',</span> <span class="pre">'default_units':</span> <span class="pre">'K',</span> <span class="pre">'description':</span> <span class="pre">'Temperature:',</span> <span class="pre">'enumeration':</span> <span class="pre">(),</span> <span class="pre">'format_string':</span> <span class="pre">'.2f',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;The</span> <span class="pre">temperature</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">thermochemistry</span> <span class="pre">(zero-point</span> <span class="pre">energy,</span> <span class="pre">thermal</span> <span class="pre">corrections,</span> <span class="pre">entropy,</span> <span class="pre">and</span> <span class="pre">Gibbs</span> <span class="pre">free</span> <span class="pre">energy).</span> <span class="pre">The</span> <span class="pre">pressure</span> <span class="pre">is</span> <span class="pre">ORCA's</span> <span class="pre">default</span> <span class="pre">of</span> <span class="pre">1</span> <span class="pre">atm.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'float'}}</span></span><a class="headerlink" href="#orca_step.frequencies_parameters.FrequenciesParameters.parameters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.frequencies_step">
+<span id="orca-step-frequencies-step-module"></span><h2>orca_step.frequencies_step module<a class="headerlink" href="#module-orca_step.frequencies_step" title="Link to this heading">#</a></h2>
+<p>Stevedore helper for the ORCA Frequencies sub-step.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.frequencies_step.FrequenciesStep">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.frequencies_step.</span></span><span class="sig-name descname"><span class="pre">FrequenciesStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies_step.html#FrequenciesStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies_step.FrequenciesStep" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.frequencies_step.FrequenciesStep.create_node">
+<span class="sig-name descname"><span class="pre">create_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies_step.html#FrequenciesStep.create_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies_step.FrequenciesStep.create_node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.frequencies_step.FrequenciesStep.create_tk_node">
+<span class="sig-name descname"><span class="pre">create_tk_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies_step.html#FrequenciesStep.create_tk_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies_step.FrequenciesStep.create_tk_node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.frequencies_step.FrequenciesStep.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frequencies_step.html#FrequenciesStep.description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frequencies_step.FrequenciesStep.description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="orca_step.frequencies_step.FrequenciesStep.my_description">
+<span class="sig-name descname"><span class="pre">my_description</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'description':</span> <span class="pre">'Vibrational</span> <span class="pre">frequencies</span> <span class="pre">(Hessian)</span> <span class="pre">with</span> <span class="pre">ORCA',</span> <span class="pre">'group':</span> <span class="pre">'Calculation',</span> <span class="pre">'name':</span> <span class="pre">'Frequencies'}</span></span><a class="headerlink" href="#orca_step.frequencies_step.FrequenciesStep.my_description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="orca-step-installer-module">
 <h2>orca_step.installer module<a class="headerlink" href="#orca-step-installer-module" title="Link to this heading">#</a></h2>
 </section>
@@ -765,8 +859,8 @@ updating the configuration with the optimized geometry.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="orca_step.optimization.Optimization.analyze">
 <span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization.html#Optimization.analyze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization.Optimization.analyze" title="Link to this definition">#</a></dt>
-<dd><p>Report the energy and update the configuration with the optimized
-geometry, plus check that the optimization converged.</p>
+<dd><p>Report the energy, store the optimized geometry according to the
+structure-handling options, and check that the optimization converged.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -791,7 +885,9 @@ geometry, plus check that the optimization converged.</p>
 <dt class="sig sig-object py" id="orca_step.optimization_parameters.OptimizationParameters">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.optimization_parameters.</span></span><span class="sig-name descname"><span class="pre">OptimizationParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization_parameters.html#OptimizationParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization_parameters.OptimizationParameters" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#orca_step.energy_parameters.EnergyParameters" title="orca_step.energy_parameters.EnergyParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnergyParameters</span></code></a></p>
-<p>Optimization parameters: the energy parameters plus optimization controls.</p>
+<p>Optimization parameters: the energy parameters plus optimization controls
+and the standard structure-handling options (where to put the optimized
+geometry).</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="orca_step.optimization_parameters.OptimizationParameters.parameters">
 <span class="sig-name descname"><span class="pre">parameters</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'optimization</span> <span class="pre">convergence':</span> <span class="pre">{'default':</span> <span class="pre">'NormalOpt',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Convergence:',</span> <span class="pre">'enumeration':</span> <span class="pre">('LooseOpt',</span> <span class="pre">'NormalOpt',</span> <span class="pre">'TightOpt',</span> <span class="pre">'VeryTightOpt'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">'The</span> <span class="pre">ORCA</span> <span class="pre">geometry-optimization</span> <span class="pre">convergence</span> <span class="pre">preset.',</span> <span class="pre">'kind':</span> <span class="pre">'enum'}}</span></span><a class="headerlink" href="#orca_step.optimization_parameters.OptimizationParameters.parameters" title="Link to this definition">#</a></dt>
@@ -1059,6 +1155,18 @@ keyword when the ORCA step consumes the model chemistry (see
 not an aliased functional.</p>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.orca_step.method_has_analytic_hessian">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">method_has_analytic_hessian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#method_has_analytic_hessian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.method_has_analytic_hessian" title="Link to this definition">#</a></dt>
+<dd><p>Whether ORCA has an <em>analytic</em> Hessian for <cite>method</cite> (a functional or a QC
+method keyword).</p>
+<p>Double hybrids have an analytic gradient but NO analytic Hessian (they need
+NumFreq); (DLPNO-)CCSD(T) and the non-self-consistent double hybrids have
+neither. Everything else with an analytic gradient (HF, MP2, the ordinary
+DFT functionals) has an analytic Hessian. Used to decide whether the MDI
+engine should advertise <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code>.</p>
+</dd></dl>
+
 </section>
 <section id="module-orca_step.tk_bsse">
 <span id="orca-step-tk-bsse-module"></span><h2>orca_step.tk_bsse module<a class="headerlink" href="#module-orca_step.tk_bsse" title="Link to this heading">#</a></h2>
@@ -1123,6 +1231,27 @@ Delete command) but only shows it for the bare TkNode, so each sub-step
 must add its own items and pop it up – without this, right-clicking a
 sub-step in the ORCA sub-flowchart shows no menu (so it can’t be
 deleted). Inherited by the Optimization and BSSE sub-steps.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-orca_step.tk_frequencies">
+<span id="orca-step-tk-frequencies-module"></span><h2>orca_step.tk_frequencies module<a class="headerlink" href="#module-orca_step.tk_frequencies" title="Link to this heading">#</a></h2>
+<p>The graphical part of an ORCA Frequencies sub-step.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="orca_step.tk_frequencies.TkFrequencies">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.tk_frequencies.</span></span><span class="sig-name descname"><span class="pre">TkFrequencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tk_flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_frequencies.html#TkFrequencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_frequencies.TkFrequencies" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orca_step.tk_energy.TkEnergy" title="orca_step.tk_energy.TkEnergy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TkEnergy</span></code></a></p>
+<p>Graphical ORCA Frequencies sub-step: the energy dialog’s level-of-theory
+controls plus the second-derivative choice, the thermochemistry temperature,
+and the standard structure-handling options (where to store the structure and
+its properties). CBS extrapolation is hidden (an extrapolated energy has no
+Hessian); the Energy property toggles are not shown.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.tk_frequencies.TkFrequencies.reset_dialog">
+<span class="sig-name descname"><span class="pre">reset_dialog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">widget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_frequencies.html#TkFrequencies.reset_dialog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_frequencies.TkFrequencies.reset_dialog" title="Link to this definition">#</a></dt>
+<dd><p>Lay out the energy controls, then the structure-handling options.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1289,6 +1418,33 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 </li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.frequencies">orca_step.frequencies module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies.Frequencies"><code class="docutils literal notranslate"><span class="pre">Frequencies</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies.Frequencies.analyze"><code class="docutils literal notranslate"><span class="pre">Frequencies.analyze()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies.Frequencies.description_text"><code class="docutils literal notranslate"><span class="pre">Frequencies.description_text()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies.Frequencies.extra_input"><code class="docutils literal notranslate"><span class="pre">Frequencies.extra_input()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies.Frequencies.run"><code class="docutils literal notranslate"><span class="pre">Frequencies.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.frequencies_parameters">orca_step.frequencies_parameters module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies_parameters.FrequenciesParameters"><code class="docutils literal notranslate"><span class="pre">FrequenciesParameters</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies_parameters.FrequenciesParameters.parameters"><code class="docutils literal notranslate"><span class="pre">FrequenciesParameters.parameters</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.frequencies_step">orca_step.frequencies_step module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies_step.FrequenciesStep"><code class="docutils literal notranslate"><span class="pre">FrequenciesStep</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies_step.FrequenciesStep.create_node"><code class="docutils literal notranslate"><span class="pre">FrequenciesStep.create_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies_step.FrequenciesStep.create_tk_node"><code class="docutils literal notranslate"><span class="pre">FrequenciesStep.create_tk_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies_step.FrequenciesStep.description"><code class="docutils literal notranslate"><span class="pre">FrequenciesStep.description()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frequencies_step.FrequenciesStep.my_description"><code class="docutils literal notranslate"><span class="pre">FrequenciesStep.my_description</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#orca-step-installer-module">orca_step.installer module</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.metadata">orca_step.metadata module</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.optimization">orca_step.optimization module</a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -1352,6 +1508,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.mc_method_alias"><code class="docutils literal notranslate"><span class="pre">mc_method_alias()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.mc_method_unalias"><code class="docutils literal notranslate"><span class="pre">mc_method_unalias()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.method_has_analytic_hessian"><code class="docutils literal notranslate"><span class="pre">method_has_analytic_hessian()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.tk_bsse">orca_step.tk_bsse module</a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -1367,6 +1524,13 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_energy.TkEnergy.reset_dialog"><code class="docutils literal notranslate"><span class="pre">TkEnergy.reset_dialog()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_energy.TkEnergy.reset_functionals"><code class="docutils literal notranslate"><span class="pre">TkEnergy.reset_functionals()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_energy.TkEnergy.right_click"><code class="docutils literal notranslate"><span class="pre">TkEnergy.right_click()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.tk_frequencies">orca_step.tk_frequencies module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_frequencies.TkFrequencies"><code class="docutils literal notranslate"><span class="pre">TkFrequencies</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.tk_frequencies.TkFrequencies.reset_dialog"><code class="docutils literal notranslate"><span class="pre">TkFrequencies.reset_dialog()</span></code></a></li>
 </ul>
 </li>
 </ul>

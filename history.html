@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.13.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.16 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=dd775c9e"></script>
+    <script src="_static/documentation_options.js?v=f84e4e00"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.13.1" />
+  <meta name="docsearch:version" content="2026.7.16" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,57 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.7.16 – Structure handling for Optimization/Frequencies, and unit fixes</dt><dd><ul class="simple">
+<li><p><strong>Bugfix:</strong> the optimized geometry from an <strong>Optimization</strong> sub-step is now
+correctly carried forward, so a following sub-step (e.g. <strong>Frequencies</strong>)
+runs at the optimized structure. Previously ORCA’s <code class="docutils literal notranslate"><span class="pre">orca.xyz</span></code> was
+discarded before it could be read, so the frequencies were computed at the
+original, un-optimized geometry.</p></li>
+<li><p>The <strong>Optimization</strong> and <strong>Frequencies</strong> sub-steps now have the standard
+<strong>Structure handling</strong> options – overwrite the current configuration
+(default), create a new configuration, create a new system and
+configuration, or discard the structure – to control where the resulting
+structure and its properties are stored.</p></li>
+<li><p><strong>Units:</strong> the zero-point energy, enthalpy, and Gibbs free energy are now
+reported in <strong>kJ/mol</strong> (SEAMM’s SI-based default), and the HOMO/LUMO
+orbital energies in <strong>eV</strong> (the conventional unit for orbital energies)
+throughout the ORCA step.</p></li>
+<li><p>The <strong>Frequencies</strong> step now also reports the <strong>largest of the 5 or 6
+nominally-zero translation/rotation frequencies</strong> – a gauge of the
+numerical accuracy of the Hessian – and writes the frequencies (and IR
+intensities) to <code class="docutils literal notranslate"><span class="pre">frequencies.csv</span></code> in the step directory. Because ORCA
+projects the translations/rotations to exactly <code class="docutils literal notranslate"><span class="pre">0.00</span></code> in its printed
+frequencies, this residual is computed from the raw, un-projected
+mass-weighted Hessian (<code class="docutils literal notranslate"><span class="pre">orca.hess</span></code>), so it shows the true numerical
+value rather than zero.</p></li>
+<li><p>The Frequencies output now includes a <strong>table of the frequencies and IR
+intensities</strong>, and the step writes an <strong>``IR_spectrum.graph``</strong> file with
+the IR spectrum as a stick trace plus a Lorentzian-broadened trace that
+mimics an experimental spectrum.</p></li>
+<li><p>Each ORCA sub-step’s output is now followed by a blank line, so the
+sub-steps are visually separated in the output.</p></li>
+<li><p>When a sub-step runs, its output now names the <strong>actual level of theory</strong> –
+the resolved model-chemistry level spec <strong>including the resolved basis</strong>
+(e.g. <code class="docutils literal notranslate"><span class="pre">ORCA:DFT&#64;B3LYP/def2-SVP</span></code>; the basis is appended when the spec
+itself omits it and the step fills in its own), or the explicit
+method/basis – instead of the generic “the model chemistry”.</p></li>
+</ul>
+</dd>
+<dt>2026.7.15 – Frequencies sub-step and an MDI Hessian command</dt><dd><ul class="simple">
+<li><p>New <strong>Frequencies</strong> sub-step: the Hessian and harmonic vibrational
+frequencies, IR intensities, and thermochemistry (zero-point energy,
+enthalpy, entropy, Gibbs free energy) via ORCA’s analytic (<code class="docutils literal notranslate"><span class="pre">AnFreq</span></code>) or
+numerical (<code class="docutils literal notranslate"><span class="pre">NumFreq</span></code>) second derivatives, at a chosen temperature.
+Imaginary frequencies are reported and flagged.</p></li>
+<li><p>The ORCA <strong>MDI engine</strong> now answers a custom <strong>``&lt;HESSIAN``</strong> command,
+returning the analytic Cartesian Hessian (via <code class="docutils literal notranslate"><span class="pre">AnFreq</span></code>). It advertises
+<code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> only when ORCA has an analytic Hessian for the method (HF, MP2,
+ordinary DFT) – not double hybrids or <code class="docutils literal notranslate"><span class="pre">(DLPNO-)CCSD(T)</span></code> – so a driver’s
+capability check is truthful. A driver (e.g. the Normal Mode Sampling step)
+pulls the analytic Hessian over a warm MDI connection when offered, or
+finite-differences the forces otherwise.</p></li>
+</ul>
+</dd>
 <dt>2026.7.13.1 – BSSE: optionally write the wavefunction for DDEC6 charges</dt><dd><ul class="simple">
 <li><p>New <strong>Write the wavefunction (wfx) file</strong> option on the BSSE sub-step
 (default off). When on, the dimer’s density is retained and converted to

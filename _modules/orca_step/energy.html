@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.13.1 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.16 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=dd775c9e"></script>
+    <script src="../../_static/documentation_options.js?v=f84e4e00"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.13.1" />
+  <meta name="docsearch:version" content="2026.7.16" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -556,23 +556,52 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Describe what this sub-step will do.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">P</span><span class="p">:</span>
             <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values_to_dict</span><span class="p">()</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Single-point energy with ORCA at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_level_of_theory_text</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_level_of_theory_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A human-readable level of theory for the run description.</span>
+
+<span class="sd">        When the global model chemistry is used, this is the resolved level spec</span>
+<span class="sd">        (e.g. ``ORCA:DFT@B3LYP/def2-SVP``) once a Model Chemistry step has</span>
+<span class="sd">        defined it -- so the actual level appears in the output when the step</span>
+<span class="sd">        runs. Before that (in the flowchart editor, where nothing is resolved</span>
+<span class="sd">        yet) it falls back to a generic phrase. For an explicit calculation it</span>
+<span class="sd">        is the chosen ``method/basis`` (or the CBS extrapolation family).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">use_mc</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">use_mc</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
             <span class="n">use_mc</span> <span class="o">=</span> <span class="n">use_mc</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
 
         <span class="k">if</span> <span class="n">use_mc</span><span class="p">:</span>
-            <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Single-point energy with ORCA using the model chemistry from a &quot;</span>
-                <span class="s2">&quot;preceding Model Chemistry step.&quot;</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
-                <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolation_keyword</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
-            <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Single-point energy with ORCA at </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">.&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
+            <span class="c1"># At run time the model chemistry is resolved, so show the actual</span>
+            <span class="c1"># level spec plus the resolved basis (the spec may omit the basis,</span>
+            <span class="c1"># in which case this node&#39;s basis fills in). In the flowchart editor</span>
+            <span class="c1"># (or tests) the flowchart variables are not set up, so fall back to</span>
+            <span class="c1"># a generic phrase.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_exists</span><span class="p">(</span><span class="s2">&quot;_model_chemistry&quot;</span><span class="p">):</span>
+                    <span class="n">mc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;_model_chemistry&quot;</span><span class="p">)</span>
+                    <span class="n">level</span> <span class="o">=</span> <span class="p">(</span><span class="n">mc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">level</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">_</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_basis_from_model_chemistry</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                            <span class="n">basis</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                        <span class="c1"># Append the resolved basis unless the spec already</span>
+                        <span class="c1"># names it (avoid &quot;…/def2-SVP/def2-SVP&quot;).</span>
+                        <span class="k">if</span> <span class="n">basis</span> <span class="ow">and</span> <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">level</span><span class="p">:</span>
+                            <span class="n">level</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="k">return</span> <span class="n">level</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">return</span> <span class="s2">&quot;the model chemistry (from a preceding Model Chemistry step)&quot;</span>
 
+        <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+            <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolation_keyword</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_basis_name</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
@@ -1333,14 +1362,17 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">occ</span> <span class="ow">or</span> <span class="n">occ</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="n">h</span><span class="p">,</span> <span class="n">lu</span> <span class="o">=</span> <span class="n">occ</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">occ</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">p</span><span class="p">[</span><span class="s2">&quot;HOMO energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">h</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">p</span><span class="p">[</span><span class="s2">&quot;LUMO energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">lu</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1"># Orbital energies are reported in eV, not E_h: eV is the conventional</span>
+        <span class="c1"># unit for orbital energies (volts are physically meaningful). ORCA</span>
+        <span class="c1"># prints both; column 2 (0-based) of the table is the eV value.</span>
+        <span class="n">p</span><span class="p">[</span><span class="s2">&quot;HOMO energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">h</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">p</span><span class="p">[</span><span class="s2">&quot;LUMO energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">lu</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
         <span class="n">p</span><span class="p">[</span><span class="s2">&quot;HOMO-LUMO gap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">lu</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">h</span><span class="p">][</span><span class="mi">2</span><span class="p">]),</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># eV</span>
         <span class="n">p</span><span class="p">[</span><span class="s2">&quot;HOMO index&quot;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;LUMO index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h</span><span class="p">,</span> <span class="n">lu</span>
         <span class="k">if</span> <span class="n">h</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">p</span><span class="p">[</span><span class="s2">&quot;nHOMO energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">h</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">p</span><span class="p">[</span><span class="s2">&quot;nHOMO energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">h</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">lu</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
-            <span class="n">p</span><span class="p">[</span><span class="s2">&quot;nLUMO energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">lu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">p</span><span class="p">[</span><span class="s2">&quot;nLUMO energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">lu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_atom_charges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
         <span class="c1"># Block runs from the header to the next blank line. (Mulliken ends with</span>
@@ -1407,14 +1439,10 @@
         <span class="n">add</span><span class="p">(</span><span class="s2">&quot;CCSD energy&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ccsd energy&quot;</span><span class="p">),</span> <span class="s2">&quot;E_h&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.8f}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">add</span><span class="p">(</span><span class="s2">&quot;CCSD(T) energy&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ccsd(t) energy&quot;</span><span class="p">),</span> <span class="s2">&quot;E_h&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.8f}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;HOMO energy&quot;</span> <span class="ow">in</span> <span class="n">p</span><span class="p">:</span>
-            <span class="n">add</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;HOMO energy (MO </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;HOMO index&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;HOMO energy&quot;</span><span class="p">],</span> <span class="s2">&quot;E_h&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.5f}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="n">add</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;LUMO energy (MO </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;LUMO index&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;LUMO energy&quot;</span><span class="p">],</span> <span class="s2">&quot;E_h&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.5f}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-        <span class="n">add</span><span class="p">(</span><span class="s2">&quot;HOMO-1 energy&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nHOMO energy&quot;</span><span class="p">),</span> <span class="s2">&quot;E_h&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.5f}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">add</span><span class="p">(</span><span class="s2">&quot;LUMO+1 energy&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nLUMO energy&quot;</span><span class="p">),</span> <span class="s2">&quot;E_h&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.5f}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HOMO energy (MO </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;HOMO index&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;HOMO energy&quot;</span><span class="p">],</span> <span class="s2">&quot;eV&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.4f}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LUMO energy (MO </span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;LUMO index&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;LUMO energy&quot;</span><span class="p">],</span> <span class="s2">&quot;eV&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.4f}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">add</span><span class="p">(</span><span class="s2">&quot;HOMO-1 energy&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nHOMO energy&quot;</span><span class="p">),</span> <span class="s2">&quot;eV&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.4f}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">add</span><span class="p">(</span><span class="s2">&quot;LUMO+1 energy&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nLUMO energy&quot;</span><span class="p">),</span> <span class="s2">&quot;eV&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.4f}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">add</span><span class="p">(</span><span class="s2">&quot;HOMO-LUMO gap&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;HOMO-LUMO gap&quot;</span><span class="p">),</span> <span class="s2">&quot;eV&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:.3f}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;dipole moment&quot;</span> <span class="ow">in</span> <span class="n">p</span><span class="p">:</span>  <span class="c1"># 3-vector -&gt; one row per component</span>
             <span class="k">for</span> <span class="n">comp</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="s2">&quot;XYZ&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;dipole moment&quot;</span><span class="p">]):</span>
