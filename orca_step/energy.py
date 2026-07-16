@@ -59,22 +59,41 @@ class Energy(orca_step.ORCABase):
         """Describe what this sub-step will do."""
         if not P:
             P = self.parameters.values_to_dict()
+        text = f"Single-point energy with ORCA at {self._level_of_theory_text(P)}."
+        return self.header + "\n" + __(text, indent=4 * " ").__str__()
 
+    def _level_of_theory_text(self, P):
+        """A human-readable level of theory for the run description.
+
+        When the global model chemistry is used, this is the resolved level spec
+        (e.g. ``ORCA:DFT@B3LYP/def2-SVP``) once a Model Chemistry step has
+        defined it -- so the actual level appears in the output when the step
+        runs. Before that (in the flowchart editor, where nothing is resolved
+        yet) it falls back to a generic phrase. For an explicit calculation it
+        is the chosen ``method/basis`` (or the CBS extrapolation family).
+        """
         use_mc = P["use model chemistry"]
         if not isinstance(use_mc, bool):
             use_mc = use_mc == "yes"
 
         if use_mc:
-            text = (
-                "Single-point energy with ORCA using the model chemistry from a "
-                "preceding Model Chemistry step."
-            )
-        else:
-            method, basis = self._resolve_method_basis(P)
-            if self._extrapolating(P):
-                basis = self._extrapolation_keyword(P)
-            text = f"Single-point energy with ORCA at {method}/{basis}."
-        return self.header + "\n" + __(text, indent=4 * " ").__str__()
+            # At run time the model chemistry is resolved, so show the actual
+            # level spec. In the flowchart editor (or tests) the flowchart
+            # variables are not set up, so fall back to a generic phrase.
+            try:
+                if self.variable_exists("_model_chemistry"):
+                    mc = self.get_variable("_model_chemistry")
+                    level = (mc.get("level") or "").strip()
+                    if level:
+                        return level
+            except Exception:
+                pass
+            return "the model chemistry (from a preceding Model Chemistry step)"
+
+        method, basis = self._resolve_method_basis(P)
+        if self._extrapolating(P):
+            basis = self._extrapolation_keyword(P)
+        return f"{method}/{basis}"
 
     @staticmethod
     def _basis_name(value):

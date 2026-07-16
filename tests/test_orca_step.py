@@ -1009,6 +1009,18 @@ $end
 """
 
 
+def test_level_of_theory_text():
+    """The run description shows the explicit method/basis, and (when the model
+    chemistry is used but not yet resolved) a generic fallback phrase."""
+    node = orca_step.Frequencies()
+    explicit = {"use model chemistry": "no", "method": "HF", "basis": "def2-SVP"}
+    assert node._level_of_theory_text(explicit) == "HF/def2-SVP"
+    # 'use model chemistry' with nothing resolved yet -> generic phrase.
+    assert "model chemistry" in node._level_of_theory_text(
+        {"use model chemistry": "yes"}
+    )
+
+
 def test_frequencies_parse_hess_file(tmp_path):
     """The .hess Cartesian Hessian and atomic masses parse correctly."""
     path = tmp_path / "orca.hess"

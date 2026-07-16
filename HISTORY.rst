@@ -31,6 +31,10 @@ History
       mimics an experimental spectrum.
     * Each ORCA sub-step's output is now followed by a blank line, so the
       sub-steps are visually separated in the output.
+    * When a sub-step runs, its output now names the **actual level of theory** --
+      the resolved model-chemistry level spec (e.g. ``ORCA:DFT@B3LYP/def2-SVP``)
+      when the global model chemistry is used, or the explicit method/basis --
+      instead of the generic "the model chemistry".
 
 2026.7.15 -- Frequencies sub-step and an MDI Hessian command
     * New **Frequencies** sub-step: the Hessian and harmonic vibrational

@@ -47,16 +47,11 @@ class Optimization(Energy):
     def description_text(self, P=None):
         if not P:
             P = self.parameters.values_to_dict()
-        use_mc = P["use model chemistry"]
-        if not isinstance(use_mc, bool):
-            use_mc = use_mc == "yes"
-        if use_mc:
-            method = "the model chemistry"
-        else:
-            m, basis = self._resolve_method_basis(P)
-            method = f"{m}/{basis}"
         conv = P["optimization convergence"]
-        text = f"Geometry optimization with ORCA at {method} ({conv})."
+        text = (
+            f"Geometry optimization with ORCA at {self._level_of_theory_text(P)} "
+            f"({conv})."
+        )
         return self.header + "\n" + __(text, indent=4 * " ").__str__()
 
     def run(self, keywords=None):
