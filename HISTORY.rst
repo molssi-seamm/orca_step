@@ -36,6 +36,8 @@ History
       (e.g. ``ORCA:DFT@B3LYP/def2-SVP``; the basis is appended when the spec
       itself omits it and the step fills in its own), or the explicit
       method/basis -- instead of the generic "the model chemistry".
+
+2026.7.28 -- Initial guess: wavefunction restart, extra ORCA blocks, job:// support
     * New **Extra ORCA blocks** control: a free-text field for one-off literal
       ORCA input (e.g. a custom ``%scf`` block with ``Shift``/``DIISBfac``/
       ``MaxIter`` for a hard-to-converge atom), inserted verbatim before the
