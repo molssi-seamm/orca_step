@@ -207,6 +207,125 @@ class EnergyParameters(seamm.Parameters):
                 "energies/forces), raise it to converge more loosely."
             ),
         },
+        "initial guess": {
+            "default": "default",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": (
+                "default",
+                "Hueckel",
+                "HCore",
+                "PAtom",
+                "PModel",
+                "SAD",
+                "SADNO",
+                "Previous wavefunction",
+                "Specified wavefunction",
+            ),
+            "format_string": "",
+            "description": "Initial guess:",
+            "help_text": (
+                "ORCA's SCF starting guess ('Guess' in the '%scf' block). "
+                "'default' leaves ORCA's own default (SAD for most systems). "
+                "'PModel' is often much more stable than SAD for a single atom "
+                "or ion, where a superposition of atomic densities has little "
+                "meaning. 'Previous wavefunction' seeds from the nearest "
+                "earlier ORCA step in this flowchart (its 'orca.gbw'); "
+                "'Specified wavefunction' seeds from the file named by "
+                "'Specified orbitals' below. Either way ORCA projects the "
+                "orbitals onto this job's basis when it differs (the same "
+                "trick its own CBS extrapolation uses internally), so this "
+                "also works across a basis-set escalation. 'If wavefunction "
+                "not found' below controls what happens when there is "
+                "nothing to read."
+            ),
+        },
+        "if wavefunction not found": {
+            "default": "Throw an error",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": (
+                "Throw an error",
+                "Use default guess",
+                "Use Hueckel guess",
+                "Use HCore guess",
+                "Use PAtom guess",
+                "Use PModel guess",
+                "Use SAD guess",
+                "Use SADNO guess",
+            ),
+            "format_string": "",
+            "description": "If wavefunction not found:",
+            "help_text": (
+                "What to do when 'Initial guess' above is 'Previous "
+                "wavefunction' or 'Specified wavefunction' but nothing is "
+                "there to read (e.g. no earlier ORCA step yet, or the first "
+                "basis set of a loop where 'Specified orbitals' has not been "
+                "written yet). 'Throw an error' (the default) fails loudly, "
+                "matching what an explicit wavefunction request implies. "
+                "Choose one of the 'Use ... guess' options instead to make "
+                "this safe to leave on for every iteration of a loop, e.g. "
+                "the first pass through a basis-set escalation."
+            ),
+        },
+        "save orbital checkpoint": {
+            "default": "no",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("no", "yes"),
+            "format_string": "",
+            "description": "Save orbital checkpoint:",
+            "help_text": (
+                "After a successful run, copy the converged orbitals "
+                "('orca.gbw') to the file named by 'Checkpoint name' below, "
+                "for a later step to read back -- e.g. with 'Initial guess' "
+                "= 'Specified wavefunction' there, naming the same "
+                "checkpoint via 'Specified orbitals'. This reaches across a "
+                "later iteration of an enclosing loop (e.g. over basis sets "
+                "for the same atom), which 'Previous wavefunction' (a "
+                "graph walk) cannot: each loop iteration gets its own "
+                "directory, so the previous iteration is not a preceding "
+                "node in the flowchart graph."
+            ),
+        },
+        "checkpoint name": {
+            "default": "default",
+            "kind": "string",
+            "default_units": "",
+            "enumeration": tuple(),
+            "format_string": "",
+            "description": "Checkpoint name:",
+            "help_text": (
+                "Where 'Save orbital checkpoint' writes this run's orbitals. "
+                "'default' (the default) derives a label automatically from "
+                "the system's composition, charge, and multiplicity (e.g. "
+                "'Co_q0_m4') -- the usual choice, since it naturally gives "
+                "one checkpoint per atom/electronic state, shared across an "
+                "inner loop (e.g. over basis sets) for that atom, and reset "
+                "automatically when an outer loop moves to a new atom. Any "
+                "other bare name is stored in a 'checkpoints' folder inside "
+                "this job; an absolute path is used as-is, e.g. to keep the "
+                "checkpoint outside this job and reuse it across separate "
+                "flowchart runs."
+            ),
+        },
+        "specified orbitals": {
+            "default": "default",
+            "kind": "string",
+            "default_units": "",
+            "enumeration": tuple(),
+            "format_string": "",
+            "description": "Specified orbitals:",
+            "help_text": (
+                "Which file 'Initial guess' = 'Specified wavefunction' reads "
+                "from. Same rules as 'Checkpoint name': 'default' derives "
+                "the label automatically from this system's composition, "
+                "charge, and multiplicity, matching what a step upstream "
+                "saved with 'Save orbital checkpoint' left on 'default'; a "
+                "bare name looks in this job's 'checkpoints' folder; an "
+                "absolute path is used as-is."
+            ),
+        },
         "extra keywords": {
             "default": "",
             "kind": "string",
@@ -218,6 +337,23 @@ class EnergyParameters(seamm.Parameters):
                 "Any additional ORCA '!' keywords to append, e.g. 'RIJCOSX', "
                 "'NoFrozenCore', 'SlowConv'. The SCF tolerance and integration "
                 "grid have their own controls above."
+            ),
+        },
+        "extra blocks": {
+            "default": "",
+            "kind": "special",
+            "widget": "seamm_widgets.LabeledText",
+            "default_units": "",
+            "enumeration": tuple(),
+            "format_string": "",
+            "description": "Extra ORCA blocks:",
+            "help_text": (
+                "Any additional literal ORCA input, inserted verbatim right "
+                "before the geometry -- after the blocks generated by the "
+                "controls above. Use this for one-off SCF-stabilization "
+                "tricks with no dedicated control, e.g. for a difficult atom:"
+                "\n%scf\n  MaxIter 400\n"
+                "  Shift Shift 0.3 ErrStart 0.05 end\n  DIISBfac 1.1\nend"
             ),
         },
         "bond orders": {

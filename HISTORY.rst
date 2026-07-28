@@ -36,6 +36,22 @@ History
       (e.g. ``ORCA:DFT@B3LYP/def2-SVP``; the basis is appended when the spec
       itself omits it and the step fills in its own), or the explicit
       method/basis -- instead of the generic "the model chemistry".
+    * New **Extra ORCA blocks** control: a free-text field for one-off literal
+      ORCA input (e.g. a custom ``%scf`` block with ``Shift``/``DIISBfac``/
+      ``MaxIter`` for a hard-to-converge atom), inserted verbatim before the
+      geometry, alongside the existing **Extra keywords** (``!`` line).
+    * New **Initial guess** and orbital-checkpoint controls for stabilizing SCF
+      convergence on difficult systems (isolated atoms, transition metals):
+      the usual ORCA guess types (``PModel``, ``SAD``, ``Hueckel``, ...), plus
+      **Previous wavefunction** (seed from the nearest earlier ORCA step in
+      this flowchart) and **Specified wavefunction** (seed from a named
+      checkpoint file, via the new **Specified orbitals** control) -- the
+      latter reaches across loop iterations (e.g. a basis-set escalation
+      inside a Loop), which the former cannot. **If wavefunction not found**
+      controls what happens when there is nothing to read (default: raise an
+      error). **Save orbital checkpoint** / **Checkpoint name** write this
+      run's orbitals to a named checkpoint (under ``checkpoints/`` in the job
+      directory by default) for a later step to read back.
 
 2026.7.15 -- Frequencies sub-step and an MDI Hessian command
     * New **Frequencies** sub-step: the Hessian and harmonic vibrational

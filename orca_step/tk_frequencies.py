@@ -30,7 +30,11 @@ class TkFrequencies(TkEnergy):
             "auxiliary basis",
             "grid",
             "scf convergence",
+            "initial guess",
+            "save orbital checkpoint",
+            "checkpoint name",
             "extra keywords",
+            "extra blocks",
             "second derivatives",
             "temperature",
         )
