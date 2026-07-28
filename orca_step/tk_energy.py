@@ -57,9 +57,16 @@ class TkEnergy(seamm.TkNode):
         self["basis"].config(values=list(orca_step.metadata["basis sets"]))
         self["basis"].elements_callback = self._current_elements
 
-        # React to the model-chemistry toggle and the method choice (the method
-        # controls whether the DFT functional pulldowns are shown).
-        for item in ("use model chemistry", "method"):
+        # React to the model-chemistry toggle and the method choice (the
+        # method controls whether the DFT functional pulldowns are shown),
+        # and to the wavefunction-guess controls that reveal/hide their own
+        # indented sub-controls (see reset_dialog).
+        for item in (
+            "use model chemistry",
+            "method",
+            "initial guess",
+            "save orbital checkpoint",
+        ):
             w = self[item]
             w.combobox.bind("<<ComboboxSelected>>", self.reset_dialog)
             w.combobox.bind("<Return>", self.reset_dialog)
@@ -170,7 +177,35 @@ class TkEnergy(seamm.TkNode):
                     add_full("basis source")
 
         for key in self._run_detail_keys():
+            # 'checkpoint name' only applies (and is only shown, indented one
+            # level) when 'save orbital checkpoint' is on.
+            if key == "checkpoint name":
+                if self["save orbital checkpoint"].get() == "yes":
+                    self[key].grid(row=row, column=1, columnspan=2, sticky=tk.EW)
+                    type_widgets.append(self[key])
+                    row += 1
+                continue
+
             add_full(key)
+
+            # 'initial guess' choosing a wavefunction reveals its own
+            # indented sub-controls right below it: 'specified orbitals'
+            # only for that specific choice, 'if wavefunction not found' for
+            # either wavefunction choice (see energy.extra_input).
+            if key == "initial guess":
+                guess = self[key].get()
+                if guess in ("Previous wavefunction", "Specified orbitals"):
+                    if guess == "Specified orbitals":
+                        self["specified orbitals"].grid(
+                            row=row, column=1, columnspan=2, sticky=tk.EW
+                        )
+                        type_widgets.append(self["specified orbitals"])
+                        row += 1
+                    self["if wavefunction not found"].grid(
+                        row=row, column=1, columnspan=2, sticky=tk.EW
+                    )
+                    type_widgets.append(self["if wavefunction not found"])
+                    row += 1
 
         # Align the full-width labels; indent the nested widgets by the leftover
         # label width plus a fixed gap, so each nested combobox sits ~30 px to the
@@ -201,7 +236,11 @@ class TkEnergy(seamm.TkNode):
             "grid",
             "scf convergence",
             "sthresh",
+            "initial guess",
+            "save orbital checkpoint",
+            "checkpoint name",
             "extra keywords",
+            "extra blocks",
             "bond orders",
             "Hirshfeld charges",
             "polarizability",

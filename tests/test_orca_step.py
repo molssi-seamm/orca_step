@@ -6,7 +6,9 @@
 import importlib.resources
 import importlib.util
 import json
+from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import pytest  # noqa: F401
 
@@ -241,6 +243,354 @@ def test_scf_and_extra_keyword_defaults():
     P = orca_step.EnergyParameters()
     assert P["scf convergence"].value == "TIGHTSCF"
     assert P["extra keywords"].value == ""
+
+
+def test_guess_and_checkpoint_defaults():
+    """The SCF-guess/orbital-checkpoint/extra-blocks controls default to
+    no-ops."""
+    P = orca_step.EnergyParameters()
+    assert P["initial guess"].value == "default"
+    assert P["if wavefunction not found"].value == "Throw an error"
+    assert P["save orbital checkpoint"].value == "no"
+    assert P["checkpoint name"].value == "default"
+    assert P["specified orbitals"].value == "default"
+    assert P["extra blocks"].value == ""
+
+
+def _fake_configuration(symbols=("Co",), charge=0, spin_multiplicity=4):
+    """A minimal stand-in for a molsystem configuration, exposing just what
+    '_auto_checkpoint_name' needs."""
+    return SimpleNamespace(
+        atoms=SimpleNamespace(symbols=list(symbols)),
+        charge=charge,
+        spin_multiplicity=spin_multiplicity,
+    )
+
+
+def _extra_input_base():
+    """A minimal P dict that exercises extra_input's optional keys as no-ops,
+    for the tests below to extend."""
+    return {
+        "use model chemistry": "no",
+        "method": "HF",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "grid": "default",
+        "scf convergence": "default",
+        "extra keywords": "",
+        "Hirshfeld charges": "no",
+        "polarizability": "no",
+    }
+
+
+def test_extra_input_initial_guess():
+    """'initial guess' adds a '%scf Guess ... end' block; 'default' emits
+    nothing."""
+    node = orca_step.Energy()
+    blocks, _ = node.extra_input({**_extra_input_base(), "initial guess": "default"})
+    assert blocks == ""
+    blocks, _ = node.extra_input({**_extra_input_base(), "initial guess": "PModel"})
+    assert blocks == "%scf\n  Guess PModel\nend"
+
+
+def test_extra_input_guess_and_sthresh_combine():
+    """Guess and SThresh land in the same '%scf' block."""
+    node = orca_step.Energy()
+    P = {
+        **_extra_input_base(),
+        "initial guess": "PModel",
+        "sthresh": "1.0e-07",
+    }
+    blocks, _ = node.extra_input(P)
+    assert blocks == "%scf\n  Guess PModel\n  SThresh 1.000e-07\nend"
+
+
+def test_extra_input_extra_blocks_verbatim():
+    """'extra blocks' is appended verbatim, after the generated blocks."""
+    node = orca_step.Energy()
+    P = {**_extra_input_base(), "extra blocks": "%scf\n  MaxIter 400\nend"}
+    blocks, _ = node.extra_input(P)
+    assert blocks == "%scf\n  MaxIter 400\nend"
+
+
+def test_auto_checkpoint_name():
+    """The default checkpoint label comes from composition/charge/mult."""
+    node = orca_step.Energy()
+    assert node._auto_checkpoint_name(_fake_configuration()) == "Co_q0_m4"
+    assert (
+        node._auto_checkpoint_name(_fake_configuration(("H", "H", "O"), 0, 1))
+        == "H2O_q0_m1"
+    )
+
+
+def test_resolve_checkpoint_path_default_auto_derives(tmp_path):
+    """'default' (the field's own default) auto-derives the name from the
+    system, landing under the job's 'checkpoints' folder."""
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    path = node._resolve_checkpoint_path("default", _fake_configuration())
+    assert path == tmp_path / "checkpoints" / "Co_q0_m4.gbw"
+
+
+def test_resolve_checkpoint_path_bare_name_under_job_root(tmp_path):
+    """A bare name lands under a fixed folder inside this job."""
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    path = node._resolve_checkpoint_path("seed", _fake_configuration())
+    assert path == tmp_path / "checkpoints" / "seed.gbw"
+
+
+def test_resolve_checkpoint_path_absolute_name_used_as_is(tmp_path):
+    """An absolute name is honored as given -- e.g. to keep a checkpoint
+    outside this job and reuse it across separate flowchart runs."""
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    outside = tmp_path.parent / "shared_cache" / "co_seed"
+    path = node._resolve_checkpoint_path(str(outside), _fake_configuration())
+    assert path == outside.with_suffix(".gbw")
+
+
+def test_resolve_checkpoint_path_this_job_shorthand(tmp_path):
+    """'job:seed' and 'job:///seed' both mean this job, same as a bare name."""
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    expected = tmp_path / "checkpoints" / "seed.gbw"
+    assert node._resolve_checkpoint_path("job:seed", _fake_configuration()) == expected
+    assert (
+        node._resolve_checkpoint_path("job:///seed", _fake_configuration()) == expected
+    )
+
+
+def _make_job_tree(tmp_path, this_job_no=1, other_job_no=53):
+    """A fake Jobs/<project>/Job_NNNNNN tree for the cross-job tests."""
+    jobs_root = tmp_path / "Jobs"
+    this_job = jobs_root / "projects" / "default" / f"Job_{this_job_no:06d}"
+    other_job = jobs_root / "projects" / "default" / f"Job_{other_job_no:06d}"
+    this_job.mkdir(parents=True)
+    other_job.mkdir(parents=True)
+    return this_job, other_job
+
+
+def test_resolve_checkpoint_path_other_job_requires_read_only(tmp_path):
+    """A job cannot write into another job -- referencing one without
+    read_only=True is a clear error, not a silent same-job fallback."""
+    this_job, _ = _make_job_tree(tmp_path)
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(this_job))
+    with pytest.raises(ValueError, match="another job"):
+        node._resolve_checkpoint_path("job://53/seed", _fake_configuration())
+
+
+def test_resolve_checkpoint_path_other_job_explicit_name(tmp_path):
+    """'job://<n>/<name>' reads an explicitly-named checkpoint from job n."""
+    this_job, other_job = _make_job_tree(tmp_path)
+    (other_job / "checkpoints").mkdir()
+    (other_job / "checkpoints" / "my_seed.gbw").write_bytes(b"data")
+
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(this_job))
+    path = node._resolve_checkpoint_path(
+        "job://53/my_seed", _fake_configuration(), read_only=True
+    )
+    assert path == other_job / "checkpoints" / "my_seed.gbw"
+
+
+def test_resolve_checkpoint_path_other_job_default(tmp_path):
+    """'job://<n>/default' picks up job n's own auto-derived name for this
+    same system -- for when the user does not know what it resolved to."""
+    this_job, other_job = _make_job_tree(tmp_path)
+    (other_job / "checkpoints").mkdir()
+    (other_job / "checkpoints" / "Co_q0_m4.gbw").write_bytes(b"data")
+
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(this_job))
+    path = node._resolve_checkpoint_path(
+        "job://53/default", _fake_configuration(), read_only=True
+    )
+    assert path == other_job / "checkpoints" / "Co_q0_m4.gbw"
+
+
+def test_extra_input_specified_orbitals_other_job(tmp_path):
+    """End to end: 'specified orbitals' = 'job://<n>/default' reads job n's
+    checkpoint through extra_input, without the caller needing read_only=True
+    threaded through by hand -- extra_input passes it itself."""
+    this_job, other_job = _make_job_tree(tmp_path)
+    (other_job / "checkpoints").mkdir()
+    (other_job / "checkpoints" / "Co_q0_m4.gbw").write_bytes(b"other-job-orbitals")
+
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(this_job))
+    node.get_system_configuration = lambda arg: (None, _fake_configuration())
+
+    P = {
+        **_extra_input_base(),
+        "initial guess": "Specified orbitals",
+        "specified orbitals": "job://53/default",
+    }
+    blocks, files = node.extra_input(P)
+    assert "Guess MORead" in blocks
+    assert files["orca.gbw"] == b"other-job-orbitals"
+
+
+def test_find_previous_wavefunction_skips_nodes_without_one(tmp_path):
+    """Walks past preceding nodes that left no 'orca.gbw' (e.g. a non-ORCA
+    step) to the nearest one that did."""
+    node = orca_step.Energy()
+    (tmp_path / "with_gbw").mkdir()
+    (tmp_path / "with_gbw" / "orca.gbw").write_bytes(b"data")
+    (tmp_path / "without_gbw").mkdir()
+
+    class _Node:
+        def __init__(self, directory):
+            self.directory = directory
+
+    node.previous_nodes = lambda: [
+        _Node(str(tmp_path / "without_gbw")),
+        _Node(str(tmp_path / "with_gbw")),
+    ]
+    found = node._find_previous_wavefunction()
+    assert found == tmp_path / "with_gbw" / "orca.gbw"
+
+
+def test_find_previous_wavefunction_none_without_flowchart():
+    """A standalone node (no flowchart, as in most of these tests) has no
+    graph to walk, so this returns None rather than raising."""
+    node = orca_step.Energy()
+    assert node._find_previous_wavefunction() is None
+
+
+def test_extra_input_previous_wavefunction_found(tmp_path):
+    """'initial guess' = 'Previous wavefunction' reads the file found by
+    '_find_previous_wavefunction', via '%moinp' + 'Guess MORead'."""
+    node = orca_step.Energy()
+    (tmp_path / "orca.gbw").write_bytes(b"prev-step-orbitals")
+
+    class _PrevNode:
+        directory = str(tmp_path)
+
+    node.previous_nodes = lambda: [_PrevNode()]
+    P = {**_extra_input_base(), "initial guess": "Previous wavefunction"}
+    blocks, files = node.extra_input(P)
+    assert '%moinp "orca.gbw"' in blocks
+    assert "Guess MORead" in blocks
+    assert files["orca.gbw"] == b"prev-step-orbitals"
+
+
+def test_extra_input_previous_wavefunction_missing_raises():
+    """The default fallback ('Throw an error') fails loudly when there is
+    nothing to read -- an explicit wavefunction request that cannot be
+    honored is a configuration problem, not something to paper over."""
+    node = orca_step.Energy()
+    node.previous_nodes = lambda: []
+    P = {**_extra_input_base(), "initial guess": "Previous wavefunction"}
+    with pytest.raises(RuntimeError, match="no earlier ORCA step"):
+        node.extra_input(P)
+
+
+def test_extra_input_previous_wavefunction_missing_uses_fallback_guess():
+    """Setting 'if wavefunction not found' to a 'Use ... guess' choice makes
+    this safe to leave on even when nothing is there yet."""
+    node = orca_step.Energy()
+    node.previous_nodes = lambda: []
+    P = {
+        **_extra_input_base(),
+        "initial guess": "Previous wavefunction",
+        "if wavefunction not found": "Use PModel guess",
+    }
+    blocks, files = node.extra_input(P)
+    assert blocks == "%scf\n  Guess PModel\nend"
+    assert "orca.gbw" not in files
+
+
+def test_extra_input_specified_wavefunction_found(tmp_path):
+    """'initial guess' = 'Specified orbitals' reads the file named by
+    'specified orbitals'."""
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    node.get_system_configuration = lambda arg: (None, _fake_configuration())
+    checkpoint = tmp_path / "checkpoints" / "Co_q0_m4.gbw"
+    checkpoint.parent.mkdir(parents=True)
+    checkpoint.write_bytes(b"specified-orbitals-data")
+
+    P = {**_extra_input_base(), "initial guess": "Specified orbitals"}
+    blocks, files = node.extra_input(P)
+    assert '%moinp "orca.gbw"' in blocks
+    assert "Guess MORead" in blocks
+    assert files["orca.gbw"] == b"specified-orbitals-data"
+
+
+def test_extra_input_specified_wavefunction_missing_raises(tmp_path):
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    node.get_system_configuration = lambda arg: (None, _fake_configuration())
+    P = {**_extra_input_base(), "initial guess": "Specified orbitals"}
+    with pytest.raises(RuntimeError, match="Specified orbitals"):
+        node.extra_input(P)
+
+
+def test_extra_input_specified_wavefunction_missing_uses_fallback_guess(tmp_path):
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    node.get_system_configuration = lambda arg: (None, _fake_configuration())
+    P = {
+        **_extra_input_base(),
+        "initial guess": "Specified orbitals",
+        "if wavefunction not found": "Use default guess",
+    }
+    blocks, files = node.extra_input(P)
+    assert blocks == ""
+    assert "orca.gbw" not in files
+
+
+def test_extra_input_specified_orbitals_custom_name(tmp_path):
+    """A named (non-'default') 'specified orbitals' is resolved the same way
+    as 'checkpoint name' -- a bare name under this job's 'checkpoints'."""
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    node.get_system_configuration = lambda arg: (None, _fake_configuration())
+    checkpoint = tmp_path / "checkpoints" / "my_seed.gbw"
+    checkpoint.parent.mkdir(parents=True)
+    checkpoint.write_bytes(b"named-seed-data")
+
+    P = {
+        **_extra_input_base(),
+        "initial guess": "Specified orbitals",
+        "specified orbitals": "my_seed",
+    }
+    blocks, files = node.extra_input(P)
+    assert files["orca.gbw"] == b"named-seed-data"
+
+
+def test_checkpoint_save_then_specified_wavefunction_round_trip(tmp_path):
+    """A run that saves a checkpoint (via 'save orbital checkpoint') leaves a
+    file that a *later run of the same node* -- e.g. the next iteration of a
+    Loop over basis sets, which gets its own 'self.directory' -- picks up via
+    'initial guess' = 'Specified orbitals'. This is the mechanism that
+    'Previous wavefunction' (a graph walk) cannot provide, since it cannot
+    reach across loop iterations."""
+    node = orca_step.Energy()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    node.get_system_configuration = lambda arg: (None, _fake_configuration())
+
+    # The first (small-basis) loop iteration's run directory + output.
+    node._id = ("iter_1",)
+    Path(node.directory).mkdir()
+    (Path(node.directory) / "orca.gbw").write_bytes(b"small-basis-orbitals")
+    node._save_orbital_checkpoint(
+        {**_extra_input_base(), "save orbital checkpoint": "yes"}
+    )
+
+    checkpoint = tmp_path / "checkpoints" / "Co_q0_m4.gbw"
+    assert checkpoint.read_bytes() == b"small-basis-orbitals"
+
+    # The next (larger-basis) iteration: a different directory, same node.
+    node._id = ("iter_2",)
+    blocks, files = node.extra_input(
+        {**_extra_input_base(), "initial guess": "Specified orbitals"}
+    )
+    assert files["orca.gbw"] == b"small-basis-orbitals"
+    assert "Guess MORead" in blocks
 
 
 def test_basis_name_forms():

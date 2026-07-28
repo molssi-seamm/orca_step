@@ -3,6 +3,7 @@
 """An ORCA single-point energy sub-step."""
 
 import ast
+from collections import Counter
 import csv
 import json
 import logging
@@ -29,6 +30,19 @@ printer = printing.getPrinter("ORCA")
 # above, e.g. cc-pV5Z) integrate poorly on ORCA's default grid (DEFGRID2), so
 # when the grid is left on 'default' the step bumps it to DEFGRID3.
 _HIGH_ANGULAR_MOMENTUM = 5
+
+# 'if wavefunction not found' values (other than "Throw an error") -> the
+# ORCA 'Guess' keyword to fall back to ("default" emits no Guess keyword at
+# all, leaving ORCA's own default).
+_FALLBACK_GUESS = {
+    "Use default guess": "default",
+    "Use Hueckel guess": "Hueckel",
+    "Use HCore guess": "HCore",
+    "Use PAtom guess": "PAtom",
+    "Use PModel guess": "PModel",
+    "Use SAD guess": "SAD",
+    "Use SADNO guess": "SADNO",
+}
 
 
 class Energy(orca_step.ORCABase):
@@ -382,8 +396,10 @@ class Energy(orca_step.ORCABase):
 
     def extra_input(self, P):
         """Return ``(extra_blocks, extra_files)`` for the ORCA input: the BSE
-        basis block (if used), and directives for the optional properties
-        (Hirshfeld charges, polarizability)."""
+        basis block (if used), the SCF guess/convergence block, an optional
+        orbital-checkpoint restart, directives for the optional properties
+        (Hirshfeld charges, polarizability), and any user-supplied literal
+        blocks."""
         blocks = []
         files = {}
 
@@ -395,6 +411,54 @@ class Energy(orca_step.ORCABase):
             files["basis.bas"] = self._bse_basis_file(basis, znums)
             blocks.append('%basis GTOName "basis.bas" end')
 
+        # SCF starting guess and convergence threshold ('%scf' block).
+        # 'initial guess' is either a plain ORCA guess keyword, or one of two
+        # ways to seed from an earlier wavefunction (a graph walk to the
+        # previous ORCA step, or a named checkpoint file); 'if wavefunction
+        # not found' controls what happens if that wavefunction isn't there.
+        scf_lines = []
+        guess = P.get("initial guess", "default") or "default"
+        if guess in ("Previous wavefunction", "Specified orbitals"):
+            if guess == "Previous wavefunction":
+                source = self._find_previous_wavefunction()
+            else:
+                _, configuration = self.get_system_configuration(None)
+                candidate = self._resolve_checkpoint_path(
+                    P.get("specified orbitals", "default"),
+                    configuration,
+                    read_only=True,
+                )
+                source = candidate if candidate.exists() else None
+
+            if source is not None:
+                files["orca.gbw"] = source.read_bytes()
+                blocks.append('%moinp "orca.gbw"')
+                scf_lines.append("  Guess MORead")
+            else:
+                fallback = P.get("if wavefunction not found", "Throw an error")
+                if fallback == "Throw an error":
+                    if guess == "Previous wavefunction":
+                        raise RuntimeError(
+                            "'Initial guess' is 'Previous wavefunction', but "
+                            "no earlier ORCA step in this flowchart left an "
+                            "'orca.gbw' to read. Add an ORCA Energy/"
+                            "Optimization step before this one, or change 'If "
+                            "wavefunction not found' to a fallback guess."
+                        )
+                    raise RuntimeError(
+                        "'Initial guess' is 'Specified orbitals', but the "
+                        "file named by 'Specified orbitals' does not exist. "
+                        "Check the name (it should match an earlier step's "
+                        "'Save orbital checkpoint' / 'Checkpoint name'), or "
+                        "change 'If wavefunction not found' to a fallback "
+                        "guess."
+                    )
+                resolved = _FALLBACK_GUESS[fallback]
+                if resolved != "default":
+                    scf_lines.append(f"  Guess {resolved}")
+        elif guess != "default":
+            scf_lines.append(f"  Guess {guess}")
+
         # SCF convergence threshold (ORCA's '%scf SThresh'). 'default' emits
         # nothing, so the SCF-convergence preset on the '!' line (or ORCA's own
         # default) governs SThresh. Any explicit value is written out and
@@ -404,18 +468,145 @@ class Energy(orca_step.ORCABase):
             sthresh = sthresh.strip()
         if sthresh and sthresh != "default":
             try:
-                blocks.append(f"%scf SThresh {float(sthresh):.3e} end")
+                scf_lines.append(f"  SThresh {float(sthresh):.3e}")
             except (TypeError, ValueError):
                 raise RuntimeError(
                     f"ORCA SThresh must be 'default' or a number, not '{sthresh}'."
                 )
+
+        if scf_lines:
+            blocks.append("\n".join(["%scf", *scf_lines, "end"]))
 
         if P["Hirshfeld charges"] != "no":
             blocks.append("%output Print[ P_Hirshfeld ] 1 end")
         if P["polarizability"] == "yes":
             blocks.append("%elprop Polar 1 end")
 
+        # Any additional literal ORCA input the user typed in -- e.g. a
+        # one-off SCF-stabilization block ('Shift', 'DIISBfac', ...) with no
+        # dedicated control above. Comes last so it can add to or follow the
+        # generated blocks.
+        extra = P.get("extra blocks", "")
+        if isinstance(extra, str) and extra.strip():
+            blocks.append(extra.strip())
+
         return "\n".join(blocks), files
+
+    @staticmethod
+    def _auto_checkpoint_name(configuration):
+        """The default 'checkpoint name': a label derived from the system's
+        composition, charge, and multiplicity, e.g. ``Co_q0_m4``.
+
+        This is deliberately NOT tied to any node's position in the flowchart
+        (unlike walking the execution graph for "the previous step's output",
+        which cannot reach across loop iterations -- SEAMM's Loop step gives
+        each iteration its own directory, see ``loop_step.loop``). An outer
+        loop over atoms therefore gets one checkpoint per atom/electronic
+        state for free, shared across an inner loop (e.g. over basis sets or
+        methods) for that atom, and the checkpoint changes -- so does not leak
+        across atoms -- as soon as the outer loop advances.
+        """
+        counts = Counter(configuration.atoms.symbols)
+        formula = "".join(
+            f"{el}{n if n > 1 else ''}" for el, n in sorted(counts.items())
+        )
+        return f"{formula}_q{configuration.charge}_m{configuration.spin_multiplicity}"
+
+    def _find_previous_wavefunction(self):
+        """The path to the 'orca.gbw' left by the nearest earlier step in this
+        flowchart, for 'initial guess' = 'Previous wavefunction', or None if
+        no earlier step left one.
+
+        Walks the execution graph backward (nearest first, via
+        ``previous_nodes``); any node type is considered -- a non-ORCA
+        predecessor simply has no 'orca.gbw' in its directory and is skipped.
+        This only reaches a *different, preceding* node in the flowchart --
+        it cannot seed across iterations of the same node inside a Loop
+        (which gets a fresh directory each iteration; see
+        ``loop_step.loop``). For that, use 'Specified orbitals' with
+        'Save orbital checkpoint' instead. Returns None (rather than
+        raising) when this node has no flowchart to walk, e.g. a node built
+        standalone for testing.
+        """
+        try:
+            previous_nodes = self.previous_nodes()
+        except Exception:
+            return None
+        for node in previous_nodes:
+            try:
+                gbw = Path(node.directory) / "orca.gbw"
+            except Exception:
+                continue
+            if gbw.exists():
+                return gbw
+        return None
+
+    def _resolve_checkpoint_path(self, name, configuration, read_only=False):
+        """The orbital-checkpoint file identified by `name` -- shared by
+        'checkpoint name' (save) and 'specified orbitals' (read).
+
+        'default' derives a label automatically from the system's
+        composition, charge, and multiplicity (e.g. 'Co_q0_m4') -- the usual
+        choice, since it naturally gives one checkpoint per atom/electronic
+        state, shared across an inner loop (e.g. over basis sets) for that
+        atom, and reset automatically when an outer loop moves to a new
+        atom. Any other bare name (or relative path) is stored under a
+        'checkpoints' directory inside this job; an absolute path (or
+        '~/...') is used as-is, e.g. to keep a checkpoint outside this job
+        and reuse it across separate flowchart runs.
+
+        A 'job:' reference (see ``seamm.Node.file_path``) names a checkpoint
+        in *another* job instead: ``job://<n>/<name>`` -- or
+        ``job://<n>/default`` to pick up that job's own auto-derived name
+        for this same system, when you do not know what it resolved to.
+        Only honored when `read_only` is True, since a job must never write
+        into another job's directory (see 'checkpoint name' vs 'specified
+        orbitals').
+        """
+        name = (name or "").strip()
+
+        job_root = Path(self.flowchart.root_directory)
+        parsed = self._parse_job_reference(name)
+        if parsed is not None:
+            job_no, tail = parsed
+            if job_no is not None:
+                if not read_only:
+                    raise ValueError(
+                        f"'{name}' refers to another job (job {job_no}); "
+                        "only 'Specified orbitals' can reference another "
+                        "job -- a job cannot write into another job."
+                    )
+                job_root = self._other_job_path(job_no)
+            name = tail.strip()
+
+        if not name or name == "default":
+            name = self._auto_checkpoint_name(configuration)
+
+        path = Path(name).expanduser()
+        if not path.is_absolute():
+            safe = "/".join(
+                re.sub(r"[^A-Za-z0-9_.-]", "_", part) for part in path.parts
+            )
+            path = job_root / "checkpoints" / safe
+        if path.suffix.lower() != ".gbw":
+            path = path.with_name(path.name + ".gbw")
+        return path
+
+    def _save_orbital_checkpoint(self, P):
+        """Copy this run's converged orbitals ('orca.gbw') to the file named
+        by 'checkpoint name' (see '_resolve_checkpoint_path'), for a later
+        step -- including a later iteration of an enclosing loop -- to read
+        back via 'initial guess' = 'Specified orbitals' /
+        'specified orbitals'."""
+        gbw = Path(self.directory) / "orca.gbw"
+        if not gbw.exists():
+            return
+        _, configuration = self.get_system_configuration(None)
+        checkpoint_path = self._resolve_checkpoint_path(
+            P.get("checkpoint name", "default"), configuration
+        )
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        checkpoint_path.write_bytes(gbw.read_bytes())
 
     @staticmethod
     def _bse_basis_file(basis_name, atomic_numbers):
@@ -524,6 +715,9 @@ class Energy(orca_step.ORCABase):
             extra_files=extra_files,
             make_wfx=P.get("save wavefunction", "no") == "yes",
         )
+
+        if P.get("save orbital checkpoint", "no") == "yes":
+            self._save_orbital_checkpoint(P)
 
         self._data = data
         self._cite_references(P)
