@@ -194,10 +194,10 @@ starting guess (``Guess`` in the ``%scf`` block):
   double-hybrid step. This only reaches a *different, preceding* node in a
   roughly linear flowchart -- it cannot seed across iterations of a **Loop**,
   since a Loop gives each iteration its own directory (see below).
-* **Specified wavefunction** -- seed from a named checkpoint file instead,
-  identified by the **Specified orbitals** control revealed underneath. This is
-  the way to seed across loop iterations: for example, a basis-set escalation
-  inside a Loop over basis sets, where each iteration reads the checkpoint the
+* **Specified orbitals** -- seed from a named checkpoint file instead, named by
+  the **Specified orbitals** control revealed underneath. This is the way to
+  seed across loop iterations: for example, a basis-set escalation inside a
+  Loop over basis sets, where each iteration reads the checkpoint the
   *previous* iteration (a smaller basis) wrote.
 
 Either wavefunction choice reveals **If wavefunction not found**, controlling
@@ -206,7 +206,7 @@ the first pass through a basis-set-escalation loop): ``Throw an error`` (the
 default -- an explicit wavefunction request that cannot be honored is treated
 as a configuration problem) or one of the ``Use ... guess`` choices, which
 falls back to that guess type instead. Set this to a fallback guess to make
-"Specified wavefunction" safe to leave on for every iteration of a loop.
+"Specified orbitals" safe to leave on for every iteration of a loop.
 
 .. note::
 
@@ -234,9 +234,22 @@ Saving a checkpoint for a later step to read is a separate pair of controls:
   absolute path is used as-is, e.g. to keep a checkpoint outside this job and
   reuse it across separate flowchart runs.
 
+.. note::
+
+   **Reading a checkpoint from another job.** Only **Specified orbitals** can
+   reference *another* job -- ``job://<job number>/<name>`` -- since a job
+   must never write into another job (so this is not available for
+   **Checkpoint name**). Use ``job://<job number>/default`` when you want that
+   other job's own auto-derived name for this same system but do not know
+   what it resolved to -- for example, ``job://53/default`` picks up whatever
+   ``Co_q0_m4``-style label job 53 auto-derived for this atom. This needs
+   SEAMM's managed ``Jobs/<project>/Job_NNNNNN`` directory layout (i.e. jobs
+   run through the dashboard/JobServer, not a bare local run) to locate the
+   other job.
+
 For a basis-set-escalation loop (e.g. looping ``def2-SVP`` -> ``def2-TZVP`` ->
 ``def2-QZVP`` for one atom), turn on both **Save orbital checkpoint** and
-**Initial guess** = **Specified wavefunction** (leaving **Checkpoint name** /
+**Initial guess** = **Specified orbitals** (leaving **Checkpoint name** /
 **Specified orbitals** on ``default`` so they agree automatically), and set
 **If wavefunction not found** to a fallback guess so the first iteration -- which
 has nothing to read yet -- does not error. Loop from the smallest basis to the

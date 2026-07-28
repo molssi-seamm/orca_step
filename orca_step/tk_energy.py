@@ -194,8 +194,8 @@ class TkEnergy(seamm.TkNode):
             # either wavefunction choice (see energy.extra_input).
             if key == "initial guess":
                 guess = self[key].get()
-                if guess in ("Previous wavefunction", "Specified wavefunction"):
-                    if guess == "Specified wavefunction":
+                if guess in ("Previous wavefunction", "Specified orbitals"):
+                    if guess == "Specified orbitals":
                         self["specified orbitals"].grid(
                             row=row, column=1, columnspan=2, sticky=tk.EW
                         )

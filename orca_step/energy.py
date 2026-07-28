@@ -418,13 +418,15 @@ class Energy(orca_step.ORCABase):
         # not found' controls what happens if that wavefunction isn't there.
         scf_lines = []
         guess = P.get("initial guess", "default") or "default"
-        if guess in ("Previous wavefunction", "Specified wavefunction"):
+        if guess in ("Previous wavefunction", "Specified orbitals"):
             if guess == "Previous wavefunction":
                 source = self._find_previous_wavefunction()
             else:
                 _, configuration = self.get_system_configuration(None)
                 candidate = self._resolve_checkpoint_path(
-                    P.get("specified orbitals", "default"), configuration
+                    P.get("specified orbitals", "default"),
+                    configuration,
+                    read_only=True,
                 )
                 source = candidate if candidate.exists() else None
 
@@ -444,7 +446,7 @@ class Energy(orca_step.ORCABase):
                             "wavefunction not found' to a fallback guess."
                         )
                     raise RuntimeError(
-                        "'Initial guess' is 'Specified wavefunction', but the "
+                        "'Initial guess' is 'Specified orbitals', but the "
                         "file named by 'Specified orbitals' does not exist. "
                         "Check the name (it should match an earlier step's "
                         "'Save orbital checkpoint' / 'Checkpoint name'), or "
@@ -521,7 +523,7 @@ class Energy(orca_step.ORCABase):
         This only reaches a *different, preceding* node in the flowchart --
         it cannot seed across iterations of the same node inside a Loop
         (which gets a fresh directory each iteration; see
-        ``loop_step.loop``). For that, use 'Specified wavefunction' with
+        ``loop_step.loop``). For that, use 'Specified orbitals' with
         'Save orbital checkpoint' instead. Returns None (rather than
         raising) when this node has no flowchart to walk, e.g. a node built
         standalone for testing.
@@ -539,7 +541,7 @@ class Energy(orca_step.ORCABase):
                 return gbw
         return None
 
-    def _resolve_checkpoint_path(self, name, configuration):
+    def _resolve_checkpoint_path(self, name, configuration, read_only=False):
         """The orbital-checkpoint file identified by `name` -- shared by
         'checkpoint name' (save) and 'specified orbitals' (read).
 
@@ -552,8 +554,31 @@ class Energy(orca_step.ORCABase):
         'checkpoints' directory inside this job; an absolute path (or
         '~/...') is used as-is, e.g. to keep a checkpoint outside this job
         and reuse it across separate flowchart runs.
+
+        A 'job:' reference (see ``seamm.Node.file_path``) names a checkpoint
+        in *another* job instead: ``job://<n>/<name>`` -- or
+        ``job://<n>/default`` to pick up that job's own auto-derived name
+        for this same system, when you do not know what it resolved to.
+        Only honored when `read_only` is True, since a job must never write
+        into another job's directory (see 'checkpoint name' vs 'specified
+        orbitals').
         """
         name = (name or "").strip()
+
+        job_root = Path(self.flowchart.root_directory)
+        parsed = self._parse_job_reference(name)
+        if parsed is not None:
+            job_no, tail = parsed
+            if job_no is not None:
+                if not read_only:
+                    raise ValueError(
+                        f"'{name}' refers to another job (job {job_no}); "
+                        "only 'Specified orbitals' can reference another "
+                        "job -- a job cannot write into another job."
+                    )
+                job_root = self._other_job_path(job_no)
+            name = tail.strip()
+
         if not name or name == "default":
             name = self._auto_checkpoint_name(configuration)
 
@@ -562,7 +587,7 @@ class Energy(orca_step.ORCABase):
             safe = "/".join(
                 re.sub(r"[^A-Za-z0-9_.-]", "_", part) for part in path.parts
             )
-            path = Path(self.flowchart.root_directory) / "checkpoints" / safe
+            path = job_root / "checkpoints" / safe
         if path.suffix.lower() != ".gbw":
             path = path.with_name(path.name + ".gbw")
         return path
@@ -571,7 +596,7 @@ class Energy(orca_step.ORCABase):
         """Copy this run's converged orbitals ('orca.gbw') to the file named
         by 'checkpoint name' (see '_resolve_checkpoint_path'), for a later
         step -- including a later iteration of an enclosing loop -- to read
-        back via 'initial guess' = 'Specified wavefunction' /
+        back via 'initial guess' = 'Specified orbitals' /
         'specified orbitals'."""
         gbw = Path(self.directory) / "orca.gbw"
         if not gbw.exists():

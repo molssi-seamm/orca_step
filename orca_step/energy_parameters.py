@@ -220,7 +220,7 @@ class EnergyParameters(seamm.Parameters):
                 "SAD",
                 "SADNO",
                 "Previous wavefunction",
-                "Specified wavefunction",
+                "Specified orbitals",
             ),
             "format_string": "",
             "description": "Initial guess:",
@@ -231,7 +231,7 @@ class EnergyParameters(seamm.Parameters):
                 "or ion, where a superposition of atomic densities has little "
                 "meaning. 'Previous wavefunction' seeds from the nearest "
                 "earlier ORCA step in this flowchart (its 'orca.gbw'); "
-                "'Specified wavefunction' seeds from the file named by "
+                "'Specified orbitals' seeds from the file named by "
                 "'Specified orbitals' below. Either way ORCA projects the "
                 "orbitals onto this job's basis when it differs (the same "
                 "trick its own CBS extrapolation uses internally), so this "
@@ -258,7 +258,7 @@ class EnergyParameters(seamm.Parameters):
             "description": "If wavefunction not found:",
             "help_text": (
                 "What to do when 'Initial guess' above is 'Previous "
-                "wavefunction' or 'Specified wavefunction' but nothing is "
+                "wavefunction' or 'Specified orbitals' but nothing is "
                 "there to read (e.g. no earlier ORCA step yet, or the first "
                 "basis set of a loop where 'Specified orbitals' has not been "
                 "written yet). 'Throw an error' (the default) fails loudly, "
@@ -279,7 +279,7 @@ class EnergyParameters(seamm.Parameters):
                 "After a successful run, copy the converged orbitals "
                 "('orca.gbw') to the file named by 'Checkpoint name' below, "
                 "for a later step to read back -- e.g. with 'Initial guess' "
-                "= 'Specified wavefunction' there, naming the same "
+                "= 'Specified orbitals' there, naming the same "
                 "checkpoint via 'Specified orbitals'. This reaches across a "
                 "later iteration of an enclosing loop (e.g. over basis sets "
                 "for the same atom), which 'Previous wavefunction' (a "
@@ -317,13 +317,18 @@ class EnergyParameters(seamm.Parameters):
             "format_string": "",
             "description": "Specified orbitals:",
             "help_text": (
-                "Which file 'Initial guess' = 'Specified wavefunction' reads "
+                "Which file 'Initial guess' = 'Specified orbitals' reads "
                 "from. Same rules as 'Checkpoint name': 'default' derives "
                 "the label automatically from this system's composition, "
                 "charge, and multiplicity, matching what a step upstream "
                 "saved with 'Save orbital checkpoint' left on 'default'; a "
                 "bare name looks in this job's 'checkpoints' folder; an "
-                "absolute path is used as-is."
+                "absolute path is used as-is. This is the one field that "
+                "may also point at ANOTHER job (reading only -- a job "
+                "cannot write into another job): 'job://<job number>/<name>' "
+                "-- or 'job://<job number>/default' to pick up that other "
+                "job's auto-derived name for this same system, when you do "
+                "not know what it resolved to."
             ),
         },
         "extra keywords": {
