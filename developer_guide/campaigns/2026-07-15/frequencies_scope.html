@@ -2,13 +2,13 @@
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="../" >
+<html lang="en" data-content_root="../../../" >
 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer Documentation &#8212; SEAMM ORCA Plug-in 2026.7.28 documentation</title>
+    <title>Frequencies sub-step and &lt;HESSIAN – scope and design &#8212; SEAMM ORCA Plug-in 2026.7.28 documentation</title>
   
   
   
@@ -27,40 +27,40 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=c224919a" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=197c1917"></script>
-    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guide/index';</script>
+    <script src="../../../_static/documentation_options.js?v=197c1917"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guide/campaigns/2026-07-15/frequencies_scope';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
-    <link rel="prev" title="User Guide" href="../user_guide/index.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="YYYY-MM-DD Initial development campaign" href="../YYYY-MM-DD/index.html" />
+    <link rel="prev" title="2026-07-15 Frequencies sub-step and the &lt;HESSIAN MDI command" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2026.7.28" />
   
     
-    <script src="../_static/searchtools.js"></script>
-    <script src="../_static/language_data.js"></script>
-    <script src="../searchindex.js"></script>
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
   
   </head>
   <body data-default-mode="">
@@ -80,7 +80,7 @@
   <dialog id="pst-search-dialog">
     
 <form class="bd-search d-flex align-items-center"
-      action="../search.html"
+      action="../../../search.html"
       method="get">
   <i class="fa-solid fa-magnifying-glass"></i>
   <input type="search"
@@ -116,7 +116,7 @@
     
   
 
-<a class="navbar-brand logo" href="../index.html">
+<a class="navbar-brand logo" href="../../../index.html">
   
   
   
@@ -127,8 +127,8 @@
       
     
     
-    <img src="../_static/SEAMM logo.png" class="logo__image only-light" alt=""/>
-    <img src="../_static/SEAMM Inverted 288x181.png" class="logo__image only-dark pst-js-only" alt=""/>
+    <img src="../../../_static/SEAMM logo.png" class="logo__image only-light" alt=""/>
+    <img src="../../../_static/SEAMM Inverted 288x181.png" class="logo__image only-dark pst-js-only" alt=""/>
   
   
     <p class="title logo__title">ORCA</p>
@@ -146,28 +146,28 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../getting_started/index.html">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
     Getting Started
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../user_guide/index.html">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
     User Guide
   </a>
 </li>
 
 
 <li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+  <a class="nav-link nav-internal" href="../../index.html">
     Developer Documentation
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
+  <a class="nav-link nav-internal" href="../../../api/index.html">
     API Documentation
   </a>
 </li>
@@ -181,14 +181,14 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="../authors.html">
+  <a class="nav-link dropdown-item nav-internal" href="../../../authors.html">
     Development Team
   </a>
 </li>
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="../history.html">
+  <a class="nav-link dropdown-item nav-internal" href="../../../history.html">
     History
   </a>
 </li>
@@ -324,42 +324,42 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../getting_started/index.html">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
     Getting Started
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../user_guide/index.html">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
     User Guide
   </a>
 </li>
 
 
 <li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+  <a class="nav-link nav-internal" href="../../index.html">
     Developer Documentation
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
+  <a class="nav-link nav-internal" href="../../../api/index.html">
     API Documentation
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../authors.html">
+  <a class="nav-link nav-internal" href="../../../authors.html">
     Development Team
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../history.html">
+  <a class="nav-link nav-internal" href="../../../history.html">
     History
   </a>
 </li>
@@ -454,22 +454,22 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="campaigns/index.html">Campaigns</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="campaigns/2026-07-09/index.html">2026-07-09 BSSE (counterpoise) sub-step</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="campaigns/2026-07-09/bsse_scope.html">BSSE sub-step – scope and design</a></li>
-<li class="toctree-l3"><a class="reference internal" href="campaigns/2026-07-09/NOTES_implementation.html">Implementation notes</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="campaigns/2026-07-15/index.html">2026-07-15 Frequencies sub-step and the &lt;HESSIAN MDI command</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="campaigns/2026-07-15/frequencies_scope.html">Frequencies sub-step and &lt;HESSIAN – scope and design</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Campaigns</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../2026-07-09/index.html">2026-07-09 BSSE (counterpoise) sub-step</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../2026-07-09/bsse_scope.html">BSSE sub-step – scope and design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../2026-07-09/NOTES_implementation.html">Implementation notes</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="campaigns/YYYY-MM-DD/index.html">YYYY-MM-DD Initial development campaign</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">2026-07-15 Frequencies sub-step and the &lt;HESSIAN MDI command</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Frequencies sub-step and &lt;HESSIAN – scope and design</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../YYYY-MM-DD/index.html">YYYY-MM-DD Initial development campaign</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
 </ul>
 </details></li>
 </ul>
@@ -510,11 +510,20 @@
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
-      <a href="../index.html" class="nav-link" aria-label="Home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Developer Documentation</span></li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Developer Documentation</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Campaigns</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">2026-07-15 Frequencies sub-step and the &lt;HESSIAN MDI command</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Frequencies sub-step and &lt;HESSIAN – scope and design</span></li>
   </ul>
 </nav>
 </div>
@@ -531,44 +540,92 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="developer-documentation">
-<h1>Developer Documentation<a class="headerlink" href="#developer-documentation" title="Link to this heading">#</a></h1>
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#stable-release">Stable release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#from-sources">From sources</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#tips">Tips</a></li>
-</ul>
-</li>
-</ul>
-</div>
-<section id="campaigns">
-<h2>Campaigns<a class="headerlink" href="#campaigns" title="Link to this heading">#</a></h2>
-<p>Notes for development campaigns</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="campaigns/index.html">Campaigns</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="campaigns/index.html#initial-suggestion">Initial Suggestion</a></li>
-</ul>
-</li>
-</ul>
-</div>
+  <section id="frequencies-sub-step-and-hessian-scope-and-design">
+<h1>Frequencies sub-step and &lt;HESSIAN – scope and design<a class="headerlink" href="#frequencies-sub-step-and-hessian-scope-and-design" title="Link to this heading">#</a></h1>
+<section id="goal">
+<h2>Goal<a class="headerlink" href="#goal" title="Link to this heading">#</a></h2>
+<p>Two related additions to the ORCA plug-in:</p>
+<ol class="arabic simple">
+<li><p>A <strong>Frequencies</strong> sub-step (a subclass of Energy) that runs ORCA’s <code class="docutils literal notranslate"><span class="pre">Freq</span></code>
+(analytic <code class="docutils literal notranslate"><span class="pre">AnFreq</span></code>) or <code class="docutils literal notranslate"><span class="pre">NumFreq</span></code> (numerical) second derivatives and
+reports the Hessian, harmonic vibrational frequencies, IR intensities, and
+the thermochemistry (zero-point energy, enthalpy, entropy, Gibbs free energy)
+at a chosen temperature. Imaginary frequencies are reported and flagged.</p></li>
+<li><p>A custom <strong>``&lt;HESSIAN``</strong> MDI command on the ORCA MDI engine that returns the
+analytic Cartesian Hessian, so a driver holding a <em>warm</em> engine can pull the
+Hessian without a fresh process launch.</p></li>
+</ol>
+<p>The immediate driver is the <code class="docutils literal notranslate"><span class="pre">normal_mode_sampling_step</span></code> plug-in, which samples
+the normal-mode space of a molecule and needs the Hessian at the optimized
+monomer. It obtains that Hessian through <code class="docutils literal notranslate"><span class="pre">seamm_mdi.MDIEngine</span></code>: an analytic
+Hessian over <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> when the engine offers one, otherwise a
+finite-difference of the forces over the same warm engine.</p>
 </section>
-<section id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">#</a></h2>
+<section id="the-frequencies-sub-step">
+<h2>The Frequencies sub-step<a class="headerlink" href="#the-frequencies-sub-step" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Freq</span></code>/<code class="docutils literal notranslate"><span class="pre">NumFreq</span></code> appended to the Energy input; ORCA writes the mass-weighted
+Hessian to <code class="docutils literal notranslate"><span class="pre">orca.hess</span></code> and the vibrational analysis to <code class="docutils literal notranslate"><span class="pre">orca.out</span></code>. Beyond the
+frequencies and IR intensities, the step reports the <strong>largest of the 5 or 6
+nominally-zero translation/rotation frequencies</strong> as a gauge of the numerical
+quality of the Hessian – computed from the raw, un-projected <code class="docutils literal notranslate"><span class="pre">orca.hess</span></code> (ORCA
+prints those modes as exactly <code class="docutils literal notranslate"><span class="pre">0.00</span></code>, which hides the real residual). It writes
+<code class="docutils literal notranslate"><span class="pre">frequencies.csv</span></code> and an <code class="docutils literal notranslate"><span class="pre">IR_spectrum.graph</span></code> (stick + Lorentzian-broadened
+trace), and honours the standard Structure-handling options.</p>
+</section>
+<section id="the-hessian-mdi-command">
+<h2>The &lt;HESSIAN MDI command<a class="headerlink" href="#the-hessian-mdi-command" title="Link to this heading">#</a></h2>
+<p>The bundled engine <code class="docutils literal notranslate"><span class="pre">data/orca_mdi.py</span></code> answers <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> by running an
+<code class="docutils literal notranslate"><span class="pre">!</span> <span class="pre">AnFreq</span></code> job for the current geometry, parsing <code class="docutils literal notranslate"><span class="pre">orca.hess</span></code>, and sending the
+<strong>3N x 3N Cartesian Hessian in hartree/bohr^2, row-major</strong>. The result is cached
+and invalidated when the geometry, charge, or multiplicity changes, so repeated
+requests at one point are free.</p>
+</section>
+<section id="truthful-capability-advertising-the-key-design-decision">
+<h2>Truthful capability advertising (the key design decision)<a class="headerlink" href="#truthful-capability-advertising-the-key-design-decision" title="Link to this heading">#</a></h2>
+<p>MDI has no standard Hessian node, so a driver must <em>discover</em> the capability at
+run time (<code class="docutils literal notranslate"><span class="pre">MDI_Check_Command_Exists</span></code> / <code class="docutils literal notranslate"><span class="pre">MDIEngine.supports(&quot;&lt;HESSIAN&quot;)</span></code>). For
+that discovery to be trustworthy, <strong>the engine advertises ``&lt;HESSIAN`` only when
+ORCA genuinely has an analytic Hessian for the method</strong>:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="../genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="../py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="../search.html"><span class="std std-ref">Search Page</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_mdi_engine_command</span></code> passes <code class="docutils literal notranslate"><span class="pre">--hessian</span> <span class="pre">yes/no</span></code> from
+<code class="xref py py-func docutils literal notranslate"><span class="pre">method_has_analytic_hessian()</span></code>;</p></li>
+<li><p>HF, MP2, and the ordinary DFT functionals have an analytic Hessian -&gt; advertise;</p></li>
+<li><p><strong>double hybrids</strong> (e.g. revDSD-PBEP86-D4) have an analytic <em>gradient</em> but <strong>no
+analytic Hessian</strong> (they need <code class="docutils literal notranslate"><span class="pre">NumFreq</span></code>) -&gt; do <strong>not</strong> advertise;</p></li>
+<li><p><strong>(DLPNO-)CCSD(T)</strong> and the non-self-consistent double hybrids have neither -&gt;
+do not advertise.</p></li>
+</ul>
+<p>An earlier iteration advertised <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> unconditionally and let <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code>
+degrade to a numerical Hessian when no analytic one existed. That was a bad
+design: the capability check lied, and a driver expecting a cheap analytic
+Hessian could unknowingly trigger a ruinously expensive <code class="docutils literal notranslate"><span class="pre">NumFreq</span></code> (catastrophic
+for coupled cluster). The engine now <strong>never silently falls back to NumFreq over
+MDI</strong> – if it does not advertise <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code>, the driver sees <code class="docutils literal notranslate"><span class="pre">supports()</span></code>
+return <code class="docutils literal notranslate"><span class="pre">False</span></code> and finite-differences the forces itself (its own explicit,
+visible choice). Use the Frequencies <em>sub-step</em> when a numerical Hessian is
+actually wanted.</p>
+</section>
+<section id="cross-repo-pieces-all-released-2026-07-15-16">
+<h2>Cross-repo pieces (all released 2026-07-15/16)<a class="headerlink" href="#cross-repo-pieces-all-released-2026-07-15-16" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>orca_step 2026.7.15</strong> – Frequencies sub-step + the <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> engine
+command (this campaign); <strong>2026.7.16</strong> – structure handling, kJ/mol units,
+the zero-mode residual, the IR-spectrum graph.</p></li>
+<li><p><strong>seamm-mdi 2026.7.15</strong> – consumer side: <code class="docutils literal notranslate"><span class="pre">MDIEngine.supports(command)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">MDIEngine.hessian()</span></code> (returns the 3N x 3N Hessian; raises
+<code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> when <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> is not advertised).</p></li>
+<li><p><strong>normal_mode_sampling_step 2026.7.15</strong> – the driver: gates on
+<code class="docutils literal notranslate"><span class="pre">supports(&quot;&lt;HESSIAN&quot;)</span></code> and uses the analytic Hessian, else FD of the forces.</p></li>
+</ul>
+</section>
+<section id="back-pointers">
+<h2>Back-pointers<a class="headerlink" href="#back-pointers" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Science spec: <code class="docutils literal notranslate"><span class="pre">~/Sites/mlff-training/2026-07-15_water-mlff-training-plan/</span></code>
+(decision #2), which now records that the sampling step and this Hessian path
+are released.</p></li>
+<li><p>Consumer design: the <code class="docutils literal notranslate"><span class="pre">normal_mode_sampling_step</span></code> campaign
+(<code class="docutils literal notranslate"><span class="pre">docs/developer_guide/campaigns/2026-07-15/</span></code> in that repo).</p></li>
 </ul>
 </section>
 </section>
@@ -584,20 +641,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../user_guide/index.html"
+       href="index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">User Guide</p>
+        <p class="prev-next-title">2026-07-15 Frequencies sub-step and the &lt;HESSIAN MDI command</p>
       </div>
     </a>
     <a class="right-next"
-       href="installation.html"
+       href="../YYYY-MM-DD/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Installation</p>
+        <p class="prev-next-title">YYYY-MM-DD Initial development campaign</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -620,15 +677,19 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#campaigns">Campaigns</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices-and-tables">Indices and tables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#goal">Goal</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-frequencies-sub-step">The Frequencies sub-step</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-hessian-mdi-command">The &lt;HESSIAN MDI command</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#truthful-capability-advertising-the-key-design-decision">Truthful capability advertising (the key design decision)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-repo-pieces-all-released-2026-07-15-16">Cross-repo pieces (all released 2026-07-15/16)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#back-pointers">Back-pointers</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/developer_guide/index.rst.txt">
+    <a href="../../../_sources/developer_guide/campaigns/2026-07-15/frequencies_scope.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -647,8 +708,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">

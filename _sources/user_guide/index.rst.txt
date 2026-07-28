@@ -174,6 +174,108 @@ See the ORCA manual's `basis-set section
 <https://orca-manual.mpi-muelheim.mpg.de/contents/essentialelements/basisset.html>`_
 for the full discussion of linear dependence and its automatic removal.
 
+Initial guess and wavefunction restart
+=======================================
+
+Single atoms and open-shell transition metals are often the hardest systems to
+converge -- a superposition of atomic densities (ORCA's default ``SAD`` guess)
+has little meaning for one atomic center, and can converge to the wrong
+electronic state entirely. The **Initial guess** control sets ORCA's SCF
+starting guess (``Guess`` in the ``%scf`` block):
+
+* ``default`` -- leave ORCA's own default.
+* ``Hueckel``, ``HCore``, ``PAtom``, ``PModel``, ``SAD``, ``SADNO`` -- ORCA's
+  built-in guess types. ``PModel`` is often much more stable than ``SAD`` for a
+  single atom or ion.
+* **Previous wavefunction** -- seed from the orbitals (``orca.gbw``) left by the
+  *nearest earlier ORCA step in this flowchart* -- for example, run a cheap,
+  robust functional (``PBE``) immediately before a fragile double-hybrid
+  (``REVDSD-PBEP86-D4/2021``) on the same atom, and turn this on for the
+  double-hybrid step. This only reaches a *different, preceding* node in a
+  roughly linear flowchart -- it cannot seed across iterations of a **Loop**,
+  since a Loop gives each iteration its own directory (see below).
+* **Specified orbitals** -- seed from a named checkpoint file instead, named by
+  the **Specified orbitals** control revealed underneath. This is the way to
+  seed across loop iterations: for example, a basis-set escalation inside a
+  Loop over basis sets, where each iteration reads the checkpoint the
+  *previous* iteration (a smaller basis) wrote.
+
+Either wavefunction choice reveals **If wavefunction not found**, controlling
+what happens when there is nothing to read (e.g. the very first ORCA step, or
+the first pass through a basis-set-escalation loop): ``Throw an error`` (the
+default -- an explicit wavefunction request that cannot be honored is treated
+as a configuration problem) or one of the ``Use ... guess`` choices, which
+falls back to that guess type instead. Set this to a fallback guess to make
+"Specified orbitals" safe to leave on for every iteration of a loop.
+
+.. note::
+
+   **ORCA projects across basis sets.** ``MORead`` is not limited to restarting
+   with the *same* basis set -- when the checkpoint's basis differs from the
+   current job's, ORCA projects the old orbitals onto the new basis (the same
+   trick ORCA's own ``Extrapolate`` (CBS) keyword uses internally). So this also
+   works for a basis-set escalation, not just same-basis restarts across
+   different functionals. It should still be the same atom/system in the same
+   electronic state (charge and multiplicity) -- MORead supplies starting
+   orbitals, it does not reinterpret the electronic state.
+
+Saving a checkpoint for a later step to read is a separate pair of controls:
+
+* **Save orbital checkpoint** -- ``yes`` copies this run's converged orbitals to
+  the file named by **Checkpoint name**, revealed underneath, once the run
+  finishes successfully.
+* **Checkpoint name** and **Specified orbitals** both resolve the same way:
+  ``default`` (the default value of each) derives a label automatically from
+  the system's composition, charge, and multiplicity (e.g. ``Co_q0_m4``) -- the
+  usual choice, since it naturally gives one checkpoint per atom/electronic
+  state, shared across an inner loop (e.g. over basis sets) for that atom, and
+  reset automatically when an outer loop moves to a new atom. Any other bare
+  name is stored under a ``checkpoints`` folder at the top of the job; an
+  absolute path is used as-is, e.g. to keep a checkpoint outside this job and
+  reuse it across separate flowchart runs.
+
+.. note::
+
+   **Reading a checkpoint from another job.** Only **Specified orbitals** can
+   reference *another* job -- ``job://<job number>/<name>`` -- since a job
+   must never write into another job (so this is not available for
+   **Checkpoint name**). Use ``job://<job number>/default`` when you want that
+   other job's own auto-derived name for this same system but do not know
+   what it resolved to -- for example, ``job://53/default`` picks up whatever
+   ``Co_q0_m4``-style label job 53 auto-derived for this atom. This needs
+   SEAMM's managed ``Jobs/<project>/Job_NNNNNN`` directory layout (i.e. jobs
+   run through the dashboard/JobServer, not a bare local run) to locate the
+   other job.
+
+For a basis-set-escalation loop (e.g. looping ``def2-SVP`` -> ``def2-TZVP`` ->
+``def2-QZVP`` for one atom), turn on both **Save orbital checkpoint** and
+**Initial guess** = **Specified orbitals** (leaving **Checkpoint name** /
+**Specified orbitals** on ``default`` so they agree automatically), and set
+**If wavefunction not found** to a fallback guess so the first iteration -- which
+has nothing to read yet -- does not error. Loop from the smallest basis to the
+largest: projecting a converged small-basis density up into a larger virtual
+space is cheap and well-conditioned, which is the direction ORCA's own CBS
+extrapolation uses internally.
+
+Extra keywords and extra ORCA blocks
+=====================================
+
+Two free-text escape hatches cover anything without a dedicated control:
+
+* **Extra keywords** -- additional ORCA ``!`` keywords, appended after
+  everything the other controls generate (e.g. ``RIJCOSX``, ``NoFrozenCore``,
+  ``SlowConv``).
+* **Extra ORCA blocks** -- literal ORCA input (one or more ``%`` blocks),
+  inserted verbatim right before the geometry, after the blocks the controls
+  above generate. Use this for one-off SCF-stabilization tricks with no
+  dedicated control, for example on a difficult atom::
+
+     %scf
+       MaxIter 400
+       Shift Shift 0.3 ErrStart 0.05 end
+       DIISBfac 1.1
+     end
+
 Energies, gradients, and forces
 ===============================
 

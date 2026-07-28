@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.16 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.7.28 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=f84e4e00"></script>
+    <script src="../_static/documentation_options.js?v=197c1917"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.16" />
+  <meta name="docsearch:version" content="2026.7.28" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -667,6 +667,108 @@ can vary discontinuously from one structure to the next.</p>
 <p>See the ORCA manual’s <a class="reference external" href="https://orca-manual.mpi-muelheim.mpg.de/contents/essentialelements/basisset.html">basis-set section</a>
 for the full discussion of linear dependence and its automatic removal.</p>
 </section>
+<section id="initial-guess-and-wavefunction-restart">
+<h2>Initial guess and wavefunction restart<a class="headerlink" href="#initial-guess-and-wavefunction-restart" title="Link to this heading">#</a></h2>
+<p>Single atoms and open-shell transition metals are often the hardest systems to
+converge – a superposition of atomic densities (ORCA’s default <code class="docutils literal notranslate"><span class="pre">SAD</span></code> guess)
+has little meaning for one atomic center, and can converge to the wrong
+electronic state entirely. The <strong>Initial guess</strong> control sets ORCA’s SCF
+starting guess (<code class="docutils literal notranslate"><span class="pre">Guess</span></code> in the <code class="docutils literal notranslate"><span class="pre">%scf</span></code> block):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> – leave ORCA’s own default.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Hueckel</span></code>, <code class="docutils literal notranslate"><span class="pre">HCore</span></code>, <code class="docutils literal notranslate"><span class="pre">PAtom</span></code>, <code class="docutils literal notranslate"><span class="pre">PModel</span></code>, <code class="docutils literal notranslate"><span class="pre">SAD</span></code>, <code class="docutils literal notranslate"><span class="pre">SADNO</span></code> – ORCA’s
+built-in guess types. <code class="docutils literal notranslate"><span class="pre">PModel</span></code> is often much more stable than <code class="docutils literal notranslate"><span class="pre">SAD</span></code> for a
+single atom or ion.</p></li>
+<li><p><strong>Previous wavefunction</strong> – seed from the orbitals (<code class="docutils literal notranslate"><span class="pre">orca.gbw</span></code>) left by the
+<em>nearest earlier ORCA step in this flowchart</em> – for example, run a cheap,
+robust functional (<code class="docutils literal notranslate"><span class="pre">PBE</span></code>) immediately before a fragile double-hybrid
+(<code class="docutils literal notranslate"><span class="pre">REVDSD-PBEP86-D4/2021</span></code>) on the same atom, and turn this on for the
+double-hybrid step. This only reaches a <em>different, preceding</em> node in a
+roughly linear flowchart – it cannot seed across iterations of a <strong>Loop</strong>,
+since a Loop gives each iteration its own directory (see below).</p></li>
+<li><p><strong>Specified orbitals</strong> – seed from a named checkpoint file instead, named by
+the <strong>Specified orbitals</strong> control revealed underneath. This is the way to
+seed across loop iterations: for example, a basis-set escalation inside a
+Loop over basis sets, where each iteration reads the checkpoint the
+<em>previous</em> iteration (a smaller basis) wrote.</p></li>
+</ul>
+<p>Either wavefunction choice reveals <strong>If wavefunction not found</strong>, controlling
+what happens when there is nothing to read (e.g. the very first ORCA step, or
+the first pass through a basis-set-escalation loop): <code class="docutils literal notranslate"><span class="pre">Throw</span> <span class="pre">an</span> <span class="pre">error</span></code> (the
+default – an explicit wavefunction request that cannot be honored is treated
+as a configuration problem) or one of the <code class="docutils literal notranslate"><span class="pre">Use</span> <span class="pre">...</span> <span class="pre">guess</span></code> choices, which
+falls back to that guess type instead. Set this to a fallback guess to make
+“Specified orbitals” safe to leave on for every iteration of a loop.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>ORCA projects across basis sets.</strong> <code class="docutils literal notranslate"><span class="pre">MORead</span></code> is not limited to restarting
+with the <em>same</em> basis set – when the checkpoint’s basis differs from the
+current job’s, ORCA projects the old orbitals onto the new basis (the same
+trick ORCA’s own <code class="docutils literal notranslate"><span class="pre">Extrapolate</span></code> (CBS) keyword uses internally). So this also
+works for a basis-set escalation, not just same-basis restarts across
+different functionals. It should still be the same atom/system in the same
+electronic state (charge and multiplicity) – MORead supplies starting
+orbitals, it does not reinterpret the electronic state.</p>
+</div>
+<p>Saving a checkpoint for a later step to read is a separate pair of controls:</p>
+<ul class="simple">
+<li><p><strong>Save orbital checkpoint</strong> – <code class="docutils literal notranslate"><span class="pre">yes</span></code> copies this run’s converged orbitals to
+the file named by <strong>Checkpoint name</strong>, revealed underneath, once the run
+finishes successfully.</p></li>
+<li><p><strong>Checkpoint name</strong> and <strong>Specified orbitals</strong> both resolve the same way:
+<code class="docutils literal notranslate"><span class="pre">default</span></code> (the default value of each) derives a label automatically from
+the system’s composition, charge, and multiplicity (e.g. <code class="docutils literal notranslate"><span class="pre">Co_q0_m4</span></code>) – the
+usual choice, since it naturally gives one checkpoint per atom/electronic
+state, shared across an inner loop (e.g. over basis sets) for that atom, and
+reset automatically when an outer loop moves to a new atom. Any other bare
+name is stored under a <code class="docutils literal notranslate"><span class="pre">checkpoints</span></code> folder at the top of the job; an
+absolute path is used as-is, e.g. to keep a checkpoint outside this job and
+reuse it across separate flowchart runs.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Reading a checkpoint from another job.</strong> Only <strong>Specified orbitals</strong> can
+reference <em>another</em> job – <code class="docutils literal notranslate"><span class="pre">job://&lt;job</span> <span class="pre">number&gt;/&lt;name&gt;</span></code> – since a job
+must never write into another job (so this is not available for
+<strong>Checkpoint name</strong>). Use <code class="docutils literal notranslate"><span class="pre">job://&lt;job</span> <span class="pre">number&gt;/default</span></code> when you want that
+other job’s own auto-derived name for this same system but do not know
+what it resolved to – for example, <code class="docutils literal notranslate"><span class="pre">job://53/default</span></code> picks up whatever
+<code class="docutils literal notranslate"><span class="pre">Co_q0_m4</span></code>-style label job 53 auto-derived for this atom. This needs
+SEAMM’s managed <code class="docutils literal notranslate"><span class="pre">Jobs/&lt;project&gt;/Job_NNNNNN</span></code> directory layout (i.e. jobs
+run through the dashboard/JobServer, not a bare local run) to locate the
+other job.</p>
+</div>
+<p>For a basis-set-escalation loop (e.g. looping <code class="docutils literal notranslate"><span class="pre">def2-SVP</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">def2-TZVP</span></code> -&gt;
+<code class="docutils literal notranslate"><span class="pre">def2-QZVP</span></code> for one atom), turn on both <strong>Save orbital checkpoint</strong> and
+<strong>Initial guess</strong> = <strong>Specified orbitals</strong> (leaving <strong>Checkpoint name</strong> /
+<strong>Specified orbitals</strong> on <code class="docutils literal notranslate"><span class="pre">default</span></code> so they agree automatically), and set
+<strong>If wavefunction not found</strong> to a fallback guess so the first iteration – which
+has nothing to read yet – does not error. Loop from the smallest basis to the
+largest: projecting a converged small-basis density up into a larger virtual
+space is cheap and well-conditioned, which is the direction ORCA’s own CBS
+extrapolation uses internally.</p>
+</section>
+<section id="extra-keywords-and-extra-orca-blocks">
+<h2>Extra keywords and extra ORCA blocks<a class="headerlink" href="#extra-keywords-and-extra-orca-blocks" title="Link to this heading">#</a></h2>
+<p>Two free-text escape hatches cover anything without a dedicated control:</p>
+<ul>
+<li><p><strong>Extra keywords</strong> – additional ORCA <code class="docutils literal notranslate"><span class="pre">!</span></code> keywords, appended after
+everything the other controls generate (e.g. <code class="docutils literal notranslate"><span class="pre">RIJCOSX</span></code>, <code class="docutils literal notranslate"><span class="pre">NoFrozenCore</span></code>,
+<code class="docutils literal notranslate"><span class="pre">SlowConv</span></code>).</p></li>
+<li><p><strong>Extra ORCA blocks</strong> – literal ORCA input (one or more <code class="docutils literal notranslate"><span class="pre">%</span></code> blocks),
+inserted verbatim right before the geometry, after the blocks the controls
+above generate. Use this for one-off SCF-stabilization tricks with no
+dedicated control, for example on a difficult atom:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">scf</span>
+  <span class="n">MaxIter</span> <span class="mi">400</span>
+  <span class="n">Shift</span> <span class="n">Shift</span> <span class="mf">0.3</span> <span class="n">ErrStart</span> <span class="mf">0.05</span> <span class="n">end</span>
+  <span class="n">DIISBfac</span> <span class="mf">1.1</span>
+<span class="n">end</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
 <section id="energies-gradients-and-forces">
 <h2>Energies, gradients, and forces<a class="headerlink" href="#energies-gradients-and-forces" title="Link to this heading">#</a></h2>
 <p>The <strong>Results</strong> tab lists everything the step can produce. Tick a result to
@@ -981,6 +1083,8 @@ high-accuracy calculations for ordinary single-point steps.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-grid">Integration grid</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-convergence">SCF convergence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-sthresh-linear-dependence">SCF SThresh (linear dependence)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initial-guess-and-wavefunction-restart">Initial guess and wavefunction restart</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extra-keywords-and-extra-orca-blocks">Extra keywords and extra ORCA blocks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energies-gradients-and-forces">Energies, gradients, and forces</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#geometry-optimization">Geometry optimization</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#frequencies-hessian-and-thermochemistry">Frequencies (Hessian and thermochemistry)</a></li>

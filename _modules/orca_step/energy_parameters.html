@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.7.16 documentation</title>
+    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.7.28 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=f84e4e00"></script>
+    <script src="../../_static/documentation_options.js?v=197c1917"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.16" />
+  <meta name="docsearch:version" content="2026.7.28" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -702,6 +702,130 @@
                 <span class="s2">&quot;energies/forces), raise it to converge more loosely.&quot;</span>
             <span class="p">),</span>
         <span class="p">},</span>
+        <span class="s2">&quot;initial guess&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Hueckel&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;HCore&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;PAtom&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;PModel&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SAD&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;SADNO&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Previous wavefunction&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Specified orbitals&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Initial guess:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;ORCA&#39;s SCF starting guess (&#39;Guess&#39; in the &#39;</span><span class="si">%s</span><span class="s2">cf&#39; block). &quot;</span>
+                <span class="s2">&quot;&#39;default&#39; leaves ORCA&#39;s own default (SAD for most systems). &quot;</span>
+                <span class="s2">&quot;&#39;PModel&#39; is often much more stable than SAD for a single atom &quot;</span>
+                <span class="s2">&quot;or ion, where a superposition of atomic densities has little &quot;</span>
+                <span class="s2">&quot;meaning. &#39;Previous wavefunction&#39; seeds from the nearest &quot;</span>
+                <span class="s2">&quot;earlier ORCA step in this flowchart (its &#39;orca.gbw&#39;); &quot;</span>
+                <span class="s2">&quot;&#39;Specified orbitals&#39; seeds from the file named by &quot;</span>
+                <span class="s2">&quot;&#39;Specified orbitals&#39; below. Either way ORCA projects the &quot;</span>
+                <span class="s2">&quot;orbitals onto this job&#39;s basis when it differs (the same &quot;</span>
+                <span class="s2">&quot;trick its own CBS extrapolation uses internally), so this &quot;</span>
+                <span class="s2">&quot;also works across a basis-set escalation. &#39;If wavefunction &quot;</span>
+                <span class="s2">&quot;not found&#39; below controls what happens when there is &quot;</span>
+                <span class="s2">&quot;nothing to read.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;if wavefunction not found&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;Throw an error&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Throw an error&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Use default guess&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Use Hueckel guess&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Use HCore guess&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Use PAtom guess&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Use PModel guess&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Use SAD guess&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Use SADNO guess&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;If wavefunction not found:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;What to do when &#39;Initial guess&#39; above is &#39;Previous &quot;</span>
+                <span class="s2">&quot;wavefunction&#39; or &#39;Specified orbitals&#39; but nothing is &quot;</span>
+                <span class="s2">&quot;there to read (e.g. no earlier ORCA step yet, or the first &quot;</span>
+                <span class="s2">&quot;basis set of a loop where &#39;Specified orbitals&#39; has not been &quot;</span>
+                <span class="s2">&quot;written yet). &#39;Throw an error&#39; (the default) fails loudly, &quot;</span>
+                <span class="s2">&quot;matching what an explicit wavefunction request implies. &quot;</span>
+                <span class="s2">&quot;Choose one of the &#39;Use ... guess&#39; options instead to make &quot;</span>
+                <span class="s2">&quot;this safe to leave on for every iteration of a loop, e.g. &quot;</span>
+                <span class="s2">&quot;the first pass through a basis-set escalation.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;save orbital checkpoint&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;no&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;no&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Save orbital checkpoint:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;After a successful run, copy the converged orbitals &quot;</span>
+                <span class="s2">&quot;(&#39;orca.gbw&#39;) to the file named by &#39;Checkpoint name&#39; below, &quot;</span>
+                <span class="s2">&quot;for a later step to read back -- e.g. with &#39;Initial guess&#39; &quot;</span>
+                <span class="s2">&quot;= &#39;Specified orbitals&#39; there, naming the same &quot;</span>
+                <span class="s2">&quot;checkpoint via &#39;Specified orbitals&#39;. This reaches across a &quot;</span>
+                <span class="s2">&quot;later iteration of an enclosing loop (e.g. over basis sets &quot;</span>
+                <span class="s2">&quot;for the same atom), which &#39;Previous wavefunction&#39; (a &quot;</span>
+                <span class="s2">&quot;graph walk) cannot: each loop iteration gets its own &quot;</span>
+                <span class="s2">&quot;directory, so the previous iteration is not a preceding &quot;</span>
+                <span class="s2">&quot;node in the flowchart graph.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;checkpoint name&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Checkpoint name:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Where &#39;Save orbital checkpoint&#39; writes this run&#39;s orbitals. &quot;</span>
+                <span class="s2">&quot;&#39;default&#39; (the default) derives a label automatically from &quot;</span>
+                <span class="s2">&quot;the system&#39;s composition, charge, and multiplicity (e.g. &quot;</span>
+                <span class="s2">&quot;&#39;Co_q0_m4&#39;) -- the usual choice, since it naturally gives &quot;</span>
+                <span class="s2">&quot;one checkpoint per atom/electronic state, shared across an &quot;</span>
+                <span class="s2">&quot;inner loop (e.g. over basis sets) for that atom, and reset &quot;</span>
+                <span class="s2">&quot;automatically when an outer loop moves to a new atom. Any &quot;</span>
+                <span class="s2">&quot;other bare name is stored in a &#39;checkpoints&#39; folder inside &quot;</span>
+                <span class="s2">&quot;this job; an absolute path is used as-is, e.g. to keep the &quot;</span>
+                <span class="s2">&quot;checkpoint outside this job and reuse it across separate &quot;</span>
+                <span class="s2">&quot;flowchart runs.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;specified orbitals&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Specified orbitals:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Which file &#39;Initial guess&#39; = &#39;Specified orbitals&#39; reads &quot;</span>
+                <span class="s2">&quot;from. Same rules as &#39;Checkpoint name&#39;: &#39;default&#39; derives &quot;</span>
+                <span class="s2">&quot;the label automatically from this system&#39;s composition, &quot;</span>
+                <span class="s2">&quot;charge, and multiplicity, matching what a step upstream &quot;</span>
+                <span class="s2">&quot;saved with &#39;Save orbital checkpoint&#39; left on &#39;default&#39;; a &quot;</span>
+                <span class="s2">&quot;bare name looks in this job&#39;s &#39;checkpoints&#39; folder; an &quot;</span>
+                <span class="s2">&quot;absolute path is used as-is. This is the one field that &quot;</span>
+                <span class="s2">&quot;may also point at ANOTHER job (reading only -- a job &quot;</span>
+                <span class="s2">&quot;cannot write into another job): &#39;job://&lt;job number&gt;/&lt;name&gt;&#39; &quot;</span>
+                <span class="s2">&quot;-- or &#39;job://&lt;job number&gt;/default&#39; to pick up that other &quot;</span>
+                <span class="s2">&quot;job&#39;s auto-derived name for this same system, when you do &quot;</span>
+                <span class="s2">&quot;not know what it resolved to.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
         <span class="s2">&quot;extra keywords&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
@@ -713,6 +837,23 @@
                 <span class="s2">&quot;Any additional ORCA &#39;!&#39; keywords to append, e.g. &#39;RIJCOSX&#39;, &quot;</span>
                 <span class="s2">&quot;&#39;NoFrozenCore&#39;, &#39;SlowConv&#39;. The SCF tolerance and integration &quot;</span>
                 <span class="s2">&quot;grid have their own controls above.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;extra blocks&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;special&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;widget&quot;</span><span class="p">:</span> <span class="s2">&quot;seamm_widgets.LabeledText&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Extra ORCA blocks:&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Any additional literal ORCA input, inserted verbatim right &quot;</span>
+                <span class="s2">&quot;before the geometry -- after the blocks generated by the &quot;</span>
+                <span class="s2">&quot;controls above. Use this for one-off SCF-stabilization &quot;</span>
+                <span class="s2">&quot;tricks with no dedicated control, e.g. for a difficult atom:&quot;</span>
+                <span class="s2">&quot;</span><span class="se">\n</span><span class="si">%s</span><span class="s2">cf</span><span class="se">\n</span><span class="s2">  MaxIter 400</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;  Shift Shift 0.3 ErrStart 0.05 end</span><span class="se">\n</span><span class="s2">  DIISBfac 1.1</span><span class="se">\n</span><span class="s2">end&quot;</span>
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">&quot;bond orders&quot;</span><span class="p">:</span> <span class="p">{</span>

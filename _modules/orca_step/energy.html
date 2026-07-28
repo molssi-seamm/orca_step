@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.16 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.28 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=f84e4e00"></script>
+    <script src="../../_static/documentation_options.js?v=197c1917"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.16" />
+  <meta name="docsearch:version" content="2026.7.28" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -496,6 +496,7 @@
 <span class="sd">&quot;&quot;&quot;An ORCA single-point energy sub-step.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -522,6 +523,19 @@
 <span class="c1"># above, e.g. cc-pV5Z) integrate poorly on ORCA&#39;s default grid (DEFGRID2), so</span>
 <span class="c1"># when the grid is left on &#39;default&#39; the step bumps it to DEFGRID3.</span>
 <span class="n">_HIGH_ANGULAR_MOMENTUM</span> <span class="o">=</span> <span class="mi">5</span>
+
+<span class="c1"># &#39;if wavefunction not found&#39; values (other than &quot;Throw an error&quot;) -&gt; the</span>
+<span class="c1"># ORCA &#39;Guess&#39; keyword to fall back to (&quot;default&quot; emits no Guess keyword at</span>
+<span class="c1"># all, leaving ORCA&#39;s own default).</span>
+<span class="n">_FALLBACK_GUESS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;Use default guess&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Use Hueckel guess&quot;</span><span class="p">:</span> <span class="s2">&quot;Hueckel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Use HCore guess&quot;</span><span class="p">:</span> <span class="s2">&quot;HCore&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Use PAtom guess&quot;</span><span class="p">:</span> <span class="s2">&quot;PAtom&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Use PModel guess&quot;</span><span class="p">:</span> <span class="s2">&quot;PModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Use SAD guess&quot;</span><span class="p">:</span> <span class="s2">&quot;SAD&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Use SADNO guess&quot;</span><span class="p">:</span> <span class="s2">&quot;SADNO&quot;</span><span class="p">,</span>
+<span class="p">}</span>
 
 
 <div class="viewcode-block" id="Energy">
@@ -885,8 +899,10 @@
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy.Energy.extra_input">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">extra_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``(extra_blocks, extra_files)`` for the ORCA input: the BSE</span>
-<span class="sd">        basis block (if used), and directives for the optional properties</span>
-<span class="sd">        (Hirshfeld charges, polarizability).&quot;&quot;&quot;</span>
+<span class="sd">        basis block (if used), the SCF guess/convergence block, an optional</span>
+<span class="sd">        orbital-checkpoint restart, directives for the optional properties</span>
+<span class="sd">        (Hirshfeld charges, polarizability), and any user-supplied literal</span>
+<span class="sd">        blocks.&quot;&quot;&quot;</span>
         <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">files</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -898,6 +914,54 @@
             <span class="n">files</span><span class="p">[</span><span class="s2">&quot;basis.bas&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bse_basis_file</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">znums</span><span class="p">)</span>
             <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;%basis GTOName &quot;basis.bas&quot; end&#39;</span><span class="p">)</span>
 
+        <span class="c1"># SCF starting guess and convergence threshold (&#39;%scf&#39; block).</span>
+        <span class="c1"># &#39;initial guess&#39; is either a plain ORCA guess keyword, or one of two</span>
+        <span class="c1"># ways to seed from an earlier wavefunction (a graph walk to the</span>
+        <span class="c1"># previous ORCA step, or a named checkpoint file); &#39;if wavefunction</span>
+        <span class="c1"># not found&#39; controls what happens if that wavefunction isn&#39;t there.</span>
+        <span class="n">scf_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">guess</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;initial guess&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;default&quot;</span>
+        <span class="k">if</span> <span class="n">guess</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Previous wavefunction&quot;</span><span class="p">,</span> <span class="s2">&quot;Specified orbitals&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">guess</span> <span class="o">==</span> <span class="s2">&quot;Previous wavefunction&quot;</span><span class="p">:</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_previous_wavefunction</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">configuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system_configuration</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_checkpoint_path</span><span class="p">(</span>
+                    <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;specified orbitals&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">),</span>
+                    <span class="n">configuration</span><span class="p">,</span>
+                    <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">candidate</span> <span class="k">if</span> <span class="n">candidate</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">files</span><span class="p">[</span><span class="s2">&quot;orca.gbw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;%moinp &quot;orca.gbw&quot;&#39;</span><span class="p">)</span>
+                <span class="n">scf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  Guess MORead&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fallback</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;if wavefunction not found&quot;</span><span class="p">,</span> <span class="s2">&quot;Throw an error&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">fallback</span> <span class="o">==</span> <span class="s2">&quot;Throw an error&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">guess</span> <span class="o">==</span> <span class="s2">&quot;Previous wavefunction&quot;</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="s2">&quot;&#39;Initial guess&#39; is &#39;Previous wavefunction&#39;, but &quot;</span>
+                            <span class="s2">&quot;no earlier ORCA step in this flowchart left an &quot;</span>
+                            <span class="s2">&quot;&#39;orca.gbw&#39; to read. Add an ORCA Energy/&quot;</span>
+                            <span class="s2">&quot;Optimization step before this one, or change &#39;If &quot;</span>
+                            <span class="s2">&quot;wavefunction not found&#39; to a fallback guess.&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="s2">&quot;&#39;Initial guess&#39; is &#39;Specified orbitals&#39;, but the &quot;</span>
+                        <span class="s2">&quot;file named by &#39;Specified orbitals&#39; does not exist. &quot;</span>
+                        <span class="s2">&quot;Check the name (it should match an earlier step&#39;s &quot;</span>
+                        <span class="s2">&quot;&#39;Save orbital checkpoint&#39; / &#39;Checkpoint name&#39;), or &quot;</span>
+                        <span class="s2">&quot;change &#39;If wavefunction not found&#39; to a fallback &quot;</span>
+                        <span class="s2">&quot;guess.&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">resolved</span> <span class="o">=</span> <span class="n">_FALLBACK_GUESS</span><span class="p">[</span><span class="n">fallback</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">resolved</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+                    <span class="n">scf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Guess </span><span class="si">{</span><span class="n">resolved</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">guess</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+            <span class="n">scf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Guess </span><span class="si">{</span><span class="n">guess</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="c1"># SCF convergence threshold (ORCA&#39;s &#39;%scf SThresh&#39;). &#39;default&#39; emits</span>
         <span class="c1"># nothing, so the SCF-convergence preset on the &#39;!&#39; line (or ORCA&#39;s own</span>
         <span class="c1"># default) governs SThresh. Any explicit value is written out and</span>
@@ -907,19 +971,146 @@
             <span class="n">sthresh</span> <span class="o">=</span> <span class="n">sthresh</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">sthresh</span> <span class="ow">and</span> <span class="n">sthresh</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;%scf SThresh </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">sthresh</span><span class="p">)</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2"> end&quot;</span><span class="p">)</span>
+                <span class="n">scf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  SThresh </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">sthresh</span><span class="p">)</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;ORCA SThresh must be &#39;default&#39; or a number, not &#39;</span><span class="si">{</span><span class="n">sthresh</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
                 <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scf_lines</span><span class="p">:</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">cf&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">scf_lines</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">]))</span>
 
         <span class="k">if</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;Hirshfeld charges&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;no&quot;</span><span class="p">:</span>
             <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%o</span><span class="s2">utput Print[ P_Hirshfeld ] 1 end&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;polarizability&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span><span class="p">:</span>
             <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%e</span><span class="s2">lprop Polar 1 end&quot;</span><span class="p">)</span>
 
+        <span class="c1"># Any additional literal ORCA input the user typed in -- e.g. a</span>
+        <span class="c1"># one-off SCF-stabilization block (&#39;Shift&#39;, &#39;DIISBfac&#39;, ...) with no</span>
+        <span class="c1"># dedicated control above. Comes last so it can add to or follow the</span>
+        <span class="c1"># generated blocks.</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra blocks&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">extra</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">blocks</span><span class="p">),</span> <span class="n">files</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_auto_checkpoint_name</span><span class="p">(</span><span class="n">configuration</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The default &#39;checkpoint name&#39;: a label derived from the system&#39;s</span>
+<span class="sd">        composition, charge, and multiplicity, e.g. ``Co_q0_m4``.</span>
+
+<span class="sd">        This is deliberately NOT tied to any node&#39;s position in the flowchart</span>
+<span class="sd">        (unlike walking the execution graph for &quot;the previous step&#39;s output&quot;,</span>
+<span class="sd">        which cannot reach across loop iterations -- SEAMM&#39;s Loop step gives</span>
+<span class="sd">        each iteration its own directory, see ``loop_step.loop``). An outer</span>
+<span class="sd">        loop over atoms therefore gets one checkpoint per atom/electronic</span>
+<span class="sd">        state for free, shared across an inner loop (e.g. over basis sets or</span>
+<span class="sd">        methods) for that atom, and the checkpoint changes -- so does not leak</span>
+<span class="sd">        across atoms -- as soon as the outer loop advances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
+        <span class="n">formula</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">el</span><span class="si">}{</span><span class="n">n</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">el</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">formula</span><span class="si">}</span><span class="s2">_q</span><span class="si">{</span><span class="n">configuration</span><span class="o">.</span><span class="n">charge</span><span class="si">}</span><span class="s2">_m</span><span class="si">{</span><span class="n">configuration</span><span class="o">.</span><span class="n">spin_multiplicity</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_find_previous_wavefunction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The path to the &#39;orca.gbw&#39; left by the nearest earlier step in this</span>
+<span class="sd">        flowchart, for &#39;initial guess&#39; = &#39;Previous wavefunction&#39;, or None if</span>
+<span class="sd">        no earlier step left one.</span>
+
+<span class="sd">        Walks the execution graph backward (nearest first, via</span>
+<span class="sd">        ``previous_nodes``); any node type is considered -- a non-ORCA</span>
+<span class="sd">        predecessor simply has no &#39;orca.gbw&#39; in its directory and is skipped.</span>
+<span class="sd">        This only reaches a *different, preceding* node in the flowchart --</span>
+<span class="sd">        it cannot seed across iterations of the same node inside a Loop</span>
+<span class="sd">        (which gets a fresh directory each iteration; see</span>
+<span class="sd">        ``loop_step.loop``). For that, use &#39;Specified orbitals&#39; with</span>
+<span class="sd">        &#39;Save orbital checkpoint&#39; instead. Returns None (rather than</span>
+<span class="sd">        raising) when this node has no flowchart to walk, e.g. a node built</span>
+<span class="sd">        standalone for testing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">previous_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_nodes</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">previous_nodes</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">gbw</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;orca.gbw&quot;</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">gbw</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">gbw</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_checkpoint_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The orbital-checkpoint file identified by `name` -- shared by</span>
+<span class="sd">        &#39;checkpoint name&#39; (save) and &#39;specified orbitals&#39; (read).</span>
+
+<span class="sd">        &#39;default&#39; derives a label automatically from the system&#39;s</span>
+<span class="sd">        composition, charge, and multiplicity (e.g. &#39;Co_q0_m4&#39;) -- the usual</span>
+<span class="sd">        choice, since it naturally gives one checkpoint per atom/electronic</span>
+<span class="sd">        state, shared across an inner loop (e.g. over basis sets) for that</span>
+<span class="sd">        atom, and reset automatically when an outer loop moves to a new</span>
+<span class="sd">        atom. Any other bare name (or relative path) is stored under a</span>
+<span class="sd">        &#39;checkpoints&#39; directory inside this job; an absolute path (or</span>
+<span class="sd">        &#39;~/...&#39;) is used as-is, e.g. to keep a checkpoint outside this job</span>
+<span class="sd">        and reuse it across separate flowchart runs.</span>
+
+<span class="sd">        A &#39;job:&#39; reference (see ``seamm.Node.file_path``) names a checkpoint</span>
+<span class="sd">        in *another* job instead: ``job://&lt;n&gt;/&lt;name&gt;`` -- or</span>
+<span class="sd">        ``job://&lt;n&gt;/default`` to pick up that job&#39;s own auto-derived name</span>
+<span class="sd">        for this same system, when you do not know what it resolved to.</span>
+<span class="sd">        Only honored when `read_only` is True, since a job must never write</span>
+<span class="sd">        into another job&#39;s directory (see &#39;checkpoint name&#39; vs &#39;specified</span>
+<span class="sd">        orbitals&#39;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="n">job_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">root_directory</span><span class="p">)</span>
+        <span class="n">parsed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_job_reference</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parsed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">job_no</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">parsed</span>
+            <span class="k">if</span> <span class="n">job_no</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">read_only</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; refers to another job (job </span><span class="si">{</span><span class="n">job_no</span><span class="si">}</span><span class="s2">); &quot;</span>
+                        <span class="s2">&quot;only &#39;Specified orbitals&#39; can reference another &quot;</span>
+                        <span class="s2">&quot;job -- a job cannot write into another job.&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">job_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_other_job_path</span><span class="p">(</span><span class="n">job_no</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">tail</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_checkpoint_name</span><span class="p">(</span><span class="n">configuration</span><span class="p">)</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+            <span class="n">safe</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^A-Za-z0-9_.-]&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">parts</span>
+            <span class="p">)</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">job_root</span> <span class="o">/</span> <span class="s2">&quot;checkpoints&quot;</span> <span class="o">/</span> <span class="n">safe</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;.gbw&quot;</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.gbw&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">path</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save_orbital_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy this run&#39;s converged orbitals (&#39;orca.gbw&#39;) to the file named</span>
+<span class="sd">        by &#39;checkpoint name&#39; (see &#39;_resolve_checkpoint_path&#39;), for a later</span>
+<span class="sd">        step -- including a later iteration of an enclosing loop -- to read</span>
+<span class="sd">        back via &#39;initial guess&#39; = &#39;Specified orbitals&#39; /</span>
+<span class="sd">        &#39;specified orbitals&#39;.&quot;&quot;&quot;</span>
+        <span class="n">gbw</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;orca.gbw&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">gbw</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">configuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system_configuration</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_checkpoint_path</span><span class="p">(</span>
+            <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;checkpoint name&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">),</span> <span class="n">configuration</span>
+        <span class="p">)</span>
+        <span class="n">checkpoint_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">checkpoint_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">gbw</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_bse_basis_file</span><span class="p">(</span><span class="n">basis_name</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">):</span>
@@ -1030,6 +1221,9 @@
             <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span>
             <span class="n">make_wfx</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save wavefunction&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span><span class="p">,</span>
         <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save orbital checkpoint&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_orbital_checkpoint</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cite_references</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.16 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.28 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=f84e4e00"></script>
+    <script src="_static/documentation_options.js?v=197c1917"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.16" />
+  <meta name="docsearch:version" content="2026.7.28" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -545,6 +545,28 @@ the resolved model-chemistry level spec <strong>including the resolved basis</st
 (e.g. <code class="docutils literal notranslate"><span class="pre">ORCA:DFT&#64;B3LYP/def2-SVP</span></code>; the basis is appended when the spec
 itself omits it and the step fills in its own), or the explicit
 method/basis – instead of the generic “the model chemistry”.</p></li>
+<li><p>New <strong>Extra ORCA blocks</strong> control: a free-text field for one-off literal
+ORCA input (e.g. a custom <code class="docutils literal notranslate"><span class="pre">%scf</span></code> block with <code class="docutils literal notranslate"><span class="pre">Shift</span></code>/<code class="docutils literal notranslate"><span class="pre">DIISBfac</span></code>/
+<code class="docutils literal notranslate"><span class="pre">MaxIter</span></code> for a hard-to-converge atom), inserted verbatim before the
+geometry, alongside the existing <strong>Extra keywords</strong> (<code class="docutils literal notranslate"><span class="pre">!</span></code> line).</p></li>
+<li><p>New <strong>Initial guess</strong> and orbital-checkpoint controls for stabilizing SCF
+convergence on difficult systems (isolated atoms, transition metals):
+the usual ORCA guess types (<code class="docutils literal notranslate"><span class="pre">PModel</span></code>, <code class="docutils literal notranslate"><span class="pre">SAD</span></code>, <code class="docutils literal notranslate"><span class="pre">Hueckel</span></code>, …), plus
+<strong>Previous wavefunction</strong> (seed from the nearest earlier ORCA step in
+this flowchart) and <strong>Specified orbitals</strong> (seed from a named
+checkpoint file) – the latter reaches across loop iterations (e.g. a
+basis-set escalation inside a Loop), which the former cannot. <strong>If
+wavefunction not found</strong> controls what happens when there is nothing
+to read (default: raise an error). <strong>Save orbital checkpoint</strong> /
+<strong>Checkpoint name</strong> write this run’s orbitals to a named checkpoint
+(under <code class="docutils literal notranslate"><span class="pre">checkpoints/</span></code> in the job directory by default) for a later
+step to read back.</p></li>
+<li><p><strong>Specified orbitals</strong> can now also reference <em>another</em> job’s
+checkpoint (read-only – a job cannot write into another job):
+<code class="docutils literal notranslate"><span class="pre">job://&lt;job</span> <span class="pre">number&gt;/&lt;name&gt;</span></code>, or <code class="docutils literal notranslate"><span class="pre">job://&lt;job</span> <span class="pre">number&gt;/default</span></code> to
+pick up that job’s own auto-derived name for this same system, when
+you do not know what it resolved to (SEAMM’s <code class="docutils literal notranslate"><span class="pre">Node.file_path</span></code>
+gained this cross-job reference).</p></li>
 </ul>
 </dd>
 <dt>2026.7.15 – Frequencies sub-step and an MDI Hessian command</dt><dd><ul class="simple">
