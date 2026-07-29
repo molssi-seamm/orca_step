@@ -771,6 +771,69 @@ def test_consume_rejects_foreign_owner():
         )
 
 
+def test_model_string_explicit_dft():
+    """The explicit (non-model-chemistry) path composes 'type@method/basis'."""
+    node = orca_step.Energy()
+    P = {
+        "use model chemistry": "no",
+        "method": "DFT",
+        "functional": "B3LYP",
+        "basis": "def2-SVP",
+        "basis set extrapolation": "none",
+    }
+    assert node._model_string(P) == "DFT@B3LYP/def2-SVP"
+
+
+def test_model_string_explicit_non_dft():
+    """A non-DFT method (e.g. HF) is typed from metadata['methods']."""
+    node = orca_step.Energy()
+    P = {
+        "use model chemistry": "no",
+        "method": "HF",
+        "basis": "6-31G*",
+        "basis set extrapolation": "none",
+    }
+    assert node._model_string(P) == "HF@HF/6-31G*"
+
+
+def test_model_string_aliases_slash_in_functional():
+    """A functional keyword containing '/' (e.g. revDSD-PBEP86-D4/2021) is
+    aliased ('/' -> '_') so the composed string carries only the one '/'
+    that separates method from basis."""
+    node = orca_step.Energy()
+    P = {
+        "use model chemistry": "no",
+        "method": "DFT",
+        "functional": "REVDSD-PBEP86-D4/2021",
+        "basis": "def2-QZVPP",
+        "basis set extrapolation": "none",
+    }
+    assert node._model_string(P) == "DFT@REVDSD-PBEP86-D4_2021/def2-QZVPP"
+
+
+def test_model_string_from_model_chemistry():
+    """When consuming a global model chemistry, the type comes from the
+    advertised model chemistry, not the (ignored) explicit parameters."""
+    node = orca_step.Energy()
+    _stub_model_chemistry(
+        node,
+        {
+            "level": "ORCA:DFT@B3LYP/def2-TZVP",
+            "owner": "ORCA",
+            "type": "DFT",
+            "method": "B3LYP",
+            "basis": "def2-TZVP",
+        },
+    )
+    P = {
+        "use model chemistry": "yes",
+        "method": "IGNORED",
+        "basis": "IGNORED",
+        "basis set extrapolation": "none",
+    }
+    assert node._model_string(P) == "DFT@B3LYP/def2-TZVP"
+
+
 def test_bibliography_loads_libraries():
     """data/references.bib parses and the support-library + BSE entries load."""
     node = orca_step.Energy()
