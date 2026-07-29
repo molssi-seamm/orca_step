@@ -294,6 +294,19 @@ def test_extra_input_initial_guess():
     assert blocks == "%scf\n  Guess PModel\nend"
 
 
+def test_extra_input_rejects_unrecognized_guess():
+    """A stale/hand-typed 'initial guess' that is not one of ORCA's guess
+    keywords (nor 'default'/'Previous wavefunction'/'Specified orbitals')
+    raises a clear error instead of being passed through to ORCA verbatim --
+    ORCA rejects an unknown '%scf Guess' token with a bare, unhelpful "Invalid
+    assignment in SCF block" parser error. Regression test for a value from
+    before the 'Specified wavefunction' -> 'Specified orbitals' rename."""
+    node = orca_step.Energy()
+    P = {**_extra_input_base(), "initial guess": "Specified wavefunction"}
+    with pytest.raises(RuntimeError, match="Specified wavefunction"):
+        node.extra_input(P)
+
+
 def test_extra_input_guess_and_sthresh_combine():
     """Guess and SThresh land in the same '%scf' block."""
     node = orca_step.Energy()

@@ -44,6 +44,16 @@ _FALLBACK_GUESS = {
     "Use SADNO guess": "SADNO",
 }
 
+# The 'initial guess' enum entries (energy_parameters.py) that are direct ORCA
+# 'Guess' keywords, i.e. neither 'default' nor one of the two
+# wavefunction-restart choices (which take their own branch in extra_input,
+# below). Anything else reaching that branch is not a value the current GUI
+# can produce -- typically a stale value from before an enum was renamed --
+# and must not be passed through to ORCA unchecked: ORCA rejects an unknown
+# '%scf Guess' token with a bare "Invalid assignment in SCF block" error, with
+# no indication of which SEAMM control caused it.
+_ORCA_GUESS_KEYWORDS = {"Hueckel", "HCore", "PAtom", "PModel", "SAD", "SADNO"}
+
 
 class Energy(orca_step.ORCABase):
     """A single-point energy with ORCA.
@@ -457,6 +467,17 @@ class Energy(orca_step.ORCABase):
                 if resolved != "default":
                     scf_lines.append(f"  Guess {resolved}")
         elif guess != "default":
+            if guess not in _ORCA_GUESS_KEYWORDS:
+                raise RuntimeError(
+                    f"'Initial guess' is '{guess}', which is not a value ORCA "
+                    "understands as a starting guess. Valid choices are "
+                    "'default', "
+                    + ", ".join(sorted(_ORCA_GUESS_KEYWORDS))
+                    + ", 'Previous wavefunction', or 'Specified orbitals'. "
+                    "(If this flowchart predates a rename of one of these "
+                    "choices, re-select 'Initial guess' in the ORCA Energy "
+                    "step.)"
+                )
             scf_lines.append(f"  Guess {guess}")
 
         # SCF convergence threshold (ORCA's '%scf SThresh'). 'default' emits
