@@ -250,9 +250,7 @@ class BSSE(Energy):
 
         xyz_filename = "bsse.xyz"
         xyz_text = self._ghost_xyz(configuration, ghost_atoms=fragmentB)
-        compound_block, method, basis = self._compound_input(
-            P, xyz_filename, script_name
-        )
+        compound_block, _, _ = self._compound_input(P, xyz_filename, script_name)
         extra_files = {
             script_name: self._compound_script(script_name),
             xyz_filename: xyz_text,
@@ -297,7 +295,7 @@ class BSSE(Energy):
 
         # Tag stored properties with the level of theory so BSSE-corrected data
         # is distinguishable in the database.
-        self.model = f"{method}/{basis}"
+        self.model = self._model_string(P)
 
         data = {
             "success": True,

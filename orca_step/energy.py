@@ -44,6 +44,16 @@ _FALLBACK_GUESS = {
     "Use SADNO guess": "SADNO",
 }
 
+# The 'initial guess' enum entries (energy_parameters.py) that are direct ORCA
+# 'Guess' keywords, i.e. neither 'default' nor one of the two
+# wavefunction-restart choices (which take their own branch in extra_input,
+# below). Anything else reaching that branch is not a value the current GUI
+# can produce -- typically a stale value from before an enum was renamed --
+# and must not be passed through to ORCA unchecked: ORCA rejects an unknown
+# '%scf Guess' token with a bare "Invalid assignment in SCF block" error, with
+# no indication of which SEAMM control caused it.
+_ORCA_GUESS_KEYWORDS = {"Hueckel", "HCore", "PAtom", "PModel", "SAD", "SADNO"}
+
 
 class Energy(orca_step.ORCABase):
     """A single-point energy with ORCA.
@@ -457,6 +467,17 @@ class Energy(orca_step.ORCABase):
                 if resolved != "default":
                     scf_lines.append(f"  Guess {resolved}")
         elif guess != "default":
+            if guess not in _ORCA_GUESS_KEYWORDS:
+                raise RuntimeError(
+                    f"'Initial guess' is '{guess}', which is not a value ORCA "
+                    "understands as a starting guess. Valid choices are "
+                    "'default', "
+                    + ", ".join(sorted(_ORCA_GUESS_KEYWORDS))
+                    + ", 'Previous wavefunction', or 'Specified orbitals'. "
+                    "(If this flowchart predates a rename of one of these "
+                    "choices, re-select 'Initial guess' in the ORCA Energy "
+                    "step.)"
+                )
             scf_lines.append(f"  Guess {guess}")
 
         # SCF convergence threshold (ORCA's '%scf SThresh'). 'default' emits
@@ -675,6 +696,41 @@ class Energy(orca_step.ORCABase):
             basis = self._basis_name(P["basis"])
         return method, basis
 
+    def _model_string(self, P):
+        """The ``type@method[/basis]`` level of theory, for tagging stored
+        properties -- the part of the model-chemistry grammar (see
+        ``model_chemistry_step``/``model_chemistry_naming.rst``) appropriate
+        here. The full grammar also carries a driver/task/[owner], which say
+        *how* the result was produced; ``type@method/basis`` is the model
+        chemistry itself in the Pople sense, comparable across codes.
+        """
+        method, basis = self._resolve_method_basis(P)
+        if self._extrapolating(P):
+            basis = self._extrapolation_keyword(P)
+
+        use_mc = P["use model chemistry"]
+        if not isinstance(use_mc, bool):
+            use_mc = use_mc == "yes"
+        mtype = ""
+        if use_mc and self.variable_exists("_model_chemistry"):
+            mtype = (self.get_variable("_model_chemistry").get("type") or "").strip()
+        if not mtype:
+            raw_method = P["method"]
+            if raw_method in orca_step.metadata["functionals"]:
+                mtype = "DFT"
+            else:
+                mtype = (
+                    orca_step.metadata["methods"].get(raw_method, {}).get("type", "QC")
+                )
+
+        # The grammar reserves '/' inside a token; alias any that appear in the
+        # method or basis the same way the model-chemistry advertising does
+        # (see `mc_method_alias`), so the string is unambiguous on its own
+        # rather than relying on Node.model's generic '/' collapsing.
+        method = orca_step.mc_method_alias(method)
+        basis = orca_step.mc_method_alias(basis)
+        return f"{mtype}@{method}/{basis}"
+
     def run(self, keywords=None):
         """Run the single-point energy.
 
@@ -686,6 +742,7 @@ class Energy(orca_step.ORCABase):
         P = self.parameters.current_values_to_dict(
             context=seamm.flowchart_variables._data
         )
+        self.model = self._model_string(P)
 
         printer.important(__(self.description_text(P), indent=self.indent))
 

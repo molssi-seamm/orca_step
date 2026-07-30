@@ -2,6 +2,28 @@
 History
 =======
 
+2026.7.30 -- BSSE gradient guard, Initial-guess validation, and property tagging
+    * **Bugfix:** the BSSE (counterpoise) Compound script now guards against a
+      silent, long-range ghost-gradient blowup: RIJCOSX/COSX exchange
+      integrated on far, diffuse ghost basis functions can corrupt the
+      force correction at large fragment separation while the SCF energy
+      stays fine -- with no ORCA warning and no linear-dependence removal to
+      flag it. A translational-invariance check (the net force on the
+      corrected gradient must be ~0) now catches this and falls back to the
+      uncorrected supermolecule gradient for the forces; the CP-corrected
+      energy is unaffected.
+    * **Bugfix:** an unrecognized **Initial guess** value (e.g. a stale value
+      from before an earlier rename of one of the choices) is now rejected
+      with a clear error before ORCA runs, instead of being written verbatim
+      into the ``%scf`` block, where ORCA previously rejected it with an
+      opaque "Invalid assignment in SCF block" parser error.
+    * Stored properties are now tagged with the ``type@method[/basis]`` level
+      of theory -- the model-chemistry grammar's Pople-style level spec
+      (e.g. ``DFT@B3LYP/def2-SVP``) -- instead of a bare ``method/basis``
+      string. A functional keyword containing ``/`` (e.g.
+      ``revDSD-PBEP86-D4/2021``) is aliased the same way the model-chemistry
+      advertising already does, so the tag is unambiguous.
+
 2026.7.16 -- Structure handling for Optimization/Frequencies, and unit fixes
     * **Bugfix:** the optimized geometry from an **Optimization** sub-step is now
       correctly carried forward, so a following sub-step (e.g. **Frequencies**)
@@ -36,6 +58,8 @@ History
       (e.g. ``ORCA:DFT@B3LYP/def2-SVP``; the basis is appended when the spec
       itself omits it and the step fills in its own), or the explicit
       method/basis -- instead of the generic "the model chemistry".
+
+2026.7.28 -- Initial guess: wavefunction restart, extra ORCA blocks, job:// support
     * New **Extra ORCA blocks** control: a free-text field for one-off literal
       ORCA input (e.g. a custom ``%scf`` block with ``Shift``/``DIISBfac``/
       ``MaxIter`` for a hard-to-converge atom), inserted verbatim before the
