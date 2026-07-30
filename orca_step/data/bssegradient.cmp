@@ -61,6 +61,10 @@ Variable tempX = 0.0, tempY=0.0, tempZ=0.0;
 Variable ghosts;
 Variable energy = 0.0;
 Variable EnGradFile, Cartesians, atomicNumbers;
+# Translational-invariance guard (see the GUARD block below): net-force
+# accumulators and the tolerance above which the ghost gradient is deemed corrupt.
+Variable netFx = 0.0, netFy = 0.0, netFz = 0.0, netF2 = 0.0;
+Variable gradTol = 0.02;   # Eh/bohr (~1 eV/A); net |Sum F| above this => fall back to the uncorrected gradient
 # ---------------------------------------
 
 
@@ -177,6 +181,35 @@ EndFor
 gradCorrected = mat_p_mat( 1, gradTotal,      0, fragACorrection);
 gradCorrected = mat_p_mat( 1, gradCorrected, -1, fragACorrection);
 gradCorrected = mat_p_mat( 1, gradCorrected, -1, fragBCorrection);
+
+# -------------------------------------------------
+# GUARD: translational-invariance check on the BSSE-corrected gradient
+# (added 2026-07-30). The counterpoise ghost-centre gradient can blow up
+# SILENTLY -- RIJCOSX/COSX exchange integrated on far, diffuse ghost functions
+# at large fragment separation corrupts the force correction while the SCF
+# energy stays fine (no ORCA warning, no linear dependence). The tell is a
+# large net force |Sum F|, which MUST be ~0 by translational invariance. When
+# it exceeds gradTol, fall back to the uncorrected supermolecule gradient
+# (gradTotal): it is clean (no ghosts) and ~exact here, because the physical
+# BSSE force is negligible wherever this triggers (large separation). The
+# ENERGY is CP-corrected and unaffected -- only the forces fall back.
+# -------------------------------------------------
+netFx = 0.0;
+netFy = 0.0;
+netFz = 0.0;
+for iAtom from 0 to NAtoms-1 Do
+  netFx = netFx + gradCorrected[3*iAtom];
+  netFy = netFy + gradCorrected[3*iAtom+1];
+  netFz = netFz + gradCorrected[3*iAtom+2];
+EndFor
+netF2 = netFx*netFx + netFy*netFy + netFz*netFz;
+if (netF2 > gradTol*gradTol) then
+  print("\n*** WARNING: BSSE-corrected gradient fails translational invariance.\n");
+  print("***   net force (Eh/bohr) = [%.6lf %.6lf %.6lf], |SumF|^2 = %.6lf > tol^2 = %.6lf\n", netFx, netFy, netFz, netF2, gradTol*gradTol);
+  print("***   Ghost-gradient blowup detected -> using the uncorrected (supermolecule) gradient for the forces.\n\n");
+  gradCorrected = mat_p_mat(1, gradTotal, 0, gradTotal);
+endIf
+
 gradCorrection = mat_p_mat( 1, gradTotal,     -1, gradCorrected);
 energy = enTotal - (enFragA-enMonA) - (enFragB-enMonB);
 # -------------------------------------
