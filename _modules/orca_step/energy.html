@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.28 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.7.30 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=197c1917"></script>
+    <script src="../../_static/documentation_options.js?v=5e20fa5c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.28" />
+  <meta name="docsearch:version" content="2026.7.30" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -537,6 +537,16 @@
     <span class="s2">&quot;Use SADNO guess&quot;</span><span class="p">:</span> <span class="s2">&quot;SADNO&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 
+<span class="c1"># The &#39;initial guess&#39; enum entries (energy_parameters.py) that are direct ORCA</span>
+<span class="c1"># &#39;Guess&#39; keywords, i.e. neither &#39;default&#39; nor one of the two</span>
+<span class="c1"># wavefunction-restart choices (which take their own branch in extra_input,</span>
+<span class="c1"># below). Anything else reaching that branch is not a value the current GUI</span>
+<span class="c1"># can produce -- typically a stale value from before an enum was renamed --</span>
+<span class="c1"># and must not be passed through to ORCA unchecked: ORCA rejects an unknown</span>
+<span class="c1"># &#39;%scf Guess&#39; token with a bare &quot;Invalid assignment in SCF block&quot; error, with</span>
+<span class="c1"># no indication of which SEAMM control caused it.</span>
+<span class="n">_ORCA_GUESS_KEYWORDS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Hueckel&quot;</span><span class="p">,</span> <span class="s2">&quot;HCore&quot;</span><span class="p">,</span> <span class="s2">&quot;PAtom&quot;</span><span class="p">,</span> <span class="s2">&quot;PModel&quot;</span><span class="p">,</span> <span class="s2">&quot;SAD&quot;</span><span class="p">,</span> <span class="s2">&quot;SADNO&quot;</span><span class="p">}</span>
+
 
 <div class="viewcode-block" id="Energy">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy.Energy">[docs]</a>
@@ -960,6 +970,17 @@
                 <span class="k">if</span> <span class="n">resolved</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
                     <span class="n">scf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Guess </span><span class="si">{</span><span class="n">resolved</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">guess</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">guess</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ORCA_GUESS_KEYWORDS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;Initial guess&#39; is &#39;</span><span class="si">{</span><span class="n">guess</span><span class="si">}</span><span class="s2">&#39;, which is not a value ORCA &quot;</span>
+                    <span class="s2">&quot;understands as a starting guess. Valid choices are &quot;</span>
+                    <span class="s2">&quot;&#39;default&#39;, &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_ORCA_GUESS_KEYWORDS</span><span class="p">))</span>
+                    <span class="o">+</span> <span class="s2">&quot;, &#39;Previous wavefunction&#39;, or &#39;Specified orbitals&#39;. &quot;</span>
+                    <span class="s2">&quot;(If this flowchart predates a rename of one of these &quot;</span>
+                    <span class="s2">&quot;choices, re-select &#39;Initial guess&#39; in the ORCA Energy &quot;</span>
+                    <span class="s2">&quot;step.)&quot;</span>
+                <span class="p">)</span>
             <span class="n">scf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Guess </span><span class="si">{</span><span class="n">guess</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># SCF convergence threshold (ORCA&#39;s &#39;%scf SThresh&#39;). &#39;default&#39; emits</span>
@@ -1179,6 +1200,41 @@
             <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;basis&quot;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="n">basis</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_model_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The ``type@method[/basis]`` level of theory, for tagging stored</span>
+<span class="sd">        properties -- the part of the model-chemistry grammar (see</span>
+<span class="sd">        ``model_chemistry_step``/``model_chemistry_naming.rst``) appropriate</span>
+<span class="sd">        here. The full grammar also carries a driver/task/[owner], which say</span>
+<span class="sd">        *how* the result was produced; ``type@method/basis`` is the model</span>
+<span class="sd">        chemistry itself in the Pople sense, comparable across codes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+            <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolation_keyword</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+
+        <span class="n">use_mc</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;use model chemistry&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">use_mc</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">use_mc</span> <span class="o">=</span> <span class="n">use_mc</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
+        <span class="n">mtype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">use_mc</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_exists</span><span class="p">(</span><span class="s2">&quot;_model_chemistry&quot;</span><span class="p">):</span>
+            <span class="n">mtype</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;_model_chemistry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mtype</span><span class="p">:</span>
+            <span class="n">raw_method</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">raw_method</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;functionals&quot;</span><span class="p">]:</span>
+                <span class="n">mtype</span> <span class="o">=</span> <span class="s2">&quot;DFT&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mtype</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;methods&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">raw_method</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;QC&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="c1"># The grammar reserves &#39;/&#39; inside a token; alias any that appear in the</span>
+        <span class="c1"># method or basis the same way the model-chemistry advertising does</span>
+        <span class="c1"># (see `mc_method_alias`), so the string is unambiguous on its own</span>
+        <span class="c1"># rather than relying on Node.model&#39;s generic &#39;/&#39; collapsing.</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">mc_method_alias</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">mc_method_alias</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mtype</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span>
+
 <div class="viewcode-block" id="Energy.run">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy.Energy.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keywords</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1192,6 +1248,7 @@
         <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">current_values_to_dict</span><span class="p">(</span>
             <span class="n">context</span><span class="o">=</span><span class="n">seamm</span><span class="o">.</span><span class="n">flowchart_variables</span><span class="o">.</span><span class="n">_data</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_string</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
 
         <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span><span class="n">__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">description_text</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span><span class="p">))</span>
 
