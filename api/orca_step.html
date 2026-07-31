@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.30.1 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.31 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=6a84fa41"></script>
+    <script src="../_static/documentation_options.js?v=fa587e45"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.30.1" />
+  <meta name="docsearch:version" content="2026.7.31" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -550,7 +550,8 @@ and the Phase-1 scope boundaries.</p>
 <dt class="sig sig-object py" id="orca_step.bsse.BSSE.analyze">
 <span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/bsse.html#BSSE.analyze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.bsse.BSSE.analyze" title="Link to this definition">#</a></dt>
 <dd><p>Store and report the corrected energy, the uncorrected energy, the
-BSSE correction, and the corrected gradient.</p>
+BSSE correction, the corrected gradient, and the formation-referenced
+DfE0 computed from the corrected energy.</p>
 <p>Unlike Energy, this does NOT parse orca.out for the usual properties:
 with a Compound job orca.out holds the sub-calculations, whose
 per-fragment properties would be misleading. Only the corrected
