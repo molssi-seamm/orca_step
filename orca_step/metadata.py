@@ -298,6 +298,24 @@ metadata["results"] = {
         "type": "float",
         "units": "E_h",
     },
+    "interaction energy": {
+        "description": "The counterpoise (BSSE) corrected interaction "
+        "(binding) energy of the complex relative to the separated monomers",
+        "dimensionality": "scalar",
+        "calculation": ["bsse"],
+        "property": "interaction energy#ORCA#{model}",
+        "type": "float",
+        "units": "kJ/mol",
+    },
+    "uncorrected interaction energy": {
+        "description": "The uncorrected interaction (binding) energy of the "
+        "complex relative to the separated monomers",
+        "dimensionality": "scalar",
+        "calculation": ["bsse"],
+        "property": "uncorrected interaction energy#ORCA#{model}",
+        "type": "float",
+        "units": "kJ/mol",
+    },
     "frequencies": {
         "description": "The harmonic vibrational frequencies",
         "dimensionality": ["n_dof"],

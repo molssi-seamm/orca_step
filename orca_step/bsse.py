@@ -24,6 +24,7 @@ from tabulate import tabulate
 import orca_step
 from .energy import Energy
 import seamm
+from seamm_util import Q_
 from seamm_util.printing import FormattedText as __
 import seamm_util.printing as printing
 
@@ -293,6 +294,19 @@ class BSSE(Energy):
         e_fragA, e_monA, e_fragB, e_monB, e_total = energies
         corrected = e_total - (e_fragA - e_monA) - (e_fragB - e_monB)
 
+        # The interaction (binding) energy of the complex relative to the two
+        # SEPARATED monomers -- a different reference point from `corrected`
+        # above, which is the BSSE-corrected TOTAL energy of the complex on
+        # the same absolute scale as `e_total`. Uncorrected: each monomer in
+        # its own (ghost-free) basis, at its geometry in the complex.
+        # CP-corrected: each fragment computed in the full dimer basis (the
+        # ghost-augmented calculations already run for the energy correction
+        # above), which is algebraically identical to
+        # `uncorrected interaction energy + bsse correction`. In kJ/mol, the
+        # conventional unit for a binding/interaction energy.
+        uncorrected_interaction = Q_(e_total - e_monA - e_monB, "E_h").m_as("kJ/mol")
+        corrected_interaction = Q_(e_total - e_fragA - e_fragB, "E_h").m_as("kJ/mol")
+
         # Tag stored properties with the level of theory so BSSE-corrected data
         # is distinguishable in the database.
         self.model = self._model_string(P)
@@ -302,6 +316,8 @@ class BSSE(Energy):
             "energy": corrected,
             "uncorrected energy": e_total,
             "bsse correction": corrected - e_total,
+            "interaction energy": corrected_interaction,
+            "uncorrected interaction energy": uncorrected_interaction,
         }
         if gradient is not None:
             data["gradients"] = gradient
@@ -396,8 +412,10 @@ class BSSE(Energy):
     # ------------------------------------------------------------------
     def analyze(self, indent="", P=None, data=None, **kwargs):
         """Store and report the corrected energy, the uncorrected energy, the
-        BSSE correction, the corrected gradient, and the formation-referenced
-        DfE0 computed from the corrected energy.
+        BSSE correction, the interaction (binding) energy relative to the
+        separated monomers (corrected and uncorrected, in kJ/mol), the
+        corrected gradient, and the formation-referenced DfE0 computed from
+        the corrected energy.
 
         Unlike Energy, this does NOT parse orca.out for the usual properties:
         with a Compound job orca.out holds the sub-calculations, whose
@@ -413,7 +431,14 @@ class BSSE(Energy):
             )
         props = {
             key: data[key]
-            for key in ("energy", "gradients", "uncorrected energy", "bsse correction")
+            for key in (
+                "energy",
+                "gradients",
+                "uncorrected energy",
+                "bsse correction",
+                "interaction energy",
+                "uncorrected interaction energy",
+            )
             if data.get(key) is not None
         }
 
@@ -437,8 +462,10 @@ class BSSE(Energy):
         except Exception as e:  # pragma: no cover
             logger.warning(f"Could not store results: {e}")
 
-        # Energy breakdown: formation/atomization energies first (the
-        # headline numbers), then uncorrected -> correction -> corrected. The
+        # Energy breakdown: formation/atomization energies first, then the
+        # interaction (binding) energy relative to the separated monomers
+        # (the headline number for a dimer/cluster), then the absolute
+        # uncorrected -> correction -> corrected complex energies. The BSSE
         # correction is small, so also show it in kcal/mol.
         rows = []
         if "DfE0" in props:
@@ -446,6 +473,22 @@ class BSSE(Energy):
         if "E atomization" in props:
             rows.append(
                 ["Atomization energy", f"{props['E atomization']:.2f}", "kJ/mol"]
+            )
+        if "interaction energy" in props:
+            rows.append(
+                [
+                    "Interaction energy (CP-corrected)",
+                    f"{props['interaction energy']:.4f}",
+                    "kJ/mol",
+                ]
+            )
+        if "uncorrected interaction energy" in props:
+            rows.append(
+                [
+                    "Interaction energy (uncorrected)",
+                    f"{props['uncorrected interaction energy']:.4f}",
+                    "kJ/mol",
+                ]
             )
         if "uncorrected energy" in props:
             rows.append(
