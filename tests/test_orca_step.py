@@ -1704,6 +1704,61 @@ def test_bsse_extra_results_registered():
     assert "BSSE correction#ORCA#{model}" in csv
 
 
+def test_bsse_analyze_computes_dfe0_from_corrected_energy(tmp_path):
+    """BSSE.analyze() must derive DfE0 from the BSSE-*corrected* complex
+    energy in data["energy"] -- not the uncorrected energy, and not any of
+    the five intermediate Compound sub-calculation energies (those are never
+    even passed to analyze())."""
+    seamm_thermochemistry = pytest.importorskip("seamm_thermochemistry")
+    if not seamm_thermochemistry.DEFAULT_DB_PATH.exists():
+        pytest.skip(f"{seamm_thermochemistry.DEFAULT_DB_PATH} not built")
+
+    configuration = SimpleNamespace(
+        atoms=SimpleNamespace(atomic_numbers=[8, 1, 1]),
+        PC_iupac_name=lambda fallback=None: fallback,
+    )
+    # PWLDA/def2-TZVP is in the prototype ThermoDB for "orca" (see
+    # test_energy_of_formation.py's DFT_P).
+    P = {
+        "use model chemistry": "no",
+        "method": "DFT",
+        "functional": "PWLDA",
+        "basis": "def2-TZVP",
+        "basis source": "ORCA internal",
+        "basis set extrapolation": "none",
+    }
+    uncorrected = -76.0
+    corrected = -76.05  # distinct from `uncorrected`, so a wrong energy
+    # feeding calculate_energy_of_formation would show up as a mismatch below.
+
+    # Reference: calling the shared helper directly with the corrected energy
+    # is exactly what BSSE.analyze() should reproduce.
+    reference_data = {"energy": corrected}
+    orca_step.Energy().calculate_energy_of_formation(P, reference_data, configuration)
+    uncorrected_data = {"energy": uncorrected}
+    orca_step.Energy().calculate_energy_of_formation(P, uncorrected_data, configuration)
+    assert reference_data["DfE0"] != pytest.approx(uncorrected_data["DfE0"])
+
+    node = orca_step.BSSE()
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+    node._id = ("1",)
+    (tmp_path / "1").mkdir()
+    node.get_system_configuration = lambda arg: (None, configuration)
+    captured = {}
+    node.store_results = lambda configuration, data: captured.update(data)
+
+    data = {
+        "energy": corrected,
+        "uncorrected energy": uncorrected,
+        "bsse correction": corrected - uncorrected,
+    }
+    node.analyze(P=P, data=data)
+
+    assert captured["DfE0"] == pytest.approx(reference_data["DfE0"])
+    assert captured["E atomization"] == pytest.approx(reference_data["E atomization"])
+    assert (tmp_path / "1" / "Thermochemistry.txt").exists()
+
+
 def test_bsse_parse_compound_energies(tmp_path):
     """The five sub-calculation totals come from each COMPOUND JOB block's LAST
     FINAL SINGLE POINT ENERGY (so an optimized monomer's converged value wins)."""

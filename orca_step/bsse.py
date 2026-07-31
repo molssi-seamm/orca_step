@@ -396,7 +396,8 @@ class BSSE(Energy):
     # ------------------------------------------------------------------
     def analyze(self, indent="", P=None, data=None, **kwargs):
         """Store and report the corrected energy, the uncorrected energy, the
-        BSSE correction, and the corrected gradient.
+        BSSE correction, the corrected gradient, and the formation-referenced
+        DfE0 computed from the corrected energy.
 
         Unlike Energy, this does NOT parse orca.out for the usual properties:
         with a Compound job orca.out holds the sub-calculations, whose
@@ -406,6 +407,10 @@ class BSSE(Energy):
         """
         if data is None:
             data = self._data or {}
+        if P is None:
+            P = self.parameters.current_values_to_dict(
+                context=seamm.flowchart_variables._data
+            )
         props = {
             key: data[key]
             for key in ("energy", "gradients", "uncorrected energy", "bsse correction")
@@ -413,14 +418,35 @@ class BSSE(Energy):
         }
 
         _, configuration = self.get_system_configuration(None)
+
+        # DfE0 (and the atomization energy it needs), referenced to the
+        # BSSE-corrected complex energy in `props["energy"]` -- NOT the
+        # uncorrected energy, and not any of the five intermediate
+        # sub-calculation energies. Mutates `props` in place, so DfE0/E
+        # atomization flow into store_results/the printed summary below
+        # exactly as the plain Energy sub-step's does.
+        if "energy" in props:
+            formation_text = self.calculate_energy_of_formation(P, props, configuration)
+            if formation_text:
+                (Path(self.directory) / "Thermochemistry.txt").write_text(
+                    formation_text
+                )
+
         try:
             self.store_results(configuration=configuration, data=props)
         except Exception as e:  # pragma: no cover
             logger.warning(f"Could not store results: {e}")
 
-        # Energy breakdown: uncorrected -> correction -> corrected. The
+        # Energy breakdown: formation/atomization energies first (the
+        # headline numbers), then uncorrected -> correction -> corrected. The
         # correction is small, so also show it in kcal/mol.
         rows = []
+        if "DfE0" in props:
+            rows.append(["Energy of formation (0 K)", f"{props['DfE0']:.2f}", "kJ/mol"])
+        if "E atomization" in props:
+            rows.append(
+                ["Atomization energy", f"{props['E atomization']:.2f}", "kJ/mol"]
+            )
         if "uncorrected energy" in props:
             rows.append(
                 ["Uncorrected energy", f"{props['uncorrected energy']:.8f}", "E_h"]

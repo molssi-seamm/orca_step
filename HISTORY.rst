@@ -2,6 +2,18 @@
 History
 =======
 
+2026.7.31 -- BSSE now reports the energy of formation (DfE0)
+    * The BSSE (counterpoise) sub-step now computes ``DfE0`` (and the
+      atomization energy it needs) from the BSSE-*corrected* complex energy,
+      via the same shared ``seamm_thermochemistry`` reference database used
+      by the plain Energy/Frequencies sub-steps -- not from the uncorrected
+      energy or any of the five intermediate Compound sub-calculation
+      energies. A ``Thermochemistry.txt`` report is written alongside the
+      run, and the property-summary table now leads with ``DfE0`` and the
+      atomization energy before the raw/uncorrected energies. This gives
+      MLFF training data referenced to a physically meaningful zero, as with
+      the plain Energy sub-step.
+
 2026.7.30.1 -- Energies of formation, and a smarter default for the Hessian method
     * Energy and Frequencies now report physically meaningful, cross-code-
       comparable formation energies -- ``DfE0`` (0 K, electronic-only,
