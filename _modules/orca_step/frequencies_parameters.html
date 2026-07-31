@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.frequencies_parameters &#8212; SEAMM ORCA Plug-in 2026.7.30 documentation</title>
+    <title>orca_step.frequencies_parameters &#8212; SEAMM ORCA Plug-in 2026.7.30.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=5e20fa5c"></script>
+    <script src="../../_static/documentation_options.js?v=6a84fa41"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.30" />
+  <meta name="docsearch:version" content="2026.7.30.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -516,18 +516,23 @@
 
     <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;second derivatives&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;analytic&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
             <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
             <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;analytic&quot;</span><span class="p">,</span> <span class="s2">&quot;numerical&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;analytic&quot;</span><span class="p">,</span> <span class="s2">&quot;numerical&quot;</span><span class="p">),</span>
             <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Second derivatives:&quot;</span><span class="p">,</span>
             <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
-                <span class="s2">&quot;How to compute the Hessian. &#39;analytic&#39; (ORCA&#39;s AnFreq) is much &quot;</span>
-                <span class="s2">&quot;faster but requires an analytic second derivative for the method &quot;</span>
-                <span class="s2">&quot;(available for HF, most DFT functionals, and MP2). &#39;numerical&#39; &quot;</span>
-                <span class="s2">&quot;(NumFreq) finite-differences the gradient -- it works for any &quot;</span>
-                <span class="s2">&quot;method that has a gradient, but is considerably more expensive.&quot;</span>
+                <span class="s2">&quot;How to compute the Hessian. &#39;default&#39; uses ORCA&#39;s analytic &quot;</span>
+                <span class="s2">&quot;second derivative (AnFreq) when one is available for the &quot;</span>
+                <span class="s2">&quot;method (HF, most DFT functionals, MP2), and falls back to &quot;</span>
+                <span class="s2">&quot;the numerical one (NumFreq) otherwise -- the right choice &quot;</span>
+                <span class="s2">&quot;for almost every case. &#39;analytic&#39; and &#39;numerical&#39; force one &quot;</span>
+                <span class="s2">&quot;or the other regardless of whether the method has an &quot;</span>
+                <span class="s2">&quot;analytic Hessian: &#39;analytic&#39; fails for a method without one &quot;</span>
+                <span class="s2">&quot;(e.g. a double hybrid or (DLPNO-)CCSD(T)); &#39;numerical&#39; &quot;</span>
+                <span class="s2">&quot;(finite-differencing the gradient) works for any method &quot;</span>
+                <span class="s2">&quot;that has a gradient, but is considerably more expensive.&quot;</span>
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="p">{</span>

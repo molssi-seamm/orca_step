@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.30 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.7.30.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=5e20fa5c"></script>
+    <script src="_static/documentation_options.js?v=6a84fa41"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.30" />
+  <meta name="docsearch:version" content="2026.7.30.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,27 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.7.30.1 – Energies of formation, and a smarter default for the Hessian method</dt><dd><ul class="simple">
+<li><p>Energy and Frequencies now report physically meaningful, cross-code-
+comparable formation energies – <code class="docutils literal notranslate"><span class="pre">DfE0</span></code> (0 K, electronic-only,
+available for any energy), and <code class="docutils literal notranslate"><span class="pre">DfHT</span></code>/<code class="docutils literal notranslate"><span class="pre">DfGT</span></code> (enthalpy/Gibbs energy
+of formation at the requested temperature, when a full thermochemistry
+calculation is available) – via the shared <code class="docutils literal notranslate"><span class="pre">seamm_thermochemistry</span></code>
+reference database, replacing the large, code-dependent-zero raw total
+energy as the headline number. A detailed, citable report
+(<code class="docutils literal notranslate"><span class="pre">Thermochemistry.txt</span></code>: the database version/DOI, the atomic
+reference energies and citations used, each computed quantity) is
+written alongside the run. The property-summary table now leads with
+these formation-referenced quantities, then atomization energy and the
+zero-point energy, before the raw electronic-structure energies.</p></li>
+<li><p><strong>Frequencies:</strong> “Second derivatives” gained a <strong>default</strong> choice (now
+the default), which uses ORCA’s analytic Hessian when available for the
+method and falls back to the numerical one otherwise – no need to know
+in advance which methods (e.g. double hybrids, (DLPNO-)CCSD(T)) lack an
+analytic Hessian. The explicit “analytic”/”numerical” choices still
+force one or the other.</p></li>
+</ul>
+</dd>
 <dt>2026.7.30 – BSSE gradient guard, Initial-guess validation, and property tagging</dt><dd><ul class="simple">
 <li><p><strong>Bugfix:</strong> the BSSE (counterpoise) Compound script now guards against a
 silent, long-range ghost-gradient blowup: RIJCOSX/COSX exchange

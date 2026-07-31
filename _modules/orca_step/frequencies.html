@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.frequencies &#8212; SEAMM ORCA Plug-in 2026.7.30 documentation</title>
+    <title>orca_step.frequencies &#8212; SEAMM ORCA Plug-in 2026.7.30.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=5e20fa5c"></script>
+    <script src="../../_static/documentation_options.js?v=6a84fa41"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.30" />
+  <meta name="docsearch:version" content="2026.7.30.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -556,12 +556,40 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Never extrapolate: a CBS-extrapolated energy has no Hessian.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">False</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_hessian_kind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve &#39;second derivatives&#39; to &#39;analytic&#39; or &#39;numerical&#39;.</span>
+
+<span class="sd">        The explicit choices force one or the other outright. &#39;default&#39;</span>
+<span class="sd">        (the normal case) picks analytic when ORCA has one for the resolved</span>
+<span class="sd">        method (see ``orca_step.method_has_analytic_hessian``), else</span>
+<span class="sd">        numerical -- so the user does not need to know which methods have</span>
+<span class="sd">        an analytic Hessian.</span>
+
+<span class="sd">        Resolving &#39;default&#39; needs the method, which needs</span>
+<span class="sd">        ``_resolve_method_basis`` -- raises whatever that raises (e.g. no</span>
+<span class="sd">        preceding Model Chemistry step has run yet) rather than guessing;</span>
+<span class="sd">        a real configuration problem should surface, not be papered over.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">second_derivatives</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;second derivatives&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">second_derivatives</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;analytic&quot;</span><span class="p">,</span> <span class="s2">&quot;numerical&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">second_derivatives</span>
+        <span class="n">method</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">&quot;analytic&quot;</span> <span class="k">if</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">method_has_analytic_hessian</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;numerical&quot;</span>
+        <span class="p">)</span>
+
 <div class="viewcode-block" id="Frequencies.description_text">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.frequencies.Frequencies.description_text">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">description_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">P</span><span class="p">:</span>
             <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values_to_dict</span><span class="p">()</span>
-        <span class="n">how</span> <span class="o">=</span> <span class="s2">&quot;numerical&quot;</span> <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;second derivatives&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;numerical&quot;</span> <span class="k">else</span> <span class="s2">&quot;analytic&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">how</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hessian_kind</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># Method not resolvable yet (e.g. in the flowchart editor, before</span>
+            <span class="c1"># a preceding Model Chemistry step has run) -- describe the</span>
+            <span class="c1"># &#39;default&#39; policy in words instead of guessing.</span>
+            <span class="n">how</span> <span class="o">=</span> <span class="s2">&quot;analytic if available, else numerical&quot;</span>
         <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Vibrational frequencies with ORCA at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_level_of_theory_text</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2"> Hessian), with thermochemistry.&quot;</span>
@@ -576,7 +604,7 @@
         <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">current_values_to_dict</span><span class="p">(</span>
             <span class="n">context</span><span class="o">=</span><span class="n">seamm</span><span class="o">.</span><span class="n">flowchart_variables</span><span class="o">.</span><span class="n">_data</span>
         <span class="p">)</span>
-        <span class="n">freq_kw</span> <span class="o">=</span> <span class="s2">&quot;NumFreq&quot;</span> <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;second derivatives&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;numerical&quot;</span> <span class="k">else</span> <span class="s2">&quot;Freq&quot;</span>
+        <span class="n">freq_kw</span> <span class="o">=</span> <span class="s2">&quot;NumFreq&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hessian_kind</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;numerical&quot;</span> <span class="k">else</span> <span class="s2">&quot;Freq&quot;</span>
         <span class="n">kws</span> <span class="o">=</span> <span class="p">[</span><span class="n">freq_kw</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">keywords</span><span class="p">:</span>
             <span class="n">kws</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">keywords</span><span class="p">)</span>
@@ -648,6 +676,22 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not create the IR-spectrum graph: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">props</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parse_thermochemistry</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+
+        <span class="c1"># Calculate the formation-referenced energies, if possible: DfE0</span>
+        <span class="c1"># (0 K, electronic-only, always) plus DfHT/DfGT (at the requested</span>
+        <span class="c1"># temperature, since a full thermochemistry calc is available here)</span>
+        <span class="c1"># via seamm_thermochemistry -- see calculate_energy_of_formation&#39;s</span>
+        <span class="c1"># docstring.</span>
+        <span class="k">if</span> <span class="s2">&quot;energy&quot;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="mf">298.15</span><span class="p">)</span>
+            <span class="n">temperature</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">&quot;K&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="s2">&quot;m_as&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+            <span class="n">props</span><span class="p">[</span><span class="s2">&quot;formation temperature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temperature</span>
+            <span class="n">formation_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_energy_of_formation</span><span class="p">(</span>
+                <span class="n">P</span><span class="p">,</span> <span class="n">props</span><span class="p">,</span> <span class="n">initial_configuration</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">formation_text</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="s2">&quot;Thermochemistry.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">formation_text</span><span class="p">)</span>
+
         <span class="n">props</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">props</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">[],</span> <span class="p">{})}</span>
 
         <span class="c1"># Store the results/properties per the structure-handling options. A</span>
@@ -928,28 +972,16 @@
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_report_frequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print the thermochemistry, note imaginary modes, and list the</span>
-<span class="sd">        frequencies for small systems.&quot;&quot;&quot;</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Note imaginary modes and list the frequencies for small systems.</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{:.3f}</span><span class="s2">&quot;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">label</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">units</span><span class="p">])</span>
-
-        <span class="n">add</span><span class="p">(</span><span class="s2">&quot;Zero-point energy&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zero point energy&quot;</span><span class="p">),</span> <span class="s2">&quot;kJ/mol&quot;</span><span class="p">)</span>
-        <span class="n">add</span><span class="p">(</span><span class="s2">&quot;Total enthalpy&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enthalpy&quot;</span><span class="p">),</span> <span class="s2">&quot;kJ/mol&quot;</span><span class="p">)</span>
-        <span class="n">add</span><span class="p">(</span><span class="s2">&quot;Gibbs free energy&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gibbs energy&quot;</span><span class="p">),</span> <span class="s2">&quot;kJ/mol&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
-            <span class="n">tmp</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span>
-                <span class="n">rows</span><span class="p">,</span>
-                <span class="n">headers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Thermochemistry&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">,</span> <span class="s2">&quot;Units&quot;</span><span class="p">],</span>
-                <span class="n">tablefmt</span><span class="o">=</span><span class="s2">&quot;rounded_outline&quot;</span><span class="p">,</span>
-                <span class="n">colalign</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="s2">&quot;left&quot;</span><span class="p">),</span>
-                <span class="n">disable_numparse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">))</span>
-
+<span class="sd">        The absolute zero-point energy/total enthalpy/Gibbs free energy</span>
+<span class="sd">        used to be printed here as their own small table; ZPE now appears</span>
+<span class="sd">        in the main scalar-summary table (`_print_scalar_summary`,</span>
+<span class="sd">        inherited from `Energy`) and the absolute enthalpy/Gibbs energy</span>
+<span class="sd">        totals -- large, code-dependent-zero numbers with no direct</span>
+<span class="sd">        chemical meaning -- are superseded there by the formation-</span>
+<span class="sd">        referenced DfHT/DfGT.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">freqs</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frequencies&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">freqs</span><span class="p">:</span>
             <span class="n">n_imag</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n imaginary frequencies&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>

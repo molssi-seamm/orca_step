@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.30 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.7.30.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=5e20fa5c"></script>
+    <script src="../_static/documentation_options.js?v=6a84fa41"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.30" />
+  <meta name="docsearch:version" content="2026.7.30.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -646,6 +646,52 @@ and optionally apply bond orders / Hirshfeld charges to the structure.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy.Energy.calculate_energy_of_formation">
+<span class="sig-name descname"><span class="pre">calculate_energy_of_formation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.calculate_energy_of_formation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.calculate_energy_of_formation" title="Link to this definition">#</a></dt>
+<dd><p>Compute formation-referenced energies via the shared
+<code class="docutils literal notranslate"><span class="pre">seamm_thermochemistry</span></code> reference database – the ORCA counterpart
+of <code class="docutils literal notranslate"><span class="pre">gaussian_step.Substep.calculate_energy_of_formation</span></code>, extended
+with temperature-dependent enthalpy/Gibbs energy of formation.</p>
+<p>Always computes <code class="docutils literal notranslate"><span class="pre">data[&quot;E</span> <span class="pre">atomization&quot;]</span></code> and <code class="docutils literal notranslate"><span class="pre">data[&quot;DfE0&quot;]</span></code>
+(0 K, electronic-only) when an energy is available – these need no
+frequency calculation. When <cite>temperature</cite> is given (the Frequencies
+sub-step’s requested temperature) and <cite>data</cite> already carries
+“enthalpy”/”gibbs energy” (kJ/mol absolute totals, as written by
+the Frequencies sub-step’s thermochemistry parsing), this also
+computes <code class="docutils literal notranslate"><span class="pre">data[&quot;DfHT&quot;]</span></code> and <code class="docutils literal notranslate"><span class="pre">data[&quot;DfGT&quot;]</span></code> – the enthalpy and
+Gibbs energy of formation AT that temperature, via
+<cite>seamm_thermochemistry.formation_enthalpy</cite>/<cite>formation_gibbs_energy</cite>.</p>
+<p>A missing formation energy must never break an ORCA job: if
+<code class="docutils literal notranslate"><span class="pre">seamm_thermochemistry</span></code> isn’t installed, its database isn’t
+built, or the reference data doesn’t cover this
+composition/method/basis yet, this returns a short explanatory
+message instead of raising. A missing DfHT/DfGT dependency (most
+commonly: no standard-state entropy yet for one of the elements)
+does not block DfE0 – it is just left out of <cite>data</cite> and noted in
+the returned report text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P</strong> (<em>dict</em>) – The current parameter values (for the method/basis).</p></li>
+<li><p><strong>data</strong> (<em>dict</em>) – The parsed results of the calculation; mutated in place.</p></li>
+<li><p><strong>configuration</strong> (<em>molsystem._Configuration</em>) – The system whose composition defines the reference reaction.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em><em>, </em><em>optional</em>) – Temperature, in K, for DfHT/DfGT. Omit for a plain Energy job
+(no thermochemistry available).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The detailed, citable report (<cite>seamm_thermochemistry.format_report</cite>)
+– the DB version, the atomic reference energies/citations used,
+and each computed quantity – or a short explanatory message if
+nothing could be computed at all.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="orca_step.energy.Energy.cleanup">
 <span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.cleanup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.cleanup" title="Link to this definition">#</a></dt>
 <dd><p>Nothing to clean up for a single point.</p>
@@ -797,7 +843,7 @@ analytic vs numerical second derivatives and the thermochemistry temperature.</p
 derivative method and the thermochemistry temperature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="orca_step.frequencies_parameters.FrequenciesParameters.parameters">
-<span class="sig-name descname"><span class="pre">parameters</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'second</span> <span class="pre">derivatives':</span> <span class="pre">{'default':</span> <span class="pre">'analytic',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Second</span> <span class="pre">derivatives:',</span> <span class="pre">'enumeration':</span> <span class="pre">('analytic',</span> <span class="pre">'numerical'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;How</span> <span class="pre">to</span> <span class="pre">compute</span> <span class="pre">the</span> <span class="pre">Hessian.</span> <span class="pre">'analytic'</span> <span class="pre">(ORCA's</span> <span class="pre">AnFreq)</span> <span class="pre">is</span> <span class="pre">much</span> <span class="pre">faster</span> <span class="pre">but</span> <span class="pre">requires</span> <span class="pre">an</span> <span class="pre">analytic</span> <span class="pre">second</span> <span class="pre">derivative</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">method</span> <span class="pre">(available</span> <span class="pre">for</span> <span class="pre">HF,</span> <span class="pre">most</span> <span class="pre">DFT</span> <span class="pre">functionals,</span> <span class="pre">and</span> <span class="pre">MP2).</span> <span class="pre">'numerical'</span> <span class="pre">(NumFreq)</span> <span class="pre">finite-differences</span> <span class="pre">the</span> <span class="pre">gradient</span> <span class="pre">--</span> <span class="pre">it</span> <span class="pre">works</span> <span class="pre">for</span> <span class="pre">any</span> <span class="pre">method</span> <span class="pre">that</span> <span class="pre">has</span> <span class="pre">a</span> <span class="pre">gradient,</span> <span class="pre">but</span> <span class="pre">is</span> <span class="pre">considerably</span> <span class="pre">more</span> <span class="pre">expensive.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'enum'},</span> <span class="pre">'temperature':</span> <span class="pre">{'default':</span> <span class="pre">'298.15',</span> <span class="pre">'default_units':</span> <span class="pre">'K',</span> <span class="pre">'description':</span> <span class="pre">'Temperature:',</span> <span class="pre">'enumeration':</span> <span class="pre">(),</span> <span class="pre">'format_string':</span> <span class="pre">'.2f',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;The</span> <span class="pre">temperature</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">thermochemistry</span> <span class="pre">(zero-point</span> <span class="pre">energy,</span> <span class="pre">thermal</span> <span class="pre">corrections,</span> <span class="pre">entropy,</span> <span class="pre">and</span> <span class="pre">Gibbs</span> <span class="pre">free</span> <span class="pre">energy).</span> <span class="pre">The</span> <span class="pre">pressure</span> <span class="pre">is</span> <span class="pre">ORCA's</span> <span class="pre">default</span> <span class="pre">of</span> <span class="pre">1</span> <span class="pre">atm.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'float'}}</span></span><a class="headerlink" href="#orca_step.frequencies_parameters.FrequenciesParameters.parameters" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'second</span> <span class="pre">derivatives':</span> <span class="pre">{'default':</span> <span class="pre">'default',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Second</span> <span class="pre">derivatives:',</span> <span class="pre">'enumeration':</span> <span class="pre">('default',</span> <span class="pre">'analytic',</span> <span class="pre">'numerical'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;How</span> <span class="pre">to</span> <span class="pre">compute</span> <span class="pre">the</span> <span class="pre">Hessian.</span> <span class="pre">'default'</span> <span class="pre">uses</span> <span class="pre">ORCA's</span> <span class="pre">analytic</span> <span class="pre">second</span> <span class="pre">derivative</span> <span class="pre">(AnFreq)</span> <span class="pre">when</span> <span class="pre">one</span> <span class="pre">is</span> <span class="pre">available</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">method</span> <span class="pre">(HF,</span> <span class="pre">most</span> <span class="pre">DFT</span> <span class="pre">functionals,</span> <span class="pre">MP2),</span> <span class="pre">and</span> <span class="pre">falls</span> <span class="pre">back</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">numerical</span> <span class="pre">one</span> <span class="pre">(NumFreq)</span> <span class="pre">otherwise</span> <span class="pre">--</span> <span class="pre">the</span> <span class="pre">right</span> <span class="pre">choice</span> <span class="pre">for</span> <span class="pre">almost</span> <span class="pre">every</span> <span class="pre">case.</span> <span class="pre">'analytic'</span> <span class="pre">and</span> <span class="pre">'numerical'</span> <span class="pre">force</span> <span class="pre">one</span> <span class="pre">or</span> <span class="pre">the</span> <span class="pre">other</span> <span class="pre">regardless</span> <span class="pre">of</span> <span class="pre">whether</span> <span class="pre">the</span> <span class="pre">method</span> <span class="pre">has</span> <span class="pre">an</span> <span class="pre">analytic</span> <span class="pre">Hessian:</span> <span class="pre">'analytic'</span> <span class="pre">fails</span> <span class="pre">for</span> <span class="pre">a</span> <span class="pre">method</span> <span class="pre">without</span> <span class="pre">one</span> <span class="pre">(e.g.</span> <span class="pre">a</span> <span class="pre">double</span> <span class="pre">hybrid</span> <span class="pre">or</span> <span class="pre">(DLPNO-)CCSD(T));</span> <span class="pre">'numerical'</span> <span class="pre">(finite-differencing</span> <span class="pre">the</span> <span class="pre">gradient)</span> <span class="pre">works</span> <span class="pre">for</span> <span class="pre">any</span> <span class="pre">method</span> <span class="pre">that</span> <span class="pre">has</span> <span class="pre">a</span> <span class="pre">gradient,</span> <span class="pre">but</span> <span class="pre">is</span> <span class="pre">considerably</span> <span class="pre">more</span> <span class="pre">expensive.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'enum'},</span> <span class="pre">'temperature':</span> <span class="pre">{'default':</span> <span class="pre">'298.15',</span> <span class="pre">'default_units':</span> <span class="pre">'K',</span> <span class="pre">'description':</span> <span class="pre">'Temperature:',</span> <span class="pre">'enumeration':</span> <span class="pre">(),</span> <span class="pre">'format_string':</span> <span class="pre">'.2f',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;The</span> <span class="pre">temperature</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">thermochemistry</span> <span class="pre">(zero-point</span> <span class="pre">energy,</span> <span class="pre">thermal</span> <span class="pre">corrections,</span> <span class="pre">entropy,</span> <span class="pre">and</span> <span class="pre">Gibbs</span> <span class="pre">free</span> <span class="pre">energy).</span> <span class="pre">The</span> <span class="pre">pressure</span> <span class="pre">is</span> <span class="pre">ORCA's</span> <span class="pre">default</span> <span class="pre">of</span> <span class="pre">1</span> <span class="pre">atm.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'float'}}</span></span><a class="headerlink" href="#orca_step.frequencies_parameters.FrequenciesParameters.parameters" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1394,6 +1440,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.energy">orca_step.energy module</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy"><code class="docutils literal notranslate"><span class="pre">Energy</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.analyze"><code class="docutils literal notranslate"><span class="pre">Energy.analyze()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.calculate_energy_of_formation"><code class="docutils literal notranslate"><span class="pre">Energy.calculate_energy_of_formation()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.cleanup"><code class="docutils literal notranslate"><span class="pre">Energy.cleanup()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.description_text"><code class="docutils literal notranslate"><span class="pre">Energy.description_text()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.extra_input"><code class="docutils literal notranslate"><span class="pre">Energy.extra_input()</span></code></a></li>
