@@ -1354,9 +1354,115 @@ def test_frequencies_extends_energy():
     node = orca_step.Frequencies()
     assert node._calculation == "frequencies"
     P = orca_step.FrequenciesParameters()
-    assert P["second derivatives"].value == "analytic"
+    assert P["second derivatives"].value == "default"
+    assert P["second derivatives"].enumeration == ("default", "analytic", "numerical")
     assert P["temperature"].value == "298.15"
     assert P["method"].value == "DLPNO-CCSD(T)"  # inherits the energy params
+
+
+def test_hessian_kind_forced_analytic_ignores_method():
+    """'analytic' forces AnFreq even for a method with no analytic Hessian --
+    run() lets ORCA itself reject it, rather than second-guessing the user."""
+    node = orca_step.Frequencies()
+    P = {
+        "second derivatives": "analytic",
+        "use model chemistry": "no",
+        "method": "DLPNO-CCSD(T)",
+        "basis": "def2-TZVP",
+    }
+    assert node._hessian_kind(P) == "analytic"
+
+
+def test_hessian_kind_forced_numerical_ignores_method():
+    node = orca_step.Frequencies()
+    P = {
+        "second derivatives": "numerical",
+        "use model chemistry": "no",
+        "method": "HF",
+        "basis": "def2-SVP",
+    }
+    assert node._hessian_kind(P) == "numerical"
+
+
+def test_hessian_kind_default_picks_analytic_when_available():
+    node = orca_step.Frequencies()
+    P = {
+        "second derivatives": "default",
+        "use model chemistry": "no",
+        "method": "DFT",
+        "functional": "B3LYP",
+        "basis": "def2-SVP",
+    }
+    assert node._hessian_kind(P) == "analytic"
+
+
+def test_hessian_kind_default_falls_back_to_numerical_for_double_hybrid():
+    node = orca_step.Frequencies()
+    P = {
+        "second derivatives": "default",
+        "use model chemistry": "no",
+        "method": "DFT",
+        "functional": "REVDSD-PBEP86-D4/2021",
+        "basis": "def2-TZVPPD",
+    }
+    assert node._hessian_kind(P) == "numerical"
+
+
+def test_hessian_kind_default_falls_back_to_numerical_for_dlpno_ccsdt():
+    node = orca_step.Frequencies()
+    P = {
+        "second derivatives": "default",
+        "use model chemistry": "no",
+        "method": "DLPNO-CCSD(T)",
+        "basis": "def2-TZVP",
+    }
+    assert node._hessian_kind(P) == "numerical"
+
+
+def test_frequencies_description_text_shows_resolved_default():
+    node = orca_step.Frequencies()
+    node._id = ("1",)
+    P = {
+        "use model chemistry": "no",
+        "method": "DFT",
+        "functional": "B3LYP",
+        "basis": "def2-SVP",
+        "basis set extrapolation": "none",
+        "second derivatives": "default",
+    }
+    text = node.description_text(P)
+    assert "(analytic Hessian)" in " ".join(text.split())
+
+
+def test_frequencies_description_text_default_resolves_numerical():
+    node = orca_step.Frequencies()
+    node._id = ("1",)
+    P = {
+        "use model chemistry": "no",
+        "method": "DLPNO-CCSD(T)",
+        "basis": "def2-TZVP",
+        "basis set extrapolation": "none",
+        "second derivatives": "default",
+    }
+    text = node.description_text(P)
+    assert "(numerical Hessian)" in " ".join(text.split())
+
+
+def test_frequencies_description_text_default_unresolvable_falls_back_to_generic_text():
+    """No preceding Model Chemistry step has set '_model_chemistry' -- the
+    method can't be resolved, so the description degrades to describing the
+    policy in words instead of raising or guessing."""
+    node = orca_step.Frequencies()
+    node._id = ("1",)
+    P = {
+        "use model chemistry": "yes",
+        "method": "IGNORED",
+        "basis": "IGNORED",
+        "basis set extrapolation": "none",
+        "second derivatives": "default",
+    }
+    text = node.description_text(P)
+    assert "analytic if available, else numerical" in " ".join(text.split())
 
 
 def test_frequencies_extra_input_temperature():

@@ -35,7 +35,11 @@ from .frequencies_step import FrequenciesStep  # noqa: F401
 from .orca import ORCA  # noqa: F401
 from .tk_orca import TkORCA  # noqa: F401
 from .orca_step import ORCAStep  # noqa: F401
-from .orca_step import mc_method_alias, mc_method_unalias  # noqa: F401
+from .orca_step import (  # noqa: F401
+    mc_method_alias,
+    mc_method_unalias,
+    method_has_analytic_hessian,
+)
 
 # Versioneer
 from ._version import get_versions

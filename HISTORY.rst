@@ -2,6 +2,26 @@
 History
 =======
 
+2026.7.30.1 -- Energies of formation, and a smarter default for the Hessian method
+    * Energy and Frequencies now report physically meaningful, cross-code-
+      comparable formation energies -- ``DfE0`` (0 K, electronic-only,
+      available for any energy), and ``DfHT``/``DfGT`` (enthalpy/Gibbs energy
+      of formation at the requested temperature, when a full thermochemistry
+      calculation is available) -- via the shared ``seamm_thermochemistry``
+      reference database, replacing the large, code-dependent-zero raw total
+      energy as the headline number. A detailed, citable report
+      (``Thermochemistry.txt``: the database version/DOI, the atomic
+      reference energies and citations used, each computed quantity) is
+      written alongside the run. The property-summary table now leads with
+      these formation-referenced quantities, then atomization energy and the
+      zero-point energy, before the raw electronic-structure energies.
+    * **Frequencies:** "Second derivatives" gained a **default** choice (now
+      the default), which uses ORCA's analytic Hessian when available for the
+      method and falls back to the numerical one otherwise -- no need to know
+      in advance which methods (e.g. double hybrids, (DLPNO-)CCSD(T)) lack an
+      analytic Hessian. The explicit "analytic"/"numerical" choices still
+      force one or the other.
+
 2026.7.30 -- BSSE gradient guard, Initial-guess validation, and property tagging
     * **Bugfix:** the BSSE (counterpoise) Compound script now guards against a
       silent, long-range ghost-gradient blowup: RIJCOSX/COSX exchange

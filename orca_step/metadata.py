@@ -356,6 +356,40 @@ metadata["results"] = {
         "type": "float",
         "units": "kJ/mol",
     },
+    "E atomization": {
+        "description": "The atomization energy: the electronic energy to "
+        "separate the system into gas-phase atoms",
+        "dimensionality": "scalar",
+        "property": "E atomization#ORCA#{model}",
+        "type": "float",
+        "units": "kJ/mol",
+    },
+    "DfE0": {
+        "description": "The energy of formation from the elements, 0 K, "
+        "electronic-only (no zero-point energy)",
+        "dimensionality": "scalar",
+        "property": "DfE0#ORCA#{model}",
+        "type": "float",
+        "units": "kJ/mol",
+    },
+    "DfHT": {
+        "calculation": ["frequencies"],
+        "description": "The enthalpy of formation from the elements, at "
+        "the requested temperature T",
+        "dimensionality": "scalar",
+        "property": "DfHT#ORCA#{model}",
+        "type": "float",
+        "units": "kJ/mol",
+    },
+    "DfGT": {
+        "calculation": ["frequencies"],
+        "description": "The Gibbs energy of formation from the elements, "
+        "at the requested temperature T",
+        "dimensionality": "scalar",
+        "property": "DfGT#ORCA#{model}",
+        "type": "float",
+        "units": "kJ/mol",
+    },
 }
 
 # Placeholder for the model-chemistry protocol; populated in the Model Chemistry
