@@ -2,6 +2,19 @@
 History
 =======
 
+2026.7.31.1 -- BSSE now reports the interaction (binding) energy
+    * The BSSE (counterpoise) sub-step now computes and can save two new
+      results, in kJ/mol: ``interaction energy`` (the CP-corrected binding
+      energy of the complex relative to the two separated monomers) and
+      ``uncorrected interaction energy`` (the same, without the counterpoise
+      correction). These are distinct from the existing ``energy`` result
+      (the BSSE-corrected *total* energy of the complex, on the same
+      absolute scale as the raw electronic energy) -- the interaction
+      energies are referenced to the separated fragments, the physically
+      meaningful quantity for a dimer/cluster. Both are registered as
+      save-able properties, alongside ``DfE0``, so they can be written with
+      the structure (e.g. for MLFF training data export).
+
 2026.7.31 -- BSSE now reports the energy of formation (DfE0)
     * The BSSE (counterpoise) sub-step now computes ``DfE0`` (and the
       atomization energy it needs) from the BSSE-*corrected* complex energy,

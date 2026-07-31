@@ -1690,10 +1690,15 @@ def test_bsse_gradients_result_available():
 
 
 def test_bsse_extra_results_registered():
-    """The uncorrected energy and BSSE correction are 'bsse'-only results with
-    registered property templates."""
+    """The uncorrected energy, BSSE correction, and interaction energies are
+    'bsse'-only results with registered property templates."""
     results = orca_step.metadata["results"]
-    for key in ("uncorrected energy", "bsse correction"):
+    for key in (
+        "uncorrected energy",
+        "bsse correction",
+        "interaction energy",
+        "uncorrected interaction energy",
+    ):
         assert results[key]["calculation"] == ["bsse"]
     import importlib.resources
 
@@ -1702,6 +1707,8 @@ def test_bsse_extra_results_registered():
     ).read_text()
     assert "uncorrected energy#ORCA#{model}" in csv
     assert "BSSE correction#ORCA#{model}" in csv
+    assert "interaction energy#ORCA#{model}" in csv
+    assert "uncorrected interaction energy#ORCA#{model}" in csv
 
 
 def test_bsse_analyze_computes_dfe0_from_corrected_energy(tmp_path):
@@ -1780,6 +1787,28 @@ def test_bsse_parse_compound_energies(tmp_path):
     # are lower, so the correction raises the energy (BSSE removed).
     corrected = e[4] - (e[0] - e[1]) - (e[2] - e[3])
     assert corrected == pytest.approx(-152.22 + 0.05 + 0.05)
+
+    # Interaction energy relative to the SEPARATED monomers -- a different
+    # reference point from `corrected` above (the BSSE-corrected TOTAL
+    # complex energy). Uncorrected: monomers in their own basis; corrected:
+    # fragments in the full dimer (ghost-augmented) basis -- and the two are
+    # related by exactly the BSSE correction.
+    e_fragA, e_monA, e_fragB, e_monB, e_total = e
+    uncorrected_interaction = e_total - e_monA - e_monB
+    corrected_interaction = e_total - e_fragA - e_fragB
+    assert uncorrected_interaction == pytest.approx(-152.22 - (-76.05) - (-76.06))
+    assert corrected_interaction == pytest.approx(-152.22 - (-76.10) - (-76.11))
+    bsse_correction = corrected - e_total
+    assert corrected_interaction == pytest.approx(
+        uncorrected_interaction + bsse_correction
+    )
+    # kJ/mol is the reported/stored unit.
+    from seamm_util import Q_
+
+    assert Q_(corrected_interaction, "E_h").m_as("kJ/mol") == pytest.approx(
+        corrected_interaction * 2625.499639
+    )
+
     # Fewer than five jobs -> None (cannot trust the energy).
     (tmp_path / "short.out").write_text("COMPOUND JOB  1\n")
     assert node._parse_compound_energies(tmp_path.parent / "missing") is None
