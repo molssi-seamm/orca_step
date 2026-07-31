@@ -16,6 +16,7 @@ import bibtexparser
 from bibtexparser.bwriter import BibTexWriter
 from tabulate import tabulate
 
+from molsystem import elements
 import orca_step
 import seamm
 from seamm_util import ureg, Q_  # noqa: F401
@@ -953,6 +954,182 @@ class Energy(orca_step.ORCABase):
                 lines.append(f"    {field} = {{{e[field]}}},")
         return "\n".join(lines).rstrip(",") + "\n}"
 
+    def calculate_energy_of_formation(
+        self, P, data, configuration, *, temperature=None
+    ):
+        """Compute formation-referenced energies via the shared
+        ``seamm_thermochemistry`` reference database -- the ORCA counterpart
+        of ``gaussian_step.Substep.calculate_energy_of_formation``, extended
+        with temperature-dependent enthalpy/Gibbs energy of formation.
+
+        Always computes ``data["E atomization"]`` and ``data["DfE0"]``
+        (0 K, electronic-only) when an energy is available -- these need no
+        frequency calculation. When `temperature` is given (the Frequencies
+        sub-step's requested temperature) and `data` already carries
+        "enthalpy"/"gibbs energy" (kJ/mol absolute totals, as written by
+        the Frequencies sub-step's thermochemistry parsing), this also
+        computes ``data["DfHT"]`` and ``data["DfGT"]`` -- the enthalpy and
+        Gibbs energy of formation AT that temperature, via
+        `seamm_thermochemistry.formation_enthalpy`/`formation_gibbs_energy`.
+
+        A missing formation energy must never break an ORCA job: if
+        ``seamm_thermochemistry`` isn't installed, its database isn't
+        built, or the reference data doesn't cover this
+        composition/method/basis yet, this returns a short explanatory
+        message instead of raising. A missing DfHT/DfGT dependency (most
+        commonly: no standard-state entropy yet for one of the elements)
+        does not block DfE0 -- it is just left out of `data` and noted in
+        the returned report text.
+
+        Parameters
+        ----------
+        P : dict
+            The current parameter values (for the method/basis).
+        data : dict
+            The parsed results of the calculation; mutated in place.
+        configuration : molsystem._Configuration
+            The system whose composition defines the reference reaction.
+        temperature : float, optional
+            Temperature, in K, for DfHT/DfGT. Omit for a plain Energy job
+            (no thermochemistry available).
+
+        Returns
+        -------
+        str
+            The detailed, citable report (`seamm_thermochemistry.format_report`)
+            -- the DB version, the atomic reference energies/citations used,
+            and each computed quantity -- or a short explanatory message if
+            nothing could be computed at all.
+        """
+        method, basis = self._resolve_method_basis(P)
+        if self._extrapolating(P):
+            basis = self._extrapolation_keyword(P)
+        basis = self._strip_bse(basis)
+        # The reference database stores functional keywords in their
+        # model-chemistry-safe spelling (see orca_step.mc_method_alias),
+        # matching how the atom-energy reference runs were tagged.
+        lookup_method = orca_step.mc_method_alias(method)
+
+        counts = Counter(configuration.atoms.atomic_numbers)
+        composition = Counter()
+        for atno, count in counts.items():
+            composition[elements.to_symbols([atno])[0]] += count
+
+        formula = "".join(
+            symbol if count == 1 else f"{symbol}{count}"
+            for symbol, count in sorted(composition.items())
+        )
+        name = f"Formula: {formula}"
+        try:
+            name = configuration.PC_iupac_name(fallback=name)
+        except Exception:
+            pass
+        if name is None:
+            name = f"Formula: {formula}"
+
+        level = f"{method}/{basis}" if basis else method
+
+        try:
+            from seamm_thermochemistry import (
+                ThermoDB,
+                atomization_energy,
+                formation_energy,
+                formation_enthalpy,
+                formation_gibbs_energy,
+                format_report,
+                MissingReferenceData,
+            )
+        except ImportError:
+            return (
+                f"Thermochemistry of {name} with {level}\n\n"
+                "seamm_thermochemistry is not installed; cannot calculate "
+                "an energy of formation."
+            )
+
+        try:
+            with ThermoDB(read_only=True) as db:
+                E = Q_(data["energy"], "E_h").m_as("kJ/mol")
+                data["E atomization"] = atomization_energy(
+                    composition,
+                    E,
+                    db,
+                    "orca",
+                    lookup_method,
+                    settings=basis,
+                    units="kJ/mol",
+                )
+                data["DfE0"] = formation_energy(
+                    composition,
+                    E,
+                    db,
+                    "orca",
+                    lookup_method,
+                    settings=basis,
+                    anchor=True,
+                    anchor_at_0K=True,
+                    units="kJ/mol",
+                )
+
+                H = data.get("enthalpy")
+                if temperature is not None and H is not None:
+                    try:
+                        data["DfHT"] = formation_enthalpy(
+                            composition,
+                            H,
+                            temperature,
+                            db,
+                            "orca",
+                            lookup_method,
+                            settings=basis,
+                            units="kJ/mol",
+                        )
+                    except MissingReferenceData:
+                        pass
+
+                G = data.get("gibbs energy")
+                if temperature is not None and G is not None:
+                    try:
+                        data["DfGT"] = formation_gibbs_energy(
+                            composition,
+                            G,
+                            temperature,
+                            db,
+                            "orca",
+                            lookup_method,
+                            settings=basis,
+                            units="kJ/mol",
+                        )
+                    except MissingReferenceData:
+                        pass
+
+                report = format_report(
+                    composition,
+                    db,
+                    "orca",
+                    lookup_method,
+                    settings=basis,
+                    units="kJ/mol",
+                    name=name,
+                    level_label=level,
+                    system_energy=E,
+                    system_enthalpy=H if temperature is not None else None,
+                    system_gibbs_energy=G if temperature is not None else None,
+                    temperature=temperature,
+                )
+        except FileNotFoundError:
+            return (
+                f"Thermochemistry of {name} with {level}\n\n"
+                "The seamm_thermochemistry reference database is not "
+                "built; cannot calculate an energy of formation."
+            )
+        except MissingReferenceData as e:
+            return (
+                f"Thermochemistry of {name} with {level}\n\n"
+                f"Cannot calculate the energy of formation: {e}"
+            )
+
+        return report
+
     def analyze(self, indent="", P=None, data=None, **kwargs):
         """Parse the properties, store them, print a summary, write CSV files,
         and optionally apply bond orders / Hirshfeld charges to the structure."""
@@ -972,6 +1149,13 @@ class Energy(orca_step.ORCABase):
             max_print = int(self.parent.options.get("max_atoms_to_print", 25))
         except (TypeError, ValueError):
             max_print = 25
+
+        # Calculate the energy of formation, if possible. 0 K, ZPE-free, via
+        # seamm_thermochemistry -- see calculate_energy_of_formation's docstring.
+        if "energy" in props:
+            formation_text = self.calculate_energy_of_formation(P, props, configuration)
+            if formation_text:
+                (directory / "Thermochemistry.txt").write_text(formation_text)
 
         # Store the scalar/array results (writes the storable properties to the
         # configuration and any results the user asked to save).
@@ -1173,6 +1357,17 @@ class Energy(orca_step.ORCABase):
         def add(prop, value, units="", fmt="{:.6f}"):
             if value is not None:
                 rows.append([prop, fmt.format(value), units])
+
+        # Formation-referenced quantities first -- the headline numbers for
+        # a chemist reading this report -- most complete/temperature-aware
+        # first, down to the bare electronic quantities.
+        temperature = p.get("formation temperature")
+        t_label = f" ({temperature:.2f} K)" if temperature is not None else ""
+        add(f"Enthalpy of formation{t_label}", p.get("DfHT"), "kJ/mol", "{:.2f}")
+        add(f"Gibbs energy of formation{t_label}", p.get("DfGT"), "kJ/mol", "{:.2f}")
+        add("Energy of formation (0 K)", p.get("DfE0"), "kJ/mol", "{:.2f}")
+        add("Atomization energy", p.get("E atomization"), "kJ/mol", "{:.2f}")
+        add("Zero-point energy", p.get("zero point energy"), "kJ/mol", "{:.2f}")
 
         add("Total energy", p.get("energy"), "E_h", "{:.8f}")
         add("SCF energy", p.get("scf energy"), "E_h", "{:.8f}")

@@ -61,10 +61,38 @@ class Frequencies(Energy):
         """Never extrapolate: a CBS-extrapolated energy has no Hessian."""
         return False
 
+    def _hessian_kind(self, P):
+        """Resolve 'second derivatives' to 'analytic' or 'numerical'.
+
+        The explicit choices force one or the other outright. 'default'
+        (the normal case) picks analytic when ORCA has one for the resolved
+        method (see ``orca_step.method_has_analytic_hessian``), else
+        numerical -- so the user does not need to know which methods have
+        an analytic Hessian.
+
+        Resolving 'default' needs the method, which needs
+        ``_resolve_method_basis`` -- raises whatever that raises (e.g. no
+        preceding Model Chemistry step has run yet) rather than guessing;
+        a real configuration problem should surface, not be papered over.
+        """
+        second_derivatives = P.get("second derivatives", "default")
+        if second_derivatives in ("analytic", "numerical"):
+            return second_derivatives
+        method, _ = self._resolve_method_basis(P)
+        return (
+            "analytic" if orca_step.method_has_analytic_hessian(method) else "numerical"
+        )
+
     def description_text(self, P=None):
         if not P:
             P = self.parameters.values_to_dict()
-        how = "numerical" if P.get("second derivatives") == "numerical" else "analytic"
+        try:
+            how = self._hessian_kind(P)
+        except Exception:
+            # Method not resolvable yet (e.g. in the flowchart editor, before
+            # a preceding Model Chemistry step has run) -- describe the
+            # 'default' policy in words instead of guessing.
+            how = "analytic if available, else numerical"
         text = (
             f"Vibrational frequencies with ORCA at {self._level_of_theory_text(P)} "
             f"({how} Hessian), with thermochemistry."
@@ -76,7 +104,7 @@ class Frequencies(Energy):
         P = self.parameters.current_values_to_dict(
             context=seamm.flowchart_variables._data
         )
-        freq_kw = "NumFreq" if P.get("second derivatives") == "numerical" else "Freq"
+        freq_kw = "NumFreq" if self._hessian_kind(P) == "numerical" else "Freq"
         kws = [freq_kw]
         if keywords:
             kws += list(keywords)
@@ -142,6 +170,22 @@ class Frequencies(Energy):
                     logger.warning(f"Could not create the IR-spectrum graph: {e}")
 
         props.update(self._parse_thermochemistry(text))
+
+        # Calculate the formation-referenced energies, if possible: DfE0
+        # (0 K, electronic-only, always) plus DfHT/DfGT (at the requested
+        # temperature, since a full thermochemistry calc is available here)
+        # via seamm_thermochemistry -- see calculate_energy_of_formation's
+        # docstring.
+        if "energy" in props:
+            temp = P.get("temperature", 298.15)
+            temperature = temp.m_as("K") if hasattr(temp, "m_as") else float(temp)
+            props["formation temperature"] = temperature
+            formation_text = self.calculate_energy_of_formation(
+                P, props, initial_configuration, temperature=temperature
+            )
+            if formation_text:
+                (directory / "Thermochemistry.txt").write_text(formation_text)
+
         props = {k: v for k, v in props.items() if v not in (None, [], {})}
 
         # Store the results/properties per the structure-handling options. A
@@ -421,28 +465,16 @@ class Frequencies(Energy):
         return out
 
     def _report_frequencies(self, p):
-        """Print the thermochemistry, note imaginary modes, and list the
-        frequencies for small systems."""
-        rows = []
+        """Note imaginary modes and list the frequencies for small systems.
 
-        def add(label, value, units, fmt="{:.3f}"):
-            if value is not None:
-                rows.append([label, fmt.format(value), units])
-
-        add("Zero-point energy", p.get("zero point energy"), "kJ/mol")
-        add("Total enthalpy", p.get("enthalpy"), "kJ/mol")
-        add("Gibbs free energy", p.get("gibbs energy"), "kJ/mol")
-        if rows:
-            tmp = tabulate(
-                rows,
-                headers=["Thermochemistry", "Value", "Units"],
-                tablefmt="rounded_outline",
-                colalign=("left", "right", "left"),
-                disable_numparse=True,
-            )
-            printer.normal("")
-            printer.normal(textwrap.indent(tmp, self.indent + 7 * " "))
-
+        The absolute zero-point energy/total enthalpy/Gibbs free energy
+        used to be printed here as their own small table; ZPE now appears
+        in the main scalar-summary table (`_print_scalar_summary`,
+        inherited from `Energy`) and the absolute enthalpy/Gibbs energy
+        totals -- large, code-dependent-zero numbers with no direct
+        chemical meaning -- are superseded there by the formation-
+        referenced DfHT/DfGT.
+        """
         freqs = p.get("frequencies")
         if freqs:
             n_imag = p.get("n imaginary frequencies", 0)

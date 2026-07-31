@@ -24,3 +24,7 @@ largest zero-mode frequency#ORCA#{model},float,1/cm,The largest nominally-zero (
 zero point energy#ORCA#{model},float,kJ/mol,The zero-point vibrational energy from {model},
 enthalpy#ORCA#{model},float,kJ/mol,The total enthalpy from the thermochemistry from {model},
 Gibbs energy#ORCA#{model},float,kJ/mol,The Gibbs free energy from the thermochemistry from {model},
+E atomization#ORCA#{model},float,kJ/mol,The atomization energy (electronic energy to separate into gas-phase atoms) from {model},
+DfE0#ORCA#{model},float,kJ/mol,The 0 K electronic-only energy of formation from the elements from {model},
+DfHT#ORCA#{model},float,kJ/mol,The enthalpy of formation from the elements at temperature T from {model},
+DfGT#ORCA#{model},float,kJ/mol,The Gibbs energy of formation from the elements at temperature T from {model},

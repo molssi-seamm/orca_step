@@ -21,18 +21,23 @@ class FrequenciesParameters(EnergyParameters):
 
     parameters = {
         "second derivatives": {
-            "default": "analytic",
+            "default": "default",
             "kind": "enum",
             "default_units": "",
-            "enumeration": ("analytic", "numerical"),
+            "enumeration": ("default", "analytic", "numerical"),
             "format_string": "",
             "description": "Second derivatives:",
             "help_text": (
-                "How to compute the Hessian. 'analytic' (ORCA's AnFreq) is much "
-                "faster but requires an analytic second derivative for the method "
-                "(available for HF, most DFT functionals, and MP2). 'numerical' "
-                "(NumFreq) finite-differences the gradient -- it works for any "
-                "method that has a gradient, but is considerably more expensive."
+                "How to compute the Hessian. 'default' uses ORCA's analytic "
+                "second derivative (AnFreq) when one is available for the "
+                "method (HF, most DFT functionals, MP2), and falls back to "
+                "the numerical one (NumFreq) otherwise -- the right choice "
+                "for almost every case. 'analytic' and 'numerical' force one "
+                "or the other regardless of whether the method has an "
+                "analytic Hessian: 'analytic' fails for a method without one "
+                "(e.g. a double hybrid or (DLPNO-)CCSD(T)); 'numerical' "
+                "(finite-differencing the gradient) works for any method "
+                "that has a gradient, but is considerably more expensive."
             ),
         },
         "temperature": {
