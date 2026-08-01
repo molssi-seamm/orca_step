@@ -254,7 +254,10 @@ class ORCABase(seamm.Node):
             # executor discards files not requested. orca.engrad appears only
             # when gradients are requested (! EnGrad).
             return_files=return_files,
-            in_situ=True,
+            # None: run in node-local scratch under a scheduler (SLURM's job
+            # dir is NFS, unsafe for ORCA's MPI scratch I/O), in place
+            # otherwise. See molssi-seamm/orca_step#20.
+            in_situ=None,
             shell=True,
             env=env,
         )
@@ -435,7 +438,8 @@ class ORCABase(seamm.Node):
             directory=self.directory,
             files=files,
             return_files=return_files,
-            in_situ=True,
+            # See the comment in run_orca -- molssi-seamm/orca_step#20.
+            in_situ=None,
             shell=True,
             env=env,
         )
