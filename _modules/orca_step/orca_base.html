@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.7.31.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.8.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=1b51b018"></script>
+    <script src="../../_static/documentation_options.js?v=54f30045"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.7.31.1" />
+  <meta name="docsearch:version" content="2026.8.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -757,15 +757,45 @@
             <span class="c1"># executor discards files not requested. orca.engrad appears only</span>
             <span class="c1"># when gradients are requested (! EnGrad).</span>
             <span class="n">return_files</span><span class="o">=</span><span class="n">return_files</span><span class="p">,</span>
-            <span class="n">in_situ</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="c1"># None: run in node-local scratch under a scheduler (SLURM&#39;s job</span>
+            <span class="c1"># dir is NFS, unsafe for ORCA&#39;s MPI scratch I/O), in place</span>
+            <span class="c1"># otherwise. See molssi-seamm/orca_step#20.</span>
+            <span class="n">in_situ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;There was an error running ORCA.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="s2">&quot;orca.out&quot;</span><span class="p">)</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_report_run_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Note in step.out where ORCA actually ran -- the job directory, or</span>
+<span class="sd">        (under a scheduler) node-local scratch, with only results copied back.</span>
+<span class="sd">        See molssi-seamm/orca_step#20: this distinction matters for diagnosing</span>
+<span class="sd">        NFS-related failures and for knowing where any leftover scratch</span>
+<span class="sd">        (e.g. after a crash) actually landed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;in_situ&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                <span class="n">__</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Ran ORCA directly in the job directory, </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                <span class="n">__</span><span class="p">(</span>
+                    <span class="s2">&quot;Ran ORCA in node-local scratch &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;directory&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">), not the job directory, &quot;</span>
+                    <span class="s2">&quot;because this job is running under a batch scheduler and &quot;</span>
+                    <span class="s2">&quot;ORCA&#39;s MPI scratch I/O is not safe on NFS; only the &quot;</span>
+                    <span class="s2">&quot;requested result files were copied back here.&quot;</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve (n_cores, memory_mb) for an ORCA run from the executor&#39;s</span>
@@ -941,12 +971,14 @@
             <span class="n">directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span>
             <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
             <span class="n">return_files</span><span class="o">=</span><span class="n">return_files</span><span class="p">,</span>
-            <span class="n">in_situ</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="c1"># See the comment in run_orca -- molssi-seamm/orca_step#20.</span>
+            <span class="n">in_situ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;There was an error running the ORCA Compound job.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span>
 
         <span class="c1"># Read the corrected gradient from the EnGrad file the Compound wrote,</span>
         <span class="c1"># when one was requested (energy-only jobs pass engrad=None).</span>
