@@ -2,6 +2,22 @@
 History
 =======
 
+2026.8.1 -- Bugfix: run ORCA in node-local scratch under a scheduler, not NFS
+    * ORCA is parallel (MPI) and was always launched directly in the SEAMM
+      job/step directory. On a cluster that directory is commonly NFS-mounted
+      shared storage, and ORCA's parallel modules are not NFS-safe for their
+      scratch I/O -- under a busy job array this produced intermittent errors
+      such as ``Sorting IAK integrals ... Failed to read asymmetric matrix``
+      or ``Error MatrixLife: cannot recover matrix``. ORCA now runs in a
+      private temporary directory (node-local scratch, honoring ``$TMPDIR``)
+      whenever it detects it is running under a batch scheduler (currently
+      SLURM), copying only the needed result files back to the job directory
+      afterwards. Local/interactive runs are unaffected. Requires
+      ``seamm_exec`` 2026.8.1 or later.
+    * ORCA now reports, in job.out/step.out, whether it ran directly in the
+      job directory or in node-local scratch (and where), so this is visible
+      without having to check the SEAMM logs.
+
 2026.7.31.1 -- BSSE now reports the interaction (binding) energy
     * The BSSE (counterpoise) sub-step now computes and can save two new
       results, in kJ/mol: ``interaction energy`` (the CP-corrected binding
