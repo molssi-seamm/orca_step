@@ -263,8 +263,35 @@ class ORCABase(seamm.Node):
         )
         if not result:
             raise RuntimeError("There was an error running ORCA.")
+        self._report_run_location(result, directory)
 
         return self._parse_output(directory / "orca.out")
+
+    def _report_run_location(self, result, directory):
+        """Note in step.out where ORCA actually ran -- the job directory, or
+        (under a scheduler) node-local scratch, with only results copied back.
+        See molssi-seamm/orca_step#20: this distinction matters for diagnosing
+        NFS-related failures and for knowing where any leftover scratch
+        (e.g. after a crash) actually landed.
+        """
+        if result.get("in_situ", True):
+            printer.normal(
+                __(
+                    f"Ran ORCA directly in the job directory, {directory}.",
+                    indent=self.indent + 4 * " ",
+                )
+            )
+        else:
+            printer.normal(
+                __(
+                    "Ran ORCA in node-local scratch "
+                    f"({result.get('directory')}), not the job directory, "
+                    "because this job is running under a batch scheduler and "
+                    "ORCA's MPI scratch I/O is not safe on NFS; only the "
+                    "requested result files were copied back here.",
+                    indent=self.indent + 4 * " ",
+                )
+            )
 
     def _resources(self):
         """Resolve (n_cores, memory_mb) for an ORCA run from the executor's
@@ -445,6 +472,7 @@ class ORCABase(seamm.Node):
         )
         if not result:
             raise RuntimeError("There was an error running the ORCA Compound job.")
+        self._report_run_location(result, directory)
 
         # Read the corrected gradient from the EnGrad file the Compound wrote,
         # when one was requested (energy-only jobs pass engrad=None).
