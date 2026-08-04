@@ -83,12 +83,49 @@ have to run side by side in the same script to be compared.
    (&minus;136 + &minus;26 &asymp; &minus;162) -- the expected
    cooperative-saturation non-additivity, not a bug.
 
+:download:`optimize_ion_water.py <optimize_ion_water.py>`
+   Geometry optimization for the Na\ :sup:`+`\ ···H\ :sub:`2`\ O and
+   Cl\ :sup:`-`\ ···H\ :sub:`2`\ O pairs (B3LYP-D3BJ/def2-TZVP, ``TightOpt``,
+   from M3's literature-informed starting geometries -- via ``orca_step``'s
+   own ``Optimization`` sub-step, then ``BSSE`` at the relaxed geometry).
+   Na-O tightens from the 2.30 Å starting guess to ~2.21 Å. CP interaction
+   energy at the true minimum: Na\ :sup:`+`\ ···H\ :sub:`2`\ O = &minus;26.4
+   kcal/mol (M3 unoptimized: &minus;26.1; lit. &asymp; &minus;24); Cl\
+   :sup:`-`\ ···H\ :sub:`2`\ O = &minus;17.5 kcal/mol (M3 unoptimized:
+   &minus;15.6; lit. &asymp; &minus;13). Optimizing moved *both* numbers
+   further from the approximate literature references, not closer --
+   traced to a basis-set effect, not a geometry or CP-wiring problem (see
+   below).
+
+:download:`check_diffuse_basis.py <check_diffuse_basis.py>`
+   Same optimized geometries, ``def2-TZVP`` vs. ``def2-TZVPPD`` (the
+   campaign's actual production basis, with diffuse functions) as a
+   single-point ``BSSE`` re-evaluation -- isolates the basis effect from any
+   geometry-relaxation effect. Diffuse functions close roughly half the gap
+   to literature in both cases: Cl\ :sup:`-`\ ···H\ :sub:`2`\ O &minus;17.5
+   -> &minus;15.5 kcal/mol (lit. &asymp; &minus;13); Na\ :sup:`+`\ ···H\
+   :sub:`2`\ O &minus;26.4 -> &minus;25.1 kcal/mol (lit. &asymp; &minus;24).
+   Confirms the residual is the same "diffuse functions matter for
+   dispersion/diffuse-anion interactions" finding the campaign already made
+   for neutral dimers (``def2-TZVPPD`` vs. plain ``def2-TZVPP``,
+   see ``bsse-corrected-gradients`` era notes) -- ``def2-TZVP`` (no diffuse
+   "D") understates ion-water binding, most visibly for the more diffuse
+   Cl\ :sup:`-`\ anion. The remaining ~1-2.5 kcal/mol gap after adding
+   diffuse functions is plausible from (a) the approximate literature
+   numbers being ballpark, not rigorous CCSD(T)/CBS benchmarks, (b)
+   B3LYP-D3BJ vs. the campaign's actual production method
+   (revDSD-PBEP86-D4), and (c) no re-optimization at the diffuse basis
+   (only a single point at the ``def2-TZVP``-optimized geometry).
+
 Not done
 --------
 
 * The Psi4 sub-step (the cross-engine check N = 3 was originally paired
-  with) -- a separate, larger piece of work (a new engine's ghost-atom
-  writer and input generation), not started.
-* Geometry optimization / a systematic angular scan for the Na\ :sup:`+`\
-  ···H\ :sub:`2`\ O and Cl\ :sup:`-`\ ···H\ :sub:`2`\ O pairs -- the current
-  numbers use literature-informed but unoptimized geometries.
+  with) is done -- see the sibling ``psi4_step`` repository's own
+  ``docs/developer_guide/campaigns/2026-08-04/``.
+* A systematic angular scan for the Na\ :sup:`+`\ ···H\ :sub:`2`\ O and
+  Cl\ :sup:`-`\ ···H\ :sub:`2`\ O pairs (the S66/angular-test pattern) --
+  only the single equilibrium geometry has been optimized so far.
+* Re-optimizing at ``def2-TZVPPD`` (or the actual production method,
+  revDSD-PBEP86-D4) rather than reusing the ``def2-TZVP``-optimized
+  geometry as a single-point re-evaluation.
