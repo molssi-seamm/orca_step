@@ -160,13 +160,33 @@ class ORCABase(seamm.Node):
     # ------------------------------------------------------------------
     # Input generation
     # ------------------------------------------------------------------
-    def geometry_block(self, configuration, charge, multiplicity):
-        """Return the ORCA coordinate block for the current configuration."""
+    def geometry_block(
+        self, configuration, charge, multiplicity, atom_indices=None, ghost_atoms=None
+    ):
+        """Return the ORCA coordinate block for `configuration`.
+
+        Parameters
+        ----------
+        atom_indices : Sequence[int] | None
+            0-based atom indices to include, in this order. ``None`` (the
+            default) is every atom, in the configuration's own order -- a BSSE
+            sub-job passes a fragment's (sub-)list instead.
+        ghost_atoms : Container[int] | None
+            The subset of `atom_indices` to write as ORCA ghost centres (the
+            element symbol with a trailing ``:``, e.g. ``O:`` -- basis
+            functions only, no nucleus/electrons). ``None``/empty writes every
+            atom as real.
+        """
         lines = [f"* xyz {charge} {multiplicity}"]
         symbols = configuration.atoms.symbols
         xyzs = configuration.atoms.get_coordinates(fractionals=False, in_cell=True)
-        for symbol, (x, y, z) in zip(symbols, xyzs):
-            lines.append(f"{symbol:2s} {x:15.8f} {y:15.8f} {z:15.8f}")
+        indices = range(len(symbols)) if atom_indices is None else atom_indices
+        ghosts = set(ghost_atoms) if ghost_atoms else set()
+        for i in indices:
+            symbol = symbols[i]
+            x, y, z = xyzs[i]
+            label = f"{symbol}:" if i in ghosts else symbol
+            lines.append(f"{label:4s} {x:15.8f} {y:15.8f} {z:15.8f}")
         lines.append("*")
         return "\n".join(lines)
 
@@ -174,7 +194,14 @@ class ORCABase(seamm.Node):
     # Execution
     # ------------------------------------------------------------------
     def run_orca(self, keyword_line, extra_blocks="", extra_files=None, make_wfx=False):
-        """Write the ORCA input, run ORCA, and return the parsed results.
+        """Write the ORCA input for the node's own configuration, run ORCA,
+        and return the parsed results.
+
+        A thin wrapper around :meth:`run_orca_job` for the common case: the
+        whole of the node's own system, at its own charge/multiplicity, in
+        the node's own directory. See :meth:`run_orca_job` for a sub-job
+        against an explicit geometry/charge/multiplicity/directory (e.g. one
+        of a BSSE correction's counterpoise sub-jobs).
 
         Parameters
         ----------
@@ -196,12 +223,77 @@ class ORCABase(seamm.Node):
         dict
             Parsed results, at least ``{"energy": <E_h>, "success": bool}``.
         """
-        directory = Path(self.directory)
-        directory.mkdir(parents=True, exist_ok=True)
-
         _, configuration = self.get_system_configuration(None)
-        charge = configuration.charge
-        multiplicity = configuration.spin_multiplicity
+        return self.run_orca_job(
+            keyword_line,
+            configuration,
+            configuration.charge,
+            configuration.spin_multiplicity,
+            extra_blocks=extra_blocks,
+            extra_files=extra_files,
+            make_wfx=make_wfx,
+        )
+
+    def run_orca_job(
+        self,
+        keyword_line,
+        configuration,
+        charge,
+        multiplicity,
+        atom_indices=None,
+        ghost_atoms=None,
+        directory=None,
+        extra_blocks="",
+        extra_files=None,
+        make_wfx=False,
+    ):
+        """Write an ORCA input for an explicit geometry/charge/multiplicity,
+        run ORCA, and return the parsed results.
+
+        The primitive ``run_orca`` and a BSSE counterpoise correction's
+        per-fragment sub-jobs both drive: geometry/charge/multiplicity come
+        from arguments instead of ``self.get_system_configuration()``/
+        ``self.directory``, since a BSSE sub-job is a different atom subset
+        (and, for a ghost-augmented fragment, a different charge) than the
+        node's own system, run in its own sub-directory so the 2N + 1 jobs of
+        one BSSE correction do not collide.
+
+        Parameters
+        ----------
+        keyword_line : str
+            The contents of the ORCA "!" simple-input line (without the "!").
+        configuration : molsystem.Configuration
+            The system to take atoms/coordinates from.
+        charge, multiplicity : int
+            The charge/multiplicity for *this job* -- not necessarily
+            ``configuration.charge``/``configuration.spin_multiplicity`` (a
+            BSSE fragment sub-job has its own).
+        atom_indices : Sequence[int] | None
+            0-based atom indices to include, in this order. ``None`` (the
+            default) is every atom, in the configuration's own order.
+        ghost_atoms : Container[int] | None
+            The subset of `atom_indices` to write as ORCA ghost centres. See
+            :meth:`geometry_block`.
+        directory : str | Path | None
+            Where to run this job. ``None`` (the default) is ``self.directory``
+            -- the node's own job directory, as ``run_orca`` uses.
+        extra_blocks : str
+            Any additional ``%`` blocks to place before the geometry.
+        extra_files : dict | None
+            Extra input files to write into the run directory.
+        make_wfx : bool
+            After ORCA finishes, run ``orca_2aim`` to convert the retained
+            density into an AIMPAC ``orca.wfx`` in *this job's* directory.
+
+        Returns
+        -------
+        dict
+            Parsed results, at least ``{"energy": <E_h>, "success": bool}``.
+        """
+        run_directory = (
+            Path(directory) if directory is not None else Path(self.directory)
+        )
+        run_directory.mkdir(parents=True, exist_ok=True)
 
         # Resources (cores + per-process memory), shared with run_orca_compound.
         n_cores, memory_mb = self._resources()
@@ -212,14 +304,22 @@ class ORCABase(seamm.Node):
         lines.append(f"%maxcore {memory_mb}")
         if extra_blocks.strip() != "":
             lines.append(extra_blocks.rstrip())
-        lines.append(self.geometry_block(configuration, charge, multiplicity))
+        lines.append(
+            self.geometry_block(
+                configuration,
+                charge,
+                multiplicity,
+                atom_indices=atom_indices,
+                ghost_atoms=ghost_atoms,
+            )
+        )
         lines.append("")
         input_text = "\n".join(lines)
 
         files = {"orca.inp": input_text}
         if extra_files:
             files.update(extra_files)
-        logger.debug("orca.inp:\n" + input_text)
+        logger.debug(f"orca.inp ({run_directory}):\n" + input_text)
 
         config = self._orca_config()
         env, lib_prefix = self._mpi_env(n_cores, config)
@@ -247,7 +347,7 @@ class ORCABase(seamm.Node):
         result = self.flowchart.executor.run(
             cmd=cmd,
             config=config,
-            directory=self.directory,
+            directory=str(run_directory),
             files=files,
             # Wildcards: ORCA writes orca.bibtex (suggested citations) and
             # orca.property.txt (and other *.txt depending on options); the
@@ -262,10 +362,10 @@ class ORCABase(seamm.Node):
             env=env,
         )
         if not result:
-            raise RuntimeError("There was an error running ORCA.")
-        self._report_run_location(result, directory)
+            raise RuntimeError(f"There was an error running ORCA in {run_directory}.")
+        self._report_run_location(result, run_directory)
 
-        return self._parse_output(directory / "orca.out")
+        return self._parse_output(run_directory / "orca.out")
 
     def _report_run_location(self, result, directory):
         """Note in step.out where ORCA actually ran -- the job directory, or
