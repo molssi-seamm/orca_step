@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.8.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.8.4 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=54f30045"></script>
+    <script src="_static/documentation_options.js?v=0cfa9efb"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.1" />
+  <meta name="docsearch:version" content="2026.8.4" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,26 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.8.4 – BSSE generalized to N fragments with independent per-fragment charge</dt><dd><ul class="simple">
+<li><p>The BSSE (counterpoise) sub-step now supports any number of fragments, not
+just two, and each fragment can have its own charge (a new “Fragment
+charges” control) – needed for ions, e.g. a Na+/Cl- pair or a
+Na+/Cl-/H2O cluster. “Fragments” gained an “auto (molecules)” mode (every
+separate molecule found, not just exactly two); “Fragment A atoms” became
+“Fragment atoms”, taking one semicolon-separated group of atoms per
+fragment.</p></li>
+<li><p>Internally, the correction is now driven by a new shared library,
+<code class="docutils literal notranslate"><span class="pre">seamm-bsse</span></code>: SEAMM generates the 2N + 1 job specs the counterpoise
+correction needs and runs each as an ordinary ORCA job, rather than the
+previous ORCA <em>Compound</em> script (limited to exactly two neutral-singlet
+fragments). Validated against the old Compound-script path on the
+existing water/FEC/EC training data (agreement to SCF-noise level) and
+against literature ion-pair/ion-water binding energies and a
+three-fragment cluster before replacing it as the production path; the
+Compound script itself is kept in the package as a permanent regression
+reference.</p></li>
+</ul>
+</dd>
 <dt>2026.8.1 – Bugfix: run ORCA in node-local scratch under a scheduler, not NFS</dt><dd><ul class="simple">
 <li><p>ORCA is parallel (MPI) and was always launched directly in the SEAMM
 job/step directory. On a cluster that directory is commonly NFS-mounted

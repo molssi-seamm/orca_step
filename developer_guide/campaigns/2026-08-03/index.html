@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>YYYY-MM-DD Initial development campaign &#8212; SEAMM ORCA Plug-in 2026.8.1 documentation</title>
+    <title>2026-08-03 N-fragment, charge-aware counterpoise (seamm_bsse) &#8212; SEAMM ORCA Plug-in 2026.8.4 documentation</title>
   
   
   
@@ -41,13 +41,13 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=54f30045"></script>
+    <script src="../../../_static/documentation_options.js?v=0cfa9efb"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guide/campaigns/YYYY-MM-DD/index';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guide/campaigns/2026-08-03/index';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -55,7 +55,7 @@
     <link rel="prev" title="Frequencies sub-step and &lt;HESSIAN – scope and design" href="../2026-07-15/frequencies_scope.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.1" />
+  <meta name="docsearch:version" content="2026.8.4" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -469,9 +469,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../2026-07-15/frequencies_scope.html">Frequencies sub-step and &lt;HESSIAN – scope and design</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 current active has-children"><a class="current reference internal" href="#">YYYY-MM-DD Initial development campaign</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
-</ul>
-</details></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">2026-08-03 N-fragment, charge-aware counterpoise (seamm_bsse)</a></li>
 </ul>
 </details></li>
 </ul>
@@ -520,7 +518,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Campaigns</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">YYYY-MM-DD Initial development campaign</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">2026-08-03 N-fragment, charge-aware counterpoise (seamm_bsse)</span></li>
   </ul>
 </nav>
 </div>
@@ -537,14 +535,125 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="yyyy-mm-dd-initial-development-campaign">
-<h1>YYYY-MM-DD Initial development campaign<a class="headerlink" href="#yyyy-mm-dd-initial-development-campaign" title="Link to this heading">#</a></h1>
-<section id="goal-of-v1">
-<h2>Goal of v1<a class="headerlink" href="#goal-of-v1" title="Link to this heading">#</a></h2>
-<p>Produce a SEAMM plug-in …</p>
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-</div>
+  <section id="n-fragment-charge-aware-counterpoise-seamm-bsse">
+<h1>2026-08-03 N-fragment, charge-aware counterpoise (seamm_bsse)<a class="headerlink" href="#n-fragment-charge-aware-counterpoise-seamm-bsse" title="Link to this heading">#</a></h1>
+<p>Generalizes the 2026-07-09 <strong>BSSE</strong> sub-step (two fragments, neutral singlet
+only, one ORCA <em>Compound</em> process) to an arbitrary number of fragments with
+independent per-fragment charge, backed by a new shared library,
+<strong>seamm_bsse</strong>, rather than a second ORCA-specific special case.</p>
+<p>The canonical design document – the physics, the architecture (why a
+separate library plus a thin per-engine sub-step rather than one
+code-agnostic driver step), and the confirmed ORCA ghost-atom indexing
+property that makes the library’s <code class="docutils literal notranslate"><span class="pre">combine()</span></code> padding-only – lives in the
+sibling <code class="docutils literal notranslate"><span class="pre">seamm_bsse</span></code> repository:
+<code class="docutils literal notranslate"><span class="pre">seamm_bsse/docs/developer_guide/campaigns/2026-08-03/bsse_architecture.rst</span></code>.
+This page is the ORCA-side implementation record and validation log.</p>
+<section id="what-changed-here">
+<h2>What changed here<a class="headerlink" href="#what-changed-here" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">orca_base.py</span></code>: <code class="docutils literal notranslate"><span class="pre">run_orca_job</span></code> extracted from <code class="docutils literal notranslate"><span class="pre">run_orca</span></code> –
+geometry/charge/multiplicity/directory now come from arguments instead of
+<code class="docutils literal notranslate"><span class="pre">self.get_system_configuration()</span></code>/<code class="docutils literal notranslate"><span class="pre">self.directory</span></code>, since a
+counterpoise sub-job differs from the node’s own system in exactly those
+ways. <code class="docutils literal notranslate"><span class="pre">run_orca</span></code> is now a thin wrapper. <code class="docutils literal notranslate"><span class="pre">geometry_block</span></code> gained
+<code class="docutils literal notranslate"><span class="pre">atom_indices=</span></code>/<code class="docutils literal notranslate"><span class="pre">ghost_atoms=</span></code> (backward compatible).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bsse.py</span></code>: <code class="docutils literal notranslate"><span class="pre">_fragments()</span></code> (renamed from <code class="docutils literal notranslate"><span class="pre">_fragment_atoms</span></code>) returns a
+list of <code class="docutils literal notranslate"><span class="pre">seamm_bsse.Fragment</span></code> for N groups with independent charge;
+<code class="docutils literal notranslate"><span class="pre">run()</span></code> generates the 2N + 1 job specs via
+<code class="docutils literal notranslate"><span class="pre">seamm_bsse.generate_job_specs</span></code>, runs each through <code class="docutils literal notranslate"><span class="pre">run_orca_job</span></code> in
+its own sub-directory, and assembles the result via
+<code class="docutils literal notranslate"><span class="pre">seamm_bsse.combine()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bsse_parameters.py</span></code>/<code class="docutils literal notranslate"><span class="pre">tk_bsse.py</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;fragments&quot;</span></code> gained
+<code class="docutils literal notranslate"><span class="pre">&quot;auto</span> <span class="pre">(molecules)&quot;</span></code> (any number of molecules, not just two);
+<code class="docutils literal notranslate"><span class="pre">&quot;fragment</span> <span class="pre">A</span> <span class="pre">atoms&quot;</span></code> became <code class="docutils literal notranslate"><span class="pre">&quot;fragment</span> <span class="pre">atoms&quot;</span></code> (semicolon-separated
+groups, one per fragment); new <code class="docutils literal notranslate"><span class="pre">&quot;fragment</span> <span class="pre">charges&quot;</span></code> parameter.</p></li>
+<li><p>The original ORCA <em>Compound</em> path (<code class="docutils literal notranslate"><span class="pre">bssegradient.cmp</span></code>/<code class="docutils literal notranslate"><span class="pre">bssenergy.cmp</span></code>,
+<code class="docutils literal notranslate"><span class="pre">_compound_input</span></code>/<code class="docutils literal notranslate"><span class="pre">run_orca_compound</span></code>/<code class="docutils literal notranslate"><span class="pre">_parse_compound_energies</span></code> in
+<code class="docutils literal notranslate"><span class="pre">bsse.py</span></code>) is <strong>not removed</strong> – it stays as the permanent N = 2
+regression reference the new path was validated against, just no longer
+called from <code class="docutils literal notranslate"><span class="pre">run()</span></code>.</p></li>
+</ul>
+</section>
+<section id="validation">
+<h2>Validation<a class="headerlink" href="#validation" title="Link to this heading">#</a></h2>
+<p>Three real-ORCA (not stubbed) validation scripts, each building a real
+<code class="docutils literal notranslate"><span class="pre">molsystem</span></code> Configuration and a minimal-but-real execution harness
+(<code class="docutils literal notranslate"><span class="pre">seamm_exec</span></code>’s local executor, actual ORCA 6.1.1) rather than a
+<code class="docutils literal notranslate"><span class="pre">.flow</span></code>/<code class="docutils literal notranslate"><span class="pre">run_flowchart</span></code> – needed because the old Compound path is no
+longer reachable through a live flowchart run, so both paths (old, called
+directly via the still-present helper methods; new, plain <code class="docutils literal notranslate"><span class="pre">node.run()</span></code>)
+have to run side by side in the same script to be compared.</p>
+<dl class="simple">
+<dt><a class="reference download internal" download="" href="../../../_downloads/25528f3729cbc8b7cc8fb21bfc39076d/validate_bsse_m2.py"><code class="xref download docutils literal notranslate"><span class="pre">validate_bsse_m2.py</span></code></a></dt><dd><p>N = 2, neutral-singlet regression gate: does the new path reproduce the
+old Compound-script path? <strong>Passed</strong> on the water dimer
+(<code class="docutils literal notranslate"><span class="pre">H2O-H2O.sdf</span></code>), FEC-FEC (<code class="docutils literal notranslate"><span class="pre">FEC-FEC</span> <span class="pre">dimer</span> <span class="pre">opt</span> <span class="pre">PM6-ORG.sdf</span></code>, incl. F),
+and EC-EC (first record of the production <code class="docutils literal notranslate"><span class="pre">EC_dimers_run_1.sdf</span></code>, an
+NMS-displaced sample, not a hand-picked equilibrium geometry) at
+HF/def2-SVP. Energies agreed to ~2-7e-9 E<sub>h</sub>, gradients to
+~5.6-6.9e-8 E<sub>h</sub>/bohr on all three – SCF-noise level.</p>
+</dd>
+<dt><a class="reference download internal" download="" href="../../../_downloads/a48eac75653ce4f27a1d9baccabeffe5/validate_bsse_m3.py"><code class="xref download docutils literal notranslate"><span class="pre">validate_bsse_m3.py</span></code></a></dt><dd><p>Per-fragment charge on real charged two-body systems, B3LYP-D3BJ/def2-TZVP,
+vs. approximate literature binding energies. Na<sup>+</sup>···Cl<sup>-</sup> well minimum &amp;minus;136 kcal/mol at R &amp;asymp; 2.4-2.6 Å (lit.
+&amp;asymp; &amp;minus;133 at R<sub>e</sub> &amp;asymp; 2.36 Å, from a Born-Haber cycle
+over atomic D0/IP/EA), decaying smoothly to &amp;minus;64 kcal/mol by 7 Å
+(points from the already-built 40-point <code class="docutils literal notranslate"><span class="pre">Na-Cl.sdf</span></code> R-scan); Na<sup>+</sup>···H<sub>2</sub>O = &amp;minus;26.1 kcal/mol (lit. &amp;asymp;
+&amp;minus;24); Cl<sup>-</sup>···H<sub>2</sub>O = &amp;minus;15.6 kcal/mol (lit.
+&amp;asymp; &amp;minus;13). All within a few kcal/mol on unoptimized,
+literature-informed geometries – the expected residual from not
+relaxing geometry, not a wiring defect.</p>
+</dd>
+<dt><a class="reference download internal" download="" href="../../../_downloads/7fc30d58ef2b6a18ec93b5c4eeb4808b/validate_bsse_n3.py"><code class="xref download docutils literal notranslate"><span class="pre">validate_bsse_n3.py</span></code></a></dt><dd><p>N = 3 on real ORCA: a hand-built Na<sup>+</sup>···Cl<sup>-</sup>···H<sub>2</sub>O trimer (contact ion pair plus a water coordinating Na<sup>+</sup> from a different direction than Cl<sup>-</sup>), same
+B3LYP-D3BJ/def2-TZVP level. Ran the full 2N + 1 = 7 jobs correctly
+(per-fragment charges +1/&amp;minus;1/0 confirmed in the printed output). CP
+interaction &amp;minus;150.2 kcal/mol: deeper than the Na<sup>+</sup>···Cl<sup>-</sup> pair alone (&amp;minus;136) but <em>less</em> than the naive pairwise sum
+(&amp;minus;136 + &amp;minus;26 &amp;asymp; &amp;minus;162) – the expected
+cooperative-saturation non-additivity, not a bug.</p>
+</dd>
+<dt><a class="reference download internal" download="" href="../../../_downloads/29662f4e7984bcbb8211d3496616de56/optimize_ion_water.py"><code class="xref download docutils literal notranslate"><span class="pre">optimize_ion_water.py</span></code></a></dt><dd><p>Geometry optimization for the Na<sup>+</sup>···H<sub>2</sub>O and
+Cl<sup>-</sup>···H<sub>2</sub>O pairs (B3LYP-D3BJ/def2-TZVP, <code class="docutils literal notranslate"><span class="pre">TightOpt</span></code>,
+from M3’s literature-informed starting geometries – via <code class="docutils literal notranslate"><span class="pre">orca_step</span></code>’s
+own <code class="docutils literal notranslate"><span class="pre">Optimization</span></code> sub-step, then <code class="docutils literal notranslate"><span class="pre">BSSE</span></code> at the relaxed geometry).
+Na-O tightens from the 2.30 Å starting guess to ~2.21 Å. CP interaction
+energy at the true minimum: Na<sup>+</sup>···H<sub>2</sub>O = &amp;minus;26.4
+kcal/mol (M3 unoptimized: &amp;minus;26.1; lit. &amp;asymp; &amp;minus;24); Cl<sup>-</sup>···H<sub>2</sub>O = &amp;minus;17.5 kcal/mol (M3 unoptimized:
+&amp;minus;15.6; lit. &amp;asymp; &amp;minus;13). Optimizing moved <em>both</em> numbers
+further from the approximate literature references, not closer –
+traced to a basis-set effect, not a geometry or CP-wiring problem (see
+below).</p>
+</dd>
+<dt><a class="reference download internal" download="" href="../../../_downloads/1e28b95fed5396fdf2bff33bd675bc0f/check_diffuse_basis.py"><code class="xref download docutils literal notranslate"><span class="pre">check_diffuse_basis.py</span></code></a></dt><dd><p>Same optimized geometries, <code class="docutils literal notranslate"><span class="pre">def2-TZVP</span></code> vs. <code class="docutils literal notranslate"><span class="pre">def2-TZVPPD</span></code> (the
+campaign’s actual production basis, with diffuse functions) as a
+single-point <code class="docutils literal notranslate"><span class="pre">BSSE</span></code> re-evaluation – isolates the basis effect from any
+geometry-relaxation effect. Diffuse functions close roughly half the gap
+to literature in both cases: Cl<sup>-</sup>···H<sub>2</sub>O &amp;minus;17.5
+-&gt; &amp;minus;15.5 kcal/mol (lit. &amp;asymp; &amp;minus;13); Na<sup>+</sup>···H<sub>2</sub>O &amp;minus;26.4 -&gt; &amp;minus;25.1 kcal/mol (lit. &amp;asymp; &amp;minus;24).
+Confirms the residual is the same “diffuse functions matter for
+dispersion/diffuse-anion interactions” finding the campaign already made
+for neutral dimers (<code class="docutils literal notranslate"><span class="pre">def2-TZVPPD</span></code> vs. plain <code class="docutils literal notranslate"><span class="pre">def2-TZVPP</span></code>,
+see <code class="docutils literal notranslate"><span class="pre">bsse-corrected-gradients</span></code> era notes) – <code class="docutils literal notranslate"><span class="pre">def2-TZVP</span></code> (no diffuse
+“D”) understates ion-water binding, most visibly for the more diffuse
+Cl<sup>-</sup>anion. The remaining ~1-2.5 kcal/mol gap after adding
+diffuse functions is plausible from (a) the approximate literature
+numbers being ballpark, not rigorous CCSD(T)/CBS benchmarks, (b)
+B3LYP-D3BJ vs. the campaign’s actual production method
+(revDSD-PBEP86-D4), and (c) no re-optimization at the diffuse basis
+(only a single point at the <code class="docutils literal notranslate"><span class="pre">def2-TZVP</span></code>-optimized geometry).</p>
+</dd>
+</dl>
+</section>
+<section id="not-done">
+<h2>Not done<a class="headerlink" href="#not-done" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>The Psi4 sub-step (the cross-engine check N = 3 was originally paired
+with) is done – see the sibling <code class="docutils literal notranslate"><span class="pre">psi4_step</span></code> repository’s own
+<code class="docutils literal notranslate"><span class="pre">docs/developer_guide/campaigns/2026-08-04/</span></code>.</p></li>
+<li><p>A systematic angular scan for the Na<sup>+</sup>···H<sub>2</sub>O and
+Cl<sup>-</sup>···H<sub>2</sub>O pairs (the S66/angular-test pattern) –
+only the single equilibrium geometry has been optimized so far.</p></li>
+<li><p>Re-optimizing at <code class="docutils literal notranslate"><span class="pre">def2-TZVPPD</span></code> (or the actual production method,
+revDSD-PBEP86-D4) rather than reusing the <code class="docutils literal notranslate"><span class="pre">def2-TZVP</span></code>-optimized
+geometry as a single-point re-evaluation.</p></li>
+</ul>
 </section>
 </section>
 
@@ -595,14 +704,16 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#goal-of-v1">Goal of v1</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-changed-here">What changed here</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validation">Validation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#not-done">Not done</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../../_sources/developer_guide/campaigns/YYYY-MM-DD/index.rst.txt">
+    <a href="../../../_sources/developer_guide/campaigns/2026-08-03/index.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

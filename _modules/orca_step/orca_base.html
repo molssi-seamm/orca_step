@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.8.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.8.4 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=54f30045"></script>
+    <script src="../../_static/documentation_options.js?v=0cfa9efb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.1" />
+  <meta name="docsearch:version" content="2026.8.4" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -660,13 +660,33 @@
     <span class="c1"># ------------------------------------------------------------------</span>
 <div class="viewcode-block" id="ORCABase.geometry_block">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.geometry_block">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">geometry_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">charge</span><span class="p">,</span> <span class="n">multiplicity</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the ORCA coordinate block for the current configuration.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">geometry_block</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">charge</span><span class="p">,</span> <span class="n">multiplicity</span><span class="p">,</span> <span class="n">atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ghost_atoms</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the ORCA coordinate block for `configuration`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        atom_indices : Sequence[int] | None</span>
+<span class="sd">            0-based atom indices to include, in this order. ``None`` (the</span>
+<span class="sd">            default) is every atom, in the configuration&#39;s own order -- a BSSE</span>
+<span class="sd">            sub-job passes a fragment&#39;s (sub-)list instead.</span>
+<span class="sd">        ghost_atoms : Container[int] | None</span>
+<span class="sd">            The subset of `atom_indices` to write as ORCA ghost centres (the</span>
+<span class="sd">            element symbol with a trailing ``:``, e.g. ``O:`` -- basis</span>
+<span class="sd">            functions only, no nucleus/electrons). ``None``/empty writes every</span>
+<span class="sd">            atom as real.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;* xyz </span><span class="si">{</span><span class="n">charge</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">multiplicity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
         <span class="n">symbols</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span>
         <span class="n">xyzs</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="n">fractionals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">in_cell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">xyzs</span><span class="p">):</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">symbol</span><span class="si">:</span><span class="s2">2s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">))</span> <span class="k">if</span> <span class="n">atom_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">atom_indices</span>
+        <span class="n">ghosts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ghost_atoms</span><span class="p">)</span> <span class="k">if</span> <span class="n">ghost_atoms</span> <span class="k">else</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="n">symbol</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">xyzs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2">:&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ghosts</span> <span class="k">else</span> <span class="n">symbol</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">4s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
@@ -677,7 +697,14 @@
 <div class="viewcode-block" id="ORCABase.run_orca">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.run_orca">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run_orca</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the ORCA input, run ORCA, and return the parsed results.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the ORCA input for the node&#39;s own configuration, run ORCA,</span>
+<span class="sd">        and return the parsed results.</span>
+
+<span class="sd">        A thin wrapper around :meth:`run_orca_job` for the common case: the</span>
+<span class="sd">        whole of the node&#39;s own system, at its own charge/multiplicity, in</span>
+<span class="sd">        the node&#39;s own directory. See :meth:`run_orca_job` for a sub-job</span>
+<span class="sd">        against an explicit geometry/charge/multiplicity/directory (e.g. one</span>
+<span class="sd">        of a BSSE correction&#39;s counterpoise sub-jobs).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -699,12 +726,80 @@
 <span class="sd">        dict</span>
 <span class="sd">            Parsed results, at least ``{&quot;energy&quot;: &lt;E_h&gt;, &quot;success&quot;: bool}``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
-        <span class="n">directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
         <span class="n">_</span><span class="p">,</span> <span class="n">configuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system_configuration</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-        <span class="n">charge</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">charge</span>
-        <span class="n">multiplicity</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">spin_multiplicity</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_job</span><span class="p">(</span>
+            <span class="n">keyword_line</span><span class="p">,</span>
+            <span class="n">configuration</span><span class="p">,</span>
+            <span class="n">configuration</span><span class="o">.</span><span class="n">charge</span><span class="p">,</span>
+            <span class="n">configuration</span><span class="o">.</span><span class="n">spin_multiplicity</span><span class="p">,</span>
+            <span class="n">extra_blocks</span><span class="o">=</span><span class="n">extra_blocks</span><span class="p">,</span>
+            <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span>
+            <span class="n">make_wfx</span><span class="o">=</span><span class="n">make_wfx</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ORCABase.run_orca_job">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.run_orca_job">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_orca_job</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">keyword_line</span><span class="p">,</span>
+        <span class="n">configuration</span><span class="p">,</span>
+        <span class="n">charge</span><span class="p">,</span>
+        <span class="n">multiplicity</span><span class="p">,</span>
+        <span class="n">atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ghost_atoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write an ORCA input for an explicit geometry/charge/multiplicity,</span>
+<span class="sd">        run ORCA, and return the parsed results.</span>
+
+<span class="sd">        The primitive ``run_orca`` and a BSSE counterpoise correction&#39;s</span>
+<span class="sd">        per-fragment sub-jobs both drive: geometry/charge/multiplicity come</span>
+<span class="sd">        from arguments instead of ``self.get_system_configuration()``/</span>
+<span class="sd">        ``self.directory``, since a BSSE sub-job is a different atom subset</span>
+<span class="sd">        (and, for a ghost-augmented fragment, a different charge) than the</span>
+<span class="sd">        node&#39;s own system, run in its own sub-directory so the 2N + 1 jobs of</span>
+<span class="sd">        one BSSE correction do not collide.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        keyword_line : str</span>
+<span class="sd">            The contents of the ORCA &quot;!&quot; simple-input line (without the &quot;!&quot;).</span>
+<span class="sd">        configuration : molsystem.Configuration</span>
+<span class="sd">            The system to take atoms/coordinates from.</span>
+<span class="sd">        charge, multiplicity : int</span>
+<span class="sd">            The charge/multiplicity for *this job* -- not necessarily</span>
+<span class="sd">            ``configuration.charge``/``configuration.spin_multiplicity`` (a</span>
+<span class="sd">            BSSE fragment sub-job has its own).</span>
+<span class="sd">        atom_indices : Sequence[int] | None</span>
+<span class="sd">            0-based atom indices to include, in this order. ``None`` (the</span>
+<span class="sd">            default) is every atom, in the configuration&#39;s own order.</span>
+<span class="sd">        ghost_atoms : Container[int] | None</span>
+<span class="sd">            The subset of `atom_indices` to write as ORCA ghost centres. See</span>
+<span class="sd">            :meth:`geometry_block`.</span>
+<span class="sd">        directory : str | Path | None</span>
+<span class="sd">            Where to run this job. ``None`` (the default) is ``self.directory``</span>
+<span class="sd">            -- the node&#39;s own job directory, as ``run_orca`` uses.</span>
+<span class="sd">        extra_blocks : str</span>
+<span class="sd">            Any additional ``%`` blocks to place before the geometry.</span>
+<span class="sd">        extra_files : dict | None</span>
+<span class="sd">            Extra input files to write into the run directory.</span>
+<span class="sd">        make_wfx : bool</span>
+<span class="sd">            After ORCA finishes, run ``orca_2aim`` to convert the retained</span>
+<span class="sd">            density into an AIMPAC ``orca.wfx`` in *this job&#39;s* directory.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Parsed results, at least ``{&quot;energy&quot;: &lt;E_h&gt;, &quot;success&quot;: bool}``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">run_directory</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">run_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Resources (cores + per-process memory), shared with run_orca_compound.</span>
         <span class="n">n_cores</span><span class="p">,</span> <span class="n">memory_mb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resources</span><span class="p">()</span>
@@ -715,14 +810,22 @@
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;%maxcore </span><span class="si">{</span><span class="n">memory_mb</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">extra_blocks</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extra_blocks</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry_block</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">charge</span><span class="p">,</span> <span class="n">multiplicity</span><span class="p">))</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">geometry_block</span><span class="p">(</span>
+                <span class="n">configuration</span><span class="p">,</span>
+                <span class="n">charge</span><span class="p">,</span>
+                <span class="n">multiplicity</span><span class="p">,</span>
+                <span class="n">atom_indices</span><span class="o">=</span><span class="n">atom_indices</span><span class="p">,</span>
+                <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">ghost_atoms</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="n">input_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
         <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;orca.inp&quot;</span><span class="p">:</span> <span class="n">input_text</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">extra_files</span><span class="p">:</span>
             <span class="n">files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_files</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;orca.inp:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">input_text</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;orca.inp (</span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">):</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">input_text</span><span class="p">)</span>
 
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orca_config</span><span class="p">()</span>
         <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mpi_env</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
@@ -750,7 +853,7 @@
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span>
             <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-            <span class="n">directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span>
+            <span class="n">directory</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">run_directory</span><span class="p">),</span>
             <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
             <span class="c1"># Wildcards: ORCA writes orca.bibtex (suggested citations) and</span>
             <span class="c1"># orca.property.txt (and other *.txt depending on options); the</span>
@@ -765,10 +868,10 @@
             <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;There was an error running ORCA.&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There was an error running ORCA in </span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="s2">&quot;orca.out&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">&quot;orca.out&quot;</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_report_run_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>

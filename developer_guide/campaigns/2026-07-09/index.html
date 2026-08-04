@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>2026-07-09 BSSE (counterpoise) sub-step &#8212; SEAMM ORCA Plug-in 2026.8.1 documentation</title>
+    <title>2026-07-09 BSSE (counterpoise) sub-step &#8212; SEAMM ORCA Plug-in 2026.8.4 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=54f30045"></script>
+    <script src="../../../_static/documentation_options.js?v=0cfa9efb"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Campaigns" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.1" />
+  <meta name="docsearch:version" content="2026.8.4" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -469,9 +469,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../2026-07-15/frequencies_scope.html">Frequencies sub-step and &lt;HESSIAN – scope and design</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../YYYY-MM-DD/index.html">YYYY-MM-DD Initial development campaign</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
-</ul>
-</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../2026-08-03/index.html">2026-08-03 N-fragment, charge-aware counterpoise (seamm_bsse)</a></li>
 </ul>
 </details></li>
 </ul>
@@ -543,9 +541,14 @@
 counterpoise-corrected energy and gradient of a molecular complex, for use as
 machine-learned-force-field (MLFF) training data. It wraps the ORCA <em>Compound</em>
 script <code class="docutils literal notranslate"><span class="pre">BSSEGradient.cmp</span></code> (D. G. Liakos &amp; F. Neese, 2024/2025).</p>
-<p>This is the fast, ORCA-specific first step. The code-agnostic, N-fragment
-generalization is a separate, larger project with its own design document (see
-the general <code class="docutils literal notranslate"><span class="pre">bsse_step</span></code> plug-in).</p>
+<p>This is the fast, ORCA-specific first step (two fragments, neutral singlet
+only, driven by a single ORCA <em>Compound</em> process). It was later generalized
+to an arbitrary number of fragments with independent per-fragment charge,
+backed by a new shared library rather than a second ORCA-specific special
+case – see <a class="reference internal" href="../2026-08-03/index.html"><span class="doc">the 2026-08-03 campaign</span></a>, whose
+canonical design document lives in the sibling <code class="docutils literal notranslate"><span class="pre">seamm_bsse</span></code> repository.
+This Compound-script path is kept as that generalization’s permanent N = 2
+regression reference, not deleted, even though <code class="docutils literal notranslate"><span class="pre">run()</span></code> no longer calls it.</p>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.8.1 documentation</title>
+    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.8.4 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=54f30045"></script>
+    <script src="../../_static/documentation_options.js?v=0cfa9efb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.1" />
+  <meta name="docsearch:version" content="2026.8.4" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -495,21 +495,29 @@
 
 <span class="sd">&quot;&quot;&quot;An ORCA counterpoise (BSSE) sub-step.</span>
 
-<span class="sd">Computes the counterpoise-corrected (Boys--Bernardi) energy and gradient of a</span>
-<span class="sd">two-fragment complex in a single ORCA run, by driving the ORCA *Compound* script</span>
-<span class="sd">``bssegradient.cmp`` (D. G. Liakos &amp; F. Neese). SEAMM prepares the ghost-flagged</span>
-<span class="sd">geometry, injects the level of theory and options, runs ORCA once, and reads the</span>
-<span class="sd">corrected energy and gradient from the EnGrad file the script writes.</span>
+<span class="sd">Computes the counterpoise-corrected (Boys--Bernardi) energy and gradient of an</span>
+<span class="sd">N-fragment complex, with independent per-fragment charge. SEAMM generates the</span>
+<span class="sd">2N + 1 job specs (via ``seamm_bsse``), runs each as an ordinary ORCA job (real</span>
+<span class="sd">atoms + ghost-flagged atoms of the other fragments, or ghost-free for a</span>
+<span class="sd">fragment alone in its own basis), and combines the results into the corrected</span>
+<span class="sd">total energy and gradient. See the campaign design note</span>
+<span class="sd">(``docs/developer_guide/campaigns/2026-08-03/bsse_architecture.rst``) for the</span>
+<span class="sd">physics, and ``seamm_bsse`` itself for the job-spec/combine algebra.</span>
 
-<span class="sd">See the campaign design note</span>
-<span class="sd">(``docs/developer_guide/campaigns/2026-07-09/bsse_scope.rst``) for the physics</span>
-<span class="sd">and the Phase-1 scope boundaries.</span>
+<span class="sd">The original ORCA *Compound* script path (``bssegradient.cmp``/</span>
+<span class="sd">``bssenergy.cmp``, D. G. Liakos &amp; F. Neese -- one ORCA process running all 5</span>
+<span class="sd">sub-calculations of a 2-fragment, neutral-singlet complex internally) is kept</span>
+<span class="sd">in this module and in ``data/`` as the N = 2 regression oracle for the new</span>
+<span class="sd">path (see the architecture doc&#39;s milestone M2), not as a second production</span>
+<span class="sd">code path. ``_compound_input``/``run_orca_compound``/</span>
+<span class="sd">``_parse_compound_energies`` below are unused by :meth:`run` now.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.resources</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">tabulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabulate</span>
@@ -517,6 +525,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">orca_step</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.energy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Energy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seamm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seamm_bsse</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q_</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_util.printing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FormattedText</span> <span class="k">as</span> <span class="n">__</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seamm_util.printing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">printing</span>
@@ -587,38 +596,77 @@
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># Fragments</span>
     <span class="c1"># ------------------------------------------------------------------</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_fragment_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">configuration</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``(fragmentA, fragmentB)`` as 0-based atom-index lists.</span>
-
-<span class="sd">        Fragment B is written as ghost atoms in the input; the correction is</span>
-<span class="sd">        symmetric, so which is A vs B is immaterial.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">configuration</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the N ``seamm_bsse.Fragment`` for this complex, per the</span>
+<span class="sd">        &#39;fragments&#39; parameter, with per-fragment charge threaded in from</span>
+<span class="sd">        &#39;fragment charges&#39;. Validates against the complex&#39;s own</span>
+<span class="sd">        charge/multiplicity (``seamm_bsse.validate_fragments``) before</span>
+<span class="sd">        returning -- catches a fragment-charge typo, or an open-shell/</span>
+<span class="sd">        multiplicity&gt;1 fragment (not yet supported), with a clear message.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n_atoms</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">n_atoms</span>
         <span class="n">mode</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;fragments&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;specified&quot;</span><span class="p">:</span>
-            <span class="n">fragA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_indices</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;fragment A atoms&quot;</span><span class="p">],</span> <span class="n">n_atoms</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">fragA</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_fragment_groups</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;fragment atoms&quot;</span><span class="p">],</span> <span class="n">n_atoms</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># &quot;auto (molecules)&quot;</span>
+            <span class="n">molecules</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">find_molecules</span><span class="p">(</span><span class="n">as_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;BSSE: &#39;Fragment A atoms&#39; is empty; list the atoms of &quot;</span>
-                    <span class="s2">&quot;fragment A (1-based), e.g. &#39;1-3, 5&#39;.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;BSSE &#39;auto&#39; fragments require at least two separate &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;molecules, but the structure has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span><span class="si">}</span><span class="s2">. Use &quot;</span>
+                    <span class="s2">&quot;&#39;specified&#39; to define the fragments by atom, or check &quot;</span>
+                    <span class="s2">&quot;the bonding.&quot;</span>
                 <span class="p">)</span>
-            <span class="n">fragB</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_atoms</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">fragA</span><span class="p">)]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">fragB</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;BSSE: fragment A is the whole system; nothing is left for &quot;</span>
-                    <span class="s2">&quot;fragment B.&quot;</span>
-                <span class="p">)</span>
-            <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">fragA</span><span class="p">),</span> <span class="n">fragB</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">molecule</span><span class="p">)</span> <span class="k">for</span> <span class="n">molecule</span> <span class="ow">in</span> <span class="n">molecules</span><span class="p">]</span>
 
-        <span class="c1"># &quot;auto (2 molecules)&quot;</span>
-        <span class="n">molecules</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">find_molecules</span><span class="p">(</span><span class="n">as_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">charges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_charges</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;fragment charges&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">charges</span><span class="p">:</span>
+            <span class="n">charges</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;BSSE &#39;auto&#39; fragments require exactly two separate molecules, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;but the structure has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span><span class="si">}</span><span class="s2">. Use &#39;specified&#39; to &quot;</span>
-                <span class="s2">&quot;define the fragments by atom, or check the bonding.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;BSSE: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">)</span><span class="si">}</span><span class="s2"> &#39;fragment charges&#39; given but &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="si">}</span><span class="s2"> fragments found/specified; give one charge &quot;</span>
+                <span class="s2">&quot;per fragment (in the same order), or leave &#39;fragment &quot;</span>
+                <span class="s2">&quot;charges&#39; empty for all-neutral.&quot;</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">molecules</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">molecules</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">fragments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">Fragment</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">atom_indices</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">charge</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">charges</span><span class="p">))</span>
+        <span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">validate_fragments</span><span class="p">(</span>
+                <span class="n">fragments</span><span class="p">,</span>
+                <span class="n">cluster_charge</span><span class="o">=</span><span class="n">configuration</span><span class="o">.</span><span class="n">charge</span><span class="p">,</span>
+                <span class="n">cluster_multiplicity</span><span class="o">=</span><span class="n">configuration</span><span class="o">.</span><span class="n">spin_multiplicity</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BSSE: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="k">return</span> <span class="n">fragments</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_fragment_groups</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse &#39;specified&#39;-mode fragment atoms: semicolon-separated</span>
+<span class="sd">        1-based index/range groups, one per fragment, e.g. ``&#39;1-3; 4-6; 7&#39;``</span>
+<span class="sd">        for three fragments -- to 0-based index lists.&quot;&quot;&quot;</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">group</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;BSSE: &#39;Fragment atoms&#39; (specified mode) needs at least two &quot;</span>
+                <span class="s2">&quot;semicolon-separated groups of atoms, e.g. &#39;1-3; 4-6&#39; for two &quot;</span>
+                <span class="s2">&quot;fragments.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">BSSE</span><span class="o">.</span><span class="n">_parse_indices</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_charges</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse &#39;fragment charges&#39;: a comma/space separated list of integers,</span>
+<span class="sd">        in fragment order. &#39;&#39; (the default, all-neutral) -&gt; [].&quot;&quot;&quot;</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_indices</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">):</span>
@@ -642,7 +690,9 @@
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="c1"># ------------------------------------------------------------------</span>
-    <span class="c1"># Input generation</span>
+    <span class="c1"># Compound-script input generation -- N = 2 regression oracle only.</span>
+    <span class="c1"># Not called by run() (see the module docstring); kept for the M2</span>
+    <span class="c1"># validation gate and any future re-check against it.</span>
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_ghost_xyz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">ghost_atoms</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;An .xyz file of the whole complex with `ghost_atoms` (0-based) flagged</span>
@@ -716,10 +766,21 @@
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># Run</span>
     <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_wants_gradients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether this run wants the gradient. Overrides Energy&#39;s version</span>
+<span class="sd">        (which checks the driver-supplied &#39;results&#39; entry) with BSSE&#39;s own</span>
+<span class="sd">        &#39;compute gradient&#39; toggle, so the inherited ``keyword_line`` adds</span>
+<span class="sd">        EnGrad/NumGrad correctly for every counterpoise sub-job.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
+
 <div class="viewcode-block" id="BSSE.run">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.bsse.BSSE.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keywords</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the counterpoise correction as an ORCA Compound job.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the N-fragment counterpoise correction: generate the 2N + 1</span>
+<span class="sd">        job specs (``seamm_bsse``), run each as an ordinary ORCA job in its</span>
+<span class="sd">        own sub-directory (real atoms + the other fragments&#39; atoms ghosted,</span>
+<span class="sd">        or a fragment alone in its own basis), and combine the results into</span>
+<span class="sd">        the corrected total energy and gradient.</span>
 
 <span class="sd">        Like the other ORCA sub-steps, this is driven by the main ORCA node</span>
 <span class="sd">        (which set up printing and cited the plug-in), so it does not call</span>
@@ -733,79 +794,74 @@
 
         <span class="n">_</span><span class="p">,</span> <span class="n">configuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system_configuration</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_supported</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">configuration</span><span class="p">)</span>
+        <span class="n">fragments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fragments</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">configuration</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span><span class="p">:</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span>
+                <span class="n">__</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Fragment </span><span class="si">{</span><span class="n">fragment</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;atom(s), charge </span><span class="si">{</span><span class="n">fragment</span><span class="o">.</span><span class="n">charge</span><span class="si">:</span><span class="s2">+d</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
-        <span class="n">fragmentA</span><span class="p">,</span> <span class="n">fragmentB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fragment_atoms</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">configuration</span><span class="p">)</span>
+        <span class="n">specs</span> <span class="o">=</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">generate_job_specs</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
         <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span>
             <span class="n">__</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Fragment A has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragmentA</span><span class="p">)</span><span class="si">}</span><span class="s2"> atoms and fragment B has &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragmentB</span><span class="p">)</span><span class="si">}</span><span class="s2"> (written as ghost atoms).&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">specs</span><span class="p">)</span><span class="si">}</span><span class="s2"> ORCA job(s) for the &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span><span class="si">}</span><span class="s2">-fragment counterpoise correction.&quot;</span><span class="p">,</span>
                 <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="c1"># Energy-only mode uses a gradient-free Compound script, so a method with</span>
-        <span class="c1"># no analytic gradient (e.g. CCSD(T)) still runs; otherwise the gradient</span>
-        <span class="c1"># script is used and the corrected gradient comes from its EnGrad file.</span>
         <span class="n">want_gradient</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
-        <span class="n">script_name</span> <span class="o">=</span> <span class="s2">&quot;bssegradient.cmp&quot;</span> <span class="k">if</span> <span class="n">want_gradient</span> <span class="k">else</span> <span class="s2">&quot;bssenergy.cmp&quot;</span>
-
-        <span class="n">xyz_filename</span> <span class="o">=</span> <span class="s2">&quot;bsse.xyz&quot;</span>
-        <span class="n">xyz_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ghost_xyz</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">fragmentB</span><span class="p">)</span>
-        <span class="n">compound_block</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compound_input</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">xyz_filename</span><span class="p">,</span> <span class="n">script_name</span><span class="p">)</span>
-        <span class="n">extra_files</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">script_name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compound_script</span><span class="p">(</span><span class="n">script_name</span><span class="p">),</span>
-            <span class="n">xyz_filename</span><span class="p">:</span> <span class="n">xyz_text</span><span class="p">,</span>
-        <span class="p">}</span>
-
-        <span class="c1"># The counterpoise-corrected GRADIENT comes from the script&#39;s EnGrad file</span>
-        <span class="c1"># (its ghost-atom bookkeeping is done on the full-method Nuclear_Gradient,</span>
-        <span class="c1"># so it is correct for every method). Its ENERGY is not used -- see below.</span>
-        <span class="c1"># Optionally write a .wfx from the dimer (the last COMPOUND JOB, step 5)</span>
-        <span class="c1"># for a following Atomic Charges (DDEC6) step, mirroring the Energy step.</span>
+        <span class="n">optimize_monomers</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimize monomers&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
         <span class="n">make_wfx</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save wavefunction&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
-        <span class="n">gradient</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">want_gradient</span><span class="p">:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_compound</span><span class="p">(</span>
-                <span class="n">compound_block</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span> <span class="n">make_wfx</span><span class="o">=</span><span class="n">make_wfx</span>
+        <span class="c1"># &#39;keepdensity&#39;/wavefunction conversion is only meaningful for the</span>
+        <span class="c1"># full cluster (what a following Atomic Charges step wants), not</span>
+        <span class="c1"># every fragment sub-job -- build the shared keyword line without it.</span>
+        <span class="n">base_keyword_line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keyword_line</span><span class="p">({</span><span class="o">**</span><span class="n">P</span><span class="p">,</span> <span class="s2">&quot;save wavefunction&quot;</span><span class="p">:</span> <span class="s2">&quot;no&quot;</span><span class="p">})</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">specs</span><span class="p">:</span>
+            <span class="n">job_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">spec</span><span class="o">.</span><span class="n">label</span>
+            <span class="n">keyword_line</span> <span class="o">=</span> <span class="n">base_keyword_line</span>
+            <span class="c1"># &#39;optimize monomers&#39; (the old Compound script&#39;s DoOptimization)</span>
+            <span class="c1"># relaxes only the free (fragment-alone) sub-jobs.</span>
+            <span class="k">if</span> <span class="n">optimize_monomers</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">FRAGMENT_ALONE</span><span class="p">:</span>
+                <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Opt </span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">job_make_wfx</span> <span class="o">=</span> <span class="n">make_wfx</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">CLUSTER</span>
+            <span class="k">if</span> <span class="n">job_make_wfx</span><span class="p">:</span>
+                <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2"> keepdensity&quot;</span>
+
+            <span class="n">outcome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_job</span><span class="p">(</span>
+                <span class="n">keyword_line</span><span class="p">,</span>
+                <span class="n">configuration</span><span class="p">,</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">charge</span><span class="p">,</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">multiplicity</span><span class="p">,</span>
+                <span class="n">atom_indices</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">,</span>
+                <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">ghost_indices</span><span class="p">,</span>
+                <span class="n">directory</span><span class="o">=</span><span class="n">job_directory</span><span class="p">,</span>
+                <span class="n">make_wfx</span><span class="o">=</span><span class="n">job_make_wfx</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">gradient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_gradients</span><span class="p">(</span><span class="n">job_directory</span><span class="p">)</span> <span class="k">if</span> <span class="n">want_gradient</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">want_gradient</span> <span class="ow">and</span> <span class="n">gradient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;The ORCA BSSE Compound job produced no result.engrad &quot;</span>
-                    <span class="s2">&quot;gradient; see orca.out and orca.err.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;The ORCA BSSE job &#39;</span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&#39; produced no gradient; &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;see </span><span class="si">{</span><span class="n">job_directory</span><span class="si">}</span><span class="s2">/orca.out and orca.err.&quot;</span>
                 <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_compound</span><span class="p">(</span>
-                <span class="n">compound_block</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span> <span class="n">engrad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">make_wfx</span><span class="o">=</span><span class="n">make_wfx</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">JobResult</span><span class="p">(</span>
+                <span class="n">energy</span><span class="o">=</span><span class="n">outcome</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">],</span> <span class="n">gradient</span><span class="o">=</span><span class="n">gradient</span>
             <span class="p">)</span>
 
-        <span class="c1"># Compute the corrected ENERGY here from the five sub-calculations&#39; total</span>
-        <span class="c1"># energies (each step&#39;s FINAL SINGLE POINT ENERGY), NOT from the script&#39;s</span>
-        <span class="c1"># result.engrad. The script reads ORCA&#39;s SCF_Energy, which for a double</span>
-        <span class="c1"># hybrid omits the MP2 correlation (and would be wrong by that amount);</span>
-        <span class="c1"># FINAL SINGLE POINT ENERGY is the full-method total that matches the</span>
-        <span class="c1"># gradient. Dispersion has no BSSE (ghosts have no nuclei) and cancels in</span>
-        <span class="c1"># the correction terms, so this is consistent for -D methods too.</span>
-        <span class="n">energies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_compound_energies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">energies</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Could not read the five BSSE sub-calculation energies from &quot;</span>
-                <span class="s2">&quot;orca.out; see orca.out and orca.err.&quot;</span>
-            <span class="p">)</span>
-        <span class="n">e_fragA</span><span class="p">,</span> <span class="n">e_monA</span><span class="p">,</span> <span class="n">e_fragB</span><span class="p">,</span> <span class="n">e_monB</span><span class="p">,</span> <span class="n">e_total</span> <span class="o">=</span> <span class="n">energies</span>
-        <span class="n">corrected</span> <span class="o">=</span> <span class="n">e_total</span> <span class="o">-</span> <span class="p">(</span><span class="n">e_fragA</span> <span class="o">-</span> <span class="n">e_monA</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">e_fragB</span> <span class="o">-</span> <span class="n">e_monB</span><span class="p">)</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">specs</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">n_atoms</span><span class="o">=</span><span class="n">configuration</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">)</span>
 
-        <span class="c1"># The interaction (binding) energy of the complex relative to the two</span>
-        <span class="c1"># SEPARATED monomers -- a different reference point from `corrected`</span>
-        <span class="c1"># above, which is the BSSE-corrected TOTAL energy of the complex on</span>
-        <span class="c1"># the same absolute scale as `e_total`. Uncorrected: each monomer in</span>
-        <span class="c1"># its own (ghost-free) basis, at its geometry in the complex.</span>
-        <span class="c1"># CP-corrected: each fragment computed in the full dimer basis (the</span>
-        <span class="c1"># ghost-augmented calculations already run for the energy correction</span>
-        <span class="c1"># above), which is algebraically identical to</span>
-        <span class="c1"># `uncorrected interaction energy + bsse correction`. In kJ/mol, the</span>
-        <span class="c1"># conventional unit for a binding/interaction energy.</span>
-        <span class="n">uncorrected_interaction</span> <span class="o">=</span> <span class="n">Q_</span><span class="p">(</span><span class="n">e_total</span> <span class="o">-</span> <span class="n">e_monA</span> <span class="o">-</span> <span class="n">e_monB</span><span class="p">,</span> <span class="s2">&quot;E_h&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">&quot;kJ/mol&quot;</span><span class="p">)</span>
-        <span class="n">corrected_interaction</span> <span class="o">=</span> <span class="n">Q_</span><span class="p">(</span><span class="n">e_total</span> <span class="o">-</span> <span class="n">e_fragA</span> <span class="o">-</span> <span class="n">e_fragB</span><span class="p">,</span> <span class="s2">&quot;E_h&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">&quot;kJ/mol&quot;</span><span class="p">)</span>
+        <span class="c1"># For a following Atomic Charges (DDEC6) step: the full cluster&#39;s</span>
+        <span class="c1"># wavefunction, copied up to this node&#39;s own directory (where a</span>
+        <span class="c1"># downstream step expects it), mirroring the Energy step.</span>
+        <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
+            <span class="n">cluster_wfx</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">CLUSTER</span> <span class="o">/</span> <span class="s2">&quot;orca.wfx&quot;</span>
+            <span class="k">if</span> <span class="n">cluster_wfx</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cluster_wfx</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;orca.wfx&quot;</span><span class="p">)</span>
 
         <span class="c1"># Tag stored properties with the level of theory so BSSE-corrected data</span>
         <span class="c1"># is distinguishable in the database.</span>
@@ -813,14 +869,16 @@
 
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">corrected</span><span class="p">,</span>
-            <span class="s2">&quot;uncorrected energy&quot;</span><span class="p">:</span> <span class="n">e_total</span><span class="p">,</span>
-            <span class="s2">&quot;bsse correction&quot;</span><span class="p">:</span> <span class="n">corrected</span> <span class="o">-</span> <span class="n">e_total</span><span class="p">,</span>
-            <span class="s2">&quot;interaction energy&quot;</span><span class="p">:</span> <span class="n">corrected_interaction</span><span class="p">,</span>
-            <span class="s2">&quot;uncorrected interaction energy&quot;</span><span class="p">:</span> <span class="n">uncorrected_interaction</span><span class="p">,</span>
+            <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+            <span class="s2">&quot;uncorrected energy&quot;</span><span class="p">:</span> <span class="n">results</span><span class="p">[</span><span class="n">seamm_bsse</span><span class="o">.</span><span class="n">CLUSTER</span><span class="p">]</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+            <span class="s2">&quot;bsse correction&quot;</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">bsse_correction</span><span class="p">,</span>
+            <span class="s2">&quot;interaction energy&quot;</span><span class="p">:</span> <span class="n">Q_</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">interaction_energy</span><span class="p">,</span> <span class="s2">&quot;E_h&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">&quot;kJ/mol&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;uncorrected interaction energy&quot;</span><span class="p">:</span> <span class="n">Q_</span><span class="p">(</span>
+                <span class="n">cp</span><span class="o">.</span><span class="n">uncorrected_interaction_energy</span><span class="p">,</span> <span class="s2">&quot;E_h&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">&quot;kJ/mol&quot;</span><span class="p">),</span>
         <span class="p">}</span>
-        <span class="k">if</span> <span class="n">gradient</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gradients&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gradient</span>
+        <span class="k">if</span> <span class="n">cp</span><span class="o">.</span><span class="n">gradient</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gradients&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">gradient</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cite_references</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cite_bsse</span><span class="p">()</span>
@@ -830,8 +888,11 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_supported</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">configuration</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refuse the cases the Phase-1 Compound path cannot do correctly, with a</span>
-<span class="sd">        clear message, rather than returning wrong numbers.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refuse the cases this sub-step cannot do correctly, with a clear</span>
+<span class="sd">        message, rather than returning wrong numbers. Per-fragment</span>
+<span class="sd">        charge/multiplicity consistency (vs. the complex&#39;s own) is checked</span>
+<span class="sd">        separately, in ``_fragments`` -- it needs the fragment definition</span>
+<span class="sd">        first.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_using_bse</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;The ORCA BSSE sub-step does not yet support Basis Set Exchange &quot;</span>
@@ -839,10 +900,9 @@
             <span class="p">)</span>
         <span class="c1"># F12 methods need an F12 basis (matching CABS) -- fail early if not.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_f12</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
-        <span class="c1"># The energy is taken from each step&#39;s FINAL SINGLE POINT ENERGY (the</span>
-        <span class="c1"># full-method total), so double hybrids and MP2 are fine. When the</span>
-        <span class="c1"># gradient is also requested, the method must have an analytic gradient</span>
-        <span class="c1"># (the gradient script requests EnGrad); energy-only lifts that.</span>
+        <span class="c1"># When the gradient is also requested, the method must have an</span>
+        <span class="c1"># analytic gradient (every job requests EnGrad); energy-only lifts</span>
+        <span class="c1"># that (e.g. for gold-standard (DLPNO-)CCSD(T) interaction energies).</span>
         <span class="n">method</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
@@ -853,17 +913,6 @@
                 <span class="s2">&quot;has only a numerical one (e.g. (DLPNO-)CCSD(T)). Set &#39;Compute &quot;</span>
                 <span class="s2">&quot;the gradient&#39; to &#39;no&#39; for an energy-only correction, or choose a &quot;</span>
                 <span class="s2">&quot;method/functional with an analytic gradient.&quot;</span>
-            <span class="p">)</span>
-        <span class="c1"># The Compound script applies the complex&#39;s charge/multiplicity to the</span>
-        <span class="c1"># monomer sub-calculations too, so it is only valid when each neutral</span>
-        <span class="c1"># closed-shell fragment shares them -- i.e. a neutral singlet complex.</span>
-        <span class="k">if</span> <span class="n">configuration</span><span class="o">.</span><span class="n">charge</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">configuration</span><span class="o">.</span><span class="n">spin_multiplicity</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;The ORCA BSSE sub-step (Phase 1) supports only a neutral, &quot;</span>
-                <span class="s2">&quot;closed-shell (charge 0, multiplicity 1) complex, because the &quot;</span>
-                <span class="s2">&quot;same charge/multiplicity is applied to each monomer. Charged or &quot;</span>
-                <span class="s2">&quot;open-shell fragments need per-fragment charge/multiplicity &quot;</span>
-                <span class="s2">&quot;(the general BSSE step).&quot;</span>
             <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_cite_bsse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
