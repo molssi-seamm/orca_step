@@ -2,21 +2,29 @@
 
 """An ORCA counterpoise (BSSE) sub-step.
 
-Computes the counterpoise-corrected (Boys--Bernardi) energy and gradient of a
-two-fragment complex in a single ORCA run, by driving the ORCA *Compound* script
-``bssegradient.cmp`` (D. G. Liakos & F. Neese). SEAMM prepares the ghost-flagged
-geometry, injects the level of theory and options, runs ORCA once, and reads the
-corrected energy and gradient from the EnGrad file the script writes.
+Computes the counterpoise-corrected (Boys--Bernardi) energy and gradient of an
+N-fragment complex, with independent per-fragment charge. SEAMM generates the
+2N + 1 job specs (via ``seamm_bsse``), runs each as an ordinary ORCA job (real
+atoms + ghost-flagged atoms of the other fragments, or ghost-free for a
+fragment alone in its own basis), and combines the results into the corrected
+total energy and gradient. See the campaign design note
+(``docs/developer_guide/campaigns/2026-08-03/bsse_architecture.rst``) for the
+physics, and ``seamm_bsse`` itself for the job-spec/combine algebra.
 
-See the campaign design note
-(``docs/developer_guide/campaigns/2026-07-09/bsse_scope.rst``) for the physics
-and the Phase-1 scope boundaries.
+The original ORCA *Compound* script path (``bssegradient.cmp``/
+``bssenergy.cmp``, D. G. Liakos & F. Neese -- one ORCA process running all 5
+sub-calculations of a 2-fragment, neutral-singlet complex internally) is kept
+in this module and in ``data/`` as the N = 2 regression oracle for the new
+path (see the architecture doc's milestone M2), not as a second production
+code path. ``_compound_input``/``run_orca_compound``/
+``_parse_compound_energies`` below are unused by :meth:`run` now.
 """
 
 import importlib.resources
 import logging
 from pathlib import Path
 import re
+import shutil
 import textwrap
 
 from tabulate import tabulate
@@ -24,6 +32,7 @@ from tabulate import tabulate
 import orca_step
 from .energy import Energy
 import seamm
+import seamm_bsse
 from seamm_util import Q_
 from seamm_util.printing import FormattedText as __
 import seamm_util.printing as printing
@@ -89,38 +98,77 @@ class BSSE(Energy):
     # ------------------------------------------------------------------
     # Fragments
     # ------------------------------------------------------------------
-    def _fragment_atoms(self, P, configuration):
-        """Return ``(fragmentA, fragmentB)`` as 0-based atom-index lists.
-
-        Fragment B is written as ghost atoms in the input; the correction is
-        symmetric, so which is A vs B is immaterial.
+    def _fragments(self, P, configuration):
+        """Return the N ``seamm_bsse.Fragment`` for this complex, per the
+        'fragments' parameter, with per-fragment charge threaded in from
+        'fragment charges'. Validates against the complex's own
+        charge/multiplicity (``seamm_bsse.validate_fragments``) before
+        returning -- catches a fragment-charge typo, or an open-shell/
+        multiplicity>1 fragment (not yet supported), with a clear message.
         """
         n_atoms = configuration.n_atoms
         mode = P["fragments"]
         if mode == "specified":
-            fragA = self._parse_indices(P["fragment A atoms"], n_atoms)
-            if not fragA:
+            groups = self._parse_fragment_groups(P["fragment atoms"], n_atoms)
+        else:
+            # "auto (molecules)"
+            molecules = configuration.find_molecules(as_indices=True)
+            if len(molecules) < 2:
                 raise RuntimeError(
-                    "BSSE: 'Fragment A atoms' is empty; list the atoms of "
-                    "fragment A (1-based), e.g. '1-3, 5'."
+                    f"BSSE 'auto' fragments require at least two separate "
+                    f"molecules, but the structure has {len(molecules)}. Use "
+                    "'specified' to define the fragments by atom, or check "
+                    "the bonding."
                 )
-            fragB = [i for i in range(n_atoms) if i not in set(fragA)]
-            if not fragB:
-                raise RuntimeError(
-                    "BSSE: fragment A is the whole system; nothing is left for "
-                    "fragment B."
-                )
-            return sorted(fragA), fragB
+            groups = [sorted(molecule) for molecule in molecules]
 
-        # "auto (2 molecules)"
-        molecules = configuration.find_molecules(as_indices=True)
-        if len(molecules) != 2:
+        charges = self._parse_charges(P["fragment charges"])
+        if not charges:
+            charges = [0] * len(groups)
+        elif len(charges) != len(groups):
             raise RuntimeError(
-                f"BSSE 'auto' fragments require exactly two separate molecules, "
-                f"but the structure has {len(molecules)}. Use 'specified' to "
-                "define the fragments by atom, or check the bonding."
+                f"BSSE: {len(charges)} 'fragment charges' given but "
+                f"{len(groups)} fragments found/specified; give one charge "
+                "per fragment (in the same order), or leave 'fragment "
+                "charges' empty for all-neutral."
             )
-        return sorted(molecules[0]), sorted(molecules[1])
+
+        fragments = [
+            seamm_bsse.Fragment(label=str(i + 1), atom_indices=group, charge=charge)
+            for i, (group, charge) in enumerate(zip(groups, charges))
+        ]
+        try:
+            seamm_bsse.validate_fragments(
+                fragments,
+                cluster_charge=configuration.charge,
+                cluster_multiplicity=configuration.spin_multiplicity,
+            )
+        except ValueError as e:
+            raise RuntimeError(f"BSSE: {e}") from e
+        return fragments
+
+    @staticmethod
+    def _parse_fragment_groups(text, n_atoms):
+        """Parse 'specified'-mode fragment atoms: semicolon-separated
+        1-based index/range groups, one per fragment, e.g. ``'1-3; 4-6; 7'``
+        for three fragments -- to 0-based index lists."""
+        groups = [group.strip() for group in str(text).split(";") if group.strip()]
+        if len(groups) < 2:
+            raise RuntimeError(
+                "BSSE: 'Fragment atoms' (specified mode) needs at least two "
+                "semicolon-separated groups of atoms, e.g. '1-3; 4-6' for two "
+                "fragments."
+            )
+        return [BSSE._parse_indices(group, n_atoms) for group in groups]
+
+    @staticmethod
+    def _parse_charges(text):
+        """Parse 'fragment charges': a comma/space separated list of integers,
+        in fragment order. '' (the default, all-neutral) -> []."""
+        text = str(text).strip()
+        if not text:
+            return []
+        return [int(token) for token in text.replace(",", " ").split()]
 
     @staticmethod
     def _parse_indices(text, n_atoms):
@@ -144,7 +192,9 @@ class BSSE(Energy):
         return out
 
     # ------------------------------------------------------------------
-    # Input generation
+    # Compound-script input generation -- N = 2 regression oracle only.
+    # Not called by run() (see the module docstring); kept for the M2
+    # validation gate and any future re-check against it.
     # ------------------------------------------------------------------
     def _ghost_xyz(self, configuration, ghost_atoms):
         """An .xyz file of the whole complex with `ghost_atoms` (0-based) flagged
@@ -218,8 +268,19 @@ class BSSE(Energy):
     # ------------------------------------------------------------------
     # Run
     # ------------------------------------------------------------------
+    def _wants_gradients(self, P):
+        """Whether this run wants the gradient. Overrides Energy's version
+        (which checks the driver-supplied 'results' entry) with BSSE's own
+        'compute gradient' toggle, so the inherited ``keyword_line`` adds
+        EnGrad/NumGrad correctly for every counterpoise sub-job."""
+        return P.get("compute gradient", "yes") == "yes"
+
     def run(self, keywords=None):
-        """Run the counterpoise correction as an ORCA Compound job.
+        """Run the N-fragment counterpoise correction: generate the 2N + 1
+        job specs (``seamm_bsse``), run each as an ordinary ORCA job in its
+        own sub-directory (real atoms + the other fragments' atoms ghosted,
+        or a fragment alone in its own basis), and combine the results into
+        the corrected total energy and gradient.
 
         Like the other ORCA sub-steps, this is driven by the main ORCA node
         (which set up printing and cited the plug-in), so it does not call
@@ -233,79 +294,74 @@ class BSSE(Energy):
 
         _, configuration = self.get_system_configuration(None)
         self._check_supported(P, configuration)
+        fragments = self._fragments(P, configuration)
+        for fragment in fragments:
+            printer.important(
+                __(
+                    f"Fragment {fragment.label} has {len(fragment.atom_indices)} "
+                    f"atom(s), charge {fragment.charge:+d}.",
+                    indent=self.indent + 4 * " ",
+                )
+            )
 
-        fragmentA, fragmentB = self._fragment_atoms(P, configuration)
+        specs = seamm_bsse.generate_job_specs(fragments)
         printer.important(
             __(
-                f"Fragment A has {len(fragmentA)} atoms and fragment B has "
-                f"{len(fragmentB)} (written as ghost atoms).",
+                f"Running {len(specs)} ORCA job(s) for the "
+                f"{len(fragments)}-fragment counterpoise correction.",
                 indent=self.indent + 4 * " ",
             )
         )
 
-        # Energy-only mode uses a gradient-free Compound script, so a method with
-        # no analytic gradient (e.g. CCSD(T)) still runs; otherwise the gradient
-        # script is used and the corrected gradient comes from its EnGrad file.
         want_gradient = P.get("compute gradient", "yes") == "yes"
-        script_name = "bssegradient.cmp" if want_gradient else "bssenergy.cmp"
-
-        xyz_filename = "bsse.xyz"
-        xyz_text = self._ghost_xyz(configuration, ghost_atoms=fragmentB)
-        compound_block, _, _ = self._compound_input(P, xyz_filename, script_name)
-        extra_files = {
-            script_name: self._compound_script(script_name),
-            xyz_filename: xyz_text,
-        }
-
-        # The counterpoise-corrected GRADIENT comes from the script's EnGrad file
-        # (its ghost-atom bookkeeping is done on the full-method Nuclear_Gradient,
-        # so it is correct for every method). Its ENERGY is not used -- see below.
-        # Optionally write a .wfx from the dimer (the last COMPOUND JOB, step 5)
-        # for a following Atomic Charges (DDEC6) step, mirroring the Energy step.
+        optimize_monomers = P.get("optimize monomers", "no") == "yes"
         make_wfx = P.get("save wavefunction", "no") == "yes"
-        gradient = None
-        if want_gradient:
-            _, gradient = self.run_orca_compound(
-                compound_block, extra_files=extra_files, make_wfx=make_wfx
+        # 'keepdensity'/wavefunction conversion is only meaningful for the
+        # full cluster (what a following Atomic Charges step wants), not
+        # every fragment sub-job -- build the shared keyword line without it.
+        base_keyword_line = self.keyword_line({**P, "save wavefunction": "no"})
+
+        results = {}
+        for spec in specs:
+            job_directory = Path(self.directory) / spec.label
+            keyword_line = base_keyword_line
+            # 'optimize monomers' (the old Compound script's DoOptimization)
+            # relaxes only the free (fragment-alone) sub-jobs.
+            if optimize_monomers and spec.kind == seamm_bsse.FRAGMENT_ALONE:
+                keyword_line = f"Opt {keyword_line}"
+            job_make_wfx = make_wfx and spec.kind == seamm_bsse.CLUSTER
+            if job_make_wfx:
+                keyword_line = f"{keyword_line} keepdensity"
+
+            outcome = self.run_orca_job(
+                keyword_line,
+                configuration,
+                spec.charge,
+                spec.multiplicity,
+                atom_indices=spec.atom_indices,
+                ghost_atoms=spec.ghost_indices,
+                directory=job_directory,
+                make_wfx=job_make_wfx,
             )
-            if gradient is None:
+            gradient = self._parse_gradients(job_directory) if want_gradient else None
+            if want_gradient and gradient is None:
                 raise RuntimeError(
-                    "The ORCA BSSE Compound job produced no result.engrad "
-                    "gradient; see orca.out and orca.err."
+                    f"The ORCA BSSE job '{spec.label}' produced no gradient; "
+                    f"see {job_directory}/orca.out and orca.err."
                 )
-        else:
-            self.run_orca_compound(
-                compound_block, extra_files=extra_files, engrad=None, make_wfx=make_wfx
+            results[spec.label] = seamm_bsse.JobResult(
+                energy=outcome["energy"], gradient=gradient
             )
 
-        # Compute the corrected ENERGY here from the five sub-calculations' total
-        # energies (each step's FINAL SINGLE POINT ENERGY), NOT from the script's
-        # result.engrad. The script reads ORCA's SCF_Energy, which for a double
-        # hybrid omits the MP2 correlation (and would be wrong by that amount);
-        # FINAL SINGLE POINT ENERGY is the full-method total that matches the
-        # gradient. Dispersion has no BSSE (ghosts have no nuclei) and cancels in
-        # the correction terms, so this is consistent for -D methods too.
-        energies = self._parse_compound_energies(self.directory)
-        if energies is None:
-            raise RuntimeError(
-                "Could not read the five BSSE sub-calculation energies from "
-                "orca.out; see orca.out and orca.err."
-            )
-        e_fragA, e_monA, e_fragB, e_monB, e_total = energies
-        corrected = e_total - (e_fragA - e_monA) - (e_fragB - e_monB)
+        cp = seamm_bsse.combine(specs, results, n_atoms=configuration.n_atoms)
 
-        # The interaction (binding) energy of the complex relative to the two
-        # SEPARATED monomers -- a different reference point from `corrected`
-        # above, which is the BSSE-corrected TOTAL energy of the complex on
-        # the same absolute scale as `e_total`. Uncorrected: each monomer in
-        # its own (ghost-free) basis, at its geometry in the complex.
-        # CP-corrected: each fragment computed in the full dimer basis (the
-        # ghost-augmented calculations already run for the energy correction
-        # above), which is algebraically identical to
-        # `uncorrected interaction energy + bsse correction`. In kJ/mol, the
-        # conventional unit for a binding/interaction energy.
-        uncorrected_interaction = Q_(e_total - e_monA - e_monB, "E_h").m_as("kJ/mol")
-        corrected_interaction = Q_(e_total - e_fragA - e_fragB, "E_h").m_as("kJ/mol")
+        # For a following Atomic Charges (DDEC6) step: the full cluster's
+        # wavefunction, copied up to this node's own directory (where a
+        # downstream step expects it), mirroring the Energy step.
+        if make_wfx:
+            cluster_wfx = Path(self.directory) / seamm_bsse.CLUSTER / "orca.wfx"
+            if cluster_wfx.exists():
+                shutil.copy(cluster_wfx, Path(self.directory) / "orca.wfx")
 
         # Tag stored properties with the level of theory so BSSE-corrected data
         # is distinguishable in the database.
@@ -313,14 +369,16 @@ class BSSE(Energy):
 
         data = {
             "success": True,
-            "energy": corrected,
-            "uncorrected energy": e_total,
-            "bsse correction": corrected - e_total,
-            "interaction energy": corrected_interaction,
-            "uncorrected interaction energy": uncorrected_interaction,
+            "energy": cp.energy,
+            "uncorrected energy": results[seamm_bsse.CLUSTER].energy,
+            "bsse correction": cp.bsse_correction,
+            "interaction energy": Q_(cp.interaction_energy, "E_h").m_as("kJ/mol"),
+            "uncorrected interaction energy": Q_(
+                cp.uncorrected_interaction_energy, "E_h"
+            ).m_as("kJ/mol"),
         }
-        if gradient is not None:
-            data["gradients"] = gradient
+        if cp.gradient is not None:
+            data["gradients"] = cp.gradient
         self._data = data
         self._cite_references(P)
         self._cite_bsse()
@@ -329,8 +387,11 @@ class BSSE(Energy):
         return self.next()
 
     def _check_supported(self, P, configuration):
-        """Refuse the cases the Phase-1 Compound path cannot do correctly, with a
-        clear message, rather than returning wrong numbers."""
+        """Refuse the cases this sub-step cannot do correctly, with a clear
+        message, rather than returning wrong numbers. Per-fragment
+        charge/multiplicity consistency (vs. the complex's own) is checked
+        separately, in ``_fragments`` -- it needs the fragment definition
+        first."""
         if self._using_bse(P):
             raise RuntimeError(
                 "The ORCA BSSE sub-step does not yet support Basis Set Exchange "
@@ -338,10 +399,9 @@ class BSSE(Energy):
             )
         # F12 methods need an F12 basis (matching CABS) -- fail early if not.
         self._check_f12(P)
-        # The energy is taken from each step's FINAL SINGLE POINT ENERGY (the
-        # full-method total), so double hybrids and MP2 are fine. When the
-        # gradient is also requested, the method must have an analytic gradient
-        # (the gradient script requests EnGrad); energy-only lifts that.
+        # When the gradient is also requested, the method must have an
+        # analytic gradient (every job requests EnGrad); energy-only lifts
+        # that (e.g. for gold-standard (DLPNO-)CCSD(T) interaction energies).
         method, _ = self._resolve_method_basis(P)
         if (
             P.get("compute gradient", "yes") == "yes"
@@ -352,17 +412,6 @@ class BSSE(Energy):
                 "has only a numerical one (e.g. (DLPNO-)CCSD(T)). Set 'Compute "
                 "the gradient' to 'no' for an energy-only correction, or choose a "
                 "method/functional with an analytic gradient."
-            )
-        # The Compound script applies the complex's charge/multiplicity to the
-        # monomer sub-calculations too, so it is only valid when each neutral
-        # closed-shell fragment shares them -- i.e. a neutral singlet complex.
-        if configuration.charge != 0 or configuration.spin_multiplicity != 1:
-            raise RuntimeError(
-                "The ORCA BSSE sub-step (Phase 1) supports only a neutral, "
-                "closed-shell (charge 0, multiplicity 1) complex, because the "
-                "same charge/multiplicity is applied to each monomer. Charged or "
-                "open-shell fragments need per-fragment charge/multiplicity "
-                "(the general BSSE step)."
             )
 
     def _cite_bsse(self):

@@ -29,4 +29,3 @@ Contents:
    :maxdepth: 2
 
    *scope*
-   NOTES_*

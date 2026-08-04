@@ -20,33 +20,51 @@ class BSSEParameters(EnergyParameters):
 
     parameters = {
         "fragments": {
-            "default": "auto (2 molecules)",
+            "default": "auto (molecules)",
             "kind": "enum",
             "default_units": "",
-            "enumeration": ("auto (2 molecules)", "specified"),
+            "enumeration": ("auto (molecules)", "specified"),
             "format_string": "",
             "description": "Fragments:",
             "help_text": (
-                "How to split the complex into the two fragments for the "
-                "counterpoise correction. 'auto (2 molecules)' uses the two "
-                "separate molecules found in the structure (an error if there "
-                "are not exactly two). 'specified' takes the atoms of fragment A "
-                "from the field below; the rest of the atoms are fragment B."
+                "How to split the complex into fragments for the counterpoise "
+                "correction. 'auto (molecules)' uses every separate molecule "
+                "found in the structure (an error if there are fewer than "
+                "two -- e.g. a Na+/Cl- pair is two molecules). 'specified' "
+                "takes the fragments from 'Fragment atoms' below."
             ),
         },
-        "fragment A atoms": {
+        "fragment atoms": {
             "default": "",
             "kind": "string",
             "default_units": "",
             "enumeration": tuple(),
             "format_string": "",
-            "description": "Fragment A atoms:",
+            "description": "Fragment atoms:",
             "help_text": (
-                "The atoms making up fragment A when 'Fragments' is 'specified', "
-                "given as atom numbers (1-based, as shown in the structure) -- a "
-                "comma/space separated list and/or ranges, e.g. '1-3, 5 7'. The "
-                "remaining atoms form fragment B (written as ghosts). Ignored "
-                "when the fragments are found automatically."
+                "The atoms making up each fragment when 'Fragments' is "
+                "'specified': one semicolon-separated group per fragment, each "
+                "a comma/space list and/or ranges of 1-based atom numbers, "
+                "e.g. '1-3; 4-6' for two fragments or '1-3; 4-6; 7' for three. "
+                "Ignored when the fragments are found automatically."
+            ),
+        },
+        "fragment charges": {
+            "default": "",
+            "kind": "string",
+            "default_units": "",
+            "enumeration": tuple(),
+            "format_string": "",
+            "description": "Fragment charges:",
+            "help_text": (
+                "The formal charge of each fragment, in the same order as the "
+                "fragments (the order 'auto' finds molecules, or the "
+                "semicolon-separated groups in 'Fragment atoms') -- a "
+                "comma/space separated list of integers, e.g. '1, -1' for a "
+                "Na+/Cl- pair. Leave empty for all-neutral fragments (the usual "
+                "case for a neutral H-bonded complex). Every fragment is "
+                "closed-shell (multiplicity 1); the complex's own charge and "
+                "multiplicity are checked against these for consistency."
             ),
         },
         "compute gradient": {

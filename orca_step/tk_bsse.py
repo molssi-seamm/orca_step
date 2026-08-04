@@ -26,7 +26,7 @@ class TkBSSE(TkEnergy):
 
     def create_dialog(self, title="ORCA BSSE"):
         """Build the dialog and make the fragment controls reactive: the
-        'Fragment A atoms' field is shown only when the fragments are
+        'Fragment atoms' field is shown only when the fragments are
         'specified'."""
         frame = super().create_dialog(title=title)
         w = self["fragments"]
@@ -43,11 +43,14 @@ class TkBSSE(TkEnergy):
             "extra keywords",
             "fragments",
         ]
-        # 'Fragment A atoms' only applies when defining the fragments by hand.
+        # 'Fragment atoms' only applies when defining the fragments by hand;
+        # 'Fragment charges' applies either way (auto-detected fragments
+        # still need their charges, e.g. a Na+/Cl- pair).
         if self["fragments"].get() == "specified":
-            keys.append("fragment A atoms")
+            keys.append("fragment atoms")
+        keys.append("fragment charges")
         keys.append("compute gradient")
         keys.append("optimize monomers")
-        # For a following Atomic Charges (DDEC6) step: write the dimer's .wfx.
+        # For a following Atomic Charges (DDEC6) step: write the cluster's .wfx.
         keys.append("save wavefunction")
         return tuple(keys)

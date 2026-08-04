@@ -1669,7 +1669,7 @@ def test_bsse_extends_energy():
     node = orca_step.BSSE()
     assert node._calculation == "bsse"
     P = orca_step.BSSEParameters()
-    assert P["fragments"].value == "auto (2 molecules)"
+    assert P["fragments"].value == "auto (molecules)"
     assert P["optimize monomers"].value == "no"
     # Inherits the energy parameters.
     assert P["method"].value == "DLPNO-CCSD(T)"
@@ -1942,6 +1942,333 @@ def test_bsse_rejects_bse_basis():
     }
     with pytest.raises(RuntimeError, match="Basis Set Exchange"):
         node._check_supported(P, None)
+
+
+class _FakeAtoms:
+    """A minimal stand-in for `configuration.atoms` -- just enough for
+    `geometry_block`/`run_orca_job` (symbols + get_coordinates)."""
+
+    def __init__(self, symbols, coords):
+        self.symbols = symbols
+        self._coords = coords
+
+    def get_coordinates(self, fractionals=False, in_cell=True):
+        return self._coords
+
+
+def test_geometry_block_default_is_every_atom_no_ghosts():
+    """Unchanged behaviour: no atom_indices/ghost_atoms -> every atom, real."""
+    node = orca_step.BSSE()
+    configuration = SimpleNamespace(
+        atoms=_FakeAtoms(
+            ["O", "H", "H"], [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)]
+        )
+    )
+    block = node.geometry_block(configuration, 0, 1)
+    lines = block.splitlines()
+    assert lines[0] == "* xyz 0 1"
+    assert lines[-1] == "*"
+    assert len(lines) == 5  # header + 3 atoms + footer
+    assert lines[1].startswith("O ")
+    assert ":" not in block
+
+
+def test_geometry_block_atom_subset_and_ghosts():
+    """A subset of atoms, in the given order, with a ghost subset flagged --
+    what a BSSE fragment-in-cluster-basis job needs (real fragment atoms +
+    the other fragments' atoms as ghosts, skipping any atom not in either)."""
+    node = orca_step.BSSE()
+    configuration = SimpleNamespace(
+        atoms=_FakeAtoms(
+            ["Na", "Cl", "O", "H", "H"],
+            [(0, 0, 0), (5, 0, 0), (2, 2, 2), (2, 3, 2), (3, 2, 2)],
+        )
+    )
+    # Na (real, index 0) + the water (ghost, indices 2,3,4); Cl (index 1)
+    # excluded entirely -- exercises both the subset and the ghost flagging.
+    block = node.geometry_block(
+        configuration, 1, 1, atom_indices=[0, 2, 3, 4], ghost_atoms=[2, 3, 4]
+    )
+    lines = block.splitlines()
+    assert lines[0] == "* xyz 1 1"
+    assert len(lines) == 6  # header + 4 atoms + footer
+    assert lines[1].startswith("Na ")
+    assert lines[2].startswith("O:")
+    assert lines[3].startswith("H:")
+    assert lines[4].startswith("H:")
+    assert "Cl" not in block
+
+
+def test_run_orca_job_uses_explicit_geometry_charge_and_directory(tmp_path):
+    """run_orca_job must use its OWN charge/multiplicity/atom subset/directory
+    arguments -- not the configuration's own charge/multiplicity or
+    self.directory -- since a BSSE fragment sub-job differs from the node's
+    own system in exactly these ways."""
+    node = orca_step.BSSE()
+    node._resources = lambda: (1, 2000)
+    node._orca_config = lambda: {"code": "/usr/bin/orca"}
+    node._mpi_env = lambda n_cores, config: ({}, [])
+    node._report_run_location = lambda result, directory: None
+    node._parse_output = lambda path: {"energy": -1.0, "success": True}
+
+    captured = {}
+
+    def fake_run(cmd, config, directory, files, return_files, in_situ, shell, env):
+        captured["directory"] = directory
+        captured["orca.inp"] = files["orca.inp"]
+        return {"in_situ": True}
+
+    node.flowchart = SimpleNamespace(executor=SimpleNamespace(run=fake_run))
+
+    # The node's own configuration is neutral -- the job charge (1) must win.
+    configuration = SimpleNamespace(
+        atoms=_FakeAtoms(["Na", "Cl"], [(0, 0, 0), (3, 0, 0)]),
+        charge=0,
+        spin_multiplicity=1,
+    )
+    job_dir = tmp_path / "Na-alone"
+
+    result = node.run_orca_job(
+        "HF def2-SVP",
+        configuration,
+        1,
+        1,
+        atom_indices=[0],
+        directory=job_dir,
+    )
+
+    assert result == {"energy": -1.0, "success": True}
+    assert captured["directory"] == str(job_dir)
+    assert "* xyz 1 1" in captured["orca.inp"]
+    assert "Cl" not in captured["orca.inp"]  # atom subset excluded it
+    assert job_dir.exists()  # created even though it isn't self.directory
+
+
+def test_run_orca_delegates_to_run_orca_job_with_own_system():
+    """run_orca is a thin wrapper: the node's own configuration/charge/
+    multiplicity, and no explicit directory (so run_orca_job falls back to
+    self.directory)."""
+    node = orca_step.BSSE()
+    configuration = SimpleNamespace(charge=-1, spin_multiplicity=2)
+    node.get_system_configuration = lambda arg: (None, configuration)
+
+    captured = {}
+
+    def fake_run_orca_job(keyword_line, config, charge, multiplicity, **kwargs):
+        captured.update(
+            keyword_line=keyword_line,
+            configuration=config,
+            charge=charge,
+            multiplicity=multiplicity,
+            kwargs=kwargs,
+        )
+        return {"energy": -2.0, "success": True}
+
+    node.run_orca_job = fake_run_orca_job
+
+    result = node.run_orca("HF def2-SVP")
+
+    assert result == {"energy": -2.0, "success": True}
+    assert captured["configuration"] is configuration
+    assert captured["charge"] == -1
+    assert captured["multiplicity"] == 2
+    assert "directory" not in captured["kwargs"]  # run_orca_job's own default
+
+
+def test_bsse_parse_charges():
+    assert orca_step.BSSE._parse_charges("") == []
+    assert orca_step.BSSE._parse_charges("  ") == []
+    assert orca_step.BSSE._parse_charges("1, -1") == [1, -1]
+    assert orca_step.BSSE._parse_charges("0 0 0") == [0, 0, 0]
+
+
+def test_bsse_parse_fragment_groups():
+    groups = orca_step.BSSE._parse_fragment_groups("1-3; 4-6", 6)
+    assert groups == [[0, 1, 2], [3, 4, 5]]
+    groups3 = orca_step.BSSE._parse_fragment_groups("1; 2; 3-4", 4)
+    assert groups3 == [[0], [1], [2, 3]]
+    with pytest.raises(RuntimeError, match="at least two"):
+        orca_step.BSSE._parse_fragment_groups("1-4", 4)
+
+
+def test_bsse_fragments_auto_neutral_two_molecules():
+    """'auto (molecules)', no charges given -> every fragment neutral."""
+    node = orca_step.BSSE()
+    configuration = SimpleNamespace(
+        n_atoms=4,
+        charge=0,
+        spin_multiplicity=1,
+        find_molecules=lambda as_indices=True: [[0, 1], [2, 3]],
+    )
+    P = {"fragments": "auto (molecules)", "fragment atoms": "", "fragment charges": ""}
+    fragments = node._fragments(P, configuration)
+    assert [f.label for f in fragments] == ["1", "2"]
+    assert [f.atom_indices for f in fragments] == [(0, 1), (2, 3)]
+    assert [f.charge for f in fragments] == [0, 0]
+
+
+def test_bsse_fragments_specified_charged_na_cl():
+    """The Na+/Cl- pilot case: 'specified' fragments, per-fragment charge,
+    neutral overall complex."""
+    node = orca_step.BSSE()
+    configuration = SimpleNamespace(n_atoms=2, charge=0, spin_multiplicity=1)
+    P = {
+        "fragments": "specified",
+        "fragment atoms": "1; 2",
+        "fragment charges": "1, -1",
+    }
+    fragments = node._fragments(P, configuration)
+    assert [f.atom_indices for f in fragments] == [(0,), (1,)]
+    assert [f.charge for f in fragments] == [1, -1]
+
+
+def test_bsse_fragments_charge_mismatch_raises():
+    """A fragment-charges typo that doesn't sum to the complex's own charge is
+    caught with a clear error, not silently run."""
+    node = orca_step.BSSE()
+    configuration = SimpleNamespace(n_atoms=2, charge=0, spin_multiplicity=1)
+    P = {
+        "fragments": "specified",
+        "fragment atoms": "1; 2",
+        "fragment charges": "1, 1",  # should be 1, -1 for a neutral complex
+    }
+    with pytest.raises(RuntimeError, match="sum to"):
+        node._fragments(P, configuration)
+
+
+def test_bsse_fragments_wrong_charge_count_raises():
+    node = orca_step.BSSE()
+    configuration = SimpleNamespace(n_atoms=3, charge=0, spin_multiplicity=1)
+    P = {
+        "fragments": "specified",
+        "fragment atoms": "1; 2-3",
+        "fragment charges": "1, -1, 0",  # 3 charges, only 2 fragments
+    }
+    with pytest.raises(RuntimeError, match="fragment charges.*fragments found"):
+        node._fragments(P, configuration)
+
+
+def test_bsse_fragments_auto_needs_at_least_two_molecules():
+    node = orca_step.BSSE()
+    configuration = SimpleNamespace(
+        n_atoms=3,
+        charge=0,
+        spin_multiplicity=1,
+        find_molecules=lambda as_indices=True: [[0, 1, 2]],
+    )
+    P = {"fragments": "auto (molecules)", "fragment atoms": "", "fragment charges": ""}
+    with pytest.raises(RuntimeError, match="at least two"):
+        node._fragments(P, configuration)
+
+
+def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch):
+    """End-to-end (energy-only, ORCA stubbed) check of run()'s new wiring: the
+    Na+/Cl- fragment charges reach the right jobs, the ghost sets are the
+    complement of each fragment, and the assembled energy/interaction numbers
+    match seamm_bsse.combine()'s algebra for hand-picked energies."""
+    import seamm
+    from seamm.variables import Variables
+
+    monkeypatch.setattr(seamm, "flowchart_variables", Variables())
+
+    node = orca_step.BSSE()
+    node._id = ("1",)
+    node.flowchart = SimpleNamespace(root_directory=str(tmp_path))
+
+    configuration = SimpleNamespace(
+        n_atoms=2,
+        charge=0,
+        spin_multiplicity=1,
+        atoms=_FakeAtoms(["Na", "Cl"], [(0.0, 0.0, 0.0), (3.0, 0.0, 0.0)]),
+    )
+    node.get_system_configuration = lambda arg: (None, configuration)
+
+    energies = {
+        "cluster": -1000.00,
+        "1-in-cluster": -500.05,  # Na, in the Na/Cl cluster basis
+        "2-in-cluster": -500.10,  # Cl, in the Na/Cl cluster basis
+        "1-alone": -500.00,  # Na alone
+        "2-alone": -500.02,  # Cl alone
+    }
+    calls = []
+
+    def fake_run_orca_job(
+        keyword_line,
+        config,
+        charge,
+        multiplicity,
+        atom_indices=None,
+        ghost_atoms=None,
+        directory=None,
+        make_wfx=False,
+    ):
+        label = Path(directory).name
+        calls.append(
+            {
+                "label": label,
+                "charge": charge,
+                "multiplicity": multiplicity,
+                "atom_indices": tuple(atom_indices),
+                "ghost_atoms": frozenset(ghost_atoms or []),
+            }
+        )
+        return {"energy": energies[label], "success": True}
+
+    node.run_orca_job = fake_run_orca_job
+
+    captured_analyze = {}
+    node.analyze = lambda **kwargs: captured_analyze.update(kwargs)
+    node._cite_references = lambda P: None
+    node._cite_bsse = lambda: None
+    node.next = lambda: None
+
+    P = {
+        "use model chemistry": "no",
+        "method": "HF",
+        "basis": "def2-SVP",
+        "basis source": "ORCA internal",
+        "auxiliary basis": "none",
+        "grid": "default",
+        "scf convergence": "default",
+        "extra keywords": "",
+        "basis set extrapolation": "none",
+        "save wavefunction": "no",
+        "compute gradient": "no",
+        "optimize monomers": "no",
+        "fragments": "specified",
+        "fragment atoms": "1; 2",
+        "fragment charges": "1, -1",
+    }
+    node.parameters = SimpleNamespace(current_values_to_dict=lambda context=None: P)
+
+    node.run()
+
+    # Per-job charge threading: fragment 1 (Na, +1) and fragment 2 (Cl, -1),
+    # the cluster job neutral, each -in-cluster job at its OWN fragment's
+    # charge (not the cluster's), each -alone job likewise.
+    by_label = {c["label"]: c for c in calls}
+    assert by_label["cluster"]["charge"] == 0
+    assert by_label["1-in-cluster"]["charge"] == 1
+    assert by_label["2-in-cluster"]["charge"] == -1
+    assert by_label["1-alone"]["charge"] == 1
+    assert by_label["2-alone"]["charge"] == -1
+
+    # Ghost sets: each -in-cluster job ghosts exactly the OTHER fragment.
+    assert by_label["1-in-cluster"]["ghost_atoms"] == frozenset({1})
+    assert by_label["2-in-cluster"]["ghost_atoms"] == frozenset({0})
+    assert by_label["1-alone"]["ghost_atoms"] == frozenset()
+    assert by_label["1-alone"]["atom_indices"] == (0,)
+    assert by_label["2-alone"]["atom_indices"] == (1,)
+
+    # The assembled data matches seamm_bsse.combine()'s algebra by hand:
+    #   delta = (in1 - alone1) + (in2 - alone2)
+    #         = (-500.05 - -500.00) + (-500.10 - -500.02) = -0.05 + -0.08 = -0.13
+    #   energy = cluster - delta = -1000.00 - (-0.13) = -999.87
+    data = captured_analyze["data"]
+    assert data["energy"] == pytest.approx(-999.87)
+    assert data["uncorrected energy"] == pytest.approx(-1000.00)
+    assert data["bsse correction"] == pytest.approx(0.13)
+    assert "gradients" not in data  # energy-only
 
 
 def test_read_engrad(tmp_path):

@@ -4,6 +4,7 @@ molsystem
 seamm-util
 seamm-widgets
 seamm-exec
+seamm-bsse
 basis_set_exchange
 bibtexparser
 tabulate
