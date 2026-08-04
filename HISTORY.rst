@@ -2,6 +2,25 @@
 History
 =======
 
+2026.8.4 -- BSSE generalized to N fragments with independent per-fragment charge
+    * The BSSE (counterpoise) sub-step now supports any number of fragments, not
+      just two, and each fragment can have its own charge (a new "Fragment
+      charges" control) -- needed for ions, e.g. a Na+/Cl- pair or a
+      Na+/Cl-/H2O cluster. "Fragments" gained an "auto (molecules)" mode (every
+      separate molecule found, not just exactly two); "Fragment A atoms" became
+      "Fragment atoms", taking one semicolon-separated group of atoms per
+      fragment.
+    * Internally, the correction is now driven by a new shared library,
+      ``seamm-bsse``: SEAMM generates the 2N + 1 job specs the counterpoise
+      correction needs and runs each as an ordinary ORCA job, rather than the
+      previous ORCA *Compound* script (limited to exactly two neutral-singlet
+      fragments). Validated against the old Compound-script path on the
+      existing water/FEC/EC training data (agreement to SCF-noise level) and
+      against literature ion-pair/ion-water binding energies and a
+      three-fragment cluster before replacing it as the production path; the
+      Compound script itself is kept in the package as a permanent regression
+      reference.
+
 2026.8.1 -- Bugfix: run ORCA in node-local scratch under a scheduler, not NFS
     * ORCA is parallel (MPI) and was always launched directly in the SEAMM
       job/step directory. On a cluster that directory is commonly NFS-mounted
