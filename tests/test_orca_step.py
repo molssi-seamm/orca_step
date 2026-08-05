@@ -1029,6 +1029,33 @@ def test_library_path_vars():
     assert pairs["DYLD_LIBRARY_PATH"] == "/opt/openmpi/lib:/x"
 
 
+def test_mpi_env_disables_binding_for_parallel_runs(monkeypatch):
+    """Concurrent ORCA jobs must not fight over the same one or two cores.
+
+    ORCA spawns its own mpirun internally, so the only way to reach its
+    binding policy is via the OMPI_MCA_* environment variable spelling of
+    ``--bind-to none``. Without it, OpenMPI's default binding policy has no
+    knowledge of other concurrently-running ORCA jobs and every independent
+    mpirun invocation binds its ranks starting from the same low-numbered
+    cores. Serial runs need no MPI at all, so binding is left untouched.
+    Under SLURM a real scheduler already isolates the job's cores (cgroups),
+    so the override is skipped there -- same SLURM_JOB_ID check seamm_exec
+    uses for its in_situ auto-detection."""
+    monkeypatch.delenv("SLURM_JOB_ID", raising=False)
+    node = orca_step.Energy()
+    config = {"code": "/usr/bin/orca"}
+
+    env, _ = node._mpi_env(4, config)
+    assert env["OMPI_MCA_hwloc_base_binding_policy"] == "none"
+
+    env, _ = node._mpi_env(1, config)
+    assert "OMPI_MCA_hwloc_base_binding_policy" not in env
+
+    monkeypatch.setenv("SLURM_JOB_ID", "12345")
+    env, _ = node._mpi_env(4, config)
+    assert "OMPI_MCA_hwloc_base_binding_policy" not in env
+
+
 # --- MDI engine wrapper (data/orca_mdi.py) ---------------------------------
 
 
