@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.8.4 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.8.5 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=0cfa9efb"></script>
+    <script src="../../_static/documentation_options.js?v=a8821ae2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.4" />
+  <meta name="docsearch:version" content="2026.8.5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -973,6 +973,26 @@
 <span class="sd">             User Guide; nothing here can substitute for it. We still export the</span>
 <span class="sd">             loader variables for Linux.</span>
 
+<span class="sd">          3. Core binding: ORCA calls its own ``mpirun`` internally once it</span>
+<span class="sd">             parses ``%pal``, so we never see that command line -- but its</span>
+<span class="sd">             environment is ours to set. On an unmanaged, interactive host</span>
+<span class="sd">             (no SLURM etc. coordinating which cores belong to which job),</span>
+<span class="sd">             every independent ``mpirun`` invocation applies OpenMPI&#39;s</span>
+<span class="sd">             default binding policy (bind each rank to a core, starting from</span>
+<span class="sd">             a low core number) with no knowledge of other concurrently-</span>
+<span class="sd">             running ORCA jobs, so several jobs launched at once all pile</span>
+<span class="sd">             onto the same one or two cores instead of spreading across the</span>
+<span class="sd">             machine. Disabling binding (``OMPI_MCA_hwloc_base_binding_policy</span>
+<span class="sd">             =none``, the environment-variable spelling of ``mpirun</span>
+<span class="sd">             --bind-to none``, same on Linux and macOS -- no ``DYLD_*``/SIP</span>
+<span class="sd">             wrinkle here) lets the OS scheduler load-balance ranks from</span>
+<span class="sd">             concurrent jobs across all cores instead. Under a real</span>
+<span class="sd">             scheduler this is unnecessary and can be counter-productive: a</span>
+<span class="sd">             SLURM allocation already restricts the job to specific cores</span>
+<span class="sd">             (cgroups), so we leave OpenMPI&#39;s binding on in that case, the</span>
+<span class="sd">             same ``SLURM_JOB_ID`` check seamm_exec&#39;s ``in_situ`` auto-</span>
+<span class="sd">             detection and ``computational_environment()`` use.</span>
+
 <span class="sd">        The OpenMPI library directory is part of *how to run ORCA*, so it comes</span>
 <span class="sd">        from the executor config (~/SEAMM/orca.ini), not the user-facing</span>
 <span class="sd">        [orca-step] options. configparser lower-cases keys.</span>
@@ -987,6 +1007,8 @@
             <span class="n">bindir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;bin&quot;</span>
             <span class="k">if</span> <span class="n">bindir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
                 <span class="n">lib_prefix</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;export PATH=</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">bindir</span><span class="p">))</span><span class="si">}</span><span class="s2">:$PATH;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s2">&quot;SLURM_JOB_ID&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+            <span class="n">env</span><span class="p">[</span><span class="s2">&quot;OMPI_MCA_hwloc_base_binding_policy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
         <span class="k">return</span> <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span>
 
 <div class="viewcode-block" id="ORCABase.run_orca_compound">

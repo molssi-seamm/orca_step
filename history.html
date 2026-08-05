@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.8.4 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.8.5 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=0cfa9efb"></script>
+    <script src="_static/documentation_options.js?v=a8821ae2"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.4" />
+  <meta name="docsearch:version" content="2026.8.5" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,18 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.8.5 – Bugfix: parallel ORCA jobs colliding on the same CPU cores</dt><dd><ul class="simple">
+<li><p>Running several parallel ORCA jobs at once (e.g. two 2-core jobs) could
+pile all of them onto the same one or two CPU cores instead of spreading
+across the machine. ORCA launches its own internal <code class="docutils literal notranslate"><span class="pre">mpirun</span></code>, and with
+no scheduler coordinating cores between separate jobs, OpenMPI’s default
+binding policy bound every independent job’s ranks to the same
+low-numbered cores. Parallel ORCA runs off a scheduler now disable that
+binding so the OS can load-balance ranks from concurrent jobs across all
+cores; under SLURM (where the allocation already restricts the job to
+specific cores) the behavior is unchanged.</p></li>
+</ul>
+</dd>
 <dt>2026.8.4 – BSSE generalized to N fragments with independent per-fragment charge</dt><dd><ul class="simple">
 <li><p>The BSSE (counterpoise) sub-step now supports any number of fragments, not
 just two, and each fragment can have its own charge (a new “Fragment
