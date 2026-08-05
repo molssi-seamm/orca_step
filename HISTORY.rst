@@ -2,6 +2,17 @@
 History
 =======
 
+2026.8.5 -- Bugfix: parallel ORCA jobs colliding on the same CPU cores
+    * Running several parallel ORCA jobs at once (e.g. two 2-core jobs) could
+      pile all of them onto the same one or two CPU cores instead of spreading
+      across the machine. ORCA launches its own internal ``mpirun``, and with
+      no scheduler coordinating cores between separate jobs, OpenMPI's default
+      binding policy bound every independent job's ranks to the same
+      low-numbered cores. Parallel ORCA runs off a scheduler now disable that
+      binding so the OS can load-balance ranks from concurrent jobs across all
+      cores; under SLURM (where the allocation already restricts the job to
+      specific cores) the behavior is unchanged.
+
 2026.8.4 -- BSSE generalized to N fragments with independent per-fragment charge
     * The BSSE (counterpoise) sub-step now supports any number of fragments, not
       just two, and each fragment can have its own charge (a new "Fragment
