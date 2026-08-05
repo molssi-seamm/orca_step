@@ -466,6 +466,26 @@ class ORCABase(seamm.Node):
              User Guide; nothing here can substitute for it. We still export the
              loader variables for Linux.
 
+          3. Core binding: ORCA calls its own ``mpirun`` internally once it
+             parses ``%pal``, so we never see that command line -- but its
+             environment is ours to set. On an unmanaged, interactive host
+             (no SLURM etc. coordinating which cores belong to which job),
+             every independent ``mpirun`` invocation applies OpenMPI's
+             default binding policy (bind each rank to a core, starting from
+             a low core number) with no knowledge of other concurrently-
+             running ORCA jobs, so several jobs launched at once all pile
+             onto the same one or two cores instead of spreading across the
+             machine. Disabling binding (``OMPI_MCA_hwloc_base_binding_policy
+             =none``, the environment-variable spelling of ``mpirun
+             --bind-to none``, same on Linux and macOS -- no ``DYLD_*``/SIP
+             wrinkle here) lets the OS scheduler load-balance ranks from
+             concurrent jobs across all cores instead. Under a real
+             scheduler this is unnecessary and can be counter-productive: a
+             SLURM allocation already restricts the job to specific cores
+             (cgroups), so we leave OpenMPI's binding on in that case, the
+             same ``SLURM_JOB_ID`` check seamm_exec's ``in_situ`` auto-
+             detection and ``computational_environment()`` use.
+
         The OpenMPI library directory is part of *how to run ORCA*, so it comes
         from the executor config (~/SEAMM/orca.ini), not the user-facing
         [orca-step] options. configparser lower-cases keys.
@@ -480,6 +500,8 @@ class ORCABase(seamm.Node):
             bindir = Path(library_path).expanduser().parent / "bin"
             if bindir.is_dir():
                 lib_prefix.insert(0, f"export PATH={shlex.quote(str(bindir))}:$PATH;")
+        if n_cores > 1 and "SLURM_JOB_ID" not in os.environ:
+            env["OMPI_MCA_hwloc_base_binding_policy"] = "none"
         return env, lib_prefix
 
     def run_orca_compound(
