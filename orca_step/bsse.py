@@ -354,6 +354,21 @@ class BSSE(Energy):
             )
 
         cp = seamm_bsse.combine(specs, results, n_atoms=configuration.n_atoms)
+        if cp.gradient_fallback:
+            printer.important(
+                __(
+                    "WARNING: the BSSE-corrected gradient failed the "
+                    "translational-invariance guard (net force "
+                    f"{cp.net_force:.4f} E_h/bohr > tolerance "
+                    f"{seamm_bsse.DEFAULT_GRADIENT_TOLERANCE:.4f} E_h/bohr), "
+                    "most likely a ghost-centre integration blowup at large "
+                    "fragment separation. Falling back to the uncorrected "
+                    "cluster gradient for the forces; the physical BSSE "
+                    "correction is negligible here. The energy is still "
+                    "fully counterpoise-corrected.",
+                    indent=self.indent + 4 * " ",
+                )
+            )
 
         # For a following Atomic Charges (DDEC6) step: the full cluster's
         # wavefunction, copied up to this node's own directory (where a
