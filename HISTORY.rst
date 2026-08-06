@@ -2,6 +2,16 @@
 History
 =======
 
+2026.8.6 -- Bugfix: warn when the BSSE gradient guard falls back
+    * The BSSE (counterpoise) sub-step now depends on a new ``seamm_bsse``
+      release that guards against a corrupted counterpoise gradient at large
+      fragment separation (net force must be ~zero by translational
+      invariance; falls back to the uncorrected cluster gradient when it
+      isn't). This step now prints a warning when that fallback fires, so a
+      well-separated dimer/cluster with a corrupted ghost gradient doesn't
+      silently use the fallback -- the corrected energy is unaffected either
+      way.
+
 2026.8.5 -- Bugfix: parallel ORCA jobs colliding on the same CPU cores
     * Running several parallel ORCA jobs at once (e.g. two 2-core jobs) could
       pile all of them onto the same one or two CPU cores instead of spreading
