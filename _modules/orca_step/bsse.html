@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.8.5 documentation</title>
+    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.8.6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=a8821ae2"></script>
+    <script src="../../_static/documentation_options.js?v=9f7a9088"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.5" />
+  <meta name="docsearch:version" content="2026.8.6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -854,6 +854,21 @@
             <span class="p">)</span>
 
         <span class="n">cp</span> <span class="o">=</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">specs</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">n_atoms</span><span class="o">=</span><span class="n">configuration</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cp</span><span class="o">.</span><span class="n">gradient_fallback</span><span class="p">:</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span>
+                <span class="n">__</span><span class="p">(</span>
+                    <span class="s2">&quot;WARNING: the BSSE-corrected gradient failed the &quot;</span>
+                    <span class="s2">&quot;translational-invariance guard (net force &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cp</span><span class="o">.</span><span class="n">net_force</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> E_h/bohr &gt; tolerance &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">seamm_bsse</span><span class="o">.</span><span class="n">DEFAULT_GRADIENT_TOLERANCE</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> E_h/bohr), &quot;</span>
+                    <span class="s2">&quot;most likely a ghost-centre integration blowup at large &quot;</span>
+                    <span class="s2">&quot;fragment separation. Falling back to the uncorrected &quot;</span>
+                    <span class="s2">&quot;cluster gradient for the forces; the physical BSSE &quot;</span>
+                    <span class="s2">&quot;correction is negligible here. The energy is still &quot;</span>
+                    <span class="s2">&quot;fully counterpoise-corrected.&quot;</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="c1"># For a following Atomic Charges (DDEC6) step: the full cluster&#39;s</span>
         <span class="c1"># wavefunction, copied up to this node&#39;s own directory (where a</span>
