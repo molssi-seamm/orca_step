@@ -2,6 +2,28 @@
 History
 =======
 
+2026.8.7 -- Bugfix: catch a mis-assigned per-fragment BSSE charge before running ORCA
+    * The BSSE (counterpoise) sub-step now passes the cluster's atomic numbers
+      into ``seamm_bsse.validate_fragments``, which checks that every fragment
+      has an even electron count at its assigned charge. Previously, a
+      per-fragment charge given to the wrong fragment (e.g. an ion's charge
+      assigned to its neutral partner, such as ``Na+..H2O`` with the +1 given to
+      the water instead of the Na) could still sum correctly to the complex's
+      own charge and pass validation, only to fail deep inside ORCA once that
+      fragment's ghost-augmented sub-job ran as an impossible odd-electron
+      singlet. This is now caught up front with a clear message naming the
+      offending fragment. The per-fragment log line also now lists each
+      fragment's element composition, to make the atom-order convention
+      ``fragment charges`` needs visible before submitting.
+    * Leaving ``fragment charges`` empty no longer always means all-neutral: if
+      the structure carries per-atom formal charges (e.g. an ion marked with an
+      SDF/MOL ``M  CHG`` record, such as the Na+ in a ``Na+..H2O`` complex), each
+      fragment now defaults to the sum of its own atoms' formal charge. This
+      covers monatomic ions (Na+, Cl-) and polyatomic ions (NH4+, BF4-) alike
+      without the caller needing to spell out ``fragment charges`` at all --
+      removing the main way to trigger the mis-assignment above in the first
+      place. An explicit ``fragment charges`` still overrides it.
+
 2026.8.6 -- Bugfix: warn when the BSSE gradient guard falls back
     * The BSSE (counterpoise) sub-step now depends on a new ``seamm_bsse``
       release that guards against a corrupted counterpoise gradient at large
