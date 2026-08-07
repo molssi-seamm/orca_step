@@ -2,6 +2,17 @@
 History
 =======
 
+2026.8.7.1 -- Bugfix: report the BSSE gradient-fallback correction size
+    * The BSSE gradient-fallback warning now reports
+      ``seamm_bsse.CPResult.gradient_correction_magnitude`` (new in
+      seamm_bsse 2026.8.7.1) alongside the net-force residual, so it is
+      clear whether a triggered fallback discarded something physically
+      significant or something negligible. Also drops the "at large
+      fragment separation" framing from the message -- the recalibrated,
+      much tighter noise guard in seamm_bsse can now also catch corruption
+      at short/moderate separation, not just the long-range case the
+      warning used to describe.
+
 2026.8.7 -- Bugfix: catch a mis-assigned per-fragment BSSE charge before running ORCA
     * The BSSE (counterpoise) sub-step now passes the cluster's atomic numbers
       into ``seamm_bsse.validate_fragments``, which checks that every fragment

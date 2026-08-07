@@ -382,13 +382,17 @@ class BSSE(Energy):
                 __(
                     "WARNING: the BSSE-corrected gradient failed the "
                     "translational-invariance guard (net force "
-                    f"{cp.net_force:.4f} E_h/bohr > tolerance "
-                    f"{seamm_bsse.DEFAULT_GRADIENT_TOLERANCE:.4f} E_h/bohr), "
-                    "most likely a ghost-centre integration blowup at large "
-                    "fragment separation. Falling back to the uncorrected "
-                    "cluster gradient for the forces; the physical BSSE "
-                    "correction is negligible here. The energy is still "
-                    "fully counterpoise-corrected.",
+                    f"{cp.net_force:.6f} E_h/bohr > tolerance "
+                    f"{seamm_bsse.DEFAULT_GRADIENT_TOLERANCE:.6f} E_h/bohr), "
+                    "most likely a ghost-centre integration blowup. Falling "
+                    "back to the uncorrected cluster gradient for the "
+                    "forces; the energy is still fully counterpoise-"
+                    "corrected. The BSSE gradient correction being dropped "
+                    f"had magnitude {cp.gradient_correction_magnitude:.6f} "
+                    "E_h/bohr -- small relative to typical forces means the "
+                    "fallback is almost certainly fine; if it is not small, "
+                    "treat this point as suspect (exclude/rerun) rather "
+                    "than trusting either gradient.",
                     indent=self.indent + 4 * " ",
                 )
             )
