@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.8.7 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.8.7.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=3b021491"></script>
+    <script src="../_static/documentation_options.js?v=5362f91f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.7" />
+  <meta name="docsearch:version" content="2026.8.7.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1302,9 +1302,10 @@ engine should advertise <code class="docutils literal notranslate"><span class="
 <dd><p>Bases: <a class="reference internal" href="#orca_step.tk_energy.TkEnergy" title="orca_step.tk_energy.TkEnergy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TkEnergy</span></code></a></p>
 <p>Graphical ORCA BSSE sub-step: the energy dialog’s level-of-theory
 controls plus the fragment definition and the monomer-optimization switch.
-The Energy property toggles (bond orders, Hirshfeld, polarizability, saved
-wavefunction) and SThresh are not shown – they are not plumbed through the
-ORCA Compound path in Phase 1.</p>
+The Energy property toggles (bond orders, Hirshfeld, polarizability) and
+SThresh are not shown – they are not plumbed through the per-fragment
+BSSE job set. ‘Write the wavefunction (wfx) file’ (for a following Atomic
+Charges step) IS shown – see <code class="docutils literal notranslate"><span class="pre">_run_detail_keys</span></code> below.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="orca_step.tk_bsse.TkBSSE.create_dialog">
 <span class="sig-name descname"><span class="pre">create_dialog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ORCA</span> <span class="pre">BSSE'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/tk_bsse.html#TkBSSE.create_dialog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.tk_bsse.TkBSSE.create_dialog" title="Link to this definition">#</a></dt>

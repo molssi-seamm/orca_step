@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.8.7 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.8.7.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=3b021491"></script>
+    <script src="_static/documentation_options.js?v=5362f91f"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.7" />
+  <meta name="docsearch:version" content="2026.8.7.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,27 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.8.7.1 – Bugfix: report the BSSE gradient-fallback correction size</dt><dd><ul class="simple">
+<li><p>The BSSE gradient-fallback warning now reports
+<code class="docutils literal notranslate"><span class="pre">seamm_bsse.CPResult.gradient_correction_magnitude</span></code> (new in
+seamm_bsse 2026.8.7.1) alongside the net-force residual, so it is
+clear whether a triggered fallback discarded something physically
+significant or something negligible. Also drops the “at large
+fragment separation” framing from the message – the recalibrated,
+much tighter noise guard in seamm_bsse can now also catch corruption
+at short/moderate separation, not just the long-range case the
+warning used to describe.</p></li>
+<li><p>Documentation: the BSSE user guide was rewritten to match the current
+N-fragment implementation (it still described the old two-fragment,
+neutral-closed-shell-only Compound-script path). Added prominent
+documentation of the <code class="docutils literal notranslate"><span class="pre">Fragment</span> <span class="pre">charges</span></code> default (derived from the
+structure’s own formal charges when available, not always
+all-neutral) and a new section explaining the ghost-centre
+gradient-noise warning – what causes it, what SEAMM does about it,
+and how to read the reported correction magnitude to judge whether a
+given fallback is safe.</p></li>
+</ul>
+</dd>
 <dt>2026.8.7 – Bugfix: catch a mis-assigned per-fragment BSSE charge before running ORCA</dt><dd><ul class="simple">
 <li><p>The BSSE (counterpoise) sub-step now passes the cluster’s atomic numbers
 into <code class="docutils literal notranslate"><span class="pre">seamm_bsse.validate_fragments</span></code>, which checks that every fragment

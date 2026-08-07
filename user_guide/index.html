@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.8.7 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.8.7.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=3b021491"></script>
+    <script src="../_static/documentation_options.js?v=5362f91f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.7" />
+  <meta name="docsearch:version" content="2026.8.7.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -858,63 +858,178 @@ otherwise.</p>
 <section id="counterpoise-bsse-corrections">
 <h2>Counterpoise (BSSE) corrections<a class="headerlink" href="#counterpoise-bsse-corrections" title="Link to this heading">#</a></h2>
 <p>The <strong>BSSE</strong> sub-step computes the counterpoise-corrected (Boys–Bernardi)
-energy <strong>and gradient</strong> of a complex of two fragments — removing the basis-set
-superposition error that artificially over-stabilizes the interaction — in a
-single ORCA run. It is aimed at machine-learned-force-field (MLFF) training
-data that is BSSE-free on both the energy surface and the forces. Internally it
-drives ORCA’s <em>Compound</em> facility (the <code class="docutils literal notranslate"><span class="pre">BSSEGradient</span></code> script by D. G. Liakos &amp;
-F. Neese), which runs the five sub-calculations (the dimer, and each fragment
-both in the full dimer basis and in its own basis) and assembles the correction.</p>
+energy <strong>and gradient</strong> of an <em>N</em>-fragment complex — removing the basis-set
+superposition error that artificially over-stabilizes the interaction. It is
+aimed at machine-learned-force-field (MLFF) training data that is BSSE-free
+on both the energy surface and the forces. For a complex of <em>N</em> fragments it
+runs <code class="docutils literal notranslate"><span class="pre">2N</span> <span class="pre">+</span> <span class="pre">1</span></code> ordinary ORCA jobs (the full cluster; each fragment real in
+the full-cluster basis with the rest ghosted; each fragment alone in its own
+basis) and assembles the counterpoise correction from their results (the
+shared, engine-agnostic <code class="docutils literal notranslate"><span class="pre">seamm_bsse</span></code> library does the bookkeeping, so the
+same correction algebra also backs Psi4’s BSSE step).</p>
 <p>Use it with the conventional finite-basis methods (HF, DFT, MP2, canonical
-CCSD(T)), where BSSE is a real effect. For <strong>explicitly-correlated F12 methods</strong>
-the superposition error is already negligible, so the counterpoise correction is
-essentially zero and this step is unnecessary — take the interaction energy
-directly from a plain <strong>Energy</strong> run instead (see <em>Explicitly-correlated (F12)
-methods</em> above).</p>
-<p>The level-of-theory controls are the same as the Energy step. Three extra
-controls define the correction:</p>
+CCSD(T)), where BSSE is a real effect. For <strong>explicitly-correlated F12
+methods</strong> the superposition error is already negligible, so the counterpoise
+correction is essentially zero and this step is unnecessary — take the
+interaction energy directly from a plain <strong>Energy</strong> run instead (see
+<em>Explicitly-correlated (F12) methods</em> above).</p>
+<p>The level-of-theory controls are the same as the Energy step. The
+counterpoise-specific controls are described below.</p>
+<section id="fragments">
+<h3>Fragments<a class="headerlink" href="#fragments" title="Link to this heading">#</a></h3>
+<p><strong>Fragments</strong> chooses how to split the complex:</p>
 <ul class="simple">
-<li><p><strong>Fragments</strong> — how to split the complex into the two fragments. <code class="docutils literal notranslate"><span class="pre">auto</span> <span class="pre">(2</span>
-<span class="pre">molecules)</span></code> (the default) uses the two separate molecules in the structure
-(so it works directly on a dimer from the <strong>Dimer Builder</strong> step), and errors
-if there are not exactly two. <code class="docutils literal notranslate"><span class="pre">specified</span></code> takes fragment A from the
-<strong>Fragment A atoms</strong> field, given as <strong>atom numbers</strong> (1-based, as shown in the
-structure) — a comma/space separated list and/or ranges, e.g. <code class="docutils literal notranslate"><span class="pre">1-3,</span> <span class="pre">5</span></code>; the
-remaining atoms form fragment B. The <strong>Fragment A atoms</strong> field is shown only
-when <code class="docutils literal notranslate"><span class="pre">specified</span></code> is selected.</p></li>
-<li><p><strong>Compute the gradient</strong> — <code class="docutils literal notranslate"><span class="pre">yes</span></code> (the default) computes the
-counterpoise-corrected gradient (forces) as well as the energy, which is what
-MLFF training needs. <code class="docutils literal notranslate"><span class="pre">no</span></code> (energy only) is cheaper and, importantly, allows
-methods that have <strong>no analytic gradient</strong> in ORCA — notably <code class="docutils literal notranslate"><span class="pre">CCSD(T)</span></code> and
-<code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)</span></code> — for gold-standard counterpoise <em>interaction energies</em>.</p></li>
-<li><p><strong>Optimize free monomers</strong> — whether to relax each isolated monomer before
-taking the correction. Leave it <code class="docutils literal notranslate"><span class="pre">no</span></code> for a fixed-geometry PES / MLFF target.</p></li>
-<li><p><strong>Write the wavefunction (wfx) file</strong> — default <code class="docutils literal notranslate"><span class="pre">no</span></code>. When <code class="docutils literal notranslate"><span class="pre">yes</span></code>, the
-dimer’s density is kept and converted (via <code class="docutils literal notranslate"><span class="pre">orca_2aim</span></code>) to an <code class="docutils literal notranslate"><span class="pre">orca.wfx</span></code>,
-so a following <strong>Atomic Charges</strong> step can partition it into DDEC6 charges on
-the CP complex — exactly as after an Energy step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto</span> <span class="pre">(molecules)</span></code> (the default) — every separate molecule found in the
+structure becomes its own fragment (an error if there are fewer than two
+— e.g. a Na+/Cl- pair is two molecules). Works directly on output from the
+<strong>Dimer Builder</strong> step, or any structure with two or more distinct
+molecules.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">specified</span></code> — the fragments come from <strong>Fragment atoms</strong>, shown only in
+this mode: one semicolon-separated group per fragment, each a comma/space
+list and/or ranges of 1-based atom numbers (as shown in the structure),
+e.g. <code class="docutils literal notranslate"><span class="pre">1-3;</span> <span class="pre">4-6</span></code> for two fragments or <code class="docutils literal notranslate"><span class="pre">1-3;</span> <span class="pre">4-6;</span> <span class="pre">7</span></code> for three.</p></li>
 </ul>
-<p>The step reports, and offers on the Results tab, the <strong>BSSE-corrected energy</strong>
-(the <code class="docutils literal notranslate"><span class="pre">energy</span></code> result), the <strong>uncorrected</strong> (raw) complex energy, the <strong>BSSE
-correction</strong> (corrected minus uncorrected, also shown in kcal/mol), and — when
-requested — the corrected <strong>gradient</strong>. Tick any of them on the Results tab to
-save it to a variable, table, or the property database.</p>
+<p>Any number of fragments ≥ 2 is supported.</p>
+</section>
+<section id="fragment-charges">
+<h3>Fragment charges<a class="headerlink" href="#fragment-charges" title="Link to this heading">#</a></h3>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><strong>Set this explicitly for any ionic system, or check the printed log to
+confirm the automatic default did the right thing.</strong> A charge given to
+the wrong fragment is not always caught by validation (see below) — it
+can silently compute the wrong physics, or surface only as a confusing
+ORCA SCF failure deep inside one sub-job.</p>
+</div>
+<p><strong>Fragment charges</strong> gives each fragment’s formal charge, in the same order
+as the fragments themselves (the order <code class="docutils literal notranslate"><span class="pre">auto</span></code> finds molecules in, or the
+semicolon-separated groups in <strong>Fragment atoms</strong>) — a comma/space separated
+list of integers, e.g. <code class="docutils literal notranslate"><span class="pre">1,</span> <span class="pre">-1</span></code> for a Na+/Cl- pair.</p>
+<p>Leave it <strong>empty</strong> for the common case:</p>
+<ul class="simple">
+<li><p>If every fragment is neutral (the usual case for an H-bonded complex),
+that is exactly what an empty field gives you.</p></li>
+<li><p>If the input structure itself carries a per-atom formal charge — for
+example an ion in an SDF/MOL file, which records the charge on the
+specific atom it belongs to (an <code class="docutils literal notranslate"><span class="pre">M</span>&#160; <span class="pre">CHG</span></code> record) — each fragment’s
+default charge is instead the <strong>sum of its own atoms’ formal charge</strong>.
+A well-formed <code class="docutils literal notranslate"><span class="pre">Na+..H2O</span></code> or <code class="docutils literal notranslate"><span class="pre">Na+..Cl-</span></code> structure then gets the
+correct per-fragment charges (<code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">+1</span></code>, or <code class="docutils literal notranslate"><span class="pre">+1</span></code>/<code class="docutils literal notranslate"><span class="pre">-1</span></code>) with
+<strong>no</strong> <code class="docutils literal notranslate"><span class="pre">Fragment</span> <span class="pre">charges</span></code> entry needed at all — this covers monatomic
+ions (Na+, Cl-) and polyatomic ions (NH4+, BF4-) alike.</p></li>
+</ul>
+<p>An explicit value always overrides charges taken from the structure.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p><strong>The fragment order is not necessarily the order you’re thinking of the
+ions in, and it is easy to get backwards.</strong> The step always prints
+exactly what it used, before submitting anything to ORCA:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Fragment</span> <span class="mi">1</span> <span class="n">has</span> <span class="mi">3</span> <span class="n">atom</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">H</span><span class="p">),</span> <span class="n">charge</span> <span class="o">+</span><span class="mf">0.</span>
+<span class="n">Fragment</span> <span class="mi">2</span> <span class="n">has</span> <span class="mi">1</span> <span class="n">atom</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="p">(</span><span class="n">Na</span><span class="p">),</span> <span class="n">charge</span> <span class="o">+</span><span class="mf">1.</span>
+</pre></div>
+</div>
+<p>Check this against which fragment you actually meant to charge —
+especially when typing <strong>Fragment charges</strong> by hand. Swapping a charge
+between two same-parity fragments (e.g. two different monatomic ions)
+still sums to the right overall complex charge, so it is <em>not</em> always
+caught by the checks below; it just computes the wrong physics.</p>
+</div>
+<p>Two checks run before anything is submitted to ORCA, stopping the run with a
+clear message if they fail:</p>
+<ul class="simple">
+<li><p>the fragment charges must sum to the complex’s own overall charge;</p></li>
+<li><p>each fragment, at its assigned charge, must have an <strong>even</strong> number of
+electrons. Every fragment is closed-shell (multiplicity 1), and an
+odd-electron fragment cannot be — this is what catches a charge given to
+the wrong fragment when it does <em>not</em> happen to share parity with the
+fragment it should have gone to (e.g. a neutral water fragment
+mistakenly given an ion’s +1 charge).</p></li>
+</ul>
+</section>
+<section id="other-controls">
+<h3>Other controls<a class="headerlink" href="#other-controls" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Compute the gradient</strong> — <code class="docutils literal notranslate"><span class="pre">yes</span></code> (the default) computes the
+counterpoise-corrected gradient (forces) as well as the energy, which is
+what MLFF training needs. <code class="docutils literal notranslate"><span class="pre">no</span></code> (energy only) is cheaper and,
+importantly, allows methods that have <strong>no analytic gradient</strong> in ORCA —
+notably <code class="docutils literal notranslate"><span class="pre">CCSD(T)</span></code> and <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)</span></code> — for gold-standard counterpoise
+<em>interaction energies</em>.</p></li>
+<li><p><strong>Optimize free monomers</strong> — whether to relax each isolated fragment
+before taking the correction. Leave it <code class="docutils literal notranslate"><span class="pre">no</span></code> for a fixed-geometry PES /
+MLFF target.</p></li>
+<li><p><strong>Write the wavefunction (wfx) file</strong> — default <code class="docutils literal notranslate"><span class="pre">no</span></code>. When <code class="docutils literal notranslate"><span class="pre">yes</span></code>, the
+full cluster’s density is kept and converted (via <code class="docutils literal notranslate"><span class="pre">orca_2aim</span></code>) to an
+<code class="docutils literal notranslate"><span class="pre">orca.wfx</span></code>, so a following <strong>Atomic Charges</strong> step can partition it into
+DDEC6 charges on the CP complex — exactly as after an Energy step.</p></li>
+</ul>
+<p>The step reports, and offers on the Results tab, the <strong>BSSE-corrected
+energy</strong> (the <code class="docutils literal notranslate"><span class="pre">energy</span></code> result), the <strong>uncorrected</strong> (raw) complex energy,
+the <strong>BSSE correction</strong> (corrected minus uncorrected, also shown in
+kcal/mol), and — when requested — the corrected <strong>gradient</strong>. Tick any of
+them on the Results tab to save it to a variable, table, or the property
+database.</p>
+</section>
+<section id="a-ghost-centre-gradient-noise-warning">
+<h3>A ghost-centre gradient-noise warning<a class="headerlink" href="#a-ghost-centre-gradient-noise-warning" title="Link to this heading">#</a></h3>
+<p>Occasionally the step’s output includes a warning like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WARNING</span><span class="p">:</span> <span class="n">the</span> <span class="n">BSSE</span><span class="o">-</span><span class="n">corrected</span> <span class="n">gradient</span> <span class="n">failed</span> <span class="n">the</span> <span class="n">translational</span><span class="o">-</span><span class="n">invariance</span>
+<span class="n">guard</span> <span class="p">(</span><span class="n">net</span> <span class="n">force</span> <span class="mf">0.001290</span> <span class="n">E_h</span><span class="o">/</span><span class="n">bohr</span> <span class="o">&gt;</span> <span class="n">tolerance</span> <span class="mf">0.000300</span> <span class="n">E_h</span><span class="o">/</span><span class="n">bohr</span><span class="p">),</span> <span class="n">most</span>
+<span class="n">likely</span> <span class="n">a</span> <span class="n">ghost</span><span class="o">-</span><span class="n">centre</span> <span class="n">integration</span> <span class="n">blowup</span><span class="o">.</span> <span class="n">Falling</span> <span class="n">back</span> <span class="n">to</span> <span class="n">the</span>
+<span class="n">uncorrected</span> <span class="n">cluster</span> <span class="n">gradient</span> <span class="k">for</span> <span class="n">the</span> <span class="n">forces</span><span class="p">;</span> <span class="n">the</span> <span class="n">energy</span> <span class="ow">is</span> <span class="n">still</span> <span class="n">fully</span>
+<span class="n">counterpoise</span><span class="o">-</span><span class="n">corrected</span><span class="o">.</span> <span class="n">The</span> <span class="n">BSSE</span> <span class="n">gradient</span> <span class="n">correction</span> <span class="n">being</span> <span class="n">dropped</span> <span class="n">had</span>
+<span class="n">magnitude</span> <span class="mf">0.001242</span> <span class="n">E_h</span><span class="o">/</span><span class="n">bohr</span> <span class="o">--</span> <span class="n">small</span> <span class="n">relative</span> <span class="n">to</span> <span class="n">typical</span> <span class="n">forces</span> <span class="n">means</span>
+<span class="n">the</span> <span class="n">fallback</span> <span class="ow">is</span> <span class="n">almost</span> <span class="n">certainly</span> <span class="n">fine</span><span class="p">;</span> <span class="k">if</span> <span class="n">it</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">small</span><span class="p">,</span> <span class="n">treat</span> <span class="n">this</span>
+<span class="n">point</span> <span class="k">as</span> <span class="n">suspect</span> <span class="p">(</span><span class="n">exclude</span><span class="o">/</span><span class="n">rerun</span><span class="p">)</span> <span class="n">rather</span> <span class="n">than</span> <span class="n">trusting</span> <span class="n">either</span> <span class="n">gradient</span><span class="o">.</span>
+</pre></div>
+</div>
+<p><strong>What causes it.</strong> One of the <code class="docutils literal notranslate"><span class="pre">fragment-in-cluster</span></code> sub-jobs — a
+fragment’s real atoms plus the other fragment(s) as ghost (basis-function
+only, no electron) centres — can occasionally pick up a small amount of
+numerical-integration noise in the Pulay (basis-derivative) force on a ghost
+centre, from ORCA’s RIJCOSX/COSX approximation. This is a genuine, if
+uncommon, ORCA numerical artifact, not a SEAMM bug and (usually) not a sign
+that anything is chemically wrong with the point. A correctly-assembled
+counterpoise gradient always sums to exactly zero net force over the whole
+cluster (translational invariance — nothing external is acting on an
+isolated system); this noise breaks that, which is what makes it
+detectable at all — the energy stays fine, with no warning from ORCA
+itself.</p>
+<p><strong>What SEAMM does about it.</strong> Every BSSE gradient is checked against this
+zero-net-force requirement. When the residual exceeds a small tolerance,
+the corrected <strong>gradient</strong> (only) falls back to the raw, uncorrected
+cluster gradient; the <strong>energy</strong> is unaffected either way, since the noise
+only shows up in the numerically far more sensitive gradient.</p>
+<p><strong>How to judge whether the fallback is safe for a given point.</strong> The
+warning reports both the net-force residual that tripped the guard <em>and</em>
+the size of the BSSE gradient correction that got dropped. Compare them:</p>
+<ul class="simple">
+<li><p>If the two are close in magnitude (as in the example above — 0.00129 vs.
+0.00124 E_h/bohr), the “correction” being discarded was itself mostly
+noise, not real physics — the fallback is safe, and the point can be used
+as-is.</p></li>
+<li><p>If the correction magnitude is <strong>much larger</strong> than the net-force
+residual, real physics is being discarded, not just noise — that point is
+genuinely suspect and worth excluding or rerunning (e.g. with a finer
+<strong>Integration grid</strong>, <code class="docutils literal notranslate"><span class="pre">DEFGRID3</span></code> — see <em>Integration grid</em> above) rather
+than trusting either gradient at face value.</p></li>
+</ul>
+<p>In practice this fires rarely, and mostly at short-to-moderate fragment
+separation (where the counterpoise correction is largest, so there is more
+for the noise to hide inside); a finer integration grid on the affected
+structures is usually enough to avoid it entirely.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><strong>Phase-1 limitations.</strong> This first version supports a <strong>neutral,
-closed-shell</strong> complex of <strong>exactly two</strong> fragments, using an
-<strong>ORCA-internal</strong> basis set (not the Basis Set Exchange). For the <strong>energy</strong>,
-any method works — HF, DFT (including dispersion-corrected and
-<strong>double-hybrid</strong> functionals such as <code class="docutils literal notranslate"><span class="pre">REVDSD-PBEP86-D4/2021</span></code>), MP2, and
-<code class="docutils literal notranslate"><span class="pre">(DLPNO-)CCSD(T)</span></code>. Computing the <strong>gradient</strong> additionally requires an
-<strong>analytic</strong> gradient, so the numerical-gradient methods (<code class="docutils literal notranslate"><span class="pre">(DLPNO-)CCSD(T)</span></code>)
-are available in <em>energy-only</em> mode only. The same charge/multiplicity is
-applied to each monomer, so charged or open-shell fragments are refused with a
-clear message; the SThresh control and the extra property analyses (bond
-orders, Hirshfeld charges, polarizability, saved wavefunction) are not
-available in the BSSE sub-step. N-fragment and code-agnostic counterpoise
-corrections are planned as a separate, general BSSE step.</p>
+<p><strong>Current limitations.</strong> Every fragment must be <strong>closed-shell</strong>
+(multiplicity 1); open-shell fragments are not yet supported. Only an
+<strong>ORCA-internal</strong> basis set works (not yet the Basis Set Exchange).
+Computing the <strong>gradient</strong> additionally requires an <strong>analytic</strong>
+gradient, so the numerical-gradient methods (<code class="docutils literal notranslate"><span class="pre">(DLPNO-)CCSD(T)</span></code>) are
+available in <em>energy-only</em> mode only. The SThresh control and the extra
+property analyses (bond orders, Hirshfeld charges, polarizability)
+available on the plain Energy step are not available here.</p>
 </div>
+</section>
 </section>
 <section id="saving-results-to-the-database">
 <h2>Saving results to the database<a class="headerlink" href="#saving-results-to-the-database" title="Link to this heading">#</a></h2>
@@ -1088,7 +1203,13 @@ high-accuracy calculations for ordinary single-point steps.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energies-gradients-and-forces">Energies, gradients, and forces</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#geometry-optimization">Geometry optimization</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#frequencies-hessian-and-thermochemistry">Frequencies (Hessian and thermochemistry)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#counterpoise-bsse-corrections">Counterpoise (BSSE) corrections</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#counterpoise-bsse-corrections">Counterpoise (BSSE) corrections</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fragments">Fragments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fragment-charges">Fragment charges</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-controls">Other controls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-ghost-centre-gradient-noise-warning">A ghost-centre gradient-noise warning</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-results-to-the-database">Saving results to the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-properties-and-outputs">Other properties and outputs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-orca-in-parallel">Running ORCA in parallel</a></li>
