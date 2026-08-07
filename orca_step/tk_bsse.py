@@ -14,9 +14,10 @@ logger = logging.getLogger(__name__)
 class TkBSSE(TkEnergy):
     """Graphical ORCA BSSE sub-step: the energy dialog's level-of-theory
     controls plus the fragment definition and the monomer-optimization switch.
-    The Energy property toggles (bond orders, Hirshfeld, polarizability, saved
-    wavefunction) and SThresh are not shown -- they are not plumbed through the
-    ORCA Compound path in Phase 1.
+    The Energy property toggles (bond orders, Hirshfeld, polarizability) and
+    SThresh are not shown -- they are not plumbed through the per-fragment
+    BSSE job set. 'Write the wavefunction (wfx) file' (for a following Atomic
+    Charges step) IS shown -- see ``_run_detail_keys`` below.
     """
 
     def _show_cbs(self):

@@ -373,65 +373,186 @@ Counterpoise (BSSE) corrections
 ===============================
 
 The **BSSE** sub-step computes the counterpoise-corrected (Boys--Bernardi)
-energy **and gradient** of a complex of two fragments — removing the basis-set
-superposition error that artificially over-stabilizes the interaction — in a
-single ORCA run. It is aimed at machine-learned-force-field (MLFF) training
-data that is BSSE-free on both the energy surface and the forces. Internally it
-drives ORCA's *Compound* facility (the ``BSSEGradient`` script by D. G. Liakos &
-F. Neese), which runs the five sub-calculations (the dimer, and each fragment
-both in the full dimer basis and in its own basis) and assembles the correction.
+energy **and gradient** of an *N*-fragment complex — removing the basis-set
+superposition error that artificially over-stabilizes the interaction. It is
+aimed at machine-learned-force-field (MLFF) training data that is BSSE-free
+on both the energy surface and the forces. For a complex of *N* fragments it
+runs ``2N + 1`` ordinary ORCA jobs (the full cluster; each fragment real in
+the full-cluster basis with the rest ghosted; each fragment alone in its own
+basis) and assembles the counterpoise correction from their results (the
+shared, engine-agnostic ``seamm_bsse`` library does the bookkeeping, so the
+same correction algebra also backs Psi4's BSSE step).
 
 Use it with the conventional finite-basis methods (HF, DFT, MP2, canonical
-CCSD(T)), where BSSE is a real effect. For **explicitly-correlated F12 methods**
-the superposition error is already negligible, so the counterpoise correction is
-essentially zero and this step is unnecessary — take the interaction energy
-directly from a plain **Energy** run instead (see *Explicitly-correlated (F12)
-methods* above).
+CCSD(T)), where BSSE is a real effect. For **explicitly-correlated F12
+methods** the superposition error is already negligible, so the counterpoise
+correction is essentially zero and this step is unnecessary — take the
+interaction energy directly from a plain **Energy** run instead (see
+*Explicitly-correlated (F12) methods* above).
 
-The level-of-theory controls are the same as the Energy step. Three extra
-controls define the correction:
+The level-of-theory controls are the same as the Energy step. The
+counterpoise-specific controls are described below.
 
-* **Fragments** — how to split the complex into the two fragments. ``auto (2
-  molecules)`` (the default) uses the two separate molecules in the structure
-  (so it works directly on a dimer from the **Dimer Builder** step), and errors
-  if there are not exactly two. ``specified`` takes fragment A from the
-  **Fragment A atoms** field, given as **atom numbers** (1-based, as shown in the
-  structure) — a comma/space separated list and/or ranges, e.g. ``1-3, 5``; the
-  remaining atoms form fragment B. The **Fragment A atoms** field is shown only
-  when ``specified`` is selected.
+Fragments
+---------
+
+**Fragments** chooses how to split the complex:
+
+* ``auto (molecules)`` (the default) — every separate molecule found in the
+  structure becomes its own fragment (an error if there are fewer than two
+  — e.g. a Na+/Cl- pair is two molecules). Works directly on output from the
+  **Dimer Builder** step, or any structure with two or more distinct
+  molecules.
+* ``specified`` — the fragments come from **Fragment atoms**, shown only in
+  this mode: one semicolon-separated group per fragment, each a comma/space
+  list and/or ranges of 1-based atom numbers (as shown in the structure),
+  e.g. ``1-3; 4-6`` for two fragments or ``1-3; 4-6; 7`` for three.
+
+Any number of fragments ≥ 2 is supported.
+
+Fragment charges
+-----------------
+
+.. important::
+
+   **Set this explicitly for any ionic system, or check the printed log to
+   confirm the automatic default did the right thing.** A charge given to
+   the wrong fragment is not always caught by validation (see below) — it
+   can silently compute the wrong physics, or surface only as a confusing
+   ORCA SCF failure deep inside one sub-job.
+
+**Fragment charges** gives each fragment's formal charge, in the same order
+as the fragments themselves (the order ``auto`` finds molecules in, or the
+semicolon-separated groups in **Fragment atoms**) — a comma/space separated
+list of integers, e.g. ``1, -1`` for a Na+/Cl- pair.
+
+Leave it **empty** for the common case:
+
+* If every fragment is neutral (the usual case for an H-bonded complex),
+  that is exactly what an empty field gives you.
+* If the input structure itself carries a per-atom formal charge — for
+  example an ion in an SDF/MOL file, which records the charge on the
+  specific atom it belongs to (an ``M  CHG`` record) — each fragment's
+  default charge is instead the **sum of its own atoms' formal charge**.
+  A well-formed ``Na+..H2O`` or ``Na+..Cl-`` structure then gets the
+  correct per-fragment charges (``0``/``+1``, or ``+1``/``-1``) with
+  **no** ``Fragment charges`` entry needed at all — this covers monatomic
+  ions (Na+, Cl-) and polyatomic ions (NH4+, BF4-) alike.
+
+An explicit value always overrides charges taken from the structure.
+
+.. caution::
+
+   **The fragment order is not necessarily the order you're thinking of the
+   ions in, and it is easy to get backwards.** The step always prints
+   exactly what it used, before submitting anything to ORCA::
+
+      Fragment 1 has 3 atom(s) (O, H, H), charge +0.
+      Fragment 2 has 1 atom(s) (Na), charge +1.
+
+   Check this against which fragment you actually meant to charge —
+   especially when typing **Fragment charges** by hand. Swapping a charge
+   between two same-parity fragments (e.g. two different monatomic ions)
+   still sums to the right overall complex charge, so it is *not* always
+   caught by the checks below; it just computes the wrong physics.
+
+Two checks run before anything is submitted to ORCA, stopping the run with a
+clear message if they fail:
+
+* the fragment charges must sum to the complex's own overall charge;
+* each fragment, at its assigned charge, must have an **even** number of
+  electrons. Every fragment is closed-shell (multiplicity 1), and an
+  odd-electron fragment cannot be — this is what catches a charge given to
+  the wrong fragment when it does *not* happen to share parity with the
+  fragment it should have gone to (e.g. a neutral water fragment
+  mistakenly given an ion's +1 charge).
+
+Other controls
+---------------
+
 * **Compute the gradient** — ``yes`` (the default) computes the
-  counterpoise-corrected gradient (forces) as well as the energy, which is what
-  MLFF training needs. ``no`` (energy only) is cheaper and, importantly, allows
-  methods that have **no analytic gradient** in ORCA — notably ``CCSD(T)`` and
-  ``DLPNO-CCSD(T)`` — for gold-standard counterpoise *interaction energies*.
-* **Optimize free monomers** — whether to relax each isolated monomer before
-  taking the correction. Leave it ``no`` for a fixed-geometry PES / MLFF target.
+  counterpoise-corrected gradient (forces) as well as the energy, which is
+  what MLFF training needs. ``no`` (energy only) is cheaper and,
+  importantly, allows methods that have **no analytic gradient** in ORCA —
+  notably ``CCSD(T)`` and ``DLPNO-CCSD(T)`` — for gold-standard counterpoise
+  *interaction energies*.
+* **Optimize free monomers** — whether to relax each isolated fragment
+  before taking the correction. Leave it ``no`` for a fixed-geometry PES /
+  MLFF target.
 * **Write the wavefunction (wfx) file** — default ``no``. When ``yes``, the
-  dimer's density is kept and converted (via ``orca_2aim``) to an ``orca.wfx``,
-  so a following **Atomic Charges** step can partition it into DDEC6 charges on
-  the CP complex — exactly as after an Energy step.
+  full cluster's density is kept and converted (via ``orca_2aim``) to an
+  ``orca.wfx``, so a following **Atomic Charges** step can partition it into
+  DDEC6 charges on the CP complex — exactly as after an Energy step.
 
-The step reports, and offers on the Results tab, the **BSSE-corrected energy**
-(the ``energy`` result), the **uncorrected** (raw) complex energy, the **BSSE
-correction** (corrected minus uncorrected, also shown in kcal/mol), and — when
-requested — the corrected **gradient**. Tick any of them on the Results tab to
-save it to a variable, table, or the property database.
+The step reports, and offers on the Results tab, the **BSSE-corrected
+energy** (the ``energy`` result), the **uncorrected** (raw) complex energy,
+the **BSSE correction** (corrected minus uncorrected, also shown in
+kcal/mol), and — when requested — the corrected **gradient**. Tick any of
+them on the Results tab to save it to a variable, table, or the property
+database.
+
+A ghost-centre gradient-noise warning
+---------------------------------------
+
+Occasionally the step's output includes a warning like this::
+
+   WARNING: the BSSE-corrected gradient failed the translational-invariance
+   guard (net force 0.001290 E_h/bohr > tolerance 0.000300 E_h/bohr), most
+   likely a ghost-centre integration blowup. Falling back to the
+   uncorrected cluster gradient for the forces; the energy is still fully
+   counterpoise-corrected. The BSSE gradient correction being dropped had
+   magnitude 0.001242 E_h/bohr -- small relative to typical forces means
+   the fallback is almost certainly fine; if it is not small, treat this
+   point as suspect (exclude/rerun) rather than trusting either gradient.
+
+**What causes it.** One of the ``fragment-in-cluster`` sub-jobs — a
+fragment's real atoms plus the other fragment(s) as ghost (basis-function
+only, no electron) centres — can occasionally pick up a small amount of
+numerical-integration noise in the Pulay (basis-derivative) force on a ghost
+centre, from ORCA's RIJCOSX/COSX approximation. This is a genuine, if
+uncommon, ORCA numerical artifact, not a SEAMM bug and (usually) not a sign
+that anything is chemically wrong with the point. A correctly-assembled
+counterpoise gradient always sums to exactly zero net force over the whole
+cluster (translational invariance — nothing external is acting on an
+isolated system); this noise breaks that, which is what makes it
+detectable at all — the energy stays fine, with no warning from ORCA
+itself.
+
+**What SEAMM does about it.** Every BSSE gradient is checked against this
+zero-net-force requirement. When the residual exceeds a small tolerance,
+the corrected **gradient** (only) falls back to the raw, uncorrected
+cluster gradient; the **energy** is unaffected either way, since the noise
+only shows up in the numerically far more sensitive gradient.
+
+**How to judge whether the fallback is safe for a given point.** The
+warning reports both the net-force residual that tripped the guard *and*
+the size of the BSSE gradient correction that got dropped. Compare them:
+
+* If the two are close in magnitude (as in the example above — 0.00129 vs.
+  0.00124 E_h/bohr), the "correction" being discarded was itself mostly
+  noise, not real physics — the fallback is safe, and the point can be used
+  as-is.
+* If the correction magnitude is **much larger** than the net-force
+  residual, real physics is being discarded, not just noise — that point is
+  genuinely suspect and worth excluding or rerunning (e.g. with a finer
+  **Integration grid**, ``DEFGRID3`` — see *Integration grid* above) rather
+  than trusting either gradient at face value.
+
+In practice this fires rarely, and mostly at short-to-moderate fragment
+separation (where the counterpoise correction is largest, so there is more
+for the noise to hide inside); a finer integration grid on the affected
+structures is usually enough to avoid it entirely.
 
 .. note::
 
-   **Phase-1 limitations.** This first version supports a **neutral,
-   closed-shell** complex of **exactly two** fragments, using an
-   **ORCA-internal** basis set (not the Basis Set Exchange). For the **energy**,
-   any method works — HF, DFT (including dispersion-corrected and
-   **double-hybrid** functionals such as ``REVDSD-PBEP86-D4/2021``), MP2, and
-   ``(DLPNO-)CCSD(T)``. Computing the **gradient** additionally requires an
-   **analytic** gradient, so the numerical-gradient methods (``(DLPNO-)CCSD(T)``)
-   are available in *energy-only* mode only. The same charge/multiplicity is
-   applied to each monomer, so charged or open-shell fragments are refused with a
-   clear message; the SThresh control and the extra property analyses (bond
-   orders, Hirshfeld charges, polarizability, saved wavefunction) are not
-   available in the BSSE sub-step. N-fragment and code-agnostic counterpoise
-   corrections are planned as a separate, general BSSE step.
+   **Current limitations.** Every fragment must be **closed-shell**
+   (multiplicity 1); open-shell fragments are not yet supported. Only an
+   **ORCA-internal** basis set works (not yet the Basis Set Exchange).
+   Computing the **gradient** additionally requires an **analytic**
+   gradient, so the numerical-gradient methods (``(DLPNO-)CCSD(T)``) are
+   available in *energy-only* mode only. The SThresh control and the extra
+   property analyses (bond orders, Hirshfeld charges, polarizability)
+   available on the plain Energy step are not available here.
 
 Saving results to the database
 ==============================

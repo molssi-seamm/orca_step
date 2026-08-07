@@ -12,6 +12,15 @@ History
       much tighter noise guard in seamm_bsse can now also catch corruption
       at short/moderate separation, not just the long-range case the
       warning used to describe.
+    * Documentation: the BSSE user guide was rewritten to match the current
+      N-fragment implementation (it still described the old two-fragment,
+      neutral-closed-shell-only Compound-script path). Added prominent
+      documentation of the ``Fragment charges`` default (derived from the
+      structure's own formal charges when available, not always
+      all-neutral) and a new section explaining the ghost-centre
+      gradient-noise warning -- what causes it, what SEAMM does about it,
+      and how to read the reported correction magnitude to judge whether a
+      given fallback is safe.
 
 2026.8.7 -- Bugfix: catch a mis-assigned per-fragment BSSE charge before running ORCA
     * The BSSE (counterpoise) sub-step now passes the cluster's atomic numbers
