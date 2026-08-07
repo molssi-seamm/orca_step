@@ -142,6 +142,7 @@ class BSSE(Energy):
                 fragments,
                 cluster_charge=configuration.charge,
                 cluster_multiplicity=configuration.spin_multiplicity,
+                atomic_numbers=configuration.atoms.atomic_numbers,
             )
         except ValueError as e:
             raise RuntimeError(f"BSSE: {e}") from e
@@ -295,11 +296,13 @@ class BSSE(Energy):
         _, configuration = self.get_system_configuration(None)
         self._check_supported(P, configuration)
         fragments = self._fragments(P, configuration)
+        symbols = configuration.atoms.symbols
         for fragment in fragments:
+            composition = ", ".join(symbols[i] for i in fragment.atom_indices)
             printer.important(
                 __(
                     f"Fragment {fragment.label} has {len(fragment.atom_indices)} "
-                    f"atom(s), charge {fragment.charge:+d}.",
+                    f"atom(s) ({composition}), charge {fragment.charge:+d}.",
                     indent=self.indent + 4 * " ",
                 )
             )

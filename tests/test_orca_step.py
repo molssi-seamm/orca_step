@@ -1973,11 +1973,14 @@ def test_bsse_rejects_bse_basis():
 
 class _FakeAtoms:
     """A minimal stand-in for `configuration.atoms` -- just enough for
-    `geometry_block`/`run_orca_job` (symbols + get_coordinates)."""
+    `geometry_block`/`run_orca_job` (symbols + get_coordinates), plus
+    `atomic_numbers` for tests that go through `_fragments`/
+    `validate_fragments`."""
 
-    def __init__(self, symbols, coords):
+    def __init__(self, symbols, coords, atomic_numbers=None):
         self.symbols = symbols
         self._coords = coords
+        self.atomic_numbers = atomic_numbers
 
     def get_coordinates(self, fractionals=False, in_cell=True):
         return self._coords
@@ -2126,6 +2129,7 @@ def test_bsse_fragments_auto_neutral_two_molecules():
         charge=0,
         spin_multiplicity=1,
         find_molecules=lambda as_indices=True: [[0, 1], [2, 3]],
+        atoms=SimpleNamespace(atomic_numbers=[1, 1, 1, 1]),
     )
     P = {"fragments": "auto (molecules)", "fragment atoms": "", "fragment charges": ""}
     fragments = node._fragments(P, configuration)
@@ -2138,7 +2142,12 @@ def test_bsse_fragments_specified_charged_na_cl():
     """The Na+/Cl- pilot case: 'specified' fragments, per-fragment charge,
     neutral overall complex."""
     node = orca_step.BSSE()
-    configuration = SimpleNamespace(n_atoms=2, charge=0, spin_multiplicity=1)
+    configuration = SimpleNamespace(
+        n_atoms=2,
+        charge=0,
+        spin_multiplicity=1,
+        atoms=SimpleNamespace(atomic_numbers=[11, 17]),
+    )
     P = {
         "fragments": "specified",
         "fragment atoms": "1; 2",
@@ -2153,7 +2162,12 @@ def test_bsse_fragments_charge_mismatch_raises():
     """A fragment-charges typo that doesn't sum to the complex's own charge is
     caught with a clear error, not silently run."""
     node = orca_step.BSSE()
-    configuration = SimpleNamespace(n_atoms=2, charge=0, spin_multiplicity=1)
+    configuration = SimpleNamespace(
+        n_atoms=2,
+        charge=0,
+        spin_multiplicity=1,
+        atoms=SimpleNamespace(atomic_numbers=[11, 17]),
+    )
     P = {
         "fragments": "specified",
         "fragment atoms": "1; 2",
@@ -2206,7 +2220,9 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
         n_atoms=2,
         charge=0,
         spin_multiplicity=1,
-        atoms=_FakeAtoms(["Na", "Cl"], [(0.0, 0.0, 0.0), (3.0, 0.0, 0.0)]),
+        atoms=_FakeAtoms(
+            ["Na", "Cl"], [(0.0, 0.0, 0.0), (3.0, 0.0, 0.0)], atomic_numbers=[11, 17]
+        ),
     )
     node.get_system_configuration = lambda arg: (None, configuration)
 
