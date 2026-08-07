@@ -101,10 +101,19 @@ class BSSE(Energy):
     def _fragments(self, P, configuration):
         """Return the N ``seamm_bsse.Fragment`` for this complex, per the
         'fragments' parameter, with per-fragment charge threaded in from
-        'fragment charges'. Validates against the complex's own
-        charge/multiplicity (``seamm_bsse.validate_fragments``) before
-        returning -- catches a fragment-charge typo, or an open-shell/
-        multiplicity>1 fragment (not yet supported), with a clear message.
+        'fragment charges' -- or, if that is left empty, from the sum of each
+        fragment's atoms' ``formal_charge`` (set on ``configuration.atoms``
+        when the structure came from a format that carries per-atom formal
+        charges, e.g. an SDF/MOL file's ``M  CHG`` record), falling back to
+        all-neutral if neither is available. This means a molecular ion
+        marked in the source structure (monatomic like Na+/Cl-, or
+        polyatomic like NH4+/BF4-) gets the right default fragment charge
+        without the caller spelling it out -- and without guessing from the
+        element/group, which does not generalize past monatomic ions.
+        Validates against the complex's own charge/multiplicity
+        (``seamm_bsse.validate_fragments``) before returning -- catches a
+        fragment-charge typo, or an open-shell/multiplicity>1 fragment (not
+        yet supported), with a clear message.
         """
         n_atoms = configuration.n_atoms
         mode = P["fragments"]
@@ -124,7 +133,18 @@ class BSSE(Energy):
 
         charges = self._parse_charges(P["fragment charges"])
         if not charges:
-            charges = [0] * len(groups)
+            if "formal_charge" in configuration.atoms:
+                formal_charges = configuration.atoms["formal_charge"]
+                charges = [sum(formal_charges[i] for i in group) for group in groups]
+                printer.important(
+                    __(
+                        "No 'fragment charges' given; using each fragment's "
+                        "net formal charge from the input structure.",
+                        indent=self.indent + 4 * " ",
+                    )
+                )
+            else:
+                charges = [0] * len(groups)
         elif len(charges) != len(groups):
             raise RuntimeError(
                 f"BSSE: {len(charges)} 'fragment charges' given but "

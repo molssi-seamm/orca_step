@@ -1973,17 +1973,30 @@ def test_bsse_rejects_bse_basis():
 
 class _FakeAtoms:
     """A minimal stand-in for `configuration.atoms` -- just enough for
-    `geometry_block`/`run_orca_job` (symbols + get_coordinates), plus
+    `geometry_block`/`run_orca_job` (symbols + get_coordinates),
     `atomic_numbers` for tests that go through `_fragments`/
-    `validate_fragments`."""
+    `validate_fragments`, and `formal_charge` (`in`/`[]`, like the real
+    molsystem atoms table) for the 'fragment charges' structure-derived
+    default."""
 
-    def __init__(self, symbols, coords, atomic_numbers=None):
+    def __init__(
+        self, symbols=None, coords=None, atomic_numbers=None, formal_charge=None
+    ):
         self.symbols = symbols
         self._coords = coords
         self.atomic_numbers = atomic_numbers
+        self._formal_charge = formal_charge
 
     def get_coordinates(self, fractionals=False, in_cell=True):
         return self._coords
+
+    def __contains__(self, key):
+        return key == "formal_charge" and self._formal_charge is not None
+
+    def __getitem__(self, key):
+        if key == "formal_charge" and self._formal_charge is not None:
+            return self._formal_charge
+        raise KeyError(key)
 
 
 def test_geometry_block_default_is_every_atom_no_ghosts():
@@ -2129,7 +2142,7 @@ def test_bsse_fragments_auto_neutral_two_molecules():
         charge=0,
         spin_multiplicity=1,
         find_molecules=lambda as_indices=True: [[0, 1], [2, 3]],
-        atoms=SimpleNamespace(atomic_numbers=[1, 1, 1, 1]),
+        atoms=_FakeAtoms(atomic_numbers=[1, 1, 1, 1]),
     )
     P = {"fragments": "auto (molecules)", "fragment atoms": "", "fragment charges": ""}
     fragments = node._fragments(P, configuration)
@@ -2146,7 +2159,7 @@ def test_bsse_fragments_specified_charged_na_cl():
         n_atoms=2,
         charge=0,
         spin_multiplicity=1,
-        atoms=SimpleNamespace(atomic_numbers=[11, 17]),
+        atoms=_FakeAtoms(atomic_numbers=[11, 17]),
     )
     P = {
         "fragments": "specified",
@@ -2166,7 +2179,7 @@ def test_bsse_fragments_charge_mismatch_raises():
         n_atoms=2,
         charge=0,
         spin_multiplicity=1,
-        atoms=SimpleNamespace(atomic_numbers=[11, 17]),
+        atoms=_FakeAtoms(atomic_numbers=[11, 17]),
     )
     P = {
         "fragments": "specified",
@@ -2175,6 +2188,45 @@ def test_bsse_fragments_charge_mismatch_raises():
     }
     with pytest.raises(RuntimeError, match="sum to"):
         node._fragments(P, configuration)
+
+
+def test_bsse_fragments_default_charges_from_formal_charge():
+    """No 'fragment charges' given, but the structure (e.g. read from an SDF
+    with an 'M  CHG' record) carries per-atom formal charges -- the Na+..H2O
+    pilot case (job 3859): water (O, H, H) neutral, Na+ +1. Each fragment's
+    default charge must be the sum of its own atoms' formal_charge, not 0."""
+    node = orca_step.BSSE()
+    node._id = ("1",)
+    configuration = SimpleNamespace(
+        n_atoms=4,
+        charge=1,
+        spin_multiplicity=1,
+        find_molecules=lambda as_indices=True: [[0, 1, 2], [3]],
+        atoms=_FakeAtoms(atomic_numbers=[8, 1, 1, 11], formal_charge=[0, 0, 0, 1]),
+    )
+    P = {"fragments": "auto (molecules)", "fragment atoms": "", "fragment charges": ""}
+    fragments = node._fragments(P, configuration)
+    assert [f.atom_indices for f in fragments] == [(0, 1, 2), (3,)]
+    assert [f.charge for f in fragments] == [0, 1]
+
+
+def test_bsse_fragments_explicit_charges_override_formal_charge():
+    """An explicit 'fragment charges' still wins over the structure's own
+    (here, deliberately wrong/absent-looking) formal charges."""
+    node = orca_step.BSSE()
+    configuration = SimpleNamespace(
+        n_atoms=2,
+        charge=0,
+        spin_multiplicity=1,
+        atoms=_FakeAtoms(atomic_numbers=[11, 17], formal_charge=[0, 0]),
+    )
+    P = {
+        "fragments": "specified",
+        "fragment atoms": "1; 2",
+        "fragment charges": "1, -1",
+    }
+    fragments = node._fragments(P, configuration)
+    assert [f.charge for f in fragments] == [1, -1]
 
 
 def test_bsse_fragments_wrong_charge_count_raises():
