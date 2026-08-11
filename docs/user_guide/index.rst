@@ -633,6 +633,28 @@ come from two files with different jobs:
 
 If you do not have a matching OpenMPI, set ``ncores = 1`` to run serially.
 
+**Environment-modules clusters.** If ORCA is provided via a cluster's
+``module`` system rather than a fixed path you manage yourself, use
+``installation = modules`` instead of ``local``, naming the module(s) to
+load:
+
+.. code-block:: ini
+
+   [local]
+   installation = modules
+   modules = ORCA
+   code = /path/to/orca
+   library-path = /path/to/orca-mpi/lib
+
+``seamm_exec`` runs ``module load <modules>`` before invoking ORCA. This
+works for both serial and parallel runs -- as of this release, a
+parallel run's OpenMPI ``library-path`` is prepended onto whatever the
+module load already put on ``LD_LIBRARY_PATH``/``DYLD_LIBRARY_PATH``,
+rather than overwriting it (a real, fixed bug: earlier releases could
+silently discard the module-provided ORCA libraries on a parallel run,
+failing with ``error while loading shared libraries`` even though the
+module load itself had succeeded).
+
 Driving ORCA as an MDI engine
 =============================
 

@@ -1056,6 +1056,70 @@ def test_mpi_env_disables_binding_for_parallel_runs(monkeypatch):
     assert "OMPI_MCA_hwloc_base_binding_policy" not in env
 
 
+def _run_seamm_exec_format_loop(command, **config):
+    """Reproduce seamm_exec.local.Local.exec()'s own variable-substitution
+    loop (``local.py``, ~line 119): calls ``.format(**config)`` repeatedly
+    *until the output stops changing*, to resolve nested ``{...}``
+    references. Real regression coverage for the bug this guards against
+    needs this exact loop, not a single ``.format()`` call -- a single call
+    can't tell the difference between text that survives one pass and text
+    that only survives one pass (doubled braces do the latter, and still
+    raise ``KeyError`` on the loop's second iteration; confirmed for real
+    on TinkerCliffs)."""
+    tmp = command
+    while True:
+        command = tmp.format(**config)
+        if tmp == command:
+            return command
+        tmp = command
+
+
+def test_mpi_env_lib_prefix_prepends_at_shell_runtime(monkeypatch):
+    """``lib_prefix``'s export lines must not bake in a Python-time
+    snapshot of LD_LIBRARY_PATH/DYLD_LIBRARY_PATH.
+
+    A code installed via ``installation = modules`` (seamm_exec's
+    ``Local.exec()``) runs ``module load ...`` *earlier in the same
+    generated shell script* -- something Python's own ``os.environ`` can't
+    see yet when ``_mpi_env`` runs. A static ``export VAR=<value>;`` line
+    would silently discard whatever that module load just added (this is
+    exactly what broke a real parallel ORCA run on TinkerCliffs: ORCA's own
+    liborca_tools_*.so vanished from LD_LIBRARY_PATH). The generated line
+    must instead expand ``$VAR`` at the point it actually runs, so it
+    stacks on top of whatever is set by then.
+
+    Deliberately brace-free (an ``if``/``then``/``else``, not
+    ``${VAR:+...}`` parameter expansion): ``seamm_exec.local.Local.exec()``
+    runs the whole command through its own ``.format(**config, **ce)``, in
+    a loop *until the output stops changing* (for its ``{code}``-style
+    placeholders) -- a single-braced ``${VAR:+...}`` survives exactly one
+    pass; even doubling the braces only buys one extra pass before the
+    same ``KeyError`` on the next iteration (both confirmed for real on
+    TinkerCliffs -- this test reproduces that exact loop via
+    ``_run_seamm_exec_format_loop``, not a single ``.format()`` call, so it
+    would have caught both prior broken attempts)."""
+    monkeypatch.delenv("SLURM_JOB_ID", raising=False)
+    node = orca_step.Energy()
+    config = {"code": "/usr/bin/orca", "library-path": "/opt/openmpi/lib"}
+
+    _, lib_prefix = node._mpi_env(4, config)
+    joined = " ".join(lib_prefix)
+
+    assert "export LD_LIBRARY_PATH=" in joined
+    assert "export DYLD_LIBRARY_PATH=" in joined
+    # No braces at all -- immune to seamm_exec's .format() loop regardless
+    # of how many passes it runs.
+    assert "{" not in joined
+    assert "}" not in joined
+
+    # Survives seamm_exec's real repeat-until-stable .format() loop intact.
+    formatted = _run_seamm_exec_format_loop(joined, **config)
+    assert 'if [ -n "$LD_LIBRARY_PATH" ]; then' in formatted
+    assert "export LD_LIBRARY_PATH=/opt/openmpi/lib:$LD_LIBRARY_PATH;" in formatted
+    assert 'if [ -n "$DYLD_LIBRARY_PATH" ]; then' in formatted
+    assert "export DYLD_LIBRARY_PATH=/opt/openmpi/lib:$DYLD_LIBRARY_PATH;" in formatted
+
+
 # --- MDI engine wrapper (data/orca_mdi.py) ---------------------------------
 
 

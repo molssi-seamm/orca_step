@@ -2,6 +2,21 @@
 History
 =======
 
+2026.8.11 -- Bugfix: parallel ORCA could lose its own shared libraries under installation = modules
+    * A parallel run (more than one core) with ``orca.ini``'s
+      ``installation = modules`` (e.g. ``modules = ORCA``, for a cluster
+      where ORCA is provided via an environment-modules ``module load``)
+      could fail with ``error while loading shared libraries`` for
+      ORCA's own libraries, even though the module load itself succeeded.
+      The generated launch script computed ``LD_LIBRARY_PATH``/
+      ``DYLD_LIBRARY_PATH`` too early -- before the module load that runs
+      ahead of it had a chance to update the environment -- and then
+      overwrote the variable with that stale, pre-module-load value,
+      discarding what the module load had just added. Fixed by having
+      the OpenMPI library path prepend onto whatever the variable
+      actually holds at the point the script runs, instead of a value
+      computed in advance. A serial (single-core) run was never affected.
+
 2026.8.7.1 -- Bugfix: report the BSSE gradient-fallback correction size
     * The BSSE gradient-fallback warning now reports
       ``seamm_bsse.CPResult.gradient_correction_magnitude`` (new in
