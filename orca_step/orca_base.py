@@ -493,9 +493,34 @@ class ORCABase(seamm.Node):
         env = {}
         lib_prefix = []
         library_path = config.get("library-path", "") or ""
+        quoted_library_path = shlex.quote(library_path)
         for var, value in _library_path_vars(n_cores, library_path):
             env[var] = value
-            lib_prefix.append(f"export {var}={shlex.quote(value)};")
+            # Prepend at shell *runtime*, not with this Python-computed
+            # snapshot of os.environ: an installation=modules code
+            # (seamm_exec.Local.exec()) runs `module load ...` earlier in
+            # this same generated script, which Python's os.environ can't
+            # see yet at this point -- a static value here would silently
+            # discard whatever that module load just added (confirmed for
+            # real: ORCA's own liborca_tools_*.so disappeared from a
+            # parallel run's LD_LIBRARY_PATH this way).
+            #
+            # Deliberately brace-free (an if/then/else, not
+            # ``${VAR:+...}`` parameter expansion): this text is later run
+            # through seamm_exec.local.Local.exec()'s own
+            # ``command.format(**config, **ce)`` (for ITS "{code}"-style
+            # placeholders), called in a loop *until the output stops
+            # changing* -- a single-braced ``${VAR:+...}`` here survives
+            # exactly one pass (mistaken for one of its own fields on the
+            # next), and even doubling the braces only buys one extra
+            # pass before the same KeyError (confirmed for real, both
+            # ways). A construct with no braces at all is immune
+            # regardless of how many passes run.
+            lib_prefix.append(
+                f'if [ -n "${var}" ]; then '
+                f"export {var}={quoted_library_path}:${var}; "
+                f"else export {var}={quoted_library_path}; fi;"
+            )
         if n_cores > 1 and library_path:
             bindir = Path(library_path).expanduser().parent / "bin"
             if bindir.is_dir():
