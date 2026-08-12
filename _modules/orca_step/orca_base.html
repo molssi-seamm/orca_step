@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.8.7.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=5362f91f"></script>
+    <script src="../../_static/documentation_options.js?v=d9a48a5b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.7.1" />
+  <meta name="docsearch:version" content="2026.8.11" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1000,9 +1000,34 @@
         <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">lib_prefix</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">library_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;library-path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">quoted_library_path</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_library_path_vars</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">library_path</span><span class="p">):</span>
             <span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-            <span class="n">lib_prefix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">)</span>
+            <span class="c1"># Prepend at shell *runtime*, not with this Python-computed</span>
+            <span class="c1"># snapshot of os.environ: an installation=modules code</span>
+            <span class="c1"># (seamm_exec.Local.exec()) runs `module load ...` earlier in</span>
+            <span class="c1"># this same generated script, which Python&#39;s os.environ can&#39;t</span>
+            <span class="c1"># see yet at this point -- a static value here would silently</span>
+            <span class="c1"># discard whatever that module load just added (confirmed for</span>
+            <span class="c1"># real: ORCA&#39;s own liborca_tools_*.so disappeared from a</span>
+            <span class="c1"># parallel run&#39;s LD_LIBRARY_PATH this way).</span>
+            <span class="c1">#</span>
+            <span class="c1"># Deliberately brace-free (an if/then/else, not</span>
+            <span class="c1"># ``${VAR:+...}`` parameter expansion): this text is later run</span>
+            <span class="c1"># through seamm_exec.local.Local.exec()&#39;s own</span>
+            <span class="c1"># ``command.format(**config, **ce)`` (for ITS &quot;{code}&quot;-style</span>
+            <span class="c1"># placeholders), called in a loop *until the output stops</span>
+            <span class="c1"># changing* -- a single-braced ``${VAR:+...}`` here survives</span>
+            <span class="c1"># exactly one pass (mistaken for one of its own fields on the</span>
+            <span class="c1"># next), and even doubling the braces only buys one extra</span>
+            <span class="c1"># pass before the same KeyError (confirmed for real, both</span>
+            <span class="c1"># ways). A construct with no braces at all is immune</span>
+            <span class="c1"># regardless of how many passes run.</span>
+            <span class="n">lib_prefix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;if [ -n &quot;$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1">&quot; ]; then &#39;</span>
+                <span class="sa">f</span><span class="s2">&quot;export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">:$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;else export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">; fi;&quot;</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">library_path</span><span class="p">:</span>
             <span class="n">bindir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;bin&quot;</span>
             <span class="k">if</span> <span class="n">bindir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>

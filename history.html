@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.8.7.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=5362f91f"></script>
+    <script src="_static/documentation_options.js?v=d9a48a5b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.7.1" />
+  <meta name="docsearch:version" content="2026.8.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,22 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.8.11 – Bugfix: parallel ORCA could lose its own shared libraries under installation = modules</dt><dd><ul class="simple">
+<li><p>A parallel run (more than one core) with <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">installation</span> <span class="pre">=</span> <span class="pre">modules</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">modules</span> <span class="pre">=</span> <span class="pre">ORCA</span></code>, for a cluster
+where ORCA is provided via an environment-modules <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span></code>)
+could fail with <code class="docutils literal notranslate"><span class="pre">error</span> <span class="pre">while</span> <span class="pre">loading</span> <span class="pre">shared</span> <span class="pre">libraries</span></code> for
+ORCA’s own libraries, even though the module load itself succeeded.
+The generated launch script computed <code class="docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code>/
+<code class="docutils literal notranslate"><span class="pre">DYLD_LIBRARY_PATH</span></code> too early – before the module load that runs
+ahead of it had a chance to update the environment – and then
+overwrote the variable with that stale, pre-module-load value,
+discarding what the module load had just added. Fixed by having
+the OpenMPI library path prepend onto whatever the variable
+actually holds at the point the script runs, instead of a value
+computed in advance. A serial (single-core) run was never affected.</p></li>
+</ul>
+</dd>
 <dt>2026.8.7.1 – Bugfix: report the BSSE gradient-fallback correction size</dt><dd><ul class="simple">
 <li><p>The BSSE gradient-fallback warning now reports
 <code class="docutils literal notranslate"><span class="pre">seamm_bsse.CPResult.gradient_correction_magnitude</span></code> (new in

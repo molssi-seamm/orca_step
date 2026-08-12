@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.8.7.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=5362f91f"></script>
+    <script src="../_static/documentation_options.js?v=d9a48a5b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.7.1" />
+  <meta name="docsearch:version" content="2026.8.11" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1105,6 +1105,25 @@ search path once, for example by symlinking into <code class="docutils literal n
 <code class="docutils literal notranslate"><span class="pre">library-path</span></code> is sufficient there.</p>
 </div>
 <p>If you do not have a matching OpenMPI, set <code class="docutils literal notranslate"><span class="pre">ncores</span> <span class="pre">=</span> <span class="pre">1</span></code> to run serially.</p>
+<p><strong>Environment-modules clusters.</strong> If ORCA is provided via a cluster’s
+<code class="docutils literal notranslate"><span class="pre">module</span></code> system rather than a fixed path you manage yourself, use
+<code class="docutils literal notranslate"><span class="pre">installation</span> <span class="pre">=</span> <span class="pre">modules</span></code> instead of <code class="docutils literal notranslate"><span class="pre">local</span></code>, naming the module(s) to
+load:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[local]</span>
+<span class="na">installation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">modules</span>
+<span class="na">modules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ORCA</span>
+<span class="na">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/orca</span>
+<span class="na">library-path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/orca-mpi/lib</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">seamm_exec</span></code> runs <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span> <span class="pre">&lt;modules&gt;</span></code> before invoking ORCA. This
+works for both serial and parallel runs – as of this release, a
+parallel run’s OpenMPI <code class="docutils literal notranslate"><span class="pre">library-path</span></code> is prepended onto whatever the
+module load already put on <code class="docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code>/<code class="docutils literal notranslate"><span class="pre">DYLD_LIBRARY_PATH</span></code>,
+rather than overwriting it (a real, fixed bug: earlier releases could
+silently discard the module-provided ORCA libraries on a parallel run,
+failing with <code class="docutils literal notranslate"><span class="pre">error</span> <span class="pre">while</span> <span class="pre">loading</span> <span class="pre">shared</span> <span class="pre">libraries</span></code> even though the
+module load itself had succeeded).</p>
 </section>
 <section id="driving-orca-as-an-mdi-engine">
 <h2>Driving ORCA as an MDI engine<a class="headerlink" href="#driving-orca-as-an-mdi-engine" title="Link to this heading">#</a></h2>
