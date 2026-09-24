@@ -358,6 +358,13 @@ class BSSE(Energy):
             job_make_wfx = make_wfx and spec.kind == seamm_bsse.CLUSTER
             if job_make_wfx:
                 keyword_line = f"{keyword_line} keepdensity"
+            # A bare single-atom fragment (e.g. Na+ alone) needs exact
+            # exchange; see Energy.single_center_keywords.
+            single_center = self.single_center_keywords(
+                keyword_line, len(spec.atom_indices)
+            )
+            if single_center:
+                keyword_line = f"{keyword_line} {single_center}"
 
             outcome = self.run_orca_job(
                 keyword_line,

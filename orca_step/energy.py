@@ -46,6 +46,11 @@ _FALLBACK_GUESS = {
 }
 
 # The 'initial guess' enum entries (energy_parameters.py) that are direct ORCA
+# Simple-input keywords that choose how ORCA evaluates exact exchange. If the
+# user picked one, the single-center COSX guard (Energy.single_center_keywords)
+# leaves it alone.
+_EXCHANGE_SCHEME_KEYWORDS = {"RIJCOSX", "COSX", "NOCOSX", "RIJK", "RIJONX", "NORI"}
+
 # 'Guess' keywords, i.e. neither 'default' nor one of the two
 # wavefunction-restart choices (which take their own branch in extra_input,
 # below). Anything else reaching that branch is not a value the current GUI
@@ -415,6 +420,25 @@ class Energy(orca_step.ORCABase):
         the parent functional (see ``orca_step.orca_method_keyword``)."""
         method, _ = self._resolve_method_basis(P)
         return orca_step.orca_method_blocks(method)
+
+    @staticmethod
+    def single_center_keywords(keyword_line, n_centers):
+        """'NoCOSX' for a one-center job (a lone atom or bare atomic ion), else ''.
+
+        ORCA 6.1.1 with its default RIJCOSX exchange mis-builds the d-type
+        virtual orbitals of some lone atoms when the SCF starts from scratch:
+        the SCF energy is right, but the MP2 part of a double hybrid is off by
+        ~5 kJ/mol (Na 5.0, Na+ 4.9, Mg 4.6), with no warning. Exact exchange
+        (NoCOSX) is right and cheap for one center. Ghost atoms count as
+        centers, so only a bare fragment qualifies. An exchange scheme the
+        user already chose is respected.
+        """
+        if n_centers != 1:
+            return ""
+        words = {w.upper() for w in keyword_line.split()}
+        if words & _EXCHANGE_SCHEME_KEYWORDS:
+            return ""
+        return "NoCOSX"
 
     def _check_dlpno_open_shell(self, method, keyword_line, multiplicity):
         """Stop early when an open-shell DLPNO double hybrid needs a gradient.
@@ -798,6 +822,18 @@ class Energy(orca_step.ORCABase):
         self._check_dlpno_open_shell(
             method, keyword_line, configuration.spin_multiplicity
         )
+        single_center = self.single_center_keywords(keyword_line, configuration.n_atoms)
+        if single_center:
+            keyword_line += " " + single_center
+            printer.important(
+                __(
+                    "Note: using exact exchange (NoCOSX) for this single "
+                    "atom, because ORCA's default COSX approximation can "
+                    "give wrong virtual orbitals, and so wrong MP2 energies, "
+                    "for some lone atoms.",
+                    indent=self.indent + 4 * " ",
+                )
+            )
 
         # Warn when we had to fall back to a numerical gradient -- it is much
         # more costly (a displaced single point per degree of freedom).
@@ -1053,8 +1089,13 @@ class Energy(orca_step.ORCABase):
         basis = self._strip_bse(basis)
         # The reference database stores functional keywords in their
         # model-chemistry-safe spelling (see orca_step.mc_method_alias),
-        # matching how the atom-energy reference runs were tagged.
-        lookup_method = orca_step.mc_method_alias(method)
+        # matching how the atom-energy reference runs were tagged. A DLPNO
+        # double hybrid uses its canonical parent's atoms: DLPNO cannot run
+        # H at all ("no pairs to be correlated"), the DLPNO effect on an
+        # isolated atom is <0.07 kJ/mol, and a molecule's DLPNO error is not
+        # a sum of atomic ones, so separate DLPNO atoms would buy nothing.
+        parent = orca_step.dlpno_parent(method)
+        lookup_method = orca_step.mc_method_alias(parent or method)
 
         counts = Counter(configuration.atoms.atomic_numbers)
         composition = Counter()
@@ -1162,6 +1203,12 @@ class Energy(orca_step.ORCABase):
                     system_gibbs_energy=G if temperature is not None else None,
                     temperature=temperature,
                 )
+                if parent is not None:
+                    report += (
+                        f"\n\nThe atomic reference energies are those of the "
+                        f"canonical {parent}; the DLPNO approximation changes "
+                        "isolated-atom energies by less than 0.07 kJ/mol."
+                    )
         except FileNotFoundError:
             return (
                 f"Thermochemistry of {name} with {level}\n\n"

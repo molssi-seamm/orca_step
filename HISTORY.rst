@@ -21,6 +21,16 @@ History
       jobs failed. They now use the numerical gradient. ``KPR2SCAN`` is not
       an ORCA keyword and is renamed ``KPR2SCAN50`` (numerical gradient
       only).
+    * DLPNO double hybrids use the canonical functional's atomic reference
+      energies for the energy of formation, which the report notes. DLPNO
+      cannot treat H at all, and it changes isolated-atom energies by less
+      than 0.07 kJ/mol.
+    * Bugfix: ORCA's default COSX exchange gives wrong results for some lone
+      atoms. From scratch, a Na or Mg atom or a bare Na+ ion gets its double
+      hybrid MP2 part about 5 kJ/mol too high, and at DEFGRID3 a lone Li or H
+      is off by 0.9 or 0.07 kJ/mol. Single-atom jobs, including the bare
+      single-atom fragments of a BSSE correction, now use exact exchange
+      (``NoCOSX``) unless an exchange scheme is given in the extra keywords.
 
 2026.8.11 -- Bugfix: parallel ORCA could lose its own shared libraries under installation = modules
     * A parallel run (more than one core) with ``orca.ini``'s

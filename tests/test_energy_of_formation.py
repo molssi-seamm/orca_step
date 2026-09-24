@@ -186,3 +186,24 @@ def test_graceful_when_database_not_built(monkeypatch, tmp_path):
 
     assert "DfE0" not in data
     assert "not built" in text
+
+
+def test_dlpno_double_hybrid_uses_canonical_atoms():
+    """A DLPNO double hybrid is referenced to its canonical parent's atoms
+    (DLPNO cannot even run H), and the report says so."""
+    canonical = {
+        **DFT_P,
+        "functional": "REVDSD-PBEP86-D4/2021",
+        "basis": "def2-TZVPPD",
+    }
+    dlpno = {**canonical, "functional": "DLPNO-REVDSD-PBEP86-D4/2021"}
+    configuration = _fake_configuration(WATER_ATOMIC_NUMBERS)
+
+    ref = {"energy": -76.4}
+    orca_step.Energy().calculate_energy_of_formation(canonical, ref, configuration)
+    data = {"energy": -76.4}
+    text = orca_step.Energy().calculate_energy_of_formation(dlpno, data, configuration)
+
+    assert data["DfE0"] == pytest.approx(ref["DfE0"])
+    assert data["E atomization"] == pytest.approx(ref["E atomization"])
+    assert "canonical REVDSD-PBEP86-D4/2021" in text

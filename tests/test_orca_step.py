@@ -2377,6 +2377,7 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
         calls.append(
             {
                 "label": label,
+                "keyword_line": keyword_line,
                 "charge": charge,
                 "multiplicity": multiplicity,
                 "atom_indices": tuple(atom_indices),
@@ -2421,6 +2422,10 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
     by_label = {c["label"]: c for c in calls}
     # HF needs no method-specific '%' blocks.
     assert all(c["extra_blocks"] == "" for c in calls)
+    # The bare single-ion jobs (Na+ alone, Cl- alone) get exact exchange;
+    # every job with more than one center (ghosts included) keeps COSX.
+    for label, c in by_label.items():
+        assert ("NoCOSX" in c["keyword_line"].split()) == label.endswith("-alone")
     assert by_label["cluster"]["charge"] == 0
     assert by_label["1-in-cluster"]["charge"] == 1
     assert by_label["2-in-cluster"]["charge"] == -1
@@ -2603,3 +2608,15 @@ def test_dlpno_double_hybrid_mdi_engine(tmp_path):
 def test_dlpno_double_hybrid_frequencies_numerical():
     """Like its parent, a DLPNO double hybrid has no analytic Hessian."""
     assert orca_step.method_has_analytic_hessian("DLPNO-B2PLYP") is False
+
+
+def test_single_center_keywords():
+    """A lone atom or bare ion gets NoCOSX (ORCA's default COSX mis-builds the
+    virtuals of e.g. Na/Mg from scratch, ~5 kJ/mol in the MP2 part); more
+    than one center, or a user-chosen exchange scheme, is left alone."""
+    kw = orca_step.Energy.single_center_keywords
+    line = "REVDSD-PBEP86-D4/2021 def2-TZVPPD AutoAux TIGHTSCF"
+    assert kw(line, 1) == "NoCOSX"
+    assert kw(line, 2) == ""
+    for scheme in ("RIJK", "rijcosx", "NoCOSX", "NORI", "RIJONX"):
+        assert kw(f"{line} {scheme}", 1) == ""
