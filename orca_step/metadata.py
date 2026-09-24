@@ -847,8 +847,10 @@ metadata["functionals"] = {
     },
     "DSD-PBEB95": {
         "category": "global double-hybrid",
-        "gradients": "analytic",
+        # ORCA 6.1.1: "Gradient is not yet implemented for ... DSD-PBEB95".
+        "gradients": "numeric",
         "citations": ["orca_dft_id602"],
+        "note": "no analytic gradient; NUMGRAD only",
     },
     "DSD-PBEP86": {
         "category": "global double-hybrid",
@@ -860,11 +862,13 @@ metadata["functionals"] = {
         "gradients": "analytic",
         "citations": ["orca_dft_id602"],
     },
-    "KPR2SCAN": {
+    "KPR2SCAN50": {
         "category": "global double-hybrid",
-        "gradients": "analytic",
+        # Regularized MP2: ORCA 6.1.1 has no regularized MP2 density, so no
+        # analytic gradient.
+        "gradients": "numeric",
         "citations": ["orca_dft_id972"],
-        "note": "kappa-Pr2SCAN50 (manual keyword KPR2SCAN50)",
+        "note": "kappa-Pr2SCAN50; no analytic gradient, NUMGRAD only",
     },
     "mPW2PLYP": {
         "category": "global double-hybrid",
@@ -895,8 +899,10 @@ metadata["functionals"] = {
     },
     "PWPB95": {
         "category": "global double-hybrid",
-        "gradients": "analytic",
+        # ORCA 6.1.1: "Gradient is not yet implemented for the PWPB95 ...".
+        "gradients": "numeric",
         "citations": ["orca_dft_id325"],
+        "note": "no analytic gradient; NUMGRAD only",
     },
     "R2SCAN-CIDH": {
         "category": "global double-hybrid",
@@ -1069,11 +1075,46 @@ metadata["functionals"] = {
     },
     "WPR2SCAN50": {
         "category": "range-separated double-hybrid",
-        "gradients": "analytic",
+        # ORCA 6.1.1's analytic gradient fails in the XC kernel ("Invalid or
+        # unknown value for Exchange in DFT XC-Kernel").
+        "gradients": "numeric",
         "citations": ["orca_dft_id972"],
-        "note": "omega-Pr2SCAN50",
+        "note": "omega-Pr2SCAN50; analytic gradient broken, NUMGRAD only",
     },
 }
+
+# DLPNO double hybrids: the same functional with its MP2 part evaluated by
+# DLPNO-MP2 instead of canonical RI-MP2 -- near-linear scaling, so affordable for
+# large clusters, at a ~0.1 kJ/mol cost (default TCutPNO). ORCA's manual implies
+# a 'DLPNO-' prefix on any double-hybrid keyword works, but ORCA 6.1.1 rejects it
+# for some (e.g. 'DLPNO-REVDSD-PBEP86-D4/2021' is an unrecognized keyword). The
+# reliable spelling, identical in energy wherever both work, is the canonical
+# keyword plus '%mp2 DLPNO true end'. So each entry below is a pseudo-keyword:
+# 'dlpno_of' names the real ORCA keyword that goes on the '!' line, and the step
+# adds the %mp2 block (see orca_step.orca_method_keyword / Energy.method_blocks).
+# ORCA 6.1.1 implements DLPNO-MP2 densities -- hence gradients -- only for RHF, so
+# open-shell DLPNO double hybrids are energy-only (checked at run time).
+#
+# Not offered as DLPNO: the double hybrids without an analytic gradient in
+# ORCA 6.1.1 (wB97M(2), wB97X-2, PWPB95, DSD-PBEB95, kPr2SCAN50, wPr2SCAN50),
+# and the excited-state-optimized SCS/SOS variants (their spin scaling is for
+# TD-DFT; the ground state is the parent functional).
+metadata["functionals"].update(
+    {
+        f"DLPNO-{name}": {
+            **rec,
+            "dlpno_of": name,
+            "citations": rec.get("citations", []) + ["orca_dft_id126"],
+            "note": "; ".join(
+                [n for n in (rec.get("note"), "DLPNO-MP2 correlation") if n is not None]
+            ),
+        }
+        for name, rec in list(metadata["functionals"].items())
+        if "double-hybrid" in rec["category"]
+        and rec["gradients"] == "analytic"
+        and rec.get("note") != "excited-state optimized"
+    }
+)
 
 # Backward-compatible view used by the citation code: functional keyword -> list
 # of reference keys. Derived from metadata["functionals"] so there is a single

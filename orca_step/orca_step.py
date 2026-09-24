@@ -56,6 +56,28 @@ def method_has_analytic_hessian(method):
     return grad == "analytic"
 
 
+def dlpno_parent(method):
+    """The canonical double-hybrid ORCA keyword behind a DLPNO pseudo-functional
+    (e.g. ``REVDSD-PBEP86-D4/2021`` for ``DLPNO-REVDSD-PBEP86-D4/2021``), or
+    None if `method` is not one. See the DLPNO note in ``metadata.py``."""
+    return orca_step.metadata["functionals"].get(method, {}).get("dlpno_of")
+
+
+def orca_method_keyword(method):
+    """The keyword to put on ORCA's '!' line for `method`: the parent functional
+    for a DLPNO double hybrid (whose DLPNO-ness goes in a '%mp2' block, see
+    :func:`orca_method_blocks`), otherwise `method` unchanged."""
+    return dlpno_parent(method) or method
+
+
+def orca_method_blocks(method):
+    """Any '%' input blocks `method` itself requires ('' if none): a DLPNO
+    double hybrid needs ``%mp2 DLPNO true end``."""
+    if dlpno_parent(method) is not None:
+        return "%mp2 DLPNO true end"
+    return ""
+
+
 def mc_method_unalias(method):
     """Inverse of :func:`mc_method_alias`: the real ORCA functional keyword for a
     (possibly aliased) model-chemistry method, or the method unchanged if it is
@@ -206,7 +228,9 @@ class ORCAStep(object):
         orca binary, and the method/basis/charge/multiplicity flags -- is
         supplied here so the driver hardwires no ORCA knowledge. ``method``
         should be the real ORCA keyword (the ``mdi_method_arg`` from
-        :meth:`get_model_chemistry_options`, not an aliased functional name).
+        :meth:`get_model_chemistry_options`, not an aliased functional name). A
+        DLPNO double hybrid is launched as its parent functional plus the
+        engine's ``--dlpno`` flag.
         """
         config = cls.get_executor_config(executor, seamm_options)
         mdi_init = (
@@ -221,7 +245,7 @@ class ORCAStep(object):
             "--orca",
             config["code"],
             "--method",
-            method,
+            orca_method_keyword(method),
             "--basis",
             basis,
             "--charge",
@@ -237,6 +261,8 @@ class ORCAStep(object):
             "--hessian",
             "yes" if method_has_analytic_hessian(method) else "no",
         ]
+        if dlpno_parent(method) is not None:
+            argv.append("--dlpno")
         if extra_args:
             argv.extend(extra_args)
         return argv

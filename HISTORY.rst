@@ -2,6 +2,26 @@
 History
 =======
 
+2026.9.24 -- Enhancement: DLPNO double hybrids; Bugfix: numerical gradients
+    * Added DLPNO variants of the double-hybrid functionals (e.g.
+      ``DLPNO-REVDSD-PBEP86-D4/2021``), which evaluate the MP2 part with
+      near-linear-scaling DLPNO-MP2. ORCA 6.1.1 rejects the ``DLPNO-``
+      keyword for some functionals although its manual lists them, so the
+      step writes the canonical functional plus ``%mp2 DLPNO true end``. It
+      works in the Energy, Optimization, Frequencies and BSSE sub-steps, as
+      a model chemistry, and through the MDI engine. ORCA computes DLPNO-MP2
+      gradients only for closed-shell systems, so an open-shell job that
+      needs gradients stops with a clear error before running.
+    * Bugfix: methods without an analytic gradient (e.g. DLPNO-CCSD(T),
+      wB97M(2)) produced no gradient at all. The step requested
+      ``NumGrad`` alone, which ORCA treats as a plain single point; it now
+      requests ``EnGrad NumGrad``.
+    * Bugfix: PWPB95, DSD-PBEB95 and wPr2SCAN50 were marked as having
+      analytic gradients, but ORCA 6.1.1 cannot compute them, so gradient
+      jobs failed. They now use the numerical gradient. ``KPR2SCAN`` is not
+      an ORCA keyword and is renamed ``KPR2SCAN50`` (numerical gradient
+      only).
+
 2026.8.11 -- Bugfix: parallel ORCA could lose its own shared libraries under installation = modules
     * A parallel run (more than one core) with ``orca.ini``'s
       ``installation = modules`` (e.g. ``modules = ORCA``, for a cluster

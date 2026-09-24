@@ -36,9 +36,12 @@ from .orca import ORCA  # noqa: F401
 from .tk_orca import TkORCA  # noqa: F401
 from .orca_step import ORCAStep  # noqa: F401
 from .orca_step import (  # noqa: F401
+    dlpno_parent,
     mc_method_alias,
     mc_method_unalias,
     method_has_analytic_hessian,
+    orca_method_blocks,
+    orca_method_keyword,
 )
 
 # Versioneer

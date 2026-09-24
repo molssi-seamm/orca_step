@@ -215,7 +215,9 @@ class Energy(orca_step.ORCABase):
         """
         method, basis = self._resolve_method_basis(P)
 
-        keywords = [method]
+        # A DLPNO double hybrid is the parent functional on the '!' line plus a
+        # '%mp2' block (see method_blocks).
+        keywords = [orca_step.orca_method_keyword(method)]
         # Basis-set extrapolation (CBS) replaces a fixed basis with ORCA's
         # Extrapolate(...) keyword, which runs both basis sets in one job. When
         # it is off, the basis name goes on the '!' line -- unless it comes from
@@ -244,7 +246,7 @@ class Energy(orca_step.ORCABase):
         # Compute the Cartesian gradient when the gradients result is requested
         # (e.g. by a driver step such as Reaction Path or Thermochemistry). Use
         # the analytic gradient (EnGrad) when ORCA has one for this method, else
-        # fall back to the numerical gradient (NumGrad).
+        # fall back to the numerical gradient (EnGrad NumGrad).
         if self._wants_gradients(P):
             if self._extrapolating(P):
                 raise RuntimeError(
@@ -399,11 +401,45 @@ class Energy(orca_step.ORCABase):
         return md["methods"].get(method, {}).get("gradients", "analytic")
 
     def _gradient_keyword(self, P):
-        """The ORCA keyword requesting the gradient: 'EnGrad' when an analytic
-        gradient exists, otherwise 'NumGrad' (numerical, much more expensive)."""
+        """The ORCA keywords requesting the gradient: 'EnGrad' when an analytic
+        gradient exists, otherwise 'EnGrad NumGrad' (numerical, much more
+        expensive). 'NumGrad' only selects HOW a gradient is computed; on its
+        own ORCA 6.1.1 runs a plain single point and writes no gradient."""
         if self._gradient_availability(P) == "analytic":
             return "EnGrad"
-        return "NumGrad"
+        return "EnGrad NumGrad"
+
+    def method_blocks(self, P):
+        """The '%' blocks the resolved method itself needs ('' if none) -- e.g.
+        ``%mp2 DLPNO true end`` for a DLPNO double hybrid, whose '!' keyword is
+        the parent functional (see ``orca_step.orca_method_keyword``)."""
+        method, _ = self._resolve_method_basis(P)
+        return orca_step.orca_method_blocks(method)
+
+    def _check_dlpno_open_shell(self, method, keyword_line, multiplicity):
+        """Stop early when an open-shell DLPNO double hybrid needs a gradient.
+
+        ORCA 6.1.1 implements DLPNO-MP2 densities, and hence gradients, only
+        for RHF; an open-shell gradient (EnGrad, Opt, NumFreq, ...) dies in the
+        MP2 module after the SCF. The GUI cannot know the multiplicity, so
+        this is a run-time check. A numerical gradient (NumGrad) needs only
+        energies, so it is fine.
+        """
+        parent = orca_step.dlpno_parent(method)
+        if multiplicity == 1 or parent is None:
+            return
+        needs_gradient = {"ENGRAD", "FREQ", "NUMFREQ", "ANFREQ"}
+        words = {w.upper() for w in keyword_line.split()}
+        if "NUMGRAD" in words:
+            return
+        if words & needs_gradient or any(w.endswith("OPT") for w in words):
+            raise RuntimeError(
+                f"{method} is open shell here (multiplicity {multiplicity}), "
+                "and ORCA can only compute DLPNO-MP2 gradients for closed-shell "
+                "(RHF) systems. Use the canonical (RI-MP2) double hybrid "
+                f"{parent} instead, or compute "
+                "only the energy."
+            )
 
     def extra_input(self, P):
         """Return ``(extra_blocks, extra_files)`` for the ORCA input: the BSE
@@ -413,6 +449,10 @@ class Energy(orca_step.ORCABase):
         blocks."""
         blocks = []
         files = {}
+
+        method_blocks = self.method_blocks(P)
+        if method_blocks:
+            blocks.append(method_blocks)
 
         if self._using_bse(P):
             _, basis = self._resolve_method_basis(P)
@@ -752,6 +792,12 @@ class Energy(orca_step.ORCABase):
         keyword_line = self.keyword_line(P)
         if keywords:
             keyword_line += " " + " ".join(keywords)
+
+        method, _ = self._resolve_method_basis(P)
+        _, configuration = self.get_system_configuration(None)
+        self._check_dlpno_open_shell(
+            method, keyword_line, configuration.spin_multiplicity
+        )
 
         # Warn when we had to fall back to a numerical gradient -- it is much
         # more costly (a displaced single point per degree of freedom).

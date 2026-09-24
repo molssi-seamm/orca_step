@@ -56,16 +56,21 @@ _Z_TO_SYMBOL = {d["atomic number"]: sym for sym, d in element_data.items()}
 # ---------------------------------------------------------------------------
 # ORCA-specific helpers (pure; unit-testable without a socket or ORCA present)
 # ---------------------------------------------------------------------------
-def orca_input(method, basis, charge, multiplicity, symbols, coords_ang, ncores=1):
+def orca_input(
+    method, basis, charge, multiplicity, symbols, coords_ang, ncores=1, blocks=""
+):
     """The ORCA input for a single-point energy + gradient (``EnGrad``).
 
     ``coords_ang`` is an (n, 3) array in Angstrom. A parallel run adds a
-    ``%pal`` block. ORCA autostarts from an existing ``orca.gbw`` in the run
-    directory, so no explicit guess keyword is needed here.
+    ``%pal`` block; ``blocks`` is any further '%' input the method needs (e.g.
+    ``%mp2 DLPNO true end``). ORCA autostarts from an existing ``orca.gbw`` in
+    the run directory, so no explicit guess keyword is needed here.
     """
     lines = [f"! {method} {basis} EnGrad"]
     if ncores and ncores > 1:
         lines.append(f"%pal nprocs {ncores} end")
+    if blocks:
+        lines.append(blocks)
     lines.append(f"* xyz {charge} {multiplicity}")
     for sym, (x, y, z) in zip(symbols, coords_ang):
         lines.append(f"{sym:2s} {x:18.10f} {y:18.10f} {z:18.10f}")
@@ -166,6 +171,13 @@ def parse_args():
         required=True,
         help="The ORCA method keyword (a functional like B3LYP, or HF, MP2, "
         "DLPNO-CCSD(T), ...).",
+    )
+    p.add_argument(
+        "--dlpno",
+        action="store_true",
+        help="Evaluate the MP2 part of a double-hybrid --method with DLPNO-MP2 "
+        "(adds '%%mp2 DLPNO true end'; closed shell only, since ORCA has "
+        "DLPNO-MP2 gradients only for RHF).",
     )
     p.add_argument(
         "--basis", default="def2-SVP", help="The orbital basis set (default def2-SVP)."
@@ -281,10 +293,22 @@ def main():
         (autostarting from any orca.gbw already in the work dir), and parse the
         energy and gradient."""
         nonlocal energy, gradient
+        if args.dlpno and multiplicity != 1:
+            raise RuntimeError(
+                f"DLPNO {args.method} needs a closed-shell system (ORCA has "
+                f"DLPNO-MP2 gradients only for RHF), not multiplicity {multiplicity}."
+            )
         symbols = [_Z_TO_SYMBOL[int(z)] for z in atomic_numbers]
         coords_ang = coords_bohr.reshape(natoms, 3) * ANG_PER_BOHR
         text = orca_input(
-            method, args.basis, charge, multiplicity, symbols, coords_ang, args.ncores
+            method,
+            args.basis,
+            charge,
+            multiplicity,
+            symbols,
+            coords_ang,
+            args.ncores,
+            blocks="%mp2 DLPNO true end" if args.dlpno else "",
         )
         (workdir / "orca.inp").write_text(text)
         t0 = time.perf_counter()
