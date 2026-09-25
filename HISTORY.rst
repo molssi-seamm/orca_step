@@ -1,6 +1,12 @@
 =======
 History
 =======
+2026.9.25.1 -- Bugfix: the Energy and related dialogs failed to open
+    * Opening the Energy, Optimization, Frequencies or BSSE dialog failed with
+      ``module 'seamm_widgets' has no attribute 'LabeledText'`` when the installed
+      seamm-widgets was older than 2026.9.25, which is the first release with that
+      widget. The plug-in now requires seamm-widgets 2026.9.25 or later so the
+      installer brings it in.
 
 2026.9.25 -- DLPNO double hybrids, and fixes for numerical gradients and lone atoms
     * Added DLPNO variants of the double-hybrid functionals (e.g.
