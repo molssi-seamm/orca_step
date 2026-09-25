@@ -6,5 +6,5 @@ seamm-widgets
 seamm-exec
 seamm-bsse
 basis_set_exchange
-bibtexparser
+bibtexparser<2
 tabulate

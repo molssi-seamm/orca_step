@@ -31,6 +31,9 @@ History
       and at DEFGRID3 a lone Li or H is off by 0.9 or 0.07 kJ/mol. Single-atom jobs, including the bare
       single-atom fragments of a BSSE correction, now use exact exchange
       (``NoCOSX``) unless an exchange scheme is given in the extra keywords.
+    * Pinned ``bibtexparser<2``: the step uses the bibtexparser 1.x API, which
+      2.x removed, so installing alongside bibtexparser 2 broke ``import
+      orca_step``.
 
 2026.8.11 -- Bugfix: parallel ORCA could lose its own shared libraries under installation = modules
     * A parallel run (more than one core) with ``orca.ini``'s
