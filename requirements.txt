@@ -2,7 +2,7 @@ numpy
 seamm
 molsystem
 seamm-util
-seamm-widgets
+seamm-widgets>=2026.9.25
 seamm-exec
 seamm-bsse
 basis_set_exchange
