@@ -57,7 +57,10 @@ the step writes the canonical functional plus ``%mp2 DLPNO true end``, which
 works for all of them. ORCA 6.1 can compute DLPNO-MP2 gradients only for
 closed-shell systems. An open-shell DLPNO double hybrid can therefore give an
 energy but not forces, an optimization, or frequencies, and the step stops
-with an error if you ask for any of those.
+with an error if you ask for any of those. Energies of formation for a DLPNO
+double hybrid use the canonical functional's atomic reference energies (DLPNO
+changes an isolated atom's energy by less than 0.07 kJ/mol, and cannot treat
+H at all), and the thermochemistry report says so.
 
 Basis set
 ---------
@@ -192,8 +195,14 @@ Initial guess and wavefunction restart
 Single atoms and open-shell transition metals are often the hardest systems to
 converge -- a superposition of atomic densities (ORCA's default ``SAD`` guess)
 has little meaning for one atomic center, and can converge to the wrong
-electronic state entirely. The **Initial guess** control sets ORCA's SCF
-starting guess (``Guess`` in the ``%scf`` block):
+electronic state entirely. (Whatever the guess, a single-atom system is run with
+exact exchange, ``NoCOSX``: ORCA's default COSX approximation can build wrong
+virtual orbitals for a lone atom, which puts the MP2 part of a double hybrid off
+by up to ~5 kJ/mol, e.g. for Na, Na\ :sup:`+` and Mg, with no warning. This also
+applies to the bare single-atom fragments of a counterpoise correction. An
+exchange scheme given in the extra keywords is respected.) The **Initial
+guess** control sets ORCA's SCF starting guess (``Guess`` in the ``%scf``
+block):
 
 * ``default`` -- leave ORCA's own default.
 * ``Hueckel``, ``HCore``, ``PAtom``, ``PModel``, ``SAD``, ``SADNO`` -- ORCA's

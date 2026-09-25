@@ -2,7 +2,7 @@
 History
 =======
 
-2026.9.24 -- Enhancement: DLPNO double hybrids; Bugfix: numerical gradients
+2026.9.25 -- DLPNO double hybrids, and fixes for numerical gradients and lone atoms
     * Added DLPNO variants of the double-hybrid functionals (e.g.
       ``DLPNO-REVDSD-PBEP86-D4/2021``), which evaluate the MP2 part with
       near-linear-scaling DLPNO-MP2. ORCA 6.1.1 rejects the ``DLPNO-``
@@ -27,8 +27,8 @@ History
       than 0.07 kJ/mol.
     * Bugfix: ORCA's default COSX exchange gives wrong results for some lone
       atoms. From scratch, a Na or Mg atom or a bare Na+ ion gets its double
-      hybrid MP2 part about 5 kJ/mol too high, and at DEFGRID3 a lone Li or H
-      is off by 0.9 or 0.07 kJ/mol. Single-atom jobs, including the bare
+      hybrid MP2 part about 5 kJ/mol too high, He is about 1 kJ/mol too high,
+      and at DEFGRID3 a lone Li or H is off by 0.9 or 0.07 kJ/mol. Single-atom jobs, including the bare
       single-atom fragments of a BSSE correction, now use exact exchange
       (``NoCOSX``) unless an exchange scheme is given in the extra keywords.
 
