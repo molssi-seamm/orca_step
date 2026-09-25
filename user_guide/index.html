@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.9.25 documentation</title>
   
   
   
@@ -27,8 +27,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -36,12 +36,12 @@
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=d9a48a5b"></script>
+    <script src="../_static/documentation_options.js?v=9a43dc2a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.11" />
+  <meta name="docsearch:version" content="2026.9.25" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -549,6 +549,20 @@ narrows the functional list so it stays readable. Double-hybrid functionals
 (for example <code class="docutils literal notranslate"><span class="pre">REVDSD-PBEP86-D4/2021</span></code> or <code class="docutils literal notranslate"><span class="pre">B2PLYP</span></code>) need an auxiliary <code class="docutils literal notranslate"><span class="pre">/C</span></code>
 fitting basis for their MP2 part — leave the <em>Auxiliary (fitting) basis</em> on
 <code class="docutils literal notranslate"><span class="pre">AutoAux</span></code> and it is supplied automatically.</p>
+<p>Most double hybrids also come in a <strong>DLPNO</strong> variant, listed after the canonical
+ones (e.g. <code class="docutils literal notranslate"><span class="pre">DLPNO-REVDSD-PBEP86-D4/2021</span></code>). It evaluates the MP2 part with
+near-linear-scaling DLPNO-MP2 instead of canonical RI-MP2, so it pays off for
+large systems and clusters; with the default thresholds it differs from the
+canonical result by roughly 0.1 kJ/mol. ORCA rejects some <code class="docutils literal notranslate"><span class="pre">DLPNO-</span></code> keywords
+even though its manual lists them (<code class="docutils literal notranslate"><span class="pre">DLPNO-REVDSD-PBEP86-D4/2021</span></code> is one), so
+the step writes the canonical functional plus <code class="docutils literal notranslate"><span class="pre">%mp2</span> <span class="pre">DLPNO</span> <span class="pre">true</span> <span class="pre">end</span></code>, which
+works for all of them. ORCA 6.1 can compute DLPNO-MP2 gradients only for
+closed-shell systems. An open-shell DLPNO double hybrid can therefore give an
+energy but not forces, an optimization, or frequencies, and the step stops
+with an error if you ask for any of those. Energies of formation for a DLPNO
+double hybrid use the canonical functional’s atomic reference energies (DLPNO
+changes an isolated atom’s energy by less than 0.07 kJ/mol, and cannot treat
+H at all), and the thermochemistry report says so.</p>
 </section>
 <section id="basis-set">
 <h3>Basis set<a class="headerlink" href="#basis-set" title="Link to this heading">#</a></h3>
@@ -672,8 +686,14 @@ for the full discussion of linear dependence and its automatic removal.</p>
 <p>Single atoms and open-shell transition metals are often the hardest systems to
 converge – a superposition of atomic densities (ORCA’s default <code class="docutils literal notranslate"><span class="pre">SAD</span></code> guess)
 has little meaning for one atomic center, and can converge to the wrong
-electronic state entirely. The <strong>Initial guess</strong> control sets ORCA’s SCF
-starting guess (<code class="docutils literal notranslate"><span class="pre">Guess</span></code> in the <code class="docutils literal notranslate"><span class="pre">%scf</span></code> block):</p>
+electronic state entirely. (Whatever the guess, a single-atom system is run with
+exact exchange, <code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>: ORCA’s default COSX approximation can build wrong
+virtual orbitals for a lone atom, which puts the MP2 part of a double hybrid off
+by up to ~5 kJ/mol, e.g. for Na, Na<sup>+</sup> and Mg, with no warning. This also
+applies to the bare single-atom fragments of a counterpoise correction. An
+exchange scheme given in the extra keywords is respected.) The <strong>Initial
+guess</strong> control sets ORCA’s SCF starting guess (<code class="docutils literal notranslate"><span class="pre">Guess</span></code> in the <code class="docutils literal notranslate"><span class="pre">%scf</span></code>
+block):</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> – leave ORCA’s own default.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Hueckel</span></code>, <code class="docutils literal notranslate"><span class="pre">HCore</span></code>, <code class="docutils literal notranslate"><span class="pre">PAtom</span></code>, <code class="docutils literal notranslate"><span class="pre">PModel</span></code>, <code class="docutils literal notranslate"><span class="pre">SAD</span></code>, <code class="docutils literal notranslate"><span class="pre">SADNO</span></code> – ORCA’s
@@ -777,9 +797,11 @@ below).</p>
 <p>Requesting <strong>gradients</strong> makes the step compute the nuclear gradient (i.e. the
 forces). ORCA computes an <em>analytic</em> gradient (<code class="docutils literal notranslate"><span class="pre">EnGrad</span></code>) when one exists for
 the chosen method, and automatically falls back to a <em>numerical</em> gradient
-(<code class="docutils literal notranslate"><span class="pre">NumGrad</span></code>) when it does not — for example <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)</span></code> (no analytic
-<code class="docutils literal notranslate"><span class="pre">(T)</span></code> gradient) and the non-self-consistent <code class="docutils literal notranslate"><span class="pre">wB97M(2)</span></code> / <code class="docutils literal notranslate"><span class="pre">wB97X-2</span></code> double
-hybrids. A note is printed when the (more expensive) numerical gradient is used.
+(<code class="docutils literal notranslate"><span class="pre">EnGrad</span> <span class="pre">NumGrad</span></code>) when it does not — for example <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)</span></code> (no
+analytic <code class="docutils literal notranslate"><span class="pre">(T)</span></code> gradient), the non-self-consistent <code class="docutils literal notranslate"><span class="pre">wB97M(2)</span></code> / <code class="docutils literal notranslate"><span class="pre">wB97X-2</span></code>
+double hybrids, and <code class="docutils literal notranslate"><span class="pre">PWPB95</span></code>, <code class="docutils literal notranslate"><span class="pre">DSD-PBEB95</span></code>, <code class="docutils literal notranslate"><span class="pre">KPR2SCAN50</span></code> and
+<code class="docutils literal notranslate"><span class="pre">WPR2SCAN50</span></code>, whose analytic gradients ORCA 6.1 lacks or cannot compute. A
+note is printed when the (more expensive) numerical gradient is used.
 Most functionals — including the standard double hybrids — have analytic
 gradients, so a single-point DFT run yields the energy <strong>and</strong> forces cheaply,
 which is convenient for generating machine-learned force-field training data.</p>
@@ -1069,7 +1091,7 @@ configuration (<code class="docutils literal notranslate"><span class="pre">~/.s
 line:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[orca-step]</span>
 <span class="na">ncores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">available</span><span class="w">        </span><span class="c1"># or an integer, or 1 to force serial</span>
-<span class="na">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">available</span><span class="w">        </span><span class="c1"># or &#39;all&#39;, or e.g. &#39;3 GB&#39; (per process)</span>
+<span class="na">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">available</span><span class="w">        </span><span class="c1"># or 'all', or e.g. '3 GB' (per process)</span>
 </pre></div>
 </div>
 </li>
@@ -1084,7 +1106,7 @@ among the processes; or give an explicit amount such as <code class="docutils li
 4.1.x and does <em>not</em> support 5.x; mixing versions makes parallel runs abort
 with a
 <code class="docutils literal notranslate"><span class="pre">BLAS-ERROR</span></code>. A dedicated conda env is the easy way to get the right one:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">orca</span><span class="o">-</span><span class="n">mpi</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="s2">&quot;openmpi=4.1&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">orca</span><span class="o">-</span><span class="n">mpi</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="s2">"openmpi=4.1"</span>
 </pre></div>
 </div>
 <p>then set <code class="docutils literal notranslate"><span class="pre">library-path</span></code> to that env’s <code class="docutils literal notranslate"><span class="pre">lib</span></code> directory. The step
@@ -1259,8 +1281,8 @@ high-accuracy calculations for ordinary single-point steps.</p></li>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1272,7 +1294,7 @@ high-accuracy calculations for ordinary single-point steps.</p></li>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

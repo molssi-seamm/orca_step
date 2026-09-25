@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.9.25 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=d9a48a5b"></script>
+    <script src="../../_static/documentation_options.js?v=9a43dc2a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.11" />
+  <meta name="docsearch:version" content="2026.9.25" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -493,14 +493,14 @@
   <h1>Source code for orca_step.orca_base</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="sd">&quot;&quot;&quot;Shared base class for the ORCA step and its sub-steps.</span>
+<span class="sd">"""Shared base class for the ORCA step and its sub-steps.</span>
 
 <span class="sd">Holds the command-line/seamm.ini parser, the geometry block, and the routine</span>
 <span class="sd">that writes the ORCA input, runs ORCA through the flowchart executor, and parses</span>
 <span class="sd">the output. The main ``ORCA`` node and the ``Energy`` sub-step both inherit from</span>
 <span class="sd">this (``Optimization`` inherits from ``Energy``), mirroring ``MOPACBase`` in the</span>
 <span class="sd">MOPAC step.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">configparser</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
@@ -518,58 +518,58 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">job</span> <span class="o">=</span> <span class="n">printing</span><span class="o">.</span><span class="n">getPrinter</span><span class="p">()</span>
-<span class="n">printer</span> <span class="o">=</span> <span class="n">printing</span><span class="o">.</span><span class="n">getPrinter</span><span class="p">(</span><span class="s2">&quot;ORCA&quot;</span><span class="p">)</span>
+<span class="n">printer</span> <span class="o">=</span> <span class="n">printing</span><span class="o">.</span><span class="n">getPrinter</span><span class="p">(</span><span class="s2">"ORCA"</span><span class="p">)</span>
 
-<span class="c1"># Byte multipliers for parsing a memory string (SI &#39;GB&#39; and binary &#39;GiB&#39;).</span>
+<span class="c1"># Byte multipliers for parsing a memory string (SI 'GB' and binary 'GiB').</span>
 <span class="n">_MEMORY_UNITS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;k&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
-    <span class="s2">&quot;kb&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
-    <span class="s2">&quot;ki&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
-    <span class="s2">&quot;kib&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
-    <span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-    <span class="s2">&quot;mb&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-    <span class="s2">&quot;mi&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-    <span class="s2">&quot;mib&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-    <span class="s2">&quot;g&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
-    <span class="s2">&quot;gb&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
-    <span class="s2">&quot;gi&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
-    <span class="s2">&quot;gib&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
-    <span class="s2">&quot;t&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
-    <span class="s2">&quot;tb&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
-    <span class="s2">&quot;ti&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
-    <span class="s2">&quot;tib&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
+    <span class="s2">""</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"b"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"k"</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="s2">"kb"</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="s2">"ki"</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="s2">"kib"</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="s2">"m"</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s2">"mb"</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s2">"mi"</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s2">"mib"</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+    <span class="s2">"g"</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+    <span class="s2">"gb"</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+    <span class="s2">"gi"</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+    <span class="s2">"gib"</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+    <span class="s2">"t"</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
+    <span class="s2">"tb"</span><span class="p">:</span> <span class="mi">1000</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
+    <span class="s2">"ti"</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
+    <span class="s2">"tib"</span><span class="p">:</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span>
 <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_dehumanize_bytes</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a memory string (&#39;3 GB&#39;, &#39;512MB&#39;, &#39;2Gi&#39;, or a bare number of bytes)</span>
-<span class="sd">    into an integer number of bytes. Raises ValueError on anything unparseable.&quot;&quot;&quot;</span>
-    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s*([0-9]*\.?[0-9]+)\s*([a-zA-Z]*)\s*&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+<span class="w">    </span><span class="sd">"""Parse a memory string ('3 GB', '512MB', '2Gi', or a bare number of bytes)</span>
+<span class="sd">    into an integer number of bytes. Raises ValueError on anything unparseable."""</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\s*([0-9]*\.?[0-9]+)\s*([a-zA-Z]*)\s*"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cannot parse memory &#39;</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cannot parse memory '</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
     <span class="n">unit</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_MEMORY_UNITS</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown memory unit &#39;</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown memory unit '</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">_MEMORY_UNITS</span><span class="p">[</span><span class="n">unit</span><span class="p">])</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_library_path_vars</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">library_path</span><span class="p">,</span> <span class="n">environ</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The dynamic-library search variables to set for a parallel ORCA run.</span>
+<span class="w">    </span><span class="sd">"""The dynamic-library search variables to set for a parallel ORCA run.</span>
 
 <span class="sd">    Returns a list of ``(name, value)`` pairs prepending ``library_path`` to</span>
 <span class="sd">    ``DYLD_LIBRARY_PATH`` and ``LD_LIBRARY_PATH`` (preserving any existing</span>
-<span class="sd">    value). Empty for a serial run or when no path is given. ORCA&#39;s OpenMPI</span>
+<span class="sd">    value). Empty for a serial run or when no path is given. ORCA's OpenMPI</span>
 <span class="sd">    launcher needs these to find e.g. ``libmpi.40.dylib``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">library_path</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
     <span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;DYLD_LIBRARY_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;LD_LIBRARY_PATH&quot;</span><span class="p">):</span>
-        <span class="n">existing</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">var</span><span class="p">,</span> <span class="n">library_path</span> <span class="o">+</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">existing</span> <span class="k">if</span> <span class="n">existing</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"DYLD_LIBRARY_PATH"</span><span class="p">,</span> <span class="s2">"LD_LIBRARY_PATH"</span><span class="p">):</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">var</span><span class="p">,</span> <span class="n">library_path</span> <span class="o">+</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">existing</span> <span class="k">if</span> <span class="n">existing</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)))</span>
     <span class="k">return</span> <span class="n">pairs</span>
 
 
@@ -579,17 +579,17 @@
 <div class="viewcode-block" id="ORCABase">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ORCABase</span><span class="p">(</span><span class="n">seamm</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Common functionality for ORCA nodes.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Common functionality for ORCA nodes."""</span>
 
 <div class="viewcode-block" id="ORCABase.create_parser">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.create_parser">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up the command-line / seamm.ini parser for the ORCA step.</span>
+<span class="w">        </span><span class="sd">"""Set up the command-line / seamm.ini parser for the ORCA step.</span>
 
 <span class="sd">        All ORCA nodes share the ``[orca-step]`` section (step_type), so the</span>
 <span class="sd">        options are registered once here.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">parser_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span>  <span class="c1"># &#39;orca-step&#39;</span>
+<span class="sd">        """</span>
+        <span class="n">parser_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span>  <span class="c1"># 'orca-step'</span>
         <span class="n">parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">parser</span>
 
         <span class="n">parser_exists</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">parser_name</span><span class="p">)</span>
@@ -605,32 +605,32 @@
         <span class="c1"># data/orca.ini and _orca_config).</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="n">parser_name</span><span class="p">,</span>
-            <span class="s2">&quot;--ncores&quot;</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;available&quot;</span><span class="p">,</span>
+            <span class="s2">"--ncores"</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">"available"</span><span class="p">,</span>
             <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">&quot;How many cores/processes ORCA may use (via </span><span class="si">%%</span><span class="s2">pal). &#39;available&#39; &quot;</span>
-                <span class="s2">&quot;(the default) uses all cores the job/machine provides; give an &quot;</span>
-                <span class="s2">&quot;integer to cap it, or &#39;1&#39; to force serial. Parallel ORCA needs a &quot;</span>
-                <span class="s2">&quot;matching OpenMPI runtime, whose location is set with &quot;</span>
-                <span class="s2">&quot;&#39;library-path&#39; in orca.ini.&quot;</span>
+                <span class="s2">"How many cores/processes ORCA may use (via </span><span class="si">%%</span><span class="s2">pal). 'available' "</span>
+                <span class="s2">"(the default) uses all cores the job/machine provides; give an "</span>
+                <span class="s2">"integer to cap it, or '1' to force serial. Parallel ORCA needs a "</span>
+                <span class="s2">"matching OpenMPI runtime, whose location is set with "</span>
+                <span class="s2">"'library-path' in orca.ini."</span>
             <span class="p">),</span>
         <span class="p">)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="n">parser_name</span><span class="p">,</span>
-            <span class="s2">&quot;--memory&quot;</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;available&quot;</span><span class="p">,</span>
+            <span class="s2">"--memory"</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">"available"</span><span class="p">,</span>
             <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">&quot;Memory ORCA may use per process (its </span><span class="si">%%</span><span class="s2">maxcore). &#39;available&#39; (the &quot;</span>
-                <span class="s2">&quot;default) scales to the memory-per-core of the machine; &#39;all&#39; uses &quot;</span>
-                <span class="s2">&quot;the whole node divided among the processes; or give an explicit &quot;</span>
-                <span class="s2">&quot;amount such as &#39;3 GB&#39; (per process).&quot;</span>
+                <span class="s2">"Memory ORCA may use per process (its </span><span class="si">%%</span><span class="s2">maxcore). 'available' (the "</span>
+                <span class="s2">"default) scales to the memory-per-core of the machine; 'all' uses "</span>
+                <span class="s2">"the whole node divided among the processes; or give an explicit "</span>
+                <span class="s2">"amount such as '3 GB' (per process)."</span>
             <span class="p">),</span>
         <span class="p">)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="n">parser_name</span><span class="p">,</span>
-            <span class="s2">&quot;--max-atoms-to-print&quot;</span><span class="p">,</span>
+            <span class="s2">"--max-atoms-to-print"</span><span class="p">,</span>
             <span class="n">default</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Maximum number of atoms for which to print detailed results.&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">"Maximum number of atoms for which to print detailed results."</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">result</span></div>
@@ -638,19 +638,19 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_runable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether this node actually runs (vs. only contributing input).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Whether this node actually runs (vs. only contributing input)."""</span>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The semantic version of this module.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The semantic version of this module."""</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">orca_step</span>
 
         <span class="k">return</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">__version__</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">git_revision</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The git version of this module.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The git version of this module."""</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">orca_step</span>
 
         <span class="k">return</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">__git_revision__</span>
@@ -663,21 +663,21 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">geometry_block</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">charge</span><span class="p">,</span> <span class="n">multiplicity</span><span class="p">,</span> <span class="n">atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ghost_atoms</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the ORCA coordinate block for `configuration`.</span>
+<span class="w">        </span><span class="sd">"""Return the ORCA coordinate block for `configuration`.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        atom_indices : Sequence[int] | None</span>
 <span class="sd">            0-based atom indices to include, in this order. ``None`` (the</span>
-<span class="sd">            default) is every atom, in the configuration&#39;s own order -- a BSSE</span>
-<span class="sd">            sub-job passes a fragment&#39;s (sub-)list instead.</span>
+<span class="sd">            default) is every atom, in the configuration's own order -- a BSSE</span>
+<span class="sd">            sub-job passes a fragment's (sub-)list instead.</span>
 <span class="sd">        ghost_atoms : Container[int] | None</span>
 <span class="sd">            The subset of `atom_indices` to write as ORCA ghost centres (the</span>
 <span class="sd">            element symbol with a trailing ``:``, e.g. ``O:`` -- basis</span>
 <span class="sd">            functions only, no nucleus/electrons). ``None``/empty writes every</span>
 <span class="sd">            atom as real.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;* xyz </span><span class="si">{</span><span class="n">charge</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">multiplicity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+<span class="sd">        """</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"* xyz </span><span class="si">{</span><span class="n">charge</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">multiplicity</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
         <span class="n">symbols</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span>
         <span class="n">xyzs</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="n">fractionals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">in_cell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">))</span> <span class="k">if</span> <span class="n">atom_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">atom_indices</span>
@@ -685,10 +685,10 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
             <span class="n">symbol</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">xyzs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2">:&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ghosts</span> <span class="k">else</span> <span class="n">symbol</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">4s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2">:"</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ghosts</span> <span class="k">else</span> <span class="n">symbol</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">4s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"*"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
 
     <span class="c1"># ------------------------------------------------------------------</span>
@@ -696,20 +696,20 @@
     <span class="c1"># ------------------------------------------------------------------</span>
 <div class="viewcode-block" id="ORCABase.run_orca">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.run_orca">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">run_orca</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the ORCA input for the node&#39;s own configuration, run ORCA,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_orca</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Write the ORCA input for the node's own configuration, run ORCA,</span>
 <span class="sd">        and return the parsed results.</span>
 
 <span class="sd">        A thin wrapper around :meth:`run_orca_job` for the common case: the</span>
-<span class="sd">        whole of the node&#39;s own system, at its own charge/multiplicity, in</span>
-<span class="sd">        the node&#39;s own directory. See :meth:`run_orca_job` for a sub-job</span>
+<span class="sd">        whole of the node's own system, at its own charge/multiplicity, in</span>
+<span class="sd">        the node's own directory. See :meth:`run_orca_job` for a sub-job</span>
 <span class="sd">        against an explicit geometry/charge/multiplicity/directory (e.g. one</span>
-<span class="sd">        of a BSSE correction&#39;s counterpoise sub-jobs).</span>
+<span class="sd">        of a BSSE correction's counterpoise sub-jobs).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        keyword_line : str</span>
-<span class="sd">            The contents of the ORCA &quot;!&quot; simple-input line (without the &quot;!&quot;).</span>
+<span class="sd">            The contents of the ORCA "!" simple-input line (without the "!").</span>
 <span class="sd">        extra_blocks : str</span>
 <span class="sd">            Any additional ``%`` blocks to place before the geometry.</span>
 <span class="sd">        extra_files : dict | None</span>
@@ -724,8 +724,8 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
-<span class="sd">            Parsed results, at least ``{&quot;energy&quot;: &lt;E_h&gt;, &quot;success&quot;: bool}``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Parsed results, at least ``{"energy": &lt;E_h&gt;, "success": bool}``.</span>
+<span class="sd">        """</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">configuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system_configuration</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_job</span><span class="p">(</span>
             <span class="n">keyword_line</span><span class="p">,</span>
@@ -749,25 +749,25 @@
         <span class="n">atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">ghost_atoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span>
         <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write an ORCA input for an explicit geometry/charge/multiplicity,</span>
+<span class="w">        </span><span class="sd">"""Write an ORCA input for an explicit geometry/charge/multiplicity,</span>
 <span class="sd">        run ORCA, and return the parsed results.</span>
 
-<span class="sd">        The primitive ``run_orca`` and a BSSE counterpoise correction&#39;s</span>
+<span class="sd">        The primitive ``run_orca`` and a BSSE counterpoise correction's</span>
 <span class="sd">        per-fragment sub-jobs both drive: geometry/charge/multiplicity come</span>
 <span class="sd">        from arguments instead of ``self.get_system_configuration()``/</span>
 <span class="sd">        ``self.directory``, since a BSSE sub-job is a different atom subset</span>
 <span class="sd">        (and, for a ghost-augmented fragment, a different charge) than the</span>
-<span class="sd">        node&#39;s own system, run in its own sub-directory so the 2N + 1 jobs of</span>
+<span class="sd">        node's own system, run in its own sub-directory so the 2N + 1 jobs of</span>
 <span class="sd">        one BSSE correction do not collide.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        keyword_line : str</span>
-<span class="sd">            The contents of the ORCA &quot;!&quot; simple-input line (without the &quot;!&quot;).</span>
+<span class="sd">            The contents of the ORCA "!" simple-input line (without the "!").</span>
 <span class="sd">        configuration : molsystem.Configuration</span>
 <span class="sd">            The system to take atoms/coordinates from.</span>
 <span class="sd">        charge, multiplicity : int</span>
@@ -776,26 +776,26 @@
 <span class="sd">            BSSE fragment sub-job has its own).</span>
 <span class="sd">        atom_indices : Sequence[int] | None</span>
 <span class="sd">            0-based atom indices to include, in this order. ``None`` (the</span>
-<span class="sd">            default) is every atom, in the configuration&#39;s own order.</span>
+<span class="sd">            default) is every atom, in the configuration's own order.</span>
 <span class="sd">        ghost_atoms : Container[int] | None</span>
 <span class="sd">            The subset of `atom_indices` to write as ORCA ghost centres. See</span>
 <span class="sd">            :meth:`geometry_block`.</span>
 <span class="sd">        directory : str | Path | None</span>
 <span class="sd">            Where to run this job. ``None`` (the default) is ``self.directory``</span>
-<span class="sd">            -- the node&#39;s own job directory, as ``run_orca`` uses.</span>
+<span class="sd">            -- the node's own job directory, as ``run_orca`` uses.</span>
 <span class="sd">        extra_blocks : str</span>
 <span class="sd">            Any additional ``%`` blocks to place before the geometry.</span>
 <span class="sd">        extra_files : dict | None</span>
 <span class="sd">            Extra input files to write into the run directory.</span>
 <span class="sd">        make_wfx : bool</span>
 <span class="sd">            After ORCA finishes, run ``orca_2aim`` to convert the retained</span>
-<span class="sd">            density into an AIMPAC ``orca.wfx`` in *this job&#39;s* directory.</span>
+<span class="sd">            density into an AIMPAC ``orca.wfx`` in *this job's* directory.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
-<span class="sd">            Parsed results, at least ``{&quot;energy&quot;: &lt;E_h&gt;, &quot;success&quot;: bool}``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Parsed results, at least ``{"energy": &lt;E_h&gt;, "success": bool}``.</span>
+<span class="sd">        """</span>
         <span class="n">run_directory</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
         <span class="p">)</span>
@@ -804,11 +804,11 @@
         <span class="c1"># Resources (cores + per-process memory), shared with run_orca_compound.</span>
         <span class="n">n_cores</span><span class="p">,</span> <span class="n">memory_mb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resources</span><span class="p">()</span>
 
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;! </span><span class="si">{</span><span class="n">keyword_line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"! </span><span class="si">{</span><span class="n">keyword_line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;%pal nprocs </span><span class="si">{</span><span class="n">n_cores</span><span class="si">}</span><span class="s2"> end&quot;</span><span class="p">)</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;%maxcore </span><span class="si">{</span><span class="n">memory_mb</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">extra_blocks</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%pal nprocs </span><span class="si">{</span><span class="n">n_cores</span><span class="si">}</span><span class="s2"> end"</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%maxcore </span><span class="si">{</span><span class="n">memory_mb</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">extra_blocks</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">""</span><span class="p">:</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extra_blocks</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">geometry_block</span><span class="p">(</span>
@@ -819,13 +819,13 @@
                 <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">ghost_atoms</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="n">input_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+        <span class="n">input_text</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
-        <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;orca.inp&quot;</span><span class="p">:</span> <span class="n">input_text</span><span class="p">}</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"orca.inp"</span><span class="p">:</span> <span class="n">input_text</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">extra_files</span><span class="p">:</span>
             <span class="n">files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_files</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;orca.inp (</span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">):</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">input_text</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"orca.inp (</span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">):</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="n">input_text</span><span class="p">)</span>
 
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orca_config</span><span class="p">()</span>
         <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mpi_env</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
@@ -834,21 +834,21 @@
         <span class="c1"># When a wavefunction file is wanted, chain orca_2aim (which lives next</span>
         <span class="c1"># to the orca binary) in the same shell so it runs in this directory</span>
         <span class="c1"># right after ORCA, reading the just-written orca.gbw/orca.densities.</span>
-        <span class="n">cmd</span> <span class="o">=</span> <span class="n">lib_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{code}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.inp&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.out&quot;</span><span class="p">,</span> <span class="s2">&quot;2&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.err&quot;</span><span class="p">]</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">lib_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"</span><span class="si">{code}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca.inp"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca.out"</span><span class="p">,</span> <span class="s2">"2&gt;"</span><span class="p">,</span> <span class="s2">"orca.err"</span><span class="p">]</span>
         <span class="n">return_files</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;orca.out&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;orca.err&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;orca.gbw&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;orca.xyz&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;orca.hess&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;*.bibtex&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;*.txt&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;*.engrad&quot;</span><span class="p">,</span>
+            <span class="s2">"orca.out"</span><span class="p">,</span>
+            <span class="s2">"orca.err"</span><span class="p">,</span>
+            <span class="s2">"orca.gbw"</span><span class="p">,</span>
+            <span class="s2">"orca.xyz"</span><span class="p">,</span>
+            <span class="s2">"orca.hess"</span><span class="p">,</span>
+            <span class="s2">"*.bibtex"</span><span class="p">,</span>
+            <span class="s2">"*.txt"</span><span class="p">,</span>
+            <span class="s2">"*.engrad"</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
-            <span class="n">orca_2aim</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;orca_2aim&quot;</span><span class="p">)</span>
-            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;&amp;&amp;&quot;</span><span class="p">,</span> <span class="n">orca_2aim</span><span class="p">,</span> <span class="s2">&quot;orca&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca_2aim.out&quot;</span><span class="p">,</span> <span class="s2">&quot;2&gt;&amp;1&quot;</span><span class="p">]</span>
-            <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;orca.wfx&quot;</span><span class="p">,</span> <span class="s2">&quot;orca_2aim.out&quot;</span><span class="p">]</span>
+            <span class="n">orca_2aim</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"code"</span><span class="p">])</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"orca_2aim"</span><span class="p">)</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"&amp;&amp;"</span><span class="p">,</span> <span class="n">orca_2aim</span><span class="p">,</span> <span class="s2">"orca"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">,</span> <span class="s2">"2&gt;&amp;1"</span><span class="p">]</span>
+            <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"orca.wfx"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">]</span>
 
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span>
@@ -860,61 +860,61 @@
             <span class="c1"># executor discards files not requested. orca.engrad appears only</span>
             <span class="c1"># when gradients are requested (! EnGrad).</span>
             <span class="n">return_files</span><span class="o">=</span><span class="n">return_files</span><span class="p">,</span>
-            <span class="c1"># None: run in node-local scratch under a scheduler (SLURM&#39;s job</span>
-            <span class="c1"># dir is NFS, unsafe for ORCA&#39;s MPI scratch I/O), in place</span>
+            <span class="c1"># None: run in node-local scratch under a scheduler (SLURM's job</span>
+            <span class="c1"># dir is NFS, unsafe for ORCA's MPI scratch I/O), in place</span>
             <span class="c1"># otherwise. See molssi-seamm/orca_step#20.</span>
             <span class="n">in_situ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There was an error running ORCA in </span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"There was an error running ORCA in </span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">&quot;orca.out&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_report_run_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Note in step.out where ORCA actually ran -- the job directory, or</span>
+<span class="w">        </span><span class="sd">"""Note in step.out where ORCA actually ran -- the job directory, or</span>
 <span class="sd">        (under a scheduler) node-local scratch, with only results copied back.</span>
 <span class="sd">        See molssi-seamm/orca_step#20: this distinction matters for diagnosing</span>
 <span class="sd">        NFS-related failures and for knowing where any leftover scratch</span>
 <span class="sd">        (e.g. after a crash) actually landed.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;in_situ&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"in_situ"</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
             <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
                 <span class="n">__</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Ran ORCA directly in the job directory, </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
-                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Ran ORCA directly in the job directory, </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
                 <span class="n">__</span><span class="p">(</span>
-                    <span class="s2">&quot;Ran ORCA in node-local scratch &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;directory&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">), not the job directory, &quot;</span>
-                    <span class="s2">&quot;because this job is running under a batch scheduler and &quot;</span>
-                    <span class="s2">&quot;ORCA&#39;s MPI scratch I/O is not safe on NFS; only the &quot;</span>
-                    <span class="s2">&quot;requested result files were copied back here.&quot;</span><span class="p">,</span>
-                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                    <span class="s2">"Ran ORCA in node-local scratch "</span>
+                    <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'directory'</span><span class="p">)</span><span class="si">}</span><span class="s2">), not the job directory, "</span>
+                    <span class="s2">"because this job is running under a batch scheduler and "</span>
+                    <span class="s2">"ORCA's MPI scratch I/O is not safe on NFS; only the "</span>
+                    <span class="s2">"requested result files were copied back here."</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve (n_cores, memory_mb) for an ORCA run from the executor&#39;s</span>
+<span class="w">        </span><span class="sd">"""Resolve (n_cores, memory_mb) for an ORCA run from the executor's</span>
 <span class="sd">        computational environment and the [orca-step] user options.</span>
 
 <span class="sd">        run_orca (and run_orca_compound) are called by a sub-step, whose options</span>
 <span class="sd">        live on its parent (the main ORCA node), mirroring the MOPAC step.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">ce</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">computational_environment</span><span class="p">()</span>
         <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">options</span>
         <span class="n">seamm_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">global_options</span>
 
         <span class="c1"># --- Cores/processes (ORCA %pal) ---</span>
-        <span class="n">available_cores</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">ce</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NTASKS&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="n">ncores_opt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ncores&quot;</span><span class="p">,</span> <span class="s2">&quot;available&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">ncores_opt</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;available&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="n">available_cores</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">ce</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"NTASKS"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">ncores_opt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ncores"</span><span class="p">,</span> <span class="s2">"available"</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ncores_opt</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"available"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">,</span> <span class="s2">"all"</span><span class="p">,</span> <span class="s2">""</span><span class="p">):</span>
             <span class="n">n_cores</span> <span class="o">=</span> <span class="n">available_cores</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -922,8 +922,8 @@
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="n">n_cores</span> <span class="o">=</span> <span class="n">available_cores</span>
         <span class="c1"># Respect a global cap from the SEAMM options, if one is set.</span>
-        <span class="n">global_ncores</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">seamm_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ncores&quot;</span><span class="p">,</span> <span class="s2">&quot;available&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">global_ncores</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;available&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="n">global_ncores</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">seamm_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ncores"</span><span class="p">,</span> <span class="s2">"available"</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">global_ncores</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"available"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">,</span> <span class="s2">"all"</span><span class="p">,</span> <span class="s2">""</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">n_cores</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">global_ncores</span><span class="p">))</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
@@ -931,44 +931,44 @@
         <span class="n">n_cores</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_cores</span><span class="p">)</span>
 
         <span class="c1"># --- Memory per process (ORCA %maxcore, in MB) ---</span>
-        <span class="n">mem_per_node</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ce</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;MEM_PER_NODE&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># bytes</span>
-        <span class="n">mem_per_cpu</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ce</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;MEM_PER_CPU&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># bytes</span>
-        <span class="n">memory_opt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;memory&quot;</span><span class="p">,</span> <span class="s2">&quot;available&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">memory_opt</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;available&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="n">mem_per_node</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ce</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"MEM_PER_NODE"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># bytes</span>
+        <span class="n">mem_per_cpu</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ce</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"MEM_PER_CPU"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># bytes</span>
+        <span class="n">memory_opt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"memory"</span><span class="p">,</span> <span class="s2">"available"</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">memory_opt</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"available"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">,</span> <span class="s2">""</span><span class="p">):</span>
             <span class="c1"># ~80% of the per-core memory, leaving headroom for the OS/driver.</span>
             <span class="n">per_proc_bytes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span> <span class="o">*</span> <span class="n">mem_per_cpu</span><span class="p">)</span> <span class="k">if</span> <span class="n">mem_per_cpu</span> <span class="k">else</span> <span class="mi">0</span>
-        <span class="k">elif</span> <span class="n">memory_opt</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">memory_opt</span> <span class="o">==</span> <span class="s2">"all"</span><span class="p">:</span>
             <span class="n">per_proc_bytes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">mem_per_node</span> <span class="o">/</span> <span class="n">n_cores</span><span class="p">)</span> <span class="k">if</span> <span class="n">mem_per_node</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">per_proc_bytes</span> <span class="o">=</span> <span class="n">_dehumanize_bytes</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;memory&quot;</span><span class="p">])</span>
+                <span class="n">per_proc_bytes</span> <span class="o">=</span> <span class="n">_dehumanize_bytes</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s2">"memory"</span><span class="p">])</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="n">per_proc_bytes</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="c1"># ORCA&#39;s %maxcore is per-process MB; fall back to a conservative default</span>
-        <span class="c1"># if the machine&#39;s memory could not be determined.</span>
+        <span class="c1"># ORCA's %maxcore is per-process MB; fall back to a conservative default</span>
+        <span class="c1"># if the machine's memory could not be determined.</span>
         <span class="n">memory_mb</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">per_proc_bytes</span> <span class="o">/</span> <span class="mi">1_000_000</span><span class="p">)</span> <span class="k">if</span> <span class="n">per_proc_bytes</span> <span class="k">else</span> <span class="mi">2000</span>
         <span class="n">memory_mb</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="n">memory_mb</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">n_cores</span><span class="p">,</span> <span class="n">memory_mb</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_mpi_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_cores</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``(env, lib_prefix)`` for launching a (possibly parallel) ORCA.</span>
+<span class="w">        </span><span class="sd">"""Return ``(env, lib_prefix)`` for launching a (possibly parallel) ORCA.</span>
 
 <span class="sd">        Parallel ORCA needs a matching OpenMPI runtime. Two things must line up</span>
 <span class="sd">        and they are handled differently:</span>
 
 <span class="sd">          1. mpirun (PATH): ORCA launches its workers with whatever ``mpirun`` it</span>
 <span class="sd">             finds on PATH; it MUST be the same OpenMPI as the libraries the</span>
-<span class="sd">             workers link, or the ranks corrupt each other&#39;s data (ORCA aborts</span>
-<span class="sd">             with a &quot;BLAS-ERROR: incompatible matrices&quot;). We prepend the OpenMPI</span>
+<span class="sd">             workers link, or the ranks corrupt each other's data (ORCA aborts</span>
+<span class="sd">             with a "BLAS-ERROR: incompatible matrices"). We prepend the OpenMPI</span>
 <span class="sd">             bin (the sibling of the lib dir given by library-path) so a</span>
 <span class="sd">             different mpirun on PATH (e.g. a newer Homebrew OpenMPI) is not used.</span>
-<span class="sd">             PATH is an ordinary variable, so it reaches ORCA&#39;s children.</span>
+<span class="sd">             PATH is an ordinary variable, so it reaches ORCA's children.</span>
 
 <span class="sd">          2. libmpi (dynamic-loader path): on Linux, LD_LIBRARY_PATH is honored</span>
 <span class="sd">             and inherited, so exporting it is enough. On macOS, ORCA does NOT</span>
 <span class="sd">             pass DYLD_* to the MPI sub-processes it spawns (and SIP strips DYLD_*</span>
 <span class="sd">             through /bin/sh anyway), so the OpenMPI libraries must instead be on</span>
-<span class="sd">             dyld&#39;s default search path -- e.g. symlink libmpi.*.dylib into</span>
+<span class="sd">             dyld's default search path -- e.g. symlink libmpi.*.dylib into</span>
 <span class="sd">             /usr/local/lib. That is a one-time machine setup, documented in the</span>
 <span class="sd">             User Guide; nothing here can substitute for it. We still export the</span>
 <span class="sd">             loader variables for Linux.</span>
@@ -977,7 +977,7 @@
 <span class="sd">             parses ``%pal``, so we never see that command line -- but its</span>
 <span class="sd">             environment is ours to set. On an unmanaged, interactive host</span>
 <span class="sd">             (no SLURM etc. coordinating which cores belong to which job),</span>
-<span class="sd">             every independent ``mpirun`` invocation applies OpenMPI&#39;s</span>
+<span class="sd">             every independent ``mpirun`` invocation applies OpenMPI's</span>
 <span class="sd">             default binding policy (bind each rank to a core, starting from</span>
 <span class="sd">             a low core number) with no knowledge of other concurrently-</span>
 <span class="sd">             running ORCA jobs, so several jobs launched at once all pile</span>
@@ -989,33 +989,33 @@
 <span class="sd">             concurrent jobs across all cores instead. Under a real</span>
 <span class="sd">             scheduler this is unnecessary and can be counter-productive: a</span>
 <span class="sd">             SLURM allocation already restricts the job to specific cores</span>
-<span class="sd">             (cgroups), so we leave OpenMPI&#39;s binding on in that case, the</span>
-<span class="sd">             same ``SLURM_JOB_ID`` check seamm_exec&#39;s ``in_situ`` auto-</span>
+<span class="sd">             (cgroups), so we leave OpenMPI's binding on in that case, the</span>
+<span class="sd">             same ``SLURM_JOB_ID`` check seamm_exec's ``in_situ`` auto-</span>
 <span class="sd">             detection and ``computational_environment()`` use.</span>
 
 <span class="sd">        The OpenMPI library directory is part of *how to run ORCA*, so it comes</span>
 <span class="sd">        from the executor config (~/SEAMM/orca.ini), not the user-facing</span>
 <span class="sd">        [orca-step] options. configparser lower-cases keys.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">lib_prefix</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">library_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;library-path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">library_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"library-path"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
         <span class="n">quoted_library_path</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_library_path_vars</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">library_path</span><span class="p">):</span>
             <span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
             <span class="c1"># Prepend at shell *runtime*, not with this Python-computed</span>
             <span class="c1"># snapshot of os.environ: an installation=modules code</span>
             <span class="c1"># (seamm_exec.Local.exec()) runs `module load ...` earlier in</span>
-            <span class="c1"># this same generated script, which Python&#39;s os.environ can&#39;t</span>
+            <span class="c1"># this same generated script, which Python's os.environ can't</span>
             <span class="c1"># see yet at this point -- a static value here would silently</span>
             <span class="c1"># discard whatever that module load just added (confirmed for</span>
-            <span class="c1"># real: ORCA&#39;s own liborca_tools_*.so disappeared from a</span>
-            <span class="c1"># parallel run&#39;s LD_LIBRARY_PATH this way).</span>
+            <span class="c1"># real: ORCA's own liborca_tools_*.so disappeared from a</span>
+            <span class="c1"># parallel run's LD_LIBRARY_PATH this way).</span>
             <span class="c1">#</span>
             <span class="c1"># Deliberately brace-free (an if/then/else, not</span>
             <span class="c1"># ``${VAR:+...}`` parameter expansion): this text is later run</span>
-            <span class="c1"># through seamm_exec.local.Local.exec()&#39;s own</span>
-            <span class="c1"># ``command.format(**config, **ce)`` (for ITS &quot;{code}&quot;-style</span>
+            <span class="c1"># through seamm_exec.local.Local.exec()'s own</span>
+            <span class="c1"># ``command.format(**config, **ce)`` (for ITS "{code}"-style</span>
             <span class="c1"># placeholders), called in a loop *until the output stops</span>
             <span class="c1"># changing* -- a single-braced ``${VAR:+...}`` here survives</span>
             <span class="c1"># exactly one pass (mistaken for one of its own fields on the</span>
@@ -1024,16 +1024,16 @@
             <span class="c1"># ways). A construct with no braces at all is immune</span>
             <span class="c1"># regardless of how many passes run.</span>
             <span class="n">lib_prefix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s1">&#39;if [ -n &quot;$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1">&quot; ]; then &#39;</span>
-                <span class="sa">f</span><span class="s2">&quot;export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">:$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;else export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">; fi;&quot;</span>
+                <span class="sa">f</span><span class="s1">'if [ -n "$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1">" ]; then '</span>
+                <span class="sa">f</span><span class="s2">"export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">:$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; "</span>
+                <span class="sa">f</span><span class="s2">"else export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">; fi;"</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">library_path</span><span class="p">:</span>
-            <span class="n">bindir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;bin&quot;</span>
+            <span class="n">bindir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"bin"</span>
             <span class="k">if</span> <span class="n">bindir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-                <span class="n">lib_prefix</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;export PATH=</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">bindir</span><span class="p">))</span><span class="si">}</span><span class="s2">:$PATH;&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s2">&quot;SLURM_JOB_ID&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
-            <span class="n">env</span><span class="p">[</span><span class="s2">&quot;OMPI_MCA_hwloc_base_binding_policy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+                <span class="n">lib_prefix</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"export PATH=</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">bindir</span><span class="p">))</span><span class="si">}</span><span class="s2">:$PATH;"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s2">"SLURM_JOB_ID"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+            <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_hwloc_base_binding_policy"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"none"</span>
         <span class="k">return</span> <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span>
 
 <div class="viewcode-block" id="ORCABase.run_orca_compound">
@@ -1042,11 +1042,11 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">compound_block</span><span class="p">,</span>
         <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">engrad</span><span class="o">=</span><span class="s2">&quot;result.engrad&quot;</span><span class="p">,</span>
+        <span class="n">engrad</span><span class="o">=</span><span class="s2">"result.engrad"</span><span class="p">,</span>
         <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">wfx_step</span><span class="o">=</span><span class="s2">&quot;orca_Compound_5&quot;</span><span class="p">,</span>
+        <span class="n">wfx_step</span><span class="o">=</span><span class="s2">"orca_Compound_5"</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write and run an ORCA *Compound* job, returning ``(energy, gradient)``.</span>
+<span class="w">        </span><span class="sd">"""Write and run an ORCA *Compound* job, returning ``(energy, gradient)``.</span>
 
 <span class="sd">        Unlike ``run_orca`` (a single ``! keywords`` + inline geometry job), a</span>
 <span class="sd">        Compound job runs several calculations from a script and writes its own</span>
@@ -1057,10 +1057,10 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        compound_block : str</span>
-<span class="sd">            The ``%Compound &quot;...&quot; ... end`` block for ``orca.inp``.</span>
+<span class="sd">            The ``%Compound "..." ... end`` block for ``orca.inp``.</span>
 <span class="sd">        extra_files : dict | None</span>
-<span class="sd">            Files the Compound job reads (e.g. ``{&quot;bssegradient.cmp&quot;: ...,</span>
-<span class="sd">            &quot;bsse.xyz&quot;: ...}``), written into the run directory.</span>
+<span class="sd">            Files the Compound job reads (e.g. ``{"bssegradient.cmp": ...,</span>
+<span class="sd">            "bsse.xyz": ...}``), written into the run directory.</span>
 <span class="sd">        engrad : str | None</span>
 <span class="sd">            The EnGrad file the Compound writes with the final energy and</span>
 <span class="sd">            gradient. Pass ``None`` for an energy-only job that writes no EnGrad</span>
@@ -1071,8 +1071,8 @@
 <span class="sd">        -------</span>
 <span class="sd">        tuple(float | None, list | None)</span>
 <span class="sd">            The energy (E_h) and gradient (``[n_atoms][3]``, E_h/bohr) from the</span>
-<span class="sd">            Compound&#39;s EnGrad file, or ``(None, None)`` when ``engrad`` is None.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Compound's EnGrad file, or ``(None, None)`` when ``engrad`` is None.</span>
+<span class="sd">        """</span>
         <span class="n">directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
         <span class="n">directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1082,39 +1082,39 @@
 
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;%pal nprocs </span><span class="si">{</span><span class="n">n_cores</span><span class="si">}</span><span class="s2"> end&quot;</span><span class="p">)</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;%maxcore </span><span class="si">{</span><span class="n">memory_mb</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%pal nprocs </span><span class="si">{</span><span class="n">n_cores</span><span class="si">}</span><span class="s2"> end"</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%maxcore </span><span class="si">{</span><span class="n">memory_mb</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">compound_block</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="n">input_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+        <span class="n">input_text</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
-        <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;orca.inp&quot;</span><span class="p">:</span> <span class="n">input_text</span><span class="p">}</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"orca.inp"</span><span class="p">:</span> <span class="n">input_text</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">extra_files</span><span class="p">:</span>
             <span class="n">files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_files</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;orca.inp (Compound):</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">input_text</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"orca.inp (Compound):</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="n">input_text</span><span class="p">)</span>
 
-        <span class="n">return_files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;orca.out&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.err&quot;</span><span class="p">,</span> <span class="s2">&quot;*.bibtex&quot;</span><span class="p">,</span> <span class="s2">&quot;*.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;*.engrad&quot;</span><span class="p">]</span>
+        <span class="n">return_files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"orca.out"</span><span class="p">,</span> <span class="s2">"orca.err"</span><span class="p">,</span> <span class="s2">"*.bibtex"</span><span class="p">,</span> <span class="s2">"*.txt"</span><span class="p">,</span> <span class="s2">"*.engrad"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">engrad</span><span class="p">:</span>
             <span class="n">return_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">engrad</span><span class="p">)</span>
-        <span class="n">cmd</span> <span class="o">=</span> <span class="n">lib_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{code}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.inp&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.out&quot;</span><span class="p">,</span> <span class="s2">&quot;2&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;orca.err&quot;</span><span class="p">]</span>
-        <span class="c1"># Convert the dimer step&#39;s retained density into a .wfx (as run_orca does</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">lib_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"</span><span class="si">{code}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca.inp"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca.out"</span><span class="p">,</span> <span class="s2">"2&gt;"</span><span class="p">,</span> <span class="s2">"orca.err"</span><span class="p">]</span>
+        <span class="c1"># Convert the dimer step's retained density into a .wfx (as run_orca does</span>
         <span class="c1"># for the Energy substep), for a following Atomic Charges (DDEC6) step.</span>
         <span class="c1"># wfx_step is the Compound sub-job that kept its density (the dimer).</span>
         <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
-            <span class="n">orca_2aim</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;orca_2aim&quot;</span><span class="p">)</span>
+            <span class="n">orca_2aim</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"code"</span><span class="p">])</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"orca_2aim"</span><span class="p">)</span>
             <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span>
-                <span class="s2">&quot;&amp;&amp;&quot;</span><span class="p">,</span>
+                <span class="s2">"&amp;&amp;"</span><span class="p">,</span>
                 <span class="n">orca_2aim</span><span class="p">,</span>
                 <span class="n">wfx_step</span><span class="p">,</span>
-                <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;orca_2aim.out&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;2&gt;&amp;1&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;&amp;&amp;&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;cp&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">wfx_step</span><span class="si">}</span><span class="s2">.wfx&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;orca.wfx&quot;</span><span class="p">,</span>
+                <span class="s2">"&gt;"</span><span class="p">,</span>
+                <span class="s2">"orca_2aim.out"</span><span class="p">,</span>
+                <span class="s2">"2&gt;&amp;1"</span><span class="p">,</span>
+                <span class="s2">"&amp;&amp;"</span><span class="p">,</span>
+                <span class="s2">"cp"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">wfx_step</span><span class="si">}</span><span class="s2">.wfx"</span><span class="p">,</span>
+                <span class="s2">"orca.wfx"</span><span class="p">,</span>
             <span class="p">]</span>
-            <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;orca.wfx&quot;</span><span class="p">,</span> <span class="s2">&quot;orca_2aim.out&quot;</span><span class="p">]</span>
+            <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"orca.wfx"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">]</span>
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span>
             <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
@@ -1127,7 +1127,7 @@
             <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;There was an error running the ORCA Compound job.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"There was an error running the ORCA Compound job."</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span>
 
         <span class="c1"># Read the corrected gradient from the EnGrad file the Compound wrote,</span>
@@ -1139,19 +1139,19 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_read_engrad</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read ``(energy, gradient)`` from an ORCA EnGrad file.</span>
+<span class="w">        </span><span class="sd">"""Read ``(energy, gradient)`` from an ORCA EnGrad file.</span>
 
 <span class="sd">        Format (comment lines start with ``#``; blank lines are ignored): the</span>
 <span class="sd">        atom count, then the energy (E_h), then ``3*n`` gradient components</span>
 <span class="sd">        (E_h/bohr). Returns ``(None, None)`` if it cannot be parsed.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">ln</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">ln</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">ln</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ln</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ln</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ln</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"#"</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -1165,17 +1165,17 @@
         <span class="k">return</span> <span class="n">energy</span><span class="p">,</span> <span class="n">gradient</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_orca_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve the ORCA executable configuration.</span>
+<span class="w">        </span><span class="sd">"""Resolve the ORCA executable configuration.</span>
 
-<span class="sd">        Reads the executor&#39;s section of ``&lt;root&gt;/orca.ini`` (the ``code`` = full</span>
+<span class="sd">        Reads the executor's section of ``&lt;root&gt;/orca.ini`` (the ``code`` = full</span>
 <span class="sd">        path to ORCA, and the optional ``library-path`` for parallel runs);</span>
 <span class="sd">        falls back to locating ``orca`` on the PATH. ORCA must be invoked by its</span>
 <span class="sd">        full path so it can find its sub-programs.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">executor_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">name</span>
         <span class="n">seamm_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">global_options</span>
-        <span class="n">ini_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">seamm_options</span><span class="p">[</span><span class="s2">&quot;root&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-        <span class="n">ini_path</span> <span class="o">=</span> <span class="n">ini_dir</span> <span class="o">/</span> <span class="s2">&quot;orca.ini&quot;</span>
+        <span class="n">ini_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">seamm_options</span><span class="p">[</span><span class="s2">"root"</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+        <span class="n">ini_path</span> <span class="o">=</span> <span class="n">ini_dir</span> <span class="o">/</span> <span class="s2">"orca.ini"</span>
 
         <span class="n">full_config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">ini_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -1183,49 +1183,49 @@
 
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">executor_type</span> <span class="ow">in</span> <span class="n">full_config</span>
-            <span class="ow">and</span> <span class="n">full_config</span><span class="p">[</span><span class="n">executor_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;code&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span>
+            <span class="ow">and</span> <span class="n">full_config</span><span class="p">[</span><span class="n">executor_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"code"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">""</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">full_config</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">executor_type</span><span class="p">))</span>
 
         <span class="c1"># Fall back to finding ORCA on the PATH.</span>
-        <span class="n">code</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;orca&quot;</span><span class="p">)</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"orca"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">code</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Could not find the &#39;orca&#39; executable. Put it on your PATH, or &quot;</span>
-                <span class="s2">&quot;set &#39;code&#39; (the full path) in the relevant section of &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ini_path</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="s2">"Could not find the 'orca' executable. Put it on your PATH, or "</span>
+                <span class="s2">"set 'code' (the full path) in the relevant section of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ini_path</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s2">&quot;installation&quot;</span><span class="p">:</span> <span class="s2">&quot;local&quot;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"code"</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s2">"installation"</span><span class="p">:</span> <span class="s2">"local"</span><span class="p">}</span>
 
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># Output parsing</span>
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse ORCA output: final single-point energy and success.&quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+<span class="w">        </span><span class="sd">"""Parse ORCA output: final single-point energy and success."""</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"success"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"energy"</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ORCA produced no output (</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ORCA produced no output (</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
         <span class="n">text</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s2">&quot;FINAL SINGLE POINT ENERGY&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"FINAL SINGLE POINT ENERGY"</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s2">"energy"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
                 <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
                     <span class="k">pass</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ORCA TERMINATED NORMALLY&quot;</span> <span class="ow">in</span> <span class="n">text</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"success"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"ORCA TERMINATED NORMALLY"</span> <span class="ow">in</span> <span class="n">text</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">[</span><span class="s2">"success"</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;ORCA did not terminate normally; see </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> and orca.err.&quot;</span>
+                <span class="sa">f</span><span class="s2">"ORCA did not terminate normally; see </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> and orca.err."</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_add_properties</span><span class="p">():</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register this package&#39;s properties with molsystem, if present.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Register this package's properties with molsystem, if present."""</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">molsystem</span>
 
-        <span class="n">path</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">&quot;orca_step&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span>
-        <span class="n">csv_file</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;properties.csv&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">"orca_step"</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"data"</span>
+        <span class="n">csv_file</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">"properties.csv"</span>
         <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">csv_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="n">molsystem</span><span class="o">.</span><span class="n">add_properties_from_file</span><span class="p">(</span><span class="n">csv_file</span><span class="p">)</span></div>
 
@@ -1238,7 +1238,7 @@
     <span class="k">pass</span>
 
 <span class="c1"># Re-export for convenience</span>
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ORCABase&quot;</span><span class="p">,</span> <span class="s2">&quot;printer&quot;</span><span class="p">,</span> <span class="s2">&quot;job&quot;</span><span class="p">,</span> <span class="s2">&quot;os&quot;</span><span class="p">,</span> <span class="s2">&quot;__&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ORCABase"</span><span class="p">,</span> <span class="s2">"printer"</span><span class="p">,</span> <span class="s2">"job"</span><span class="p">,</span> <span class="s2">"os"</span><span class="p">,</span> <span class="s2">"__"</span><span class="p">]</span>
 </pre></div>
 
                 </article>
@@ -1268,8 +1268,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1281,7 +1281,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.9.25 documentation</title>
   
   
   
@@ -27,8 +27,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -36,12 +36,12 @@
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=d9a48a5b"></script>
+    <script src="_static/documentation_options.js?v=9a43dc2a"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.11" />
+  <meta name="docsearch:version" content="2026.9.25" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,40 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.9.25 – DLPNO double hybrids, and fixes for numerical gradients and lone atoms</dt><dd><ul class="simple">
+<li><p>Added DLPNO variants of the double-hybrid functionals (e.g.
+<code class="docutils literal notranslate"><span class="pre">DLPNO-REVDSD-PBEP86-D4/2021</span></code>), which evaluate the MP2 part with
+near-linear-scaling DLPNO-MP2. ORCA 6.1.1 rejects the <code class="docutils literal notranslate"><span class="pre">DLPNO-</span></code>
+keyword for some functionals although its manual lists them, so the
+step writes the canonical functional plus <code class="docutils literal notranslate"><span class="pre">%mp2</span> <span class="pre">DLPNO</span> <span class="pre">true</span> <span class="pre">end</span></code>. It
+works in the Energy, Optimization, Frequencies and BSSE sub-steps, as
+a model chemistry, and through the MDI engine. ORCA computes DLPNO-MP2
+gradients only for closed-shell systems, so an open-shell job that
+needs gradients stops with a clear error before running.</p></li>
+<li><p>Bugfix: methods without an analytic gradient (e.g. DLPNO-CCSD(T),
+wB97M(2)) produced no gradient at all. The step requested
+<code class="docutils literal notranslate"><span class="pre">NumGrad</span></code> alone, which ORCA treats as a plain single point; it now
+requests <code class="docutils literal notranslate"><span class="pre">EnGrad</span> <span class="pre">NumGrad</span></code>.</p></li>
+<li><p>Bugfix: PWPB95, DSD-PBEB95 and wPr2SCAN50 were marked as having
+analytic gradients, but ORCA 6.1.1 cannot compute them, so gradient
+jobs failed. They now use the numerical gradient. <code class="docutils literal notranslate"><span class="pre">KPR2SCAN</span></code> is not
+an ORCA keyword and is renamed <code class="docutils literal notranslate"><span class="pre">KPR2SCAN50</span></code> (numerical gradient
+only).</p></li>
+<li><p>DLPNO double hybrids use the canonical functional’s atomic reference
+energies for the energy of formation, which the report notes. DLPNO
+cannot treat H at all, and it changes isolated-atom energies by less
+than 0.07 kJ/mol.</p></li>
+<li><p>Bugfix: ORCA’s default COSX exchange gives wrong results for some lone
+atoms. From scratch, a Na or Mg atom or a bare Na+ ion gets its double
+hybrid MP2 part about 5 kJ/mol too high, He is about 1 kJ/mol too high,
+and at DEFGRID3 a lone Li or H is off by 0.9 or 0.07 kJ/mol. Single-atom jobs, including the bare
+single-atom fragments of a BSSE correction, now use exact exchange
+(<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>) unless an exchange scheme is given in the extra keywords.</p></li>
+<li><p>Pinned <code class="docutils literal notranslate"><span class="pre">bibtexparser&lt;2</span></code>: the step uses the bibtexparser 1.x API, which
+2.x removed, so installing alongside bibtexparser 2 broke <code class="docutils literal notranslate"><span class="pre">import</span>
+<span class="pre">orca_step</span></code>.</p></li>
+</ul>
+</dd>
 <dt>2026.8.11 – Bugfix: parallel ORCA could lose its own shared libraries under installation = modules</dt><dd><ul class="simple">
 <li><p>A parallel run (more than one core) with <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code>’s
 <code class="docutils literal notranslate"><span class="pre">installation</span> <span class="pre">=</span> <span class="pre">modules</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">modules</span> <span class="pre">=</span> <span class="pre">ORCA</span></code>, for a cluster
@@ -1029,8 +1063,8 @@ Model Chemistry step. Basis sets use ORCA’s built-in families.</p></li>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1042,7 +1076,7 @@ Model Chemistry step. Basis sets use ORCA’s built-in families.</p></li>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

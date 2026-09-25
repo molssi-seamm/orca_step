@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.tk_bsse &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
+    <title>orca_step.tk_bsse &#8212; SEAMM ORCA Plug-in 2026.9.25 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=d9a48a5b"></script>
+    <script src="../../_static/documentation_options.js?v=9a43dc2a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.11" />
+  <meta name="docsearch:version" content="2026.9.25" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -493,7 +493,7 @@
   <h1>Source code for orca_step.tk_bsse</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="sd">&quot;&quot;&quot;The graphical part of an ORCA BSSE (counterpoise) sub-step.&quot;&quot;&quot;</span>
+<span class="sd">"""The graphical part of an ORCA BSSE (counterpoise) sub-step."""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
@@ -507,28 +507,28 @@
 <div class="viewcode-block" id="TkBSSE">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.tk_bsse.TkBSSE">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TkBSSE</span><span class="p">(</span><span class="n">TkEnergy</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Graphical ORCA BSSE sub-step: the energy dialog&#39;s level-of-theory</span>
+<span class="w">    </span><span class="sd">"""Graphical ORCA BSSE sub-step: the energy dialog's level-of-theory</span>
 <span class="sd">    controls plus the fragment definition and the monomer-optimization switch.</span>
 <span class="sd">    The Energy property toggles (bond orders, Hirshfeld, polarizability) and</span>
 <span class="sd">    SThresh are not shown -- they are not plumbed through the per-fragment</span>
-<span class="sd">    BSSE job set. &#39;Write the wavefunction (wfx) file&#39; (for a following Atomic</span>
+<span class="sd">    BSSE job set. 'Write the wavefunction (wfx) file' (for a following Atomic</span>
 <span class="sd">    Charges step) IS shown -- see ``_run_detail_keys`` below.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_show_cbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Hide CBS extrapolation: the counterpoise gradient needs a real</span>
-<span class="sd">        gradient, which an extrapolated energy does not have.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Hide CBS extrapolation: the counterpoise gradient needs a real</span>
+<span class="sd">        gradient, which an extrapolated energy does not have."""</span>
         <span class="k">return</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="TkBSSE.create_dialog">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.tk_bsse.TkBSSE.create_dialog">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">create_dialog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;ORCA BSSE&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the dialog and make the fragment controls reactive: the</span>
-<span class="sd">        &#39;Fragment atoms&#39; field is shown only when the fragments are</span>
-<span class="sd">        &#39;specified&#39;.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_dialog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"ORCA BSSE"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Build the dialog and make the fragment controls reactive: the</span>
+<span class="sd">        'Fragment atoms' field is shown only when the fragments are</span>
+<span class="sd">        'specified'."""</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">create_dialog</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
-        <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;fragments&quot;</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&lt;&lt;ComboboxSelected&gt;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;Return&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;FocusOut&gt;&quot;</span><span class="p">):</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"fragments"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"&lt;&lt;ComboboxSelected&gt;&gt;"</span><span class="p">,</span> <span class="s2">"&lt;Return&gt;"</span><span class="p">,</span> <span class="s2">"&lt;FocusOut&gt;"</span><span class="p">):</span>
             <span class="n">w</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">frame</span></div>
@@ -536,22 +536,22 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_run_detail_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;auxiliary basis&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;grid&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;scf convergence&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;extra keywords&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;fragments&quot;</span><span class="p">,</span>
+            <span class="s2">"auxiliary basis"</span><span class="p">,</span>
+            <span class="s2">"grid"</span><span class="p">,</span>
+            <span class="s2">"scf convergence"</span><span class="p">,</span>
+            <span class="s2">"extra keywords"</span><span class="p">,</span>
+            <span class="s2">"fragments"</span><span class="p">,</span>
         <span class="p">]</span>
-        <span class="c1"># &#39;Fragment atoms&#39; only applies when defining the fragments by hand;</span>
-        <span class="c1"># &#39;Fragment charges&#39; applies either way (auto-detected fragments</span>
+        <span class="c1"># 'Fragment atoms' only applies when defining the fragments by hand;</span>
+        <span class="c1"># 'Fragment charges' applies either way (auto-detected fragments</span>
         <span class="c1"># still need their charges, e.g. a Na+/Cl- pair).</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;fragments&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;specified&quot;</span><span class="p">:</span>
-            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;fragment atoms&quot;</span><span class="p">)</span>
-        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;fragment charges&quot;</span><span class="p">)</span>
-        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">)</span>
-        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;optimize monomers&quot;</span><span class="p">)</span>
-        <span class="c1"># For a following Atomic Charges (DDEC6) step: write the cluster&#39;s .wfx.</span>
-        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;save wavefunction&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"fragments"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"specified"</span><span class="p">:</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"fragment atoms"</span><span class="p">)</span>
+        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"fragment charges"</span><span class="p">)</span>
+        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"compute gradient"</span><span class="p">)</span>
+        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"optimize monomers"</span><span class="p">)</span>
+        <span class="c1"># For a following Atomic Charges (DDEC6) step: write the cluster's .wfx.</span>
+        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"save wavefunction"</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span></div>
 
 </pre></div>
@@ -583,8 +583,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -596,7 +596,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

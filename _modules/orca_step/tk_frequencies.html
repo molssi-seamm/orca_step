@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.tk_frequencies &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
+    <title>orca_step.tk_frequencies &#8212; SEAMM ORCA Plug-in 2026.9.25 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=d9a48a5b"></script>
+    <script src="../../_static/documentation_options.js?v=9a43dc2a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.11" />
+  <meta name="docsearch:version" content="2026.9.25" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -493,7 +493,7 @@
   <h1>Source code for orca_step.tk_frequencies</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="sd">&quot;&quot;&quot;The graphical part of an ORCA Frequencies sub-step.&quot;&quot;&quot;</span>
+<span class="sd">"""The graphical part of an ORCA Frequencies sub-step."""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tk</span>
@@ -508,39 +508,39 @@
 <div class="viewcode-block" id="TkFrequencies">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.tk_frequencies.TkFrequencies">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TkFrequencies</span><span class="p">(</span><span class="n">TkEnergy</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Graphical ORCA Frequencies sub-step: the energy dialog&#39;s level-of-theory</span>
+<span class="w">    </span><span class="sd">"""Graphical ORCA Frequencies sub-step: the energy dialog's level-of-theory</span>
 <span class="sd">    controls plus the second-derivative choice, the thermochemistry temperature,</span>
 <span class="sd">    and the standard structure-handling options (where to store the structure and</span>
 <span class="sd">    its properties). CBS extrapolation is hidden (an extrapolated energy has no</span>
 <span class="sd">    Hessian); the Energy property toggles are not shown.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_show_cbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Hide CBS extrapolation: a frequency calculation needs a Hessian,</span>
-<span class="sd">        which an extrapolated energy does not have.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Hide CBS extrapolation: a frequency calculation needs a Hessian,</span>
+<span class="sd">        which an extrapolated energy does not have."""</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_run_detail_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="s2">&quot;auxiliary basis&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;grid&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;scf convergence&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;initial guess&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;save orbital checkpoint&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;checkpoint name&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;extra keywords&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;extra blocks&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;second derivatives&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;temperature&quot;</span><span class="p">,</span>
+            <span class="s2">"auxiliary basis"</span><span class="p">,</span>
+            <span class="s2">"grid"</span><span class="p">,</span>
+            <span class="s2">"scf convergence"</span><span class="p">,</span>
+            <span class="s2">"initial guess"</span><span class="p">,</span>
+            <span class="s2">"save orbital checkpoint"</span><span class="p">,</span>
+            <span class="s2">"checkpoint name"</span><span class="p">,</span>
+            <span class="s2">"extra keywords"</span><span class="p">,</span>
+            <span class="s2">"extra blocks"</span><span class="p">,</span>
+            <span class="s2">"second derivatives"</span><span class="p">,</span>
+            <span class="s2">"temperature"</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="TkFrequencies.reset_dialog">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.tk_frequencies.TkFrequencies.reset_dialog">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_dialog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lay out the energy controls, then the structure-handling options.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Lay out the energy controls, then the structure-handling options."""</span>
         <span class="n">row</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset_dialog</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
         <span class="n">widgets</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;structure handling&quot;</span><span class="p">,</span> <span class="s2">&quot;system name&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration name&quot;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"structure handling"</span><span class="p">,</span> <span class="s2">"system name"</span><span class="p">,</span> <span class="s2">"configuration name"</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
                 <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span><span class="p">)</span>
                 <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
@@ -578,8 +578,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -591,7 +591,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

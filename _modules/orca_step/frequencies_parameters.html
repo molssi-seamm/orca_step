@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.frequencies_parameters &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
+    <title>orca_step.frequencies_parameters &#8212; SEAMM ORCA Plug-in 2026.9.25 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=d9a48a5b"></script>
+    <script src="../../_static/documentation_options.js?v=9a43dc2a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.11" />
+  <meta name="docsearch:version" content="2026.9.25" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -493,11 +493,11 @@
   <h1>Source code for orca_step.frequencies_parameters</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="sd">&quot;&quot;&quot;Control parameters for the ORCA Frequencies (Hessian) sub-step.</span>
+<span class="sd">"""Control parameters for the ORCA Frequencies (Hessian) sub-step.</span>
 
 <span class="sd">Extends the Energy parameters (level of theory, basis, ...) with the choice of</span>
 <span class="sd">analytic vs numerical second derivatives and the thermochemistry temperature.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
@@ -511,47 +511,47 @@
 <div class="viewcode-block" id="FrequenciesParameters">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.frequencies_parameters.FrequenciesParameters">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FrequenciesParameters</span><span class="p">(</span><span class="n">EnergyParameters</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The Frequencies parameters: the Energy parameters plus the second-</span>
-<span class="sd">    derivative method and the thermochemistry temperature.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The Frequencies parameters: the Energy parameters plus the second-</span>
+<span class="sd">    derivative method and the thermochemistry temperature."""</span>
 
     <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;second derivatives&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;analytic&quot;</span><span class="p">,</span> <span class="s2">&quot;numerical&quot;</span><span class="p">),</span>
-            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Second derivatives:&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
-                <span class="s2">&quot;How to compute the Hessian. &#39;default&#39; uses ORCA&#39;s analytic &quot;</span>
-                <span class="s2">&quot;second derivative (AnFreq) when one is available for the &quot;</span>
-                <span class="s2">&quot;method (HF, most DFT functionals, MP2), and falls back to &quot;</span>
-                <span class="s2">&quot;the numerical one (NumFreq) otherwise -- the right choice &quot;</span>
-                <span class="s2">&quot;for almost every case. &#39;analytic&#39; and &#39;numerical&#39; force one &quot;</span>
-                <span class="s2">&quot;or the other regardless of whether the method has an &quot;</span>
-                <span class="s2">&quot;analytic Hessian: &#39;analytic&#39; fails for a method without one &quot;</span>
-                <span class="s2">&quot;(e.g. a double hybrid or (DLPNO-)CCSD(T)); &#39;numerical&#39; &quot;</span>
-                <span class="s2">&quot;(finite-differencing the gradient) works for any method &quot;</span>
-                <span class="s2">&quot;that has a gradient, but is considerably more expensive.&quot;</span>
+        <span class="s2">"second derivatives"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"default"</span><span class="p">,</span>
+            <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
+            <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"enumeration"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"default"</span><span class="p">,</span> <span class="s2">"analytic"</span><span class="p">,</span> <span class="s2">"numerical"</span><span class="p">),</span>
+            <span class="s2">"format_string"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Second derivatives:"</span><span class="p">,</span>
+            <span class="s2">"help_text"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">"How to compute the Hessian. 'default' uses ORCA's analytic "</span>
+                <span class="s2">"second derivative (AnFreq) when one is available for the "</span>
+                <span class="s2">"method (HF, most DFT functionals, MP2), and falls back to "</span>
+                <span class="s2">"the numerical one (NumFreq) otherwise -- the right choice "</span>
+                <span class="s2">"for almost every case. 'analytic' and 'numerical' force one "</span>
+                <span class="s2">"or the other regardless of whether the method has an "</span>
+                <span class="s2">"analytic Hessian: 'analytic' fails for a method without one "</span>
+                <span class="s2">"(e.g. a double hybrid or (DLPNO-)CCSD(T)); 'numerical' "</span>
+                <span class="s2">"(finite-differencing the gradient) works for any method "</span>
+                <span class="s2">"that has a gradient, but is considerably more expensive."</span>
             <span class="p">),</span>
         <span class="p">},</span>
-        <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;298.15&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;K&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
-            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;.2f&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Temperature:&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="p">(</span>
-                <span class="s2">&quot;The temperature for the thermochemistry (zero-point energy, &quot;</span>
-                <span class="s2">&quot;thermal corrections, entropy, and Gibbs free energy). The &quot;</span>
-                <span class="s2">&quot;pressure is ORCA&#39;s default of 1 atm.&quot;</span>
+        <span class="s2">"temperature"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"298.15"</span><span class="p">,</span>
+            <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"float"</span><span class="p">,</span>
+            <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">"K"</span><span class="p">,</span>
+            <span class="s2">"enumeration"</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
+            <span class="s2">"format_string"</span><span class="p">:</span> <span class="s2">".2f"</span><span class="p">,</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Temperature:"</span><span class="p">,</span>
+            <span class="s2">"help_text"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">"The temperature for the thermochemistry (zero-point energy, "</span>
+                <span class="s2">"thermal corrections, entropy, and Gibbs free energy). The "</span>
+                <span class="s2">"pressure is ORCA's default of 1 atm."</span>
             <span class="p">),</span>
         <span class="p">},</span>
     <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{},</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;FrequenciesParameters.__init__&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"FrequenciesParameters.__init__"</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
                 <span class="o">**</span><span class="n">FrequenciesParameters</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
@@ -564,8 +564,8 @@
         <span class="c1"># A frequency calculation does not change the geometry, so default to</span>
         <span class="c1"># overwriting the current configuration (storing the results/properties</span>
         <span class="c1"># there) and keeping its name.</span>
-        <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;structure handling&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;Structure handling:&quot;</span>
-        <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;configuration name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="s2">&quot;keep current name&quot;</span></div>
+        <span class="bp">self</span><span class="p">[</span><span class="s2">"structure handling"</span><span class="p">]</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s2">"Structure handling:"</span>
+        <span class="bp">self</span><span class="p">[</span><span class="s2">"configuration name"</span><span class="p">]</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="s2">"keep current name"</span></div>
 
 </pre></div>
 
@@ -596,8 +596,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -609,7 +609,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

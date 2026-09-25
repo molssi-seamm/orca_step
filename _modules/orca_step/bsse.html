@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.8.11 documentation</title>
+    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.9.25 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -35,12 +35,12 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=d9a48a5b"></script>
+    <script src="../../_static/documentation_options.js?v=9a43dc2a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.8.11" />
+  <meta name="docsearch:version" content="2026.9.25" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -493,7 +493,7 @@
   <h1>Source code for orca_step.bsse</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="sd">&quot;&quot;&quot;An ORCA counterpoise (BSSE) sub-step.</span>
+<span class="sd">"""An ORCA counterpoise (BSSE) sub-step.</span>
 
 <span class="sd">Computes the counterpoise-corrected (Boys--Bernardi) energy and gradient of an</span>
 <span class="sd">N-fragment complex, with independent per-fragment charge. SEAMM generates the</span>
@@ -508,10 +508,10 @@
 <span class="sd">``bssenergy.cmp``, D. G. Liakos &amp; F. Neese -- one ORCA process running all 5</span>
 <span class="sd">sub-calculations of a 2-fragment, neutral-singlet complex internally) is kept</span>
 <span class="sd">in this module and in ``data/`` as the N = 2 regression oracle for the new</span>
-<span class="sd">path (see the architecture doc&#39;s milestone M2), not as a second production</span>
+<span class="sd">path (see the architecture doc's milestone M2), not as a second production</span>
 <span class="sd">code path. ``_compound_input``/``run_orca_compound``/</span>
 <span class="sd">``_parse_compound_energies`` below are unused by :meth:`run` now.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.resources</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -534,10 +534,10 @@
 <span class="n">_HARTREE_TO_KCAL</span> <span class="o">=</span> <span class="mf">627.509474</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-<span class="n">printer</span> <span class="o">=</span> <span class="n">printing</span><span class="o">.</span><span class="n">getPrinter</span><span class="p">(</span><span class="s2">&quot;ORCA&quot;</span><span class="p">)</span>
+<span class="n">printer</span> <span class="o">=</span> <span class="n">printing</span><span class="o">.</span><span class="n">getPrinter</span><span class="p">(</span><span class="s2">"ORCA"</span><span class="p">)</span>
 
 <span class="c1">#: Boys &amp; Bernardi counterpoise method -- the correction this step applies.</span>
-<span class="n">_BSSE_CITATION</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="n">_BSSE_CITATION</span> <span class="o">=</span> <span class="s2">"""</span><span class="se">\</span>
 <span class="s2">@article{Boys1970,</span>
 <span class="s2">    author = {Boys, S. F. and Bernardi, F.},</span>
 <span class="s2">    title = {The calculation of small molecular interactions by the differences</span>
@@ -549,31 +549,31 @@
 <span class="s2">    year = </span><span class="si">{1970}</span><span class="s2">,</span>
 <span class="s2">    doi = {10.1080/00268977000101561}</span>
 <span class="s2">}</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">"""</span>
 
 
 <div class="viewcode-block" id="BSSE">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.bsse.BSSE">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BSSE</span><span class="p">(</span><span class="n">Energy</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A counterpoise (BSSE) correction with ORCA.</span>
+<span class="w">    </span><span class="sd">"""A counterpoise (BSSE) correction with ORCA.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    TkBSSE, BSSEParameters, Energy</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flowchart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;BSSE&quot;</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating ORCA BSSE </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flowchart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"BSSE"</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Creating ORCA BSSE </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">flowchart</span><span class="o">=</span><span class="n">flowchart</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="n">extension</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_calculation</span> <span class="o">=</span> <span class="s2">&quot;bsse&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculation</span> <span class="o">=</span> <span class="s2">"bsse"</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">BSSEParameters</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_extrapolating</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Never extrapolate: a CBS-extrapolated energy has no gradient, so it</span>
+<span class="w">        </span><span class="sd">"""Never extrapolate: a CBS-extrapolated energy has no gradient, so it</span>
 <span class="sd">        cannot drive the counterpoise gradient. Hidden in the GUI; also ignored</span>
-<span class="sd">        here for a hand-edited flowchart.&quot;&quot;&quot;</span>
+<span class="sd">        here for a hand-edited flowchart."""</span>
         <span class="k">return</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="BSSE.description_text">
@@ -582,73 +582,73 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">P</span><span class="p">:</span>
             <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values_to_dict</span><span class="p">()</span>
         <span class="n">what</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;energy and gradient&quot;</span>
-            <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
-            <span class="k">else</span> <span class="s2">&quot;energy&quot;</span>
+            <span class="s2">"energy and gradient"</span>
+            <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"compute gradient"</span><span class="p">,</span> <span class="s2">"yes"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span>
+            <span class="k">else</span> <span class="s2">"energy"</span>
         <span class="p">)</span>
         <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Counterpoise (BSSE) corrected </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> with ORCA at &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_level_of_theory_text</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Counterpoise (BSSE) corrected </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> with ORCA at "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_level_of_theory_text</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
 
 
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># Fragments</span>
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">configuration</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the N ``seamm_bsse.Fragment`` for this complex, per the</span>
-<span class="sd">        &#39;fragments&#39; parameter, with per-fragment charge threaded in from</span>
-<span class="sd">        &#39;fragment charges&#39; -- or, if that is left empty, from the sum of each</span>
-<span class="sd">        fragment&#39;s atoms&#39; ``formal_charge`` (set on ``configuration.atoms``</span>
+<span class="w">        </span><span class="sd">"""Return the N ``seamm_bsse.Fragment`` for this complex, per the</span>
+<span class="sd">        'fragments' parameter, with per-fragment charge threaded in from</span>
+<span class="sd">        'fragment charges' -- or, if that is left empty, from the sum of each</span>
+<span class="sd">        fragment's atoms' ``formal_charge`` (set on ``configuration.atoms``</span>
 <span class="sd">        when the structure came from a format that carries per-atom formal</span>
-<span class="sd">        charges, e.g. an SDF/MOL file&#39;s ``M  CHG`` record), falling back to</span>
+<span class="sd">        charges, e.g. an SDF/MOL file's ``M  CHG`` record), falling back to</span>
 <span class="sd">        all-neutral if neither is available. This means a molecular ion</span>
 <span class="sd">        marked in the source structure (monatomic like Na+/Cl-, or</span>
 <span class="sd">        polyatomic like NH4+/BF4-) gets the right default fragment charge</span>
 <span class="sd">        without the caller spelling it out -- and without guessing from the</span>
 <span class="sd">        element/group, which does not generalize past monatomic ions.</span>
-<span class="sd">        Validates against the complex&#39;s own charge/multiplicity</span>
+<span class="sd">        Validates against the complex's own charge/multiplicity</span>
 <span class="sd">        (``seamm_bsse.validate_fragments``) before returning -- catches a</span>
 <span class="sd">        fragment-charge typo, or an open-shell/multiplicity&gt;1 fragment (not</span>
 <span class="sd">        yet supported), with a clear message.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">n_atoms</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">n_atoms</span>
-        <span class="n">mode</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;fragments&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;specified&quot;</span><span class="p">:</span>
-            <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_fragment_groups</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;fragment atoms&quot;</span><span class="p">],</span> <span class="n">n_atoms</span><span class="p">)</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">"fragments"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"specified"</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_fragment_groups</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">"fragment atoms"</span><span class="p">],</span> <span class="n">n_atoms</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># &quot;auto (molecules)&quot;</span>
+            <span class="c1"># "auto (molecules)"</span>
             <span class="n">molecules</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">find_molecules</span><span class="p">(</span><span class="n">as_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;BSSE &#39;auto&#39; fragments require at least two separate &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;molecules, but the structure has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span><span class="si">}</span><span class="s2">. Use &quot;</span>
-                    <span class="s2">&quot;&#39;specified&#39; to define the fragments by atom, or check &quot;</span>
-                    <span class="s2">&quot;the bonding.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"BSSE 'auto' fragments require at least two separate "</span>
+                    <span class="sa">f</span><span class="s2">"molecules, but the structure has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">molecules</span><span class="p">)</span><span class="si">}</span><span class="s2">. Use "</span>
+                    <span class="s2">"'specified' to define the fragments by atom, or check "</span>
+                    <span class="s2">"the bonding."</span>
                 <span class="p">)</span>
             <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">molecule</span><span class="p">)</span> <span class="k">for</span> <span class="n">molecule</span> <span class="ow">in</span> <span class="n">molecules</span><span class="p">]</span>
 
-        <span class="n">charges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_charges</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;fragment charges&quot;</span><span class="p">])</span>
+        <span class="n">charges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_charges</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">"fragment charges"</span><span class="p">])</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">charges</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s2">&quot;formal_charge&quot;</span> <span class="ow">in</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="p">:</span>
-                <span class="n">formal_charges</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="p">[</span><span class="s2">&quot;formal_charge&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">"formal_charge"</span> <span class="ow">in</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="p">:</span>
+                <span class="n">formal_charges</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="p">[</span><span class="s2">"formal_charge"</span><span class="p">]</span>
                 <span class="n">charges</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">formal_charges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
                 <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span>
                     <span class="n">__</span><span class="p">(</span>
-                        <span class="s2">&quot;No &#39;fragment charges&#39; given; using each fragment&#39;s &quot;</span>
-                        <span class="s2">&quot;net formal charge from the input structure.&quot;</span><span class="p">,</span>
-                        <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                        <span class="s2">"No 'fragment charges' given; using each fragment's "</span>
+                        <span class="s2">"net formal charge from the input structure."</span><span class="p">,</span>
+                        <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">charges</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;BSSE: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">)</span><span class="si">}</span><span class="s2"> &#39;fragment charges&#39; given but &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="si">}</span><span class="s2"> fragments found/specified; give one charge &quot;</span>
-                <span class="s2">&quot;per fragment (in the same order), or leave &#39;fragment &quot;</span>
-                <span class="s2">&quot;charges&#39; empty for all-neutral.&quot;</span>
+                <span class="sa">f</span><span class="s2">"BSSE: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">)</span><span class="si">}</span><span class="s2"> 'fragment charges' given but "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="si">}</span><span class="s2"> fragments found/specified; give one charge "</span>
+                <span class="s2">"per fragment (in the same order), or leave 'fragment "</span>
+                <span class="s2">"charges' empty for all-neutral."</span>
             <span class="p">)</span>
 
         <span class="n">fragments</span> <span class="o">=</span> <span class="p">[</span>
@@ -663,39 +663,39 @@
                 <span class="n">atomic_numbers</span><span class="o">=</span><span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">atomic_numbers</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BSSE: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"BSSE: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
         <span class="k">return</span> <span class="n">fragments</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_fragment_groups</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse &#39;specified&#39;-mode fragment atoms: semicolon-separated</span>
-<span class="sd">        1-based index/range groups, one per fragment, e.g. ``&#39;1-3; 4-6; 7&#39;``</span>
-<span class="sd">        for three fragments -- to 0-based index lists.&quot;&quot;&quot;</span>
-        <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">group</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+<span class="w">        </span><span class="sd">"""Parse 'specified'-mode fragment atoms: semicolon-separated</span>
+<span class="sd">        1-based index/range groups, one per fragment, e.g. ``'1-3; 4-6; 7'``</span>
+<span class="sd">        for three fragments -- to 0-based index lists."""</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">group</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">";"</span><span class="p">)</span> <span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;BSSE: &#39;Fragment atoms&#39; (specified mode) needs at least two &quot;</span>
-                <span class="s2">&quot;semicolon-separated groups of atoms, e.g. &#39;1-3; 4-6&#39; for two &quot;</span>
-                <span class="s2">&quot;fragments.&quot;</span>
+                <span class="s2">"BSSE: 'Fragment atoms' (specified mode) needs at least two "</span>
+                <span class="s2">"semicolon-separated groups of atoms, e.g. '1-3; 4-6' for two "</span>
+                <span class="s2">"fragments."</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">BSSE</span><span class="o">.</span><span class="n">_parse_indices</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_charges</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse &#39;fragment charges&#39;: a comma/space separated list of integers,</span>
-<span class="sd">        in fragment order. &#39;&#39; (the default, all-neutral) -&gt; [].&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Parse 'fragment charges': a comma/space separated list of integers,</span>
+<span class="sd">        in fragment order. '' (the default, all-neutral) -&gt; []."""</span>
         <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
-        <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_indices</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a 1-based index/range list (``&#39;1-3, 5 7&#39;``) to 0-based indices.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Parse a 1-based index/range list (``'1-3, 5 7'``) to 0-based indices."""</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s2">&quot;-&quot;</span> <span class="ow">in</span> <span class="n">token</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>  <span class="c1"># a range like 1-3 (not a leading minus)</span>
-                <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">"-"</span> <span class="ow">in</span> <span class="n">token</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>  <span class="c1"># a range like 1-3 (not a leading minus)</span>
+                <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
                 <span class="n">indices</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">lo</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">hi</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
             <span class="k">elif</span> <span class="n">token</span><span class="p">:</span>
                 <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">token</span><span class="p">))</span>
@@ -704,7 +704,7 @@
             <span class="n">j</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="n">n_atoms</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;BSSE: atom index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is out of range (1..</span><span class="si">{</span><span class="n">n_atoms</span><span class="si">}</span><span class="s2">).&quot;</span>
+                    <span class="sa">f</span><span class="s2">"BSSE: atom index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is out of range (1..</span><span class="si">{</span><span class="n">n_atoms</span><span class="si">}</span><span class="s2">)."</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
                 <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
@@ -716,97 +716,97 @@
     <span class="c1"># validation gate and any future re-check against it.</span>
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_ghost_xyz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">ghost_atoms</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;An .xyz file of the whole complex with `ghost_atoms` (0-based) flagged</span>
-<span class="sd">        as ORCA ghost centres (element symbol + &#39;:&#39;).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""An .xyz file of the whole complex with `ghost_atoms` (0-based) flagged</span>
+<span class="sd">        as ORCA ghost centres (element symbol + ':')."""</span>
         <span class="n">ghosts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ghost_atoms</span><span class="p">)</span>
         <span class="n">symbols</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span>
         <span class="n">xyzs</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="n">fractionals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">in_cell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)),</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)),</span> <span class="s2">""</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">xyzs</span><span class="p">)):</span>
-            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2">:&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ghosts</span> <span class="k">else</span> <span class="n">symbol</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">4s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2">:"</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ghosts</span> <span class="k">else</span> <span class="n">symbol</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">4s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z</span><span class="si">:</span><span class="s2">15.8f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compound_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">xyz_filename</span><span class="p">,</span> <span class="n">script_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``(compound_block, method, basis)`` -- the ``%Compound`` block</span>
+<span class="w">        </span><span class="sd">"""Return ``(compound_block, method, basis)`` -- the ``%Compound`` block</span>
 <span class="sd">        that runs ``script_name`` with the resolved level of theory injected via</span>
-<span class="sd">        a ``with`` clause.&quot;&quot;&quot;</span>
+<span class="sd">        a ``with`` clause."""</span>
         <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
 
-        <span class="c1"># &quot;rest of input&quot;: the ! keywords the Compound sub-steps also use. SThresh</span>
+        <span class="c1"># "rest of input": the ! keywords the Compound sub-steps also use. SThresh</span>
         <span class="c1"># (a %scf block) and the property blocks are NOT plumbed through Compound</span>
         <span class="c1"># in Phase 1.</span>
         <span class="n">rest</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">aux</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;auxiliary basis&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">aux</span> <span class="ow">and</span> <span class="n">aux</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="n">aux</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">"auxiliary basis"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">aux</span> <span class="ow">and</span> <span class="n">aux</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">"none"</span><span class="p">:</span>
             <span class="n">rest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aux</span><span class="p">)</span>
-        <span class="n">grid</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;grid&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">grid</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"grid"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">grid</span> <span class="o">==</span> <span class="s2">"default"</span><span class="p">:</span>
             <span class="n">grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_grid</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">grid</span> <span class="ow">and</span> <span class="n">grid</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">grid</span> <span class="ow">and</span> <span class="n">grid</span> <span class="o">!=</span> <span class="s2">"default"</span><span class="p">:</span>
             <span class="n">rest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
-        <span class="n">scf</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scf convergence&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">scf</span> <span class="ow">and</span> <span class="n">scf</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+        <span class="n">scf</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scf convergence"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scf</span> <span class="ow">and</span> <span class="n">scf</span> <span class="o">!=</span> <span class="s2">"default"</span><span class="p">:</span>
             <span class="n">rest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scf</span><span class="p">)</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;extra keywords&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">"extra keywords"</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>
             <span class="n">rest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span>
         <span class="c1"># Explicitly-correlated (F12) methods need the matching CABS basis.</span>
         <span class="n">cabs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cabs_keyword</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">cabs</span><span class="p">:</span>
             <span class="n">rest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cabs</span><span class="p">)</span>
-        <span class="n">rest_of_input</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
+        <span class="n">rest_of_input</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
 
-        <span class="n">do_opt</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimize monomers&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span>
-        <span class="n">make_wfx</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save wavefunction&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span>
+        <span class="n">do_opt</span> <span class="o">=</span> <span class="s2">"true"</span> <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"optimize monomers"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span> <span class="k">else</span> <span class="s2">"false"</span>
+        <span class="n">make_wfx</span> <span class="o">=</span> <span class="s2">"true"</span> <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"save wavefunction"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span> <span class="k">else</span> <span class="s2">"false"</span>
 
-        <span class="n">block</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="p">[</span>
-                <span class="sa">f</span><span class="s1">&#39;%Compound &quot;</span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">,</span>
-                <span class="s2">&quot;  with&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s1">&#39;    molecule       = &quot;</span><span class="si">{</span><span class="n">xyz_filename</span><span class="si">}</span><span class="s1">&quot;;&#39;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s1">&#39;    method         = &quot;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s1">&quot;;&#39;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s1">&#39;    basis          = &quot;</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s1">&quot;;&#39;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s1">&#39;    restOfInput    = &quot;</span><span class="si">{</span><span class="n">rest_of_input</span><span class="si">}</span><span class="s1">&quot;;&#39;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">'%Compound "</span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s1">"'</span><span class="p">,</span>
+                <span class="s2">"  with"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">'    molecule       = "</span><span class="si">{</span><span class="n">xyz_filename</span><span class="si">}</span><span class="s1">";'</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">'    method         = "</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s1">";'</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">'    basis          = "</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s1">";'</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">'    restOfInput    = "</span><span class="si">{</span><span class="n">rest_of_input</span><span class="si">}</span><span class="s1">";'</span><span class="p">,</span>
                 <span class="c1"># Neutral closed-shell only in Phase 1 (guarded in run()); the</span>
                 <span class="c1"># same charge/mult is applied to the monomer sub-calculations.</span>
-                <span class="s2">&quot;    charge         = 0;&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;    mult           = 1;&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;    DoOptimization = </span><span class="si">{</span><span class="n">do_opt</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;    ProduceWavefunction = </span><span class="si">{</span><span class="n">make_wfx</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;  end&quot;</span><span class="p">,</span>
+                <span class="s2">"    charge         = 0;"</span><span class="p">,</span>
+                <span class="s2">"    mult           = 1;"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"    DoOptimization = </span><span class="si">{</span><span class="n">do_opt</span><span class="si">}</span><span class="s2">;"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"    ProduceWavefunction = </span><span class="si">{</span><span class="n">make_wfx</span><span class="si">}</span><span class="s2">;"</span><span class="p">,</span>
+                <span class="s2">"  end"</span><span class="p">,</span>
             <span class="p">]</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">block</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">basis</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compound_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The shipped Compound script `script_name` (as text).&quot;&quot;&quot;</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">&quot;orca_step&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="n">script_name</span>
+<span class="w">        </span><span class="sd">"""The shipped Compound script `script_name` (as text)."""</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">"orca_step"</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="n">script_name</span>
         <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
 
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># Run</span>
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_wants_gradients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether this run wants the gradient. Overrides Energy&#39;s version</span>
-<span class="sd">        (which checks the driver-supplied &#39;results&#39; entry) with BSSE&#39;s own</span>
-<span class="sd">        &#39;compute gradient&#39; toggle, so the inherited ``keyword_line`` adds</span>
-<span class="sd">        EnGrad/NumGrad correctly for every counterpoise sub-job.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
+<span class="w">        </span><span class="sd">"""Whether this run wants the gradient. Overrides Energy's version</span>
+<span class="sd">        (which checks the driver-supplied 'results' entry) with BSSE's own</span>
+<span class="sd">        'compute gradient' toggle, so the inherited ``keyword_line`` adds</span>
+<span class="sd">        EnGrad/NumGrad correctly for every counterpoise sub-job."""</span>
+        <span class="k">return</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"compute gradient"</span><span class="p">,</span> <span class="s2">"yes"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span>
 
 <div class="viewcode-block" id="BSSE.run">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.bsse.BSSE.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keywords</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the N-fragment counterpoise correction: generate the 2N + 1</span>
+<span class="w">        </span><span class="sd">"""Run the N-fragment counterpoise correction: generate the 2N + 1</span>
 <span class="sd">        job specs (``seamm_bsse``), run each as an ordinary ORCA job in its</span>
-<span class="sd">        own sub-directory (real atoms + the other fragments&#39; atoms ghosted,</span>
+<span class="sd">        own sub-directory (real atoms + the other fragments' atoms ghosted,</span>
 <span class="sd">        or a fragment alone in its own basis), and combine the results into</span>
 <span class="sd">        the corrected total energy and gradient.</span>
 
 <span class="sd">        Like the other ORCA sub-steps, this is driven by the main ORCA node</span>
 <span class="sd">        (which set up printing and cited the plug-in), so it does not call</span>
 <span class="sd">        ``super().run()``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">current_values_to_dict</span><span class="p">(</span>
             <span class="n">context</span><span class="o">=</span><span class="n">seamm</span><span class="o">.</span><span class="n">flowchart_variables</span><span class="o">.</span><span class="n">_data</span>
         <span class="p">)</span>
@@ -818,43 +818,53 @@
         <span class="n">fragments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fragments</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">configuration</span><span class="p">)</span>
         <span class="n">symbols</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span>
         <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span><span class="p">:</span>
-            <span class="n">composition</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fragment</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">)</span>
+            <span class="n">composition</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fragment</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">)</span>
             <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span>
                 <span class="n">__</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Fragment </span><span class="si">{</span><span class="n">fragment</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;atom(s) (</span><span class="si">{</span><span class="n">composition</span><span class="si">}</span><span class="s2">), charge </span><span class="si">{</span><span class="n">fragment</span><span class="o">.</span><span class="n">charge</span><span class="si">:</span><span class="s2">+d</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
-                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Fragment </span><span class="si">{</span><span class="n">fragment</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">)</span><span class="si">}</span><span class="s2"> "</span>
+                    <span class="sa">f</span><span class="s2">"atom(s) (</span><span class="si">{</span><span class="n">composition</span><span class="si">}</span><span class="s2">), charge </span><span class="si">{</span><span class="n">fragment</span><span class="o">.</span><span class="n">charge</span><span class="si">:</span><span class="s2">+d</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
         <span class="n">specs</span> <span class="o">=</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">generate_job_specs</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
         <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span>
             <span class="n">__</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">specs</span><span class="p">)</span><span class="si">}</span><span class="s2"> ORCA job(s) for the &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span><span class="si">}</span><span class="s2">-fragment counterpoise correction.&quot;</span><span class="p">,</span>
-                <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"Running </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">specs</span><span class="p">)</span><span class="si">}</span><span class="s2"> ORCA job(s) for the "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span><span class="si">}</span><span class="s2">-fragment counterpoise correction."</span><span class="p">,</span>
+                <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="n">want_gradient</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
-        <span class="n">optimize_monomers</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimize monomers&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
-        <span class="n">make_wfx</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save wavefunction&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
-        <span class="c1"># &#39;keepdensity&#39;/wavefunction conversion is only meaningful for the</span>
+        <span class="n">want_gradient</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"compute gradient"</span><span class="p">,</span> <span class="s2">"yes"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span>
+        <span class="n">optimize_monomers</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"optimize monomers"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span>
+        <span class="n">make_wfx</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"save wavefunction"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span>
+        <span class="c1"># 'keepdensity'/wavefunction conversion is only meaningful for the</span>
         <span class="c1"># full cluster (what a following Atomic Charges step wants), not</span>
         <span class="c1"># every fragment sub-job -- build the shared keyword line without it.</span>
-        <span class="n">base_keyword_line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keyword_line</span><span class="p">({</span><span class="o">**</span><span class="n">P</span><span class="p">,</span> <span class="s2">&quot;save wavefunction&quot;</span><span class="p">:</span> <span class="s2">&quot;no&quot;</span><span class="p">})</span>
+        <span class="n">base_keyword_line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keyword_line</span><span class="p">({</span><span class="o">**</span><span class="n">P</span><span class="p">,</span> <span class="s2">"save wavefunction"</span><span class="p">:</span> <span class="s2">"no"</span><span class="p">})</span>
+        <span class="c1"># Blocks the method itself needs (e.g. '%mp2 DLPNO true end' for a</span>
+        <span class="c1"># DLPNO double hybrid); every sub-job must run the same method.</span>
+        <span class="n">method_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_blocks</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
 
         <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">specs</span><span class="p">:</span>
             <span class="n">job_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">spec</span><span class="o">.</span><span class="n">label</span>
             <span class="n">keyword_line</span> <span class="o">=</span> <span class="n">base_keyword_line</span>
-            <span class="c1"># &#39;optimize monomers&#39; (the old Compound script&#39;s DoOptimization)</span>
+            <span class="c1"># 'optimize monomers' (the old Compound script's DoOptimization)</span>
             <span class="c1"># relaxes only the free (fragment-alone) sub-jobs.</span>
             <span class="k">if</span> <span class="n">optimize_monomers</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">FRAGMENT_ALONE</span><span class="p">:</span>
-                <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Opt </span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Opt </span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2">"</span>
             <span class="n">job_make_wfx</span> <span class="o">=</span> <span class="n">make_wfx</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">CLUSTER</span>
             <span class="k">if</span> <span class="n">job_make_wfx</span><span class="p">:</span>
-                <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2"> keepdensity&quot;</span>
+                <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2"> keepdensity"</span>
+            <span class="c1"># A bare single-atom fragment (e.g. Na+ alone) needs exact</span>
+            <span class="c1"># exchange; see Energy.single_center_keywords.</span>
+            <span class="n">single_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_center_keywords</span><span class="p">(</span>
+                <span class="n">keyword_line</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">single_center</span><span class="p">:</span>
+                <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">single_center</span><span class="si">}</span><span class="s2">"</span>
 
             <span class="n">outcome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_job</span><span class="p">(</span>
                 <span class="n">keyword_line</span><span class="p">,</span>
@@ -864,63 +874,64 @@
                 <span class="n">atom_indices</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">,</span>
                 <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">ghost_indices</span><span class="p">,</span>
                 <span class="n">directory</span><span class="o">=</span><span class="n">job_directory</span><span class="p">,</span>
+                <span class="n">extra_blocks</span><span class="o">=</span><span class="n">method_blocks</span><span class="p">,</span>
                 <span class="n">make_wfx</span><span class="o">=</span><span class="n">job_make_wfx</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_gradients</span><span class="p">(</span><span class="n">job_directory</span><span class="p">)</span> <span class="k">if</span> <span class="n">want_gradient</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">want_gradient</span> <span class="ow">and</span> <span class="n">gradient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The ORCA BSSE job &#39;</span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&#39; produced no gradient; &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;see </span><span class="si">{</span><span class="n">job_directory</span><span class="si">}</span><span class="s2">/orca.out and orca.err.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"The ORCA BSSE job '</span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">' produced no gradient; "</span>
+                    <span class="sa">f</span><span class="s2">"see </span><span class="si">{</span><span class="n">job_directory</span><span class="si">}</span><span class="s2">/orca.out and orca.err."</span>
                 <span class="p">)</span>
             <span class="n">results</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">JobResult</span><span class="p">(</span>
-                <span class="n">energy</span><span class="o">=</span><span class="n">outcome</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">],</span> <span class="n">gradient</span><span class="o">=</span><span class="n">gradient</span>
+                <span class="n">energy</span><span class="o">=</span><span class="n">outcome</span><span class="p">[</span><span class="s2">"energy"</span><span class="p">],</span> <span class="n">gradient</span><span class="o">=</span><span class="n">gradient</span>
             <span class="p">)</span>
 
         <span class="n">cp</span> <span class="o">=</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">specs</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">n_atoms</span><span class="o">=</span><span class="n">configuration</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">cp</span><span class="o">.</span><span class="n">gradient_fallback</span><span class="p">:</span>
             <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span>
                 <span class="n">__</span><span class="p">(</span>
-                    <span class="s2">&quot;WARNING: the BSSE-corrected gradient failed the &quot;</span>
-                    <span class="s2">&quot;translational-invariance guard (net force &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cp</span><span class="o">.</span><span class="n">net_force</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> E_h/bohr &gt; tolerance &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">seamm_bsse</span><span class="o">.</span><span class="n">DEFAULT_GRADIENT_TOLERANCE</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> E_h/bohr), &quot;</span>
-                    <span class="s2">&quot;most likely a ghost-centre integration blowup. Falling &quot;</span>
-                    <span class="s2">&quot;back to the uncorrected cluster gradient for the &quot;</span>
-                    <span class="s2">&quot;forces; the energy is still fully counterpoise-&quot;</span>
-                    <span class="s2">&quot;corrected. The BSSE gradient correction being dropped &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;had magnitude </span><span class="si">{</span><span class="n">cp</span><span class="o">.</span><span class="n">gradient_correction_magnitude</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> &quot;</span>
-                    <span class="s2">&quot;E_h/bohr -- small relative to typical forces means the &quot;</span>
-                    <span class="s2">&quot;fallback is almost certainly fine; if it is not small, &quot;</span>
-                    <span class="s2">&quot;treat this point as suspect (exclude/rerun) rather &quot;</span>
-                    <span class="s2">&quot;than trusting either gradient.&quot;</span><span class="p">,</span>
-                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+                    <span class="s2">"WARNING: the BSSE-corrected gradient failed the "</span>
+                    <span class="s2">"translational-invariance guard (net force "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cp</span><span class="o">.</span><span class="n">net_force</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> E_h/bohr &gt; tolerance "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">seamm_bsse</span><span class="o">.</span><span class="n">DEFAULT_GRADIENT_TOLERANCE</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> E_h/bohr), "</span>
+                    <span class="s2">"most likely a ghost-centre integration blowup. Falling "</span>
+                    <span class="s2">"back to the uncorrected cluster gradient for the "</span>
+                    <span class="s2">"forces; the energy is still fully counterpoise-"</span>
+                    <span class="s2">"corrected. The BSSE gradient correction being dropped "</span>
+                    <span class="sa">f</span><span class="s2">"had magnitude </span><span class="si">{</span><span class="n">cp</span><span class="o">.</span><span class="n">gradient_correction_magnitude</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> "</span>
+                    <span class="s2">"E_h/bohr -- small relative to typical forces means the "</span>
+                    <span class="s2">"fallback is almost certainly fine; if it is not small, "</span>
+                    <span class="s2">"treat this point as suspect (exclude/rerun) rather "</span>
+                    <span class="s2">"than trusting either gradient."</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="c1"># For a following Atomic Charges (DDEC6) step: the full cluster&#39;s</span>
-        <span class="c1"># wavefunction, copied up to this node&#39;s own directory (where a</span>
+        <span class="c1"># For a following Atomic Charges (DDEC6) step: the full cluster's</span>
+        <span class="c1"># wavefunction, copied up to this node's own directory (where a</span>
         <span class="c1"># downstream step expects it), mirroring the Energy step.</span>
         <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
-            <span class="n">cluster_wfx</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">CLUSTER</span> <span class="o">/</span> <span class="s2">&quot;orca.wfx&quot;</span>
+            <span class="n">cluster_wfx</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">CLUSTER</span> <span class="o">/</span> <span class="s2">"orca.wfx"</span>
             <span class="k">if</span> <span class="n">cluster_wfx</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cluster_wfx</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;orca.wfx&quot;</span><span class="p">)</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cluster_wfx</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"orca.wfx"</span><span class="p">)</span>
 
         <span class="c1"># Tag stored properties with the level of theory so BSSE-corrected data</span>
         <span class="c1"># is distinguishable in the database.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_string</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
 
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
-            <span class="s2">&quot;uncorrected energy&quot;</span><span class="p">:</span> <span class="n">results</span><span class="p">[</span><span class="n">seamm_bsse</span><span class="o">.</span><span class="n">CLUSTER</span><span class="p">]</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
-            <span class="s2">&quot;bsse correction&quot;</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">bsse_correction</span><span class="p">,</span>
-            <span class="s2">&quot;interaction energy&quot;</span><span class="p">:</span> <span class="n">Q_</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">interaction_energy</span><span class="p">,</span> <span class="s2">&quot;E_h&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">&quot;kJ/mol&quot;</span><span class="p">),</span>
-            <span class="s2">&quot;uncorrected interaction energy&quot;</span><span class="p">:</span> <span class="n">Q_</span><span class="p">(</span>
-                <span class="n">cp</span><span class="o">.</span><span class="n">uncorrected_interaction_energy</span><span class="p">,</span> <span class="s2">&quot;E_h&quot;</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">&quot;kJ/mol&quot;</span><span class="p">),</span>
+            <span class="s2">"success"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"energy"</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+            <span class="s2">"uncorrected energy"</span><span class="p">:</span> <span class="n">results</span><span class="p">[</span><span class="n">seamm_bsse</span><span class="o">.</span><span class="n">CLUSTER</span><span class="p">]</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+            <span class="s2">"bsse correction"</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">bsse_correction</span><span class="p">,</span>
+            <span class="s2">"interaction energy"</span><span class="p">:</span> <span class="n">Q_</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">interaction_energy</span><span class="p">,</span> <span class="s2">"E_h"</span><span class="p">)</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">"kJ/mol"</span><span class="p">),</span>
+            <span class="s2">"uncorrected interaction energy"</span><span class="p">:</span> <span class="n">Q_</span><span class="p">(</span>
+                <span class="n">cp</span><span class="o">.</span><span class="n">uncorrected_interaction_energy</span><span class="p">,</span> <span class="s2">"E_h"</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">"kJ/mol"</span><span class="p">),</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="n">cp</span><span class="o">.</span><span class="n">gradient</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gradients&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">gradient</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"gradients"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">gradient</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cite_references</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cite_bsse</span><span class="p">()</span>
@@ -930,15 +941,15 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_supported</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">configuration</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refuse the cases this sub-step cannot do correctly, with a clear</span>
+<span class="w">        </span><span class="sd">"""Refuse the cases this sub-step cannot do correctly, with a clear</span>
 <span class="sd">        message, rather than returning wrong numbers. Per-fragment</span>
-<span class="sd">        charge/multiplicity consistency (vs. the complex&#39;s own) is checked</span>
+<span class="sd">        charge/multiplicity consistency (vs. the complex's own) is checked</span>
 <span class="sd">        separately, in ``_fragments`` -- it needs the fragment definition</span>
-<span class="sd">        first.&quot;&quot;&quot;</span>
+<span class="sd">        first."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_using_bse</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;The ORCA BSSE sub-step does not yet support Basis Set Exchange &quot;</span>
-                <span class="s2">&quot;bases; choose an ORCA-internal basis set.&quot;</span>
+                <span class="s2">"The ORCA BSSE sub-step does not yet support Basis Set Exchange "</span>
+                <span class="s2">"bases; choose an ORCA-internal basis set."</span>
             <span class="p">)</span>
         <span class="c1"># F12 methods need an F12 basis (matching CABS) -- fail early if not.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_f12</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
@@ -947,31 +958,31 @@
         <span class="c1"># that (e.g. for gold-standard (DLPNO-)CCSD(T) interaction energies).</span>
         <span class="n">method</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span>
-            <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;compute gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradient_availability</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;analytic&quot;</span>
+            <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"compute gradient"</span><span class="p">,</span> <span class="s2">"yes"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradient_availability</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"analytic"</span>
         <span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The ORCA BSSE sub-step needs an analytic gradient, but </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="s2">&quot;has only a numerical one (e.g. (DLPNO-)CCSD(T)). Set &#39;Compute &quot;</span>
-                <span class="s2">&quot;the gradient&#39; to &#39;no&#39; for an energy-only correction, or choose a &quot;</span>
-                <span class="s2">&quot;method/functional with an analytic gradient.&quot;</span>
+                <span class="sa">f</span><span class="s2">"The ORCA BSSE sub-step needs an analytic gradient, but </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="s2">"has only a numerical one (e.g. (DLPNO-)CCSD(T)). Set 'Compute "</span>
+                <span class="s2">"the gradient' to 'no' for an energy-only correction, or choose a "</span>
+                <span class="s2">"method/functional with an analytic gradient."</span>
             <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_cite_bsse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cite the counterpoise method (Boys &amp; Bernardi). Best-effort.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Cite the counterpoise method (Boys &amp; Bernardi). Best-effort."""</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">references</span><span class="o">.</span><span class="n">cite</span><span class="p">(</span>
                 <span class="n">raw</span><span class="o">=</span><span class="n">_BSSE_CITATION</span><span class="p">,</span>
-                <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;boys-bernardi-1970&quot;</span><span class="p">,</span>
-                <span class="n">module</span><span class="o">=</span><span class="s2">&quot;orca_step&quot;</span><span class="p">,</span>
+                <span class="n">alias</span><span class="o">=</span><span class="s2">"boys-bernardi-1970"</span><span class="p">,</span>
+                <span class="n">module</span><span class="o">=</span><span class="s2">"orca_step"</span><span class="p">,</span>
                 <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">note</span><span class="o">=</span><span class="s2">&quot;The counterpoise correction for BSSE.&quot;</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="s2">"The counterpoise correction for BSSE."</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not cite the counterpoise method: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not cite the counterpoise method: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_compound_energies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The five sub-calculation total energies, in the script&#39;s order:</span>
+<span class="w">        </span><span class="sd">"""The five sub-calculation total energies, in the script's order:</span>
 <span class="sd">        ``[E_fragA(AB), E_monA(A), E_fragB(AB), E_monB(B), E_total(AB)]`` (E_h).</span>
 
 <span class="sd">        Each value is the *last* ``FINAL SINGLE POINT ENERGY`` inside its</span>
@@ -979,12 +990,12 @@
 <span class="sd">        correlation + dispersion), and the last one so it is the converged value</span>
 <span class="sd">        when the free monomers are optimized. Returns ``None`` if the five blocks</span>
 <span class="sd">        or their energies cannot be found.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;orca.out&quot;</span>
+<span class="sd">        """</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"orca.out"</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">text</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
-        <span class="n">jobs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;COMPOUND JOB\s+(\d+)&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">))</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="sa">r</span><span class="s2">"COMPOUND JOB\s+(\d+)"</span><span class="p">,</span> <span class="n">text</span><span class="p">))</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">energies</span> <span class="o">=</span> <span class="p">[]</span>
@@ -992,7 +1003,7 @@
             <span class="n">start</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
             <span class="n">end</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
             <span class="n">fspe</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span>
-                <span class="sa">r</span><span class="s2">&quot;FINAL SINGLE POINT ENERGY\s+(-?\d+\.\d+)&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+                <span class="sa">r</span><span class="s2">"FINAL SINGLE POINT ENERGY\s+(-?\d+\.\d+)"</span><span class="p">,</span> <span class="n">text</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">fspe</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
@@ -1004,8 +1015,8 @@
     <span class="c1"># ------------------------------------------------------------------</span>
 <div class="viewcode-block" id="BSSE.analyze">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.bsse.BSSE.analyze">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Store and report the corrected energy, the uncorrected energy, the</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Store and report the corrected energy, the uncorrected energy, the</span>
 <span class="sd">        BSSE correction, the interaction (binding) energy relative to the</span>
 <span class="sd">        separated monomers (corrected and uncorrected, in kJ/mol), the</span>
 <span class="sd">        corrected gradient, and the formation-referenced DfE0 computed from</span>
@@ -1016,7 +1027,7 @@
 <span class="sd">        per-fragment properties would be misleading. Only the corrected</span>
 <span class="sd">        energy/gradient (from the EnGrad file), the raw complex energy, and the</span>
 <span class="sd">        correction are meaningful.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">P</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1026,12 +1037,12 @@
         <span class="n">props</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">key</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
-                <span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;gradients&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;uncorrected energy&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;bsse correction&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;interaction energy&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;uncorrected interaction energy&quot;</span><span class="p">,</span>
+                <span class="s2">"energy"</span><span class="p">,</span>
+                <span class="s2">"gradients"</span><span class="p">,</span>
+                <span class="s2">"uncorrected energy"</span><span class="p">,</span>
+                <span class="s2">"bsse correction"</span><span class="p">,</span>
+                <span class="s2">"interaction energy"</span><span class="p">,</span>
+                <span class="s2">"uncorrected interaction energy"</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">}</span>
@@ -1039,22 +1050,22 @@
         <span class="n">_</span><span class="p">,</span> <span class="n">configuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system_configuration</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
         <span class="c1"># DfE0 (and the atomization energy it needs), referenced to the</span>
-        <span class="c1"># BSSE-corrected complex energy in `props[&quot;energy&quot;]` -- NOT the</span>
+        <span class="c1"># BSSE-corrected complex energy in `props["energy"]` -- NOT the</span>
         <span class="c1"># uncorrected energy, and not any of the five intermediate</span>
         <span class="c1"># sub-calculation energies. Mutates `props` in place, so DfE0/E</span>
         <span class="c1"># atomization flow into store_results/the printed summary below</span>
-        <span class="c1"># exactly as the plain Energy sub-step&#39;s does.</span>
-        <span class="k">if</span> <span class="s2">&quot;energy&quot;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+        <span class="c1"># exactly as the plain Energy sub-step's does.</span>
+        <span class="k">if</span> <span class="s2">"energy"</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
             <span class="n">formation_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_energy_of_formation</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">props</span><span class="p">,</span> <span class="n">configuration</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">formation_text</span><span class="p">:</span>
-                <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;Thermochemistry.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"Thermochemistry.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
                     <span class="n">formation_text</span>
                 <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">store_results</span><span class="p">(</span><span class="n">configuration</span><span class="o">=</span><span class="n">configuration</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">props</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not store results: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not store results: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Energy breakdown: formation/atomization energies first, then the</span>
         <span class="c1"># interaction (binding) energy relative to the separated monomers</span>
@@ -1062,50 +1073,50 @@
         <span class="c1"># uncorrected -&gt; correction -&gt; corrected complex energies. The BSSE</span>
         <span class="c1"># correction is small, so also show it in kcal/mol.</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="s2">&quot;DfE0&quot;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
-            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;Energy of formation (0 K)&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">&#39;DfE0&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;kJ/mol&quot;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="s2">&quot;E atomization&quot;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"DfE0"</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">"Energy of formation (0 K)"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">'DfE0'</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"kJ/mol"</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">"E atomization"</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">[</span><span class="s2">&quot;Atomization energy&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">&#39;E atomization&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;kJ/mol&quot;</span><span class="p">]</span>
+                <span class="p">[</span><span class="s2">"Atomization energy"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">'E atomization'</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"kJ/mol"</span><span class="p">]</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;interaction energy&quot;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"interaction energy"</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">[</span>
-                    <span class="s2">&quot;Interaction energy (CP-corrected)&quot;</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">&#39;interaction energy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;kJ/mol&quot;</span><span class="p">,</span>
+                    <span class="s2">"Interaction energy (CP-corrected)"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">'interaction energy'</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="s2">"kJ/mol"</span><span class="p">,</span>
                 <span class="p">]</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;uncorrected interaction energy&quot;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"uncorrected interaction energy"</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">[</span>
-                    <span class="s2">&quot;Interaction energy (uncorrected)&quot;</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">&#39;uncorrected interaction energy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;kJ/mol&quot;</span><span class="p">,</span>
+                    <span class="s2">"Interaction energy (uncorrected)"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">'uncorrected interaction energy'</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="s2">"kJ/mol"</span><span class="p">,</span>
                 <span class="p">]</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;uncorrected energy&quot;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"uncorrected energy"</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">[</span><span class="s2">&quot;Uncorrected energy&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">&#39;uncorrected energy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;E_h&quot;</span><span class="p">]</span>
+                <span class="p">[</span><span class="s2">"Uncorrected energy"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">'uncorrected energy'</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"E_h"</span><span class="p">]</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;energy&quot;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
-            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;BSSE-corrected energy&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">&#39;energy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;E_h&quot;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="s2">&quot;bsse correction&quot;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
-            <span class="n">corr</span> <span class="o">=</span> <span class="n">props</span><span class="p">[</span><span class="s2">&quot;bsse correction&quot;</span><span class="p">]</span>
-            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;BSSE correction&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">corr</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;E_h&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">"energy"</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">"BSSE-corrected energy"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="s1">'energy'</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"E_h"</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">"bsse correction"</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+            <span class="n">corr</span> <span class="o">=</span> <span class="n">props</span><span class="p">[</span><span class="s2">"bsse correction"</span><span class="p">]</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">"BSSE correction"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">corr</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"E_h"</span><span class="p">])</span>
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">[</span><span class="s2">&quot;BSSE correction&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">corr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">_HARTREE_TO_KCAL</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;kcal/mol&quot;</span><span class="p">]</span>
+                <span class="p">[</span><span class="s2">"BSSE correction"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">corr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">_HARTREE_TO_KCAL</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"kcal/mol"</span><span class="p">]</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
             <span class="n">tmp</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span>
                 <span class="n">rows</span><span class="p">,</span>
-                <span class="n">headers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Property&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">,</span> <span class="s2">&quot;Units&quot;</span><span class="p">],</span>
-                <span class="n">tablefmt</span><span class="o">=</span><span class="s2">&quot;rounded_outline&quot;</span><span class="p">,</span>
-                <span class="n">colalign</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="s2">&quot;left&quot;</span><span class="p">),</span>
+                <span class="n">headers</span><span class="o">=</span><span class="p">[</span><span class="s2">"Property"</span><span class="p">,</span> <span class="s2">"Value"</span><span class="p">,</span> <span class="s2">"Units"</span><span class="p">],</span>
+                <span class="n">tablefmt</span><span class="o">=</span><span class="s2">"rounded_outline"</span><span class="p">,</span>
+                <span class="n">colalign</span><span class="o">=</span><span class="p">(</span><span class="s2">"left"</span><span class="p">,</span> <span class="s2">"right"</span><span class="p">,</span> <span class="s2">"left"</span><span class="p">),</span>
                 <span class="n">disable_numparse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">))</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_report_gradients</span><span class="p">(</span><span class="n">props</span><span class="p">)</span></div>
 </div>
@@ -1139,8 +1150,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1152,7 +1163,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>
