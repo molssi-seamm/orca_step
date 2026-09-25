@@ -894,7 +894,8 @@ def test_keyword_line_dft_functional():
 
 def test_gradient_keyword_analytic_vs_numeric():
     """Analytic-gradient functionals get EnGrad; wB97M(2) and (DLPNO-)CCSD(T)
-    have no analytic gradient, so they get NumGrad."""
+    have no analytic gradient, so they get 'EnGrad NumGrad' -- NumGrad alone
+    makes ORCA run a plain single point with no gradient at all."""
     node = orca_step.Energy()
     base = {
         "use model chemistry": "no",
@@ -923,10 +924,10 @@ def test_gradient_keyword_analytic_vs_numeric():
             "functional": "WB97M(2)",
         }
     )
-    assert "NumGrad" in numeric and "EnGrad" not in numeric
+    assert "EnGrad NumGrad" in numeric
     # DLPNO-CCSD(T): no analytic (T) gradient -> NumGrad.
     cc = node.keyword_line({**base, "method": "DLPNO-CCSD(T)"})
-    assert "NumGrad" in cc and "EnGrad" not in cc
+    assert "EnGrad NumGrad" in cc
 
 
 def test_metadata_functionals_catalog():
@@ -941,8 +942,18 @@ def test_metadata_functionals_catalog():
     cats = set(md["functional categories"])
     assert all(rec["category"] in cats for rec in funcs.values())
     # Only the non-self-consistent double hybrids are numeric-gradient.
+    # Double hybrids without a (working) analytic gradient in ORCA 6.1.1 are
+    # numeric-gradient; every other functional gave an EnGrad gradient.
     numeric = {n for n, r in funcs.items() if r["gradients"] == "numeric"}
-    assert numeric == {"WB97M(2)", "WB97X-2"}
+    assert numeric == {
+        "WB97M(2)",
+        "WB97X-2",
+        "PWPB95",
+        "DSD-PBEB95",
+        "KPR2SCAN50",
+        "WPR2SCAN50",
+    }
+    assert "KPR2SCAN" not in funcs  # not an ORCA keyword; KPR2SCAN50 is
     # DFT is now a single method; the functional is chosen separately.
     assert "DFT" in md["methods"]
     assert "B3LYP" not in md["methods"] and "B3LYP" in funcs
@@ -2359,16 +2370,19 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
         atom_indices=None,
         ghost_atoms=None,
         directory=None,
+        extra_blocks="",
         make_wfx=False,
     ):
         label = Path(directory).name
         calls.append(
             {
                 "label": label,
+                "keyword_line": keyword_line,
                 "charge": charge,
                 "multiplicity": multiplicity,
                 "atom_indices": tuple(atom_indices),
                 "ghost_atoms": frozenset(ghost_atoms or []),
+                "extra_blocks": extra_blocks,
             }
         )
         return {"energy": energies[label], "success": True}
@@ -2406,6 +2420,12 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
     # the cluster job neutral, each -in-cluster job at its OWN fragment's
     # charge (not the cluster's), each -alone job likewise.
     by_label = {c["label"]: c for c in calls}
+    # HF needs no method-specific '%' blocks.
+    assert all(c["extra_blocks"] == "" for c in calls)
+    # The bare single-ion jobs (Na+ alone, Cl- alone) get exact exchange;
+    # every job with more than one center (ghosts included) keeps COSX.
+    for label, c in by_label.items():
+        assert ("NoCOSX" in c["keyword_line"].split()) == label.endswith("-alone")
     assert by_label["cluster"]["charge"] == 0
     assert by_label["1-in-cluster"]["charge"] == 1
     assert by_label["2-in-cluster"]["charge"] == -1
@@ -2442,3 +2462,161 @@ def test_read_engrad(tmp_path):
     assert grad == [[0.1, 0.2, 0.3], [-0.1, -0.2, -0.3]]
     # Missing file -> (None, None).
     assert orca_step.BSSE._read_engrad(tmp_path / "missing.engrad") == (None, None)
+
+
+# ---------------------------------------------------------------------------
+# DLPNO double hybrids: the parent functional on the '!' line plus
+# '%mp2 DLPNO true end' (ORCA 6.1.1 rejects e.g. 'DLPNO-REVDSD-PBEP86-D4/2021')
+# ---------------------------------------------------------------------------
+def _dlpno_P(functional="DLPNO-REVDSD-PBEP86-D4/2021", **extra):
+    return {
+        **_extra_input_base(),
+        "method": "DFT",
+        "functional type": "global double-hybrid",
+        "functional": functional,
+        "auxiliary basis": "AutoAux",
+        "results": {"gradients": {}},
+        **extra,
+    }
+
+
+def test_dlpno_double_hybrid_catalog():
+    """Each analytic-gradient ground-state double hybrid has a DLPNO variant
+    that names its parent keyword; the broken/excited-state ones do not."""
+    funcs = orca_step.metadata["functionals"]
+    rec = funcs["DLPNO-REVDSD-PBEP86-D4/2021"]
+    assert rec["dlpno_of"] == "REVDSD-PBEP86-D4/2021"
+    assert rec["category"] == "global double-hybrid"
+    assert rec["gradients"] == "analytic"
+    assert "orca_dft_id126" in rec["citations"]
+    assert funcs["DLPNO-WB2PLYP"]["category"] == "range-separated double-hybrid"
+    for name in (
+        "WB97M(2)",
+        "WB97X-2",
+        "PWPB95",
+        "DSD-PBEB95",
+        "WPR2SCAN50",
+        "KPR2SCAN50",
+        "SCS-PBE-QIDH",
+        "B3LYP",
+    ):
+        assert f"DLPNO-{name}" not in funcs
+    # Every variant's parent is a real (non-DLPNO) catalog entry.
+    for name, rec in funcs.items():
+        if "dlpno_of" in rec:
+            assert name == f"DLPNO-{rec['dlpno_of']}"
+            assert "dlpno_of" not in funcs[rec["dlpno_of"]]
+
+
+def test_dlpno_double_hybrid_input():
+    """The '!' line carries the parent functional (with EnGrad) and the %mp2
+    block turns on DLPNO; the canonical functional gets no block."""
+    node = orca_step.Energy()
+    P = _dlpno_P()
+    line = node.keyword_line(P)
+    assert line.split()[0] == "REVDSD-PBEP86-D4/2021"
+    assert "EnGrad" in line and "DLPNO" not in line
+    blocks, _ = node.extra_input(P)
+    assert blocks == "%mp2 DLPNO true end"
+    # BSSE passes the same block to each of its counterpoise sub-jobs.
+    assert orca_step.BSSE().method_blocks(P) == "%mp2 DLPNO true end"
+
+    canonical = _dlpno_P("REVDSD-PBEP86-D4/2021")
+    assert node.keyword_line(canonical).split()[0] == "REVDSD-PBEP86-D4/2021"
+    assert node.extra_input(canonical)[0] == ""
+
+
+def test_dlpno_double_hybrid_from_model_chemistry():
+    """The aliased DLPNO model chemistry round-trips to the parent keyword +
+    %mp2 block, and keeps its own identity in the stored model string."""
+    key = "ORCA:DFT@DLPNO-REVDSD-PBEP86-D4_2021/def2-TZVP"
+    opts = orca_step.ORCAStep.get_model_chemistry_options(mdi_only=True)
+    assert opts[key]["mdi_method_arg"] == "DLPNO-REVDSD-PBEP86-D4/2021"
+
+    node = orca_step.Energy()
+    _stub_model_chemistry(
+        node,
+        {
+            "level": key,
+            "owner": "ORCA",
+            "type": "DFT",
+            "method": "DLPNO-REVDSD-PBEP86-D4_2021",
+            "basis": "def2-TZVP",
+        },
+    )
+    P = {**_dlpno_P(), "use model chemistry": "yes", "basis set extrapolation": "none"}
+    assert node.keyword_line(P).startswith("REVDSD-PBEP86-D4/2021 def2-TZVP AutoAux")
+    assert node.method_blocks(P) == "%mp2 DLPNO true end"
+    assert node._model_string(P) == "DFT@DLPNO-REVDSD-PBEP86-D4_2021/def2-TZVP"
+
+
+def test_dlpno_double_hybrid_open_shell_gradient_rejected():
+    """ORCA has DLPNO-MP2 gradients only for RHF: open-shell jobs needing a
+    gradient stop early; energies (incl. NumGrad) and closed shell are fine."""
+    node = orca_step.Energy()
+    check = node._check_dlpno_open_shell
+    dlpno = "DLPNO-REVDSD-PBEP86-D4/2021"
+    for line in (
+        "REVDSD-PBEP86-D4/2021 def2-SVP EnGrad",
+        "REVDSD-PBEP86-D4/2021 def2-SVP TightOpt",
+        "REVDSD-PBEP86-D4/2021 def2-SVP NumFreq",
+    ):
+        with pytest.raises(RuntimeError, match="closed-shell"):
+            check(dlpno, line, 2)
+        check(dlpno, line, 1)  # closed shell: fine
+        check("REVDSD-PBEP86-D4/2021", line, 2)  # canonical: fine
+    check(dlpno, "REVDSD-PBEP86-D4/2021 def2-SVP", 2)
+    check(dlpno, "REVDSD-PBEP86-D4/2021 def2-SVP EnGrad NumGrad", 2)
+
+
+def test_dlpno_double_hybrid_mdi_engine(tmp_path):
+    """The MDI engine is launched with the parent keyword and --dlpno (and no
+    analytic Hessian); orca_mdi writes the %mp2 block."""
+    (tmp_path / "orca.ini").write_text("[local]\ncode = /opt/orca/orca\n")
+
+    def argv(method):
+        return orca_step.ORCAStep.get_mdi_engine_command(
+            _FakeExecutor("local"),
+            {"root": str(tmp_path)},
+            method=method,
+            basis="def2-TZVP",
+            port=8021,
+        )
+
+    dlpno = argv("DLPNO-REVDSD-PBEP86-D4/2021")
+    assert dlpno[dlpno.index("--method") + 1] == "REVDSD-PBEP86-D4/2021"
+    assert "--dlpno" in dlpno
+    assert dlpno[dlpno.index("--hessian") + 1] == "no"
+    assert "--dlpno" not in argv("REVDSD-PBEP86-D4/2021")
+
+    mod = _load_orca_mdi()
+    text = mod.orca_input(
+        "REVDSD-PBEP86-D4/2021 AutoAux",
+        "def2-SVP",
+        0,
+        1,
+        ["H", "H"],
+        [[0, 0, 0], [0, 0, 0.74]],
+        ncores=4,
+        blocks="%mp2 DLPNO true end",
+    )
+    lines = text.splitlines()
+    assert lines[0] == "! REVDSD-PBEP86-D4/2021 AutoAux def2-SVP EnGrad"
+    assert lines.index("%mp2 DLPNO true end") < lines.index("* xyz 0 1")
+
+
+def test_dlpno_double_hybrid_frequencies_numerical():
+    """Like its parent, a DLPNO double hybrid has no analytic Hessian."""
+    assert orca_step.method_has_analytic_hessian("DLPNO-B2PLYP") is False
+
+
+def test_single_center_keywords():
+    """A lone atom or bare ion gets NoCOSX (ORCA's default COSX mis-builds the
+    virtuals of e.g. Na/Mg from scratch, ~5 kJ/mol in the MP2 part); more
+    than one center, or a user-chosen exchange scheme, is left alone."""
+    kw = orca_step.Energy.single_center_keywords
+    line = "REVDSD-PBEP86-D4/2021 def2-TZVPPD AutoAux TIGHTSCF"
+    assert kw(line, 1) == "NoCOSX"
+    assert kw(line, 2) == ""
+    for scheme in ("RIJK", "rijcosx", "NoCOSX", "NORI", "RIJONX"):
+        assert kw(f"{line} {scheme}", 1) == ""

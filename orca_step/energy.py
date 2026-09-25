@@ -46,6 +46,11 @@ _FALLBACK_GUESS = {
 }
 
 # The 'initial guess' enum entries (energy_parameters.py) that are direct ORCA
+# Simple-input keywords that choose how ORCA evaluates exact exchange. If the
+# user picked one, the single-center COSX guard (Energy.single_center_keywords)
+# leaves it alone.
+_EXCHANGE_SCHEME_KEYWORDS = {"RIJCOSX", "COSX", "NOCOSX", "RIJK", "RIJONX", "NORI"}
+
 # 'Guess' keywords, i.e. neither 'default' nor one of the two
 # wavefunction-restart choices (which take their own branch in extra_input,
 # below). Anything else reaching that branch is not a value the current GUI
@@ -215,7 +220,9 @@ class Energy(orca_step.ORCABase):
         """
         method, basis = self._resolve_method_basis(P)
 
-        keywords = [method]
+        # A DLPNO double hybrid is the parent functional on the '!' line plus a
+        # '%mp2' block (see method_blocks).
+        keywords = [orca_step.orca_method_keyword(method)]
         # Basis-set extrapolation (CBS) replaces a fixed basis with ORCA's
         # Extrapolate(...) keyword, which runs both basis sets in one job. When
         # it is off, the basis name goes on the '!' line -- unless it comes from
@@ -244,7 +251,7 @@ class Energy(orca_step.ORCABase):
         # Compute the Cartesian gradient when the gradients result is requested
         # (e.g. by a driver step such as Reaction Path or Thermochemistry). Use
         # the analytic gradient (EnGrad) when ORCA has one for this method, else
-        # fall back to the numerical gradient (NumGrad).
+        # fall back to the numerical gradient (EnGrad NumGrad).
         if self._wants_gradients(P):
             if self._extrapolating(P):
                 raise RuntimeError(
@@ -399,11 +406,64 @@ class Energy(orca_step.ORCABase):
         return md["methods"].get(method, {}).get("gradients", "analytic")
 
     def _gradient_keyword(self, P):
-        """The ORCA keyword requesting the gradient: 'EnGrad' when an analytic
-        gradient exists, otherwise 'NumGrad' (numerical, much more expensive)."""
+        """The ORCA keywords requesting the gradient: 'EnGrad' when an analytic
+        gradient exists, otherwise 'EnGrad NumGrad' (numerical, much more
+        expensive). 'NumGrad' only selects HOW a gradient is computed; on its
+        own ORCA 6.1.1 runs a plain single point and writes no gradient."""
         if self._gradient_availability(P) == "analytic":
             return "EnGrad"
-        return "NumGrad"
+        return "EnGrad NumGrad"
+
+    def method_blocks(self, P):
+        """The '%' blocks the resolved method itself needs ('' if none) -- e.g.
+        ``%mp2 DLPNO true end`` for a DLPNO double hybrid, whose '!' keyword is
+        the parent functional (see ``orca_step.orca_method_keyword``)."""
+        method, _ = self._resolve_method_basis(P)
+        return orca_step.orca_method_blocks(method)
+
+    @staticmethod
+    def single_center_keywords(keyword_line, n_centers):
+        """'NoCOSX' for a one-center job (a lone atom or bare atomic ion), else ''.
+
+        ORCA 6.1.1 with its default RIJCOSX exchange mis-builds the d-type
+        virtual orbitals of some lone atoms when the SCF starts from scratch:
+        the SCF energy is right, but the MP2 part of a double hybrid is off by
+        ~5 kJ/mol (Na 5.0, Na+ 4.9, Mg 4.6), with no warning. Exact exchange
+        (NoCOSX) is right and cheap for one center. Ghost atoms count as
+        centers, so only a bare fragment qualifies. An exchange scheme the
+        user already chose is respected.
+        """
+        if n_centers != 1:
+            return ""
+        words = {w.upper() for w in keyword_line.split()}
+        if words & _EXCHANGE_SCHEME_KEYWORDS:
+            return ""
+        return "NoCOSX"
+
+    def _check_dlpno_open_shell(self, method, keyword_line, multiplicity):
+        """Stop early when an open-shell DLPNO double hybrid needs a gradient.
+
+        ORCA 6.1.1 implements DLPNO-MP2 densities, and hence gradients, only
+        for RHF; an open-shell gradient (EnGrad, Opt, NumFreq, ...) dies in the
+        MP2 module after the SCF. The GUI cannot know the multiplicity, so
+        this is a run-time check. A numerical gradient (NumGrad) needs only
+        energies, so it is fine.
+        """
+        parent = orca_step.dlpno_parent(method)
+        if multiplicity == 1 or parent is None:
+            return
+        needs_gradient = {"ENGRAD", "FREQ", "NUMFREQ", "ANFREQ"}
+        words = {w.upper() for w in keyword_line.split()}
+        if "NUMGRAD" in words:
+            return
+        if words & needs_gradient or any(w.endswith("OPT") for w in words):
+            raise RuntimeError(
+                f"{method} is open shell here (multiplicity {multiplicity}), "
+                "and ORCA can only compute DLPNO-MP2 gradients for closed-shell "
+                "(RHF) systems. Use the canonical (RI-MP2) double hybrid "
+                f"{parent} instead, or compute "
+                "only the energy."
+            )
 
     def extra_input(self, P):
         """Return ``(extra_blocks, extra_files)`` for the ORCA input: the BSE
@@ -413,6 +473,10 @@ class Energy(orca_step.ORCABase):
         blocks."""
         blocks = []
         files = {}
+
+        method_blocks = self.method_blocks(P)
+        if method_blocks:
+            blocks.append(method_blocks)
 
         if self._using_bse(P):
             _, basis = self._resolve_method_basis(P)
@@ -753,6 +817,24 @@ class Energy(orca_step.ORCABase):
         if keywords:
             keyword_line += " " + " ".join(keywords)
 
+        method, _ = self._resolve_method_basis(P)
+        _, configuration = self.get_system_configuration(None)
+        self._check_dlpno_open_shell(
+            method, keyword_line, configuration.spin_multiplicity
+        )
+        single_center = self.single_center_keywords(keyword_line, configuration.n_atoms)
+        if single_center:
+            keyword_line += " " + single_center
+            printer.important(
+                __(
+                    "Note: using exact exchange (NoCOSX) for this single "
+                    "atom, because ORCA's default COSX approximation can "
+                    "give wrong virtual orbitals, and so wrong MP2 energies, "
+                    "for some lone atoms.",
+                    indent=self.indent + 4 * " ",
+                )
+            )
+
         # Warn when we had to fall back to a numerical gradient -- it is much
         # more costly (a displaced single point per degree of freedom).
         if self._wants_gradients(P) and self._gradient_availability(P) == "numeric":
@@ -1007,8 +1089,13 @@ class Energy(orca_step.ORCABase):
         basis = self._strip_bse(basis)
         # The reference database stores functional keywords in their
         # model-chemistry-safe spelling (see orca_step.mc_method_alias),
-        # matching how the atom-energy reference runs were tagged.
-        lookup_method = orca_step.mc_method_alias(method)
+        # matching how the atom-energy reference runs were tagged. A DLPNO
+        # double hybrid uses its canonical parent's atoms: DLPNO cannot run
+        # H at all ("no pairs to be correlated"), the DLPNO effect on an
+        # isolated atom is <0.07 kJ/mol, and a molecule's DLPNO error is not
+        # a sum of atomic ones, so separate DLPNO atoms would buy nothing.
+        parent = orca_step.dlpno_parent(method)
+        lookup_method = orca_step.mc_method_alias(parent or method)
 
         counts = Counter(configuration.atoms.atomic_numbers)
         composition = Counter()
@@ -1116,6 +1203,12 @@ class Energy(orca_step.ORCABase):
                     system_gibbs_energy=G if temperature is not None else None,
                     temperature=temperature,
                 )
+                if parent is not None:
+                    report += (
+                        f"\n\nThe atomic reference energies are those of the "
+                        f"canonical {parent}; the DLPNO approximation changes "
+                        "isolated-atom energies by less than 0.07 kJ/mol."
+                    )
         except FileNotFoundError:
             return (
                 f"Thermochemistry of {name} with {level}\n\n"

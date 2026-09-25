@@ -13,7 +13,9 @@ dependencies:
 
   # Dependencies
   - basis_set_exchange
-  - bibtexparser
+  # orca_step (energy.py) uses the bibtexparser 1.x API (bwriter.BibTexWriter),
+  # which 2.x removed; unpinned, conda brings in 2.x and the docs build fails.
+  - bibtexparser<2
   - tabulate
 
   # Testing

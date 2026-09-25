@@ -343,6 +343,9 @@ class BSSE(Energy):
         # full cluster (what a following Atomic Charges step wants), not
         # every fragment sub-job -- build the shared keyword line without it.
         base_keyword_line = self.keyword_line({**P, "save wavefunction": "no"})
+        # Blocks the method itself needs (e.g. '%mp2 DLPNO true end' for a
+        # DLPNO double hybrid); every sub-job must run the same method.
+        method_blocks = self.method_blocks(P)
 
         results = {}
         for spec in specs:
@@ -355,6 +358,13 @@ class BSSE(Energy):
             job_make_wfx = make_wfx and spec.kind == seamm_bsse.CLUSTER
             if job_make_wfx:
                 keyword_line = f"{keyword_line} keepdensity"
+            # A bare single-atom fragment (e.g. Na+ alone) needs exact
+            # exchange; see Energy.single_center_keywords.
+            single_center = self.single_center_keywords(
+                keyword_line, len(spec.atom_indices)
+            )
+            if single_center:
+                keyword_line = f"{keyword_line} {single_center}"
 
             outcome = self.run_orca_job(
                 keyword_line,
@@ -364,6 +374,7 @@ class BSSE(Energy):
                 atom_indices=spec.atom_indices,
                 ghost_atoms=spec.ghost_indices,
                 directory=job_directory,
+                extra_blocks=method_blocks,
                 make_wfx=job_make_wfx,
             )
             gradient = self._parse_gradients(job_directory) if want_gradient else None

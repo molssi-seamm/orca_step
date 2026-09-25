@@ -47,6 +47,21 @@ narrows the functional list so it stays readable. Double-hybrid functionals
 fitting basis for their MP2 part — leave the *Auxiliary (fitting) basis* on
 ``AutoAux`` and it is supplied automatically.
 
+Most double hybrids also come in a **DLPNO** variant, listed after the canonical
+ones (e.g. ``DLPNO-REVDSD-PBEP86-D4/2021``). It evaluates the MP2 part with
+near-linear-scaling DLPNO-MP2 instead of canonical RI-MP2, so it pays off for
+large systems and clusters; with the default thresholds it differs from the
+canonical result by roughly 0.1 kJ/mol. ORCA rejects some ``DLPNO-`` keywords
+even though its manual lists them (``DLPNO-REVDSD-PBEP86-D4/2021`` is one), so
+the step writes the canonical functional plus ``%mp2 DLPNO true end``, which
+works for all of them. ORCA 6.1 can compute DLPNO-MP2 gradients only for
+closed-shell systems. An open-shell DLPNO double hybrid can therefore give an
+energy but not forces, an optimization, or frequencies, and the step stops
+with an error if you ask for any of those. Energies of formation for a DLPNO
+double hybrid use the canonical functional's atomic reference energies (DLPNO
+changes an isolated atom's energy by less than 0.07 kJ/mol, and cannot treat
+H at all), and the thermochemistry report says so.
+
 Basis set
 ---------
 
@@ -180,8 +195,14 @@ Initial guess and wavefunction restart
 Single atoms and open-shell transition metals are often the hardest systems to
 converge -- a superposition of atomic densities (ORCA's default ``SAD`` guess)
 has little meaning for one atomic center, and can converge to the wrong
-electronic state entirely. The **Initial guess** control sets ORCA's SCF
-starting guess (``Guess`` in the ``%scf`` block):
+electronic state entirely. (Whatever the guess, a single-atom system is run with
+exact exchange, ``NoCOSX``: ORCA's default COSX approximation can build wrong
+virtual orbitals for a lone atom, which puts the MP2 part of a double hybrid off
+by up to ~5 kJ/mol, e.g. for Na, Na\ :sup:`+` and Mg, with no warning. This also
+applies to the bare single-atom fragments of a counterpoise correction. An
+exchange scheme given in the extra keywords is respected.) The **Initial
+guess** control sets ORCA's SCF starting guess (``Guess`` in the ``%scf``
+block):
 
 * ``default`` -- leave ORCA's own default.
 * ``Hueckel``, ``HCore``, ``PAtom``, ``PModel``, ``SAD``, ``SADNO`` -- ORCA's
@@ -286,9 +307,11 @@ below).
 Requesting **gradients** makes the step compute the nuclear gradient (i.e. the
 forces). ORCA computes an *analytic* gradient (``EnGrad``) when one exists for
 the chosen method, and automatically falls back to a *numerical* gradient
-(``NumGrad``) when it does not — for example ``DLPNO-CCSD(T)`` (no analytic
-``(T)`` gradient) and the non-self-consistent ``wB97M(2)`` / ``wB97X-2`` double
-hybrids. A note is printed when the (more expensive) numerical gradient is used.
+(``EnGrad NumGrad``) when it does not — for example ``DLPNO-CCSD(T)`` (no
+analytic ``(T)`` gradient), the non-self-consistent ``wB97M(2)`` / ``wB97X-2``
+double hybrids, and ``PWPB95``, ``DSD-PBEB95``, ``KPR2SCAN50`` and
+``WPR2SCAN50``, whose analytic gradients ORCA 6.1 lacks or cannot compute. A
+note is printed when the (more expensive) numerical gradient is used.
 Most functionals — including the standard double hybrids — have analytic
 gradients, so a single-point DFT run yields the energy **and** forces cheaply,
 which is convenient for generating machine-learned force-field training data.
