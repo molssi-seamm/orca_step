@@ -2620,3 +2620,38 @@ def test_single_center_keywords():
     assert kw(line, 2) == ""
     for scheme in ("RIJK", "rijcosx", "NoCOSX", "NORI", "RIJONX"):
         assert kw(f"{line} {scheme}", 1) == ""
+
+
+def test_template_leaves_code_to_the_path(tmp_path, monkeypatch):
+    """The shipped orca.ini sets no 'code', so ORCA is found on the PATH (by its
+    full path) until the user gives one."""
+    import configparser
+    import importlib.resources
+
+    template = importlib.resources.files("orca_step") / "data" / "orca.ini"
+    config = configparser.ConfigParser()
+    config.read_string(template.read_text())
+    assert config["local"].get("code", "") == ""
+
+    (tmp_path / "orca.ini").write_text(template.read_text())
+    monkeypatch.setattr(
+        orca_step.orca_step.shutil, "which", lambda name: f"/opt/orca/{name}"
+    )
+    result = orca_step.ORCAStep.get_executor_config(
+        _FakeExecutor("local"), {"root": str(tmp_path)}
+    )
+    assert result["code"] == "/opt/orca/orca"
+
+
+def test_bare_orca_name_becomes_the_full_path(monkeypatch):
+    from orca_step.orca_step import full_orca_path
+
+    monkeypatch.setattr(
+        orca_step.orca_step.shutil, "which", lambda name: f"/opt/orca/{name}"
+    )
+    assert full_orca_path("orca") == "/opt/orca/orca"
+    assert full_orca_path("") == "/opt/orca/orca"
+    assert full_orca_path("/Users/me/orca_6_1_1/orca") == "/Users/me/orca_6_1_1/orca"
+    monkeypatch.setattr(orca_step.orca_step.shutil, "which", lambda name: None)
+    assert full_orca_path("") == ""
+    assert full_orca_path("orca") == "orca"

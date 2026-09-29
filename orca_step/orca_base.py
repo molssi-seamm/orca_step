@@ -23,6 +23,8 @@ import seamm_exec
 import seamm_util.printing as printing
 from seamm_util.printing import FormattedText as __
 
+from .orca_step import full_orca_path
+
 logger = logging.getLogger(__name__)
 job = printing.getPrinter()
 printer = printing.getPrinter("ORCA")
@@ -675,7 +677,10 @@ class ORCABase(seamm.Node):
             executor_type in full_config
             and full_config[executor_type].get("code", "") != ""
         ):
-            return dict(full_config.items(executor_type))
+            config = dict(full_config.items(executor_type))
+            # A bare name such as 'orca' must become the full path.
+            config["code"] = full_orca_path(config["code"])
+            return config
 
         # Fall back to finding ORCA on the PATH.
         code = shutil.which("orca")
