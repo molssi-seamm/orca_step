@@ -4,11 +4,28 @@
 
 import configparser
 import importlib.resources
+import os
 from pathlib import Path
 import shutil
 import sys
 
 import orca_step
+
+
+def full_orca_path(code):
+    """The full path of the ORCA executable, which ORCA must be invoked by.
+
+    A bare name such as ``orca`` (from orca.ini, or empty to mean the PATH) is
+    looked up on the PATH; anything else is returned unchanged. Returns "" if
+    ORCA cannot be found.
+    """
+    code = (code or "").strip()
+    if code == "":
+        return shutil.which("orca") or ""
+    if os.sep not in code and " " not in code:
+        return shutil.which(code) or code
+    return code
+
 
 # Basis sets advertised with each method to the Model Chemistry step. ORCA can
 # use any basis it knows; this is a curated, bounded set so the model-chemistry
@@ -190,9 +207,7 @@ class ORCAStep(object):
             if executor_type in full_config
             else {}
         )
-        code = config.get("code", "") or ""
-        if code == "":
-            code = shutil.which("orca") or ""
+        code = full_orca_path(config.get("code", ""))
         if code == "":
             raise RuntimeError(
                 "Could not find the 'orca' executable for the MDI engine. Set "

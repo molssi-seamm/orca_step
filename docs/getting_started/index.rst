@@ -4,25 +4,22 @@ Getting Started
 
 Installation
 ============
-The ORCA step is probably already installed in your SEAMM
-environment, but if not or if you wish to check, follow the directions for the `SEAMM
-Installer`_. The graphical installer is the easiest to use. In the SEAMM conda
-environment, simply type:: 
+The ORCA step is installed with the `SEAMM Manager`_, and is probably already part of
+your SEAMM installation. To add it, or bring it up to date::
 
-  seamm-installer
+  seamm-manager install orca-step
+  seamm-manager update orca-step
 
-or use the shortcut if you installed one. Switch to the second tab, `Components`, and
-check for `orca-step`. If it is not installed, or
-can be updated, check the box next to it and click `Install selected` or `Update
-selected` as appropriate.
+or use the Manager's window. ORCA itself is licensed software that you install
+yourself, so installing the step does not install ORCA. Instead it creates
+``~/SEAMM/orca.ini`` -- or ``orca.ini`` in whichever SEAMM installation you are
+working on -- which tells SEAMM where ORCA is and how to run it. An existing file
+is never changed.
 
-The non-graphical installer is also straightforward::
+.. _SEAMM Manager: https://molssi-seamm.github.io/getting_started/installation/seamm-manager.html
 
-  seamm-installer install --update orca-step
-
-will ensure both that it is installed and up-to-date.
-
-.. _SEAMM Installer: https://molssi-seamm.github.io/installation/index.html
+If ``code`` is not given in ``orca.ini``, SEAMM runs the ``orca`` on your ``PATH``,
+using its full path as ORCA requires.
 
 A first calculation
 ===================

@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.9.29 -- Bugfix: ORCA is always run by its full path
+    * ``code = orca`` in ``orca.ini`` -- a bare name, as in the template -- ran ORCA by
+      that name, but ORCA must be run by its full path to find its sub-programs. A bare
+      name is now looked up on the PATH, for calculations and for the MDI engine.
+    * The template no longer sets ``code``, so until you give the full path SEAMM uses
+      the ``orca`` on your PATH. The SEAMM Manager now writes this template to
+      ``~/SEAMM/orca.ini`` when the step is installed.
+    * The documentation describes installing with the SEAMM Manager.
+
 2026.9.25.1 -- Bugfix: the Energy and related dialogs failed to open
     * Opening the Energy, Optimization, Frequencies or BSSE dialog failed with
       ``module 'seamm_widgets' has no attribute 'LabeledText'`` when the installed
