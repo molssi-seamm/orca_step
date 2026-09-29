@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Getting Started &#8212; SEAMM ORCA Plug-in 2026.9.25.1 documentation</title>
+    <title>Getting Started &#8212; SEAMM ORCA Plug-in 2026.9.29 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=c1ec65af"></script>
+    <script src="../_static/documentation_options.js?v=45a1f582"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Welcome to the documentation for the ORCA SEAMM plug-in" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.9.25.1" />
+  <meta name="docsearch:version" content="2026.9.29" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -512,22 +512,19 @@
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>The ORCA step is probably already installed in your SEAMM
-environment, but if not or if you wish to check, follow the directions for the <a class="reference external" href="https://molssi-seamm.github.io/installation/index.html">SEAMM
-Installer</a>. The graphical installer is the easiest to use. In the SEAMM conda
-environment, simply type:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">seamm</span><span class="o">-</span><span class="n">installer</span>
+<p>The ORCA step is installed with the <a class="reference external" href="https://molssi-seamm.github.io/getting_started/installation/seamm-manager.html">SEAMM Manager</a>, and is probably already part of
+your SEAMM installation. To add it, or bring it up to date:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">seamm</span><span class="o">-</span><span class="n">manager</span> <span class="n">install</span> <span class="n">orca</span><span class="o">-</span><span class="n">step</span>
+<span class="n">seamm</span><span class="o">-</span><span class="n">manager</span> <span class="n">update</span> <span class="n">orca</span><span class="o">-</span><span class="n">step</span>
 </pre></div>
 </div>
-<p>or use the shortcut if you installed one. Switch to the second tab, <cite>Components</cite>, and
-check for <cite>orca-step</cite>. If it is not installed, or
-can be updated, check the box next to it and click <cite>Install selected</cite> or <cite>Update
-selected</cite> as appropriate.</p>
-<p>The non-graphical installer is also straightforward:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">seamm</span><span class="o">-</span><span class="n">installer</span> <span class="n">install</span> <span class="o">--</span><span class="n">update</span> <span class="n">orca</span><span class="o">-</span><span class="n">step</span>
-</pre></div>
-</div>
-<p>will ensure both that it is installed and up-to-date.</p>
+<p>or use the Manager’s window. ORCA itself is licensed software that you install
+yourself, so installing the step does not install ORCA. Instead it creates
+<code class="docutils literal notranslate"><span class="pre">~/SEAMM/orca.ini</span></code> – or <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code> in whichever SEAMM installation you are
+working on – which tells SEAMM where ORCA is and how to run it. An existing file
+is never changed.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">code</span></code> is not given in <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code>, SEAMM runs the <code class="docutils literal notranslate"><span class="pre">orca</span></code> on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>,
+using its full path as ORCA requires.</p>
 </section>
 <section id="a-first-calculation">
 <h2>A first calculation<a class="headerlink" href="#a-first-calculation" title="Link to this heading">#</a></h2>

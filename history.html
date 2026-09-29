@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.9.25.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.9.29 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=c1ec65af"></script>
+    <script src="_static/documentation_options.js?v=45a1f582"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.9.25.1" />
+  <meta name="docsearch:version" content="2026.9.29" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,16 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.9.29 – Bugfix: ORCA is always run by its full path</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">=</span> <span class="pre">orca</span></code> in <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code> – a bare name, as in the template – ran ORCA by
+that name, but ORCA must be run by its full path to find its sub-programs. A bare
+name is now looked up on the PATH, for calculations and for the MDI engine.</p></li>
+<li><p>The template no longer sets <code class="docutils literal notranslate"><span class="pre">code</span></code>, so until you give the full path SEAMM uses
+the <code class="docutils literal notranslate"><span class="pre">orca</span></code> on your PATH. The SEAMM Manager now writes this template to
+<code class="docutils literal notranslate"><span class="pre">~/SEAMM/orca.ini</span></code> when the step is installed.</p></li>
+<li><p>The documentation describes installing with the SEAMM Manager.</p></li>
+</ul>
+</dd>
 <dt>2026.9.25.1 – Bugfix: the Energy and related dialogs failed to open</dt><dd><ul class="simple">
 <li><p>Opening the Energy, Optimization, Frequencies or BSSE dialog failed with
 <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">'seamm_widgets'</span> <span class="pre">has</span> <span class="pre">no</span> <span class="pre">attribute</span> <span class="pre">'LabeledText'</span></code> when the installed

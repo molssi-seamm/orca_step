@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.9.25.1 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.9.29 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=c1ec65af"></script>
+    <script src="../_static/documentation_options.js?v=45a1f582"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.9.25.1" />
+  <meta name="docsearch:version" content="2026.9.29" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1290,6 +1290,15 @@ None if <cite>method</cite> is not one. See the DLPNO note in <code class="docut
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="orca_step.orca_step.full_orca_path">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">full_orca_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#full_orca_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.full_orca_path" title="Link to this definition">#</a></dt>
+<dd><p>The full path of the ORCA executable, which ORCA must be invoked by.</p>
+<p>A bare name such as <code class="docutils literal notranslate"><span class="pre">orca</span></code> (from orca.ini, or empty to mean the PATH) is
+looked up on the PATH; anything else is returned unchanged. Returns “” if
+ORCA cannot be found.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="orca_step.orca_step.mc_method_alias">
 <span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">mc_method_alias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functional</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#mc_method_alias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.mc_method_alias" title="Link to this definition">#</a></dt>
 <dd><p>A model-chemistry-safe spelling of a DFT functional keyword.</p>
@@ -1682,6 +1691,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.dlpno_parent"><code class="docutils literal notranslate"><span class="pre">dlpno_parent()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.full_orca_path"><code class="docutils literal notranslate"><span class="pre">full_orca_path()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.mc_method_alias"><code class="docutils literal notranslate"><span class="pre">mc_method_alias()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.mc_method_unalias"><code class="docutils literal notranslate"><span class="pre">mc_method_unalias()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.method_has_analytic_hessian"><code class="docutils literal notranslate"><span class="pre">method_has_analytic_hessian()</span></code></a></li>
