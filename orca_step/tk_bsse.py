@@ -20,11 +20,6 @@ class TkBSSE(TkEnergy):
     Charges step) IS shown -- see ``_run_detail_keys`` below.
     """
 
-    def _show_cbs(self):
-        """Hide CBS extrapolation: the counterpoise gradient needs a real
-        gradient, which an extrapolated energy does not have."""
-        return False
-
     def create_dialog(self, title="ORCA BSSE"):
         """Build the dialog and make the fragment controls reactive: the
         'Fragment atoms' field is shown only when the fragments are

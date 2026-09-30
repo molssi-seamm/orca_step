@@ -124,9 +124,13 @@ class TkEnergy(seamm.TkNode):
         frame.columnconfigure(0, minsize=0)
         frame.columnconfigure(1, minsize=0)
 
-        use_mc = self["use model chemistry"].get() == "yes"
-        is_dft = (not use_mc) and self["method"].get() == "DFT"
-        is_f12 = (not use_mc) and "F12" in self["method"].get().upper()
+        # Which controls to show, and what they offer, come from the parameters'
+        # rules (orca_step.EnergyParameters), which the flowchart builder uses too.
+        P = self.node.parameters
+        values = self._widget_values()
+
+        def applies(key):
+            return P.applies(key, values)
 
         row = 0
         widgets = []  # full-width (column 0) controls
@@ -139,73 +143,56 @@ class TkEnergy(seamm.TkNode):
             widgets.append(self[key])
             row += 1
 
+        def add_indented(key):
+            nonlocal row
+            self[key].grid(row=row, column=1, columnspan=2, sticky=tk.EW)
+            type_widgets.append(self[key])
+            row += 1
+
         add_full("use model chemistry")
 
         # Method, basis, and basis source come from the model chemistry when it
-        # is used, so they are hidden in that mode. The auxiliary basis and the
-        # rest are ORCA run details that apply either way.
-        if not use_mc:
+        # is used, so they do not apply then. The auxiliary basis and the rest
+        # are ORCA run details that apply either way.
+        if applies("method"):
             add_full("method")
             # Narrow the basis list to what the method allows (F12 -> F12 bases).
-            self._filter_basis_sets()
-            if is_dft:
+            self._filter_basis_sets(values)
+            values = self._widget_values()
+            if applies("functional type"):
                 # Functional type indented one level, functional two levels.
-                self._filter_functionals()
-                self["functional type"].grid(
-                    row=row, column=1, columnspan=2, sticky=tk.EW
-                )
-                type_widgets.append(self["functional type"])
-                row += 1
+                self._filter_functionals(values)
+                add_indented("functional type")
                 self["functional"].grid(row=row, column=2, columnspan=1, sticky=tk.EW)
                 func_widgets.append(self["functional"])
                 row += 1
-            # CBS extrapolation replaces the fixed basis: show the family instead
-            # of the basis/basis-source controls when it is on. It is hidden for
-            # sub-steps that need a gradient (e.g. Optimization), where an
-            # extrapolated energy is unusable, and for F12 methods (which fix a
-            # specific F12 basis).
-            show_cbs = self._show_cbs() and not is_f12
-            if show_cbs:
+            # CBS extrapolation replaces the fixed basis. It does not apply to
+            # sub-steps that need a gradient (e.g. Optimization) or to F12 methods.
+            if applies("basis set extrapolation"):
                 add_full("basis set extrapolation")
-            if show_cbs and self["basis set extrapolation"].get() != "none":
+            if applies("extrapolation family"):
                 add_full("extrapolation family")
-            else:
+            if applies("basis"):
                 add_full("basis")
-                # The source is forced to ORCA-internal for F12 (no BSE CABS),
-                # so hide the control in that case.
-                if not is_f12:
-                    add_full("basis source")
+            if applies("basis source"):
+                add_full("basis source")
 
         for key in self._run_detail_keys():
-            # 'checkpoint name' only applies (and is only shown, indented one
-            # level) when 'save orbital checkpoint' is on.
+            if not applies(key):
+                continue
+            # 'checkpoint name' is shown indented under 'save orbital checkpoint'.
             if key == "checkpoint name":
-                if self["save orbital checkpoint"].get() == "yes":
-                    self[key].grid(row=row, column=1, columnspan=2, sticky=tk.EW)
-                    type_widgets.append(self[key])
-                    row += 1
+                add_indented(key)
                 continue
 
             add_full(key)
 
-            # 'initial guess' choosing a wavefunction reveals its own
-            # indented sub-controls right below it: 'specified orbitals'
-            # only for that specific choice, 'if wavefunction not found' for
-            # either wavefunction choice (see energy.extra_input).
+            # 'initial guess' choosing a wavefunction reveals its own indented
+            # sub-controls right below it (see energy.extra_input).
             if key == "initial guess":
-                guess = self[key].get()
-                if guess in ("Previous wavefunction", "Specified orbitals"):
-                    if guess == "Specified orbitals":
-                        self["specified orbitals"].grid(
-                            row=row, column=1, columnspan=2, sticky=tk.EW
-                        )
-                        type_widgets.append(self["specified orbitals"])
-                        row += 1
-                    self["if wavefunction not found"].grid(
-                        row=row, column=1, columnspan=2, sticky=tk.EW
-                    )
-                    type_widgets.append(self["if wavefunction not found"])
-                    row += 1
+                for sub in ("specified orbitals", "if wavefunction not found"):
+                    if applies(sub):
+                        add_indented(sub)
 
         # Align the full-width labels; indent the nested widgets by the leftover
         # label width plus a fixed gap, so each nested combobox sits ~30 px to the
@@ -222,11 +209,18 @@ class TkEnergy(seamm.TkNode):
         self.setup_results()
         return row
 
-    def _show_cbs(self):
-        """Whether to show the CBS basis-set-extrapolation controls. Off for
-        sub-steps that need a gradient (Optimization overrides this): an
-        extrapolated energy has no gradient, so it cannot drive them."""
-        return True
+    def _widget_values(self):
+        """The dialog's current values, {name: value}, for the parameters' rules."""
+        values = {}
+        for key in self.node.parameters:
+            if key == "results" or key not in self:
+                continue
+            try:
+                value = self[key].get()
+            except Exception:
+                continue
+            values[key] = value[0] if isinstance(value, tuple) else value
+        return values
 
     def _run_detail_keys(self):
         """The full-width 'run detail' controls laid out below the level of
@@ -255,34 +249,29 @@ class TkEnergy(seamm.TkNode):
             if callable(browse):
                 browse()
 
-    def _filter_basis_sets(self):
-        """Restrict the basis dropdown to the choices valid for the current
-        method, so the user can only pick a usable basis.
+    def _filter_basis_sets(self, values=None):
+        """Offer only the bases the method allows, and set what it requires.
 
-        Explicitly-correlated F12 methods work only with the F12-optimized
-        orbital bases (they need a matching CABS), so when one is chosen the list
-        is narrowed to those and the source is forced to ORCA-internal (the Basis
+        From the parameters' rules: explicitly-correlated F12 methods take only the
+        F12-optimized bases (they need a matching CABS), from ORCA itself (the Basis
         Set Exchange has no CABS). Otherwise the full curated list is offered.
         """
-        all_bases = list(orca_step.metadata["basis sets"])
-        if "F12" in self["method"].get().upper():
-            f12 = [b for b in all_bases if b.upper().endswith("-F12")]
-            self["basis"].config(values=f12)
-            if self["basis"].get() not in f12:
-                self["basis"].set("cc-pVTZ-F12" if "cc-pVTZ-F12" in f12 else f12[0])
-            self["basis source"].set("ORCA internal")
-        else:
-            self["basis"].config(values=all_bases)
+        P = self.node.parameters
+        values = self._widget_values() if values is None else values
+        allowed = P.choices("basis", values)
+        if allowed is None:
+            allowed = orca_step.metadata["basis sets"]
+        self["basis"].config(values=list(allowed))
+        for key, value in P.implied(values).items():
+            if key in ("basis", "basis source"):
+                self[key].set(value)
 
-    def _filter_functionals(self):
-        """Restrict the functional pulldown to the functionals of the currently
-        selected functional type, keeping the selection valid."""
-        ftype = self["functional type"].get()
-        funcs = [
-            name
-            for name, rec in orca_step.metadata["functionals"].items()
-            if rec["category"] == ftype
-        ]
+    def _filter_functionals(self, values=None):
+        """Offer only the functionals of the chosen functional type, keeping the
+        selection valid."""
+        P = self.node.parameters
+        values = self._widget_values() if values is None else values
+        funcs = list(P.choices("functional", values) or ())
         self["functional"].combobox.configure(values=funcs)
         if funcs and self["functional"].get() not in funcs:
             self["functional"].set(funcs[0])

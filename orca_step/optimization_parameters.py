@@ -27,6 +27,9 @@ class OptimizationParameters(EnergyParameters):
         },
     }
 
+    # An optimization needs a gradient, which an extrapolated energy lacks.
+    extrapolation = False
+
     def __init__(self, defaults={}, data=None):
         logger.debug("OptimizationParameters.__init__")
         super().__init__(

@@ -33,6 +33,7 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "method": {
+            "applies_when": {"use model chemistry": "no"},
             "default": "DLPNO-CCSD(T)",
             "kind": "enum",
             "default_units": "",
@@ -46,6 +47,7 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "functional type": {
+            "applies_when": {"method": "DFT"},
             "default": "global hybrid",
             "kind": "enum",
             "default_units": "",
@@ -60,6 +62,7 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "functional": {
+            "applies_when": {"method": "DFT"},
             "default": "B3LYP",
             "kind": "enum",
             "default_units": "",
@@ -74,6 +77,7 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "basis": {
+            "applies_when": {"use model chemistry": "no"},
             "default": "def2-TZVP",
             "kind": "special",
             "widget": "seamm_widgets.BasisSetField",
@@ -90,6 +94,7 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "basis source": {
+            "applies_when": {"use model chemistry": "no"},
             "default": "ORCA internal",
             "kind": "enum",
             "default_units": "",
@@ -106,6 +111,7 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "basis set extrapolation": {
+            "applies_when": {"use model chemistry": "no"},
             "default": "none",
             "kind": "enum",
             "default_units": "",
@@ -124,6 +130,7 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "extrapolation family": {
+            "applies_when": {"basis set extrapolation": {"not": "none"}},
             "default": "cc",
             "kind": "enum",
             "default_units": "",
@@ -241,6 +248,9 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "if wavefunction not found": {
+            "applies_when": {
+                "initial guess": ["Previous wavefunction", "Specified orbitals"]
+            },
             "default": "Throw an error",
             "kind": "enum",
             "default_units": "",
@@ -289,6 +299,7 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "checkpoint name": {
+            "applies_when": {"save orbital checkpoint": "yes"},
             "default": "default",
             "kind": "string",
             "default_units": "",
@@ -310,6 +321,7 @@ class EnergyParameters(seamm.Parameters):
             ),
         },
         "specified orbitals": {
+            "applies_when": {"initial guess": "Specified orbitals"},
             "default": "default",
             "kind": "string",
             "default_units": "",
@@ -424,6 +436,108 @@ class EnergyParameters(seamm.Parameters):
             "help_text": "The results to save to variables or in tables.",
         },
     }
+
+    # Rules shared by the dialog and the flowchart builder (see seamm.Parameters).
+    # The simple conditions are the "applies_when" entries above.
+
+    extrapolation = True
+    """Whether basis-set extrapolation can be used. False for steps that need a
+    gradient or Hessian, which an extrapolated energy does not have."""
+
+    unused = ()
+    """Parameters that this kind of step never uses."""
+
+    @staticmethod
+    def _is_f12(values):
+        return "F12" in str(values.get("method", "")).upper()
+
+    def _extrapolating(self, values):
+        return self.applies("basis set extrapolation", values) and values.get(
+            "basis set extrapolation"
+        ) not in (None, "none")
+
+    def applies(self, key, values=None, _seen=None):
+        """As seamm.Parameters.applies, plus: no extrapolation for F12 methods (they
+        need their own F12 basis) or for steps that need a gradient; the basis and
+        its source are replaced by the extrapolation when it is used; and the basis
+        source is always ORCA's own for F12 (the Basis Set Exchange has no CABS)."""
+        if values is None:
+            values = self.current_values()
+        if key in self.unused:
+            return False
+        if not super().applies(key, values, _seen):
+            return False
+        if key == "basis set extrapolation":
+            return self.extrapolation and not self._is_f12(values)
+        if key == "basis":
+            return not self._extrapolating(values)
+        if key == "basis source":
+            return not self._extrapolating(values) and not self._is_f12(values)
+        return True
+
+    def not_applicable_reason(self, key, values=None):
+        """Why a parameter does not apply, for the builder's messages."""
+        if values is None:
+            values = self.current_values()
+        if key in self.unused:
+            return "this kind of step does not use it"
+        reason = super().not_applicable_reason(key, values)
+        if reason:
+            return reason
+        if key == "basis set extrapolation":
+            if not self.extrapolation:
+                return (
+                    "this step needs a gradient (or Hessian), which an extrapolated "
+                    "energy does not have"
+                )
+            if self._is_f12(values):
+                return "F12 methods use their own F12 basis, not an extrapolation"
+        if key in ("basis", "basis source") and self._extrapolating(values):
+            return "the basis-set extrapolation replaces it"
+        if key == "basis source" and self._is_f12(values):
+            return "F12 methods use ORCA's own basis sets (they need a CABS)"
+        return ""
+
+    def choices(self, key, values=None):
+        """F12 methods take only the F12 bases; the functionals are those of the
+        functional type."""
+        if values is None:
+            values = self.current_values()
+        if key == "basis" and self._is_f12(values):
+            return tuple(
+                b
+                for b in orca_step.metadata["basis sets"]
+                if b.upper().endswith("-F12")
+            )
+        if key == "functional":
+            ftype = values.get("functional type")
+            if not self._is_expr(ftype):
+                return tuple(
+                    name
+                    for name, record in orca_step.metadata["functionals"].items()
+                    if record["category"] == ftype
+                )
+        return super().choices(key, values)
+
+    def implied(self, values=None):
+        """An F12 method needs an F12 basis from ORCA itself; a functional implies
+        its functional type."""
+        if values is None:
+            values = self.current_values()
+        result = {}
+        if self.applies("method", values) and self._is_f12(values):
+            f12 = self.choices("basis", values)
+            basis = values.get("basis")
+            name = basis.get("name") if isinstance(basis, dict) else basis
+            if name not in f12 and not self._is_expr(name):
+                result["basis"] = "cc-pVTZ-F12" if "cc-pVTZ-F12" in f12 else f12[0]
+            result["basis source"] = "ORCA internal"
+        if self.applies("functional", values):
+            functional = values.get("functional")
+            record = orca_step.metadata["functionals"].get(functional)
+            if record is not None:
+                result["functional type"] = record["category"]
+        return result
 
     def __init__(self, defaults={}, data=None):
         """Initialize with the parameters above plus any overrides."""

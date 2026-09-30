@@ -35,6 +35,7 @@ class BSSEParameters(EnergyParameters):
             ),
         },
         "fragment atoms": {
+            "applies_when": {"fragments": "specified"},
             "default": "",
             "kind": "string",
             "default_units": "",
@@ -102,6 +103,20 @@ class BSSEParameters(EnergyParameters):
             ),
         },
     }
+
+    # The counterpoise gradient needs a real gradient, which an extrapolated energy
+    # lacks; and these Energy settings are not used by the BSSE step.
+    extrapolation = False
+    unused = (
+        "sthresh",
+        "initial guess",
+        "save orbital checkpoint",
+        "checkpoint name",
+        "extra blocks",
+        "bond orders",
+        "Hirshfeld charges",
+        "polarizability",
+    )
 
     def __init__(self, defaults={}, data=None):
         logger.debug("BSSEParameters.__init__")

@@ -55,6 +55,17 @@ class FrequenciesParameters(EnergyParameters):
         },
     }
 
+    # Frequencies need a Hessian, which an extrapolated energy lacks; and these
+    # Energy settings are not used by a frequency calculation.
+    extrapolation = False
+    unused = (
+        "sthresh",
+        "bond orders",
+        "Hirshfeld charges",
+        "polarizability",
+        "save wavefunction",
+    )
+
     def __init__(self, defaults={}, data=None):
         logger.debug("FrequenciesParameters.__init__")
         super().__init__(
