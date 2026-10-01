@@ -539,9 +539,19 @@ class EnergyParameters(seamm.Parameters):
                 result["functional type"] = record["category"]
         return result
 
+    # Methods renamed since flowcharts were saved: old name -> current name
+    renamed_methods = {
+        # 2026-07-13: ORCA rejects the bare keyword; the canonical one has /RI
+        "CCSD(T)-F12D": "CCSD(T)-F12D/RI",
+    }
+
     def __init__(self, defaults={}, data=None):
         """Initialize with the parameters above plus any overrides."""
         logger.debug("EnergyParameters.__init__")
+        if data is not None:
+            entry = data.get("method")
+            if isinstance(entry, dict) and entry.get("value") in self.renamed_methods:
+                entry["value"] = self.renamed_methods[entry["value"]]
         super().__init__(
             defaults={**EnergyParameters.parameters, **defaults}, data=data
         )
