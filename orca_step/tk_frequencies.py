@@ -20,11 +20,6 @@ class TkFrequencies(TkEnergy):
     Hessian); the Energy property toggles are not shown.
     """
 
-    def _show_cbs(self):
-        """Hide CBS extrapolation: a frequency calculation needs a Hessian,
-        which an extrapolated energy does not have."""
-        return False
-
     def _run_detail_keys(self):
         return (
             "auxiliary basis",

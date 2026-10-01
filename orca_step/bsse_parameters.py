@@ -35,6 +35,7 @@ class BSSEParameters(EnergyParameters):
             ),
         },
         "fragment atoms": {
+            "applies_when": {"fragments": "specified"},
             "default": "",
             "kind": "string",
             "default_units": "",
@@ -46,7 +47,9 @@ class BSSEParameters(EnergyParameters):
                 "'specified': one semicolon-separated group per fragment, each "
                 "a comma/space list and/or ranges of 1-based atom numbers, "
                 "e.g. '1-3; 4-6' for two fragments or '1-3; 4-6; 7' for three. "
-                "Ignored when the fragments are found automatically."
+                "The last group may be 'rest' for the atoms in no other group, "
+                "e.g. '1-3; rest'. Ignored when the fragments are found "
+                "automatically."
             ),
         },
         "fragment charges": {
@@ -103,6 +106,35 @@ class BSSEParameters(EnergyParameters):
         },
     }
 
+    # The counterpoise gradient needs a real gradient, which an extrapolated energy
+    # lacks; and these Energy settings are not used by the BSSE step.
+    extrapolation = False
+    unused = (
+        "sthresh",
+        "initial guess",
+        "save orbital checkpoint",
+        "checkpoint name",
+        "extra blocks",
+        "bond orders",
+        "Hirshfeld charges",
+        "polarizability",
+    )
+
     def __init__(self, defaults={}, data=None):
         logger.debug("BSSEParameters.__init__")
+        if data is not None:
+            self._translate_old(data)
         super().__init__(defaults={**BSSEParameters.parameters, **defaults}, data=data)
+
+    @staticmethod
+    def _translate_old(data):
+        """Flowcharts saved before BSSE took N fragments (2026-08-04) had two:
+        'auto (2 molecules)', or 'fragment A atoms' with the rest as fragment B."""
+        entry = data.get("fragments")
+        if isinstance(entry, dict) and entry.get("value") == "auto (2 molecules)":
+            entry["value"] = "auto (molecules)"
+        if "fragment A atoms" in data:
+            old = data.pop("fragment A atoms")
+            atoms = old.get("value") if isinstance(old, dict) else old
+            if atoms and "fragment atoms" not in data:
+                data["fragment atoms"] = {"value": f"{atoms}; rest", "units": None}

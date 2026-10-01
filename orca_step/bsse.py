@@ -172,15 +172,29 @@ class BSSE(Energy):
     def _parse_fragment_groups(text, n_atoms):
         """Parse 'specified'-mode fragment atoms: semicolon-separated
         1-based index/range groups, one per fragment, e.g. ``'1-3; 4-6; 7'``
-        for three fragments -- to 0-based index lists."""
+        for three fragments -- to 0-based index lists. The last group may be
+        ``rest``: the atoms in no other group (``'1-3; rest'``)."""
         groups = [group.strip() for group in str(text).split(";") if group.strip()]
         if len(groups) < 2:
             raise RuntimeError(
                 "BSSE: 'Fragment atoms' (specified mode) needs at least two "
                 "semicolon-separated groups of atoms, e.g. '1-3; 4-6' for two "
-                "fragments."
+                "fragments, or '1-3; rest'."
             )
-        return [BSSE._parse_indices(group, n_atoms) for group in groups]
+        rest = groups[-1].lower() == "rest"
+        if any(group.lower() == "rest" for group in groups[: len(groups) - 1]):
+            raise RuntimeError("BSSE: 'rest' can only be the last group of atoms.")
+        result = [
+            BSSE._parse_indices(group, n_atoms)
+            for group in (groups[:-1] if rest else groups)
+        ]
+        if rest:
+            used = {i for group in result for i in group}
+            remaining = [i for i in range(n_atoms) if i not in used]
+            if not remaining:
+                raise RuntimeError("BSSE: no atoms are left for the 'rest' group.")
+            result.append(remaining)
+        return result
 
     @staticmethod
     def _parse_charges(text):
