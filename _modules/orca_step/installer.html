@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.frequencies_parameters &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
+    <title>orca_step.installer &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
   
   
   
@@ -45,7 +45,7 @@
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/orca_step/frequencies_parameters';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/orca_step/installer';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -472,7 +472,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">orca_step.frequencies_parameters</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">orca_step.installer</span></li>
   </ul>
 </nav>
 </div>
@@ -489,93 +489,51 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for orca_step.frequencies_parameters</h1><div class="highlight"><pre>
+  <h1>Source code for orca_step.installer</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="sd">"""Control parameters for the ORCA Frequencies (Hessian) sub-step.</span>
+<span class="sd">"""Installer for the ORCA plug-in.</span>
 
-<span class="sd">Extends the Energy parameters (level of theory, basis, ...) with the choice of</span>
-<span class="sd">analytic vs numerical second derivatives and the thermochemistry temperature.</span>
+<span class="sd">ORCA is licensed software installed manually from https://www.faccts.de / the</span>
+<span class="sd">ORCA forum, so this installer locates the existing ``orca`` executable and</span>
+<span class="sd">registers its full path in seamm.ini (ORCA needs its full path to launch its</span>
+<span class="sd">sub-programs).</span>
 <span class="sd">"""</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">seamm</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">.energy_parameters</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnergyParameters</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seamm_installer</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="FrequenciesParameters">
-<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frequencies_parameters.FrequenciesParameters">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">FrequenciesParameters</span><span class="p">(</span><span class="n">EnergyParameters</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""The Frequencies parameters: the Energy parameters plus the second-</span>
-<span class="sd">    derivative method and the thermochemistry temperature."""</span>
+<div class="viewcode-block" id="Installer">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.installer.Installer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Installer</span><span class="p">(</span><span class="n">seamm_installer</span><span class="o">.</span><span class="n">InstallerBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Locate the ORCA executable and register it in seamm.ini."""</span>
 
-    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"second derivatives"</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"default"</span><span class="p">,</span>
-            <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
-            <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-            <span class="s2">"enumeration"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"default"</span><span class="p">,</span> <span class="s2">"analytic"</span><span class="p">,</span> <span class="s2">"numerical"</span><span class="p">),</span>
-            <span class="s2">"format_string"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-            <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Second derivatives:"</span><span class="p">,</span>
-            <span class="s2">"help_text"</span><span class="p">:</span> <span class="p">(</span>
-                <span class="s2">"How to compute the Hessian. 'default' uses ORCA's analytic "</span>
-                <span class="s2">"second derivative (AnFreq) when one is available for the "</span>
-                <span class="s2">"method (HF, most DFT functionals, MP2), and falls back to "</span>
-                <span class="s2">"the numerical one (NumFreq) otherwise -- the right choice "</span>
-                <span class="s2">"for almost every case. 'analytic' and 'numerical' force one "</span>
-                <span class="s2">"or the other regardless of whether the method has an "</span>
-                <span class="s2">"analytic Hessian: 'analytic' fails for a method without one "</span>
-                <span class="s2">"(e.g. a double hybrid or (DLPNO-)CCSD(T)); 'numerical' "</span>
-                <span class="s2">"(finite-differencing the gradient) works for any method "</span>
-                <span class="s2">"that has a gradient, but is considerably more expensive."</span>
-            <span class="p">),</span>
-        <span class="p">},</span>
-        <span class="s2">"temperature"</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"298.15"</span><span class="p">,</span>
-            <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"float"</span><span class="p">,</span>
-            <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">"K"</span><span class="p">,</span>
-            <span class="s2">"enumeration"</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
-            <span class="s2">"format_string"</span><span class="p">:</span> <span class="s2">".2f"</span><span class="p">,</span>
-            <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Temperature:"</span><span class="p">,</span>
-            <span class="s2">"help_text"</span><span class="p">:</span> <span class="p">(</span>
-                <span class="s2">"The temperature for the thermochemistry (zero-point energy, "</span>
-                <span class="s2">"thermal corrections, entropy, and Gibbs free energy). The "</span>
-                <span class="s2">"pressure is ORCA's default of 1 atm."</span>
-            <span class="p">),</span>
-        <span class="p">},</span>
-    <span class="p">}</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Initializing the ORCA installer object."</span><span class="p">)</span>
 
-    <span class="c1"># Frequencies need a Hessian, which an extrapolated energy lacks; and these</span>
-    <span class="c1"># Energy settings are not used by a frequency calculation.</span>
-    <span class="n">extrapolation</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">unused</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">"sthresh"</span><span class="p">,</span>
-        <span class="s2">"bond orders"</span><span class="p">,</span>
-        <span class="s2">"Hirshfeld charges"</span><span class="p">,</span>
-        <span class="s2">"polarizability"</span><span class="p">,</span>
-        <span class="s2">"save wavefunction"</span><span class="p">,</span>
-    <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">section</span> <span class="o">=</span> <span class="s2">"orca-step"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">executables</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"orca"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resource_path</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">"orca_step"</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"data"</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{},</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"FrequenciesParameters.__init__"</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
-                <span class="o">**</span><span class="n">FrequenciesParameters</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">seamm</span><span class="o">.</span><span class="n">standard_parameters</span><span class="o">.</span><span class="n">structure_handling_parameters</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">defaults</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
-        <span class="p">)</span>
+<div class="viewcode-block" id="Installer.exe_version">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.installer.Installer.exe_version">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exe_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the ORCA name and version.</span>
 
-        <span class="c1"># A frequency calculation does not change the geometry, so default to</span>
-        <span class="c1"># overwriting the current configuration (storing the results/properties</span>
-        <span class="c1"># there) and keeping its name.</span>
-        <span class="bp">self</span><span class="p">[</span><span class="s2">"structure handling"</span><span class="p">]</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s2">"Structure handling:"</span>
-        <span class="bp">self</span><span class="p">[</span><span class="s2">"configuration name"</span><span class="p">]</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="s2">"keep current name"</span></div>
+<span class="sd">        ORCA has no stable ``--version`` flag (the version is in the run banner),</span>
+<span class="sd">        so this just confirms the executable is reachable.</span>
+<span class="sd">        """</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"code"</span><span class="p">,</span> <span class="s2">"orca"</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="ow">or</span> <span class="n">code</span>
+        <span class="k">return</span> <span class="s2">"ORCA"</span><span class="p">,</span> <span class="s2">"unknown"</span> <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"unknown"</span></div>
+</div>
 
 </pre></div>
 

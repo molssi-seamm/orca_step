@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.9.29 documentation</title>
+    <title>orca_step.tk_energy &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=45a1f582"></script>
+    <script src="../../_static/documentation_options.js?v=65cfade2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.9.29" />
+  <meta name="docsearch:version" content="2026.10.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -626,9 +626,13 @@
         <span class="n">frame</span><span class="o">.</span><span class="n">columnconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">minsize</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">frame</span><span class="o">.</span><span class="n">columnconfigure</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">minsize</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="n">use_mc</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"use model chemistry"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"yes"</span>
-        <span class="n">is_dft</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">use_mc</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"DFT"</span>
-        <span class="n">is_f12</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">use_mc</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"F12"</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="c1"># Which controls to show, and what they offer, come from the parameters'</span>
+        <span class="c1"># rules (orca_step.EnergyParameters), which the flowchart builder uses too.</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_values</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">applies</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">P</span><span class="o">.</span><span class="n">applies</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
 
         <span class="n">row</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">widgets</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># full-width (column 0) controls</span>
@@ -641,73 +645,56 @@
             <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
             <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
 
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_indented</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="k">nonlocal</span> <span class="n">row</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span><span class="p">)</span>
+            <span class="n">type_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+
         <span class="n">add_full</span><span class="p">(</span><span class="s2">"use model chemistry"</span><span class="p">)</span>
 
         <span class="c1"># Method, basis, and basis source come from the model chemistry when it</span>
-        <span class="c1"># is used, so they are hidden in that mode. The auxiliary basis and the</span>
-        <span class="c1"># rest are ORCA run details that apply either way.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">use_mc</span><span class="p">:</span>
+        <span class="c1"># is used, so they do not apply then. The auxiliary basis and the rest</span>
+        <span class="c1"># are ORCA run details that apply either way.</span>
+        <span class="k">if</span> <span class="n">applies</span><span class="p">(</span><span class="s2">"method"</span><span class="p">):</span>
             <span class="n">add_full</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span>
             <span class="c1"># Narrow the basis list to what the method allows (F12 -&gt; F12 bases).</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_filter_basis_sets</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">is_dft</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filter_basis_sets</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_values</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">applies</span><span class="p">(</span><span class="s2">"functional type"</span><span class="p">):</span>
                 <span class="c1"># Functional type indented one level, functional two levels.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_filter_functionals</span><span class="p">()</span>
-                <span class="bp">self</span><span class="p">[</span><span class="s2">"functional type"</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span>
-                    <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span>
-                <span class="p">)</span>
-                <span class="n">type_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">"functional type"</span><span class="p">])</span>
-                <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_filter_functionals</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+                <span class="n">add_indented</span><span class="p">(</span><span class="s2">"functional type"</span><span class="p">)</span>
                 <span class="bp">self</span><span class="p">[</span><span class="s2">"functional"</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span><span class="p">)</span>
                 <span class="n">func_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">"functional"</span><span class="p">])</span>
                 <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="c1"># CBS extrapolation replaces the fixed basis: show the family instead</span>
-            <span class="c1"># of the basis/basis-source controls when it is on. It is hidden for</span>
-            <span class="c1"># sub-steps that need a gradient (e.g. Optimization), where an</span>
-            <span class="c1"># extrapolated energy is unusable, and for F12 methods (which fix a</span>
-            <span class="c1"># specific F12 basis).</span>
-            <span class="n">show_cbs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_cbs</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_f12</span>
-            <span class="k">if</span> <span class="n">show_cbs</span><span class="p">:</span>
+            <span class="c1"># CBS extrapolation replaces the fixed basis. It does not apply to</span>
+            <span class="c1"># sub-steps that need a gradient (e.g. Optimization) or to F12 methods.</span>
+            <span class="k">if</span> <span class="n">applies</span><span class="p">(</span><span class="s2">"basis set extrapolation"</span><span class="p">):</span>
                 <span class="n">add_full</span><span class="p">(</span><span class="s2">"basis set extrapolation"</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">show_cbs</span> <span class="ow">and</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"basis set extrapolation"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">"none"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">applies</span><span class="p">(</span><span class="s2">"extrapolation family"</span><span class="p">):</span>
                 <span class="n">add_full</span><span class="p">(</span><span class="s2">"extrapolation family"</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">applies</span><span class="p">(</span><span class="s2">"basis"</span><span class="p">):</span>
                 <span class="n">add_full</span><span class="p">(</span><span class="s2">"basis"</span><span class="p">)</span>
-                <span class="c1"># The source is forced to ORCA-internal for F12 (no BSE CABS),</span>
-                <span class="c1"># so hide the control in that case.</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">is_f12</span><span class="p">:</span>
-                    <span class="n">add_full</span><span class="p">(</span><span class="s2">"basis source"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">applies</span><span class="p">(</span><span class="s2">"basis source"</span><span class="p">):</span>
+                <span class="n">add_full</span><span class="p">(</span><span class="s2">"basis source"</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_detail_keys</span><span class="p">():</span>
-            <span class="c1"># 'checkpoint name' only applies (and is only shown, indented one</span>
-            <span class="c1"># level) when 'save orbital checkpoint' is on.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">applies</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="c1"># 'checkpoint name' is shown indented under 'save orbital checkpoint'.</span>
             <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"checkpoint name"</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"save orbital checkpoint"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"yes"</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span><span class="p">)</span>
-                    <span class="n">type_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-                    <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">add_indented</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="n">add_full</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
-            <span class="c1"># 'initial guess' choosing a wavefunction reveals its own</span>
-            <span class="c1"># indented sub-controls right below it: 'specified orbitals'</span>
-            <span class="c1"># only for that specific choice, 'if wavefunction not found' for</span>
-            <span class="c1"># either wavefunction choice (see energy.extra_input).</span>
+            <span class="c1"># 'initial guess' choosing a wavefunction reveals its own indented</span>
+            <span class="c1"># sub-controls right below it (see energy.extra_input).</span>
             <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"initial guess"</span><span class="p">:</span>
-                <span class="n">guess</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">guess</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"Previous wavefunction"</span><span class="p">,</span> <span class="s2">"Specified orbitals"</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="n">guess</span> <span class="o">==</span> <span class="s2">"Specified orbitals"</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="p">[</span><span class="s2">"specified orbitals"</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span>
-                            <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span>
-                        <span class="p">)</span>
-                        <span class="n">type_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">"specified orbitals"</span><span class="p">])</span>
-                        <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="bp">self</span><span class="p">[</span><span class="s2">"if wavefunction not found"</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span>
-                        <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">EW</span>
-                    <span class="p">)</span>
-                    <span class="n">type_widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">"if wavefunction not found"</span><span class="p">])</span>
-                    <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"specified orbitals"</span><span class="p">,</span> <span class="s2">"if wavefunction not found"</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">applies</span><span class="p">(</span><span class="n">sub</span><span class="p">):</span>
+                        <span class="n">add_indented</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span>
 
         <span class="c1"># Align the full-width labels; indent the nested widgets by the leftover</span>
         <span class="c1"># label width plus a fixed gap, so each nested combobox sits ~30 px to the</span>
@@ -725,11 +712,18 @@
         <span class="k">return</span> <span class="n">row</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_show_cbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Whether to show the CBS basis-set-extrapolation controls. Off for</span>
-<span class="sd">        sub-steps that need a gradient (Optimization overrides this): an</span>
-<span class="sd">        extrapolated energy has no gradient, so it cannot drive them."""</span>
-        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_widget_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The dialog's current values, {name: value}, for the parameters' rules."""</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"results"</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">values</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_run_detail_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""The full-width 'run detail' controls laid out below the level of</span>
@@ -758,34 +752,29 @@
             <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">browse</span><span class="p">):</span>
                 <span class="n">browse</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_basis_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Restrict the basis dropdown to the choices valid for the current</span>
-<span class="sd">        method, so the user can only pick a usable basis.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_basis_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Offer only the bases the method allows, and set what it requires.</span>
 
-<span class="sd">        Explicitly-correlated F12 methods work only with the F12-optimized</span>
-<span class="sd">        orbital bases (they need a matching CABS), so when one is chosen the list</span>
-<span class="sd">        is narrowed to those and the source is forced to ORCA-internal (the Basis</span>
+<span class="sd">        From the parameters' rules: explicitly-correlated F12 methods take only the</span>
+<span class="sd">        F12-optimized bases (they need a matching CABS), from ORCA itself (the Basis</span>
 <span class="sd">        Set Exchange has no CABS). Otherwise the full curated list is offered.</span>
 <span class="sd">        """</span>
-        <span class="n">all_bases</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"basis sets"</span><span class="p">])</span>
-        <span class="k">if</span> <span class="s2">"F12"</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
-            <span class="n">f12</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">all_bases</span> <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"-F12"</span><span class="p">)]</span>
-            <span class="bp">self</span><span class="p">[</span><span class="s2">"basis"</span><span class="p">]</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">f12</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"basis"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f12</span><span class="p">:</span>
-                <span class="bp">self</span><span class="p">[</span><span class="s2">"basis"</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"cc-pVTZ-F12"</span> <span class="k">if</span> <span class="s2">"cc-pVTZ-F12"</span> <span class="ow">in</span> <span class="n">f12</span> <span class="k">else</span> <span class="n">f12</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="bp">self</span><span class="p">[</span><span class="s2">"basis source"</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"ORCA internal"</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="p">[</span><span class="s2">"basis"</span><span class="p">]</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">all_bases</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_values</span><span class="p">()</span> <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">values</span>
+        <span class="n">allowed</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="s2">"basis"</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">allowed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">allowed</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"basis sets"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">[</span><span class="s2">"basis"</span><span class="p">]</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">allowed</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">P</span><span class="o">.</span><span class="n">implied</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"basis"</span><span class="p">,</span> <span class="s2">"basis source"</span><span class="p">):</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_functionals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Restrict the functional pulldown to the functionals of the currently</span>
-<span class="sd">        selected functional type, keeping the selection valid."""</span>
-        <span class="n">ftype</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"functional type"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-        <span class="n">funcs</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">name</span>
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">rec</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span> <span class="o">==</span> <span class="n">ftype</span>
-        <span class="p">]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_functionals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Offer only the functionals of the chosen functional type, keeping the</span>
+<span class="sd">        selection valid."""</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_values</span><span class="p">()</span> <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">values</span>
+        <span class="n">funcs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">P</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="s2">"functional"</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span>
         <span class="bp">self</span><span class="p">[</span><span class="s2">"functional"</span><span class="p">]</span><span class="o">.</span><span class="n">combobox</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">funcs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">funcs</span> <span class="ow">and</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"functional"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">funcs</span><span class="p">:</span>
             <span class="bp">self</span><span class="p">[</span><span class="s2">"functional"</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">funcs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>

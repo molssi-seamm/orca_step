@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.9.29 documentation</title>
+    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=45a1f582"></script>
+    <script src="../../_static/documentation_options.js?v=65cfade2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.9.29" />
+  <meta name="docsearch:version" content="2026.10.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -527,6 +527,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"method"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"use model chemistry"</span><span class="p">:</span> <span class="s2">"no"</span><span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"DLPNO-CCSD(T)"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -540,6 +541,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"functional type"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"method"</span><span class="p">:</span> <span class="s2">"DFT"</span><span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"global hybrid"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -554,6 +556,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"functional"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"method"</span><span class="p">:</span> <span class="s2">"DFT"</span><span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"B3LYP"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -568,6 +571,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"basis"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"use model chemistry"</span><span class="p">:</span> <span class="s2">"no"</span><span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"def2-TZVP"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"special"</span><span class="p">,</span>
             <span class="s2">"widget"</span><span class="p">:</span> <span class="s2">"seamm_widgets.BasisSetField"</span><span class="p">,</span>
@@ -584,6 +588,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"basis source"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"use model chemistry"</span><span class="p">:</span> <span class="s2">"no"</span><span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"ORCA internal"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -600,6 +605,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"basis set extrapolation"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"use model chemistry"</span><span class="p">:</span> <span class="s2">"no"</span><span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"none"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -618,6 +624,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"extrapolation family"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"basis set extrapolation"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"not"</span><span class="p">:</span> <span class="s2">"none"</span><span class="p">}},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"cc"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -735,6 +742,9 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"if wavefunction not found"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"initial guess"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"Previous wavefunction"</span><span class="p">,</span> <span class="s2">"Specified orbitals"</span><span class="p">]</span>
+            <span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"Throw an error"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -783,6 +793,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"checkpoint name"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"save orbital checkpoint"</span><span class="p">:</span> <span class="s2">"yes"</span><span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"default"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -804,6 +815,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"specified orbitals"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"initial guess"</span><span class="p">:</span> <span class="s2">"Specified orbitals"</span><span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"default"</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -919,9 +931,133 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
+    <span class="c1"># Rules shared by the dialog and the flowchart builder (see seamm.Parameters).</span>
+    <span class="c1"># The simple conditions are the "applies_when" entries above.</span>
+
+    <span class="n">extrapolation</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="w">    </span><span class="sd">"""Whether basis-set extrapolation can be used. False for steps that need a</span>
+<span class="sd">    gradient or Hessian, which an extrapolated energy does not have."""</span>
+
+    <span class="n">unused</span> <span class="o">=</span> <span class="p">()</span>
+<span class="w">    </span><span class="sd">"""Parameters that this kind of step never uses."""</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_f12</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"F12"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extrapolating</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">applies</span><span class="p">(</span><span class="s2">"basis set extrapolation"</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">and</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"basis set extrapolation"</span>
+        <span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EnergyParameters.applies">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy_parameters.EnergyParameters.applies">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">applies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_seen</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""As seamm.Parameters.applies, plus: no extrapolation for F12 methods (they</span>
+<span class="sd">        need their own F12 basis) or for steps that need a gradient; the basis and</span>
+<span class="sd">        its source are replaced by the extrapolation when it is used; and the basis</span>
+<span class="sd">        source is always ORCA's own for F12 (the Basis Set Exchange has no CABS)."""</span>
+        <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">unused</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">applies</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">_seen</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"basis set extrapolation"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">extrapolation</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_f12</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"basis"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"basis source"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_f12</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="EnergyParameters.not_applicable_reason">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy_parameters.EnergyParameters.not_applicable_reason">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">not_applicable_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Why a parameter does not apply, for the builder's messages."""</span>
+        <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">unused</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"this kind of step does not use it"</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">not_applicable_reason</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reason</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">reason</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"basis set extrapolation"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">extrapolation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span>
+                    <span class="s2">"this step needs a gradient (or Hessian), which an extrapolated "</span>
+                    <span class="s2">"energy does not have"</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_f12</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">"F12 methods use their own F12 basis, not an extrapolation"</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"basis"</span><span class="p">,</span> <span class="s2">"basis source"</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">"the basis-set extrapolation replaces it"</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"basis source"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_f12</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">"F12 methods use ORCA's own basis sets (they need a CABS)"</span>
+        <span class="k">return</span> <span class="s2">""</span></div>
+
+
+<div class="viewcode-block" id="EnergyParameters.choices">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy_parameters.EnergyParameters.choices">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">choices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""F12 methods take only the F12 bases; the functionals are those of the</span>
+<span class="sd">        functional type."""</span>
+        <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"basis"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_f12</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">b</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"basis sets"</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"-F12"</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"functional"</span><span class="p">:</span>
+            <span class="n">ftype</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"functional type"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_expr</span><span class="p">(</span><span class="n">ftype</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="n">name</span>
+                    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">record</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span> <span class="o">==</span> <span class="n">ftype</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EnergyParameters.implied">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy_parameters.EnergyParameters.implied">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">implied</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""An F12 method needs an F12 basis from ORCA itself; a functional implies</span>
+<span class="sd">        its functional type."""</span>
+        <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_values</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">applies</span><span class="p">(</span><span class="s2">"method"</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_f12</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="n">f12</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="s2">"basis"</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="n">basis</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"basis"</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">basis</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f12</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_expr</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+                <span class="n">result</span><span class="p">[</span><span class="s2">"basis"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"cc-pVTZ-F12"</span> <span class="k">if</span> <span class="s2">"cc-pVTZ-F12"</span> <span class="ow">in</span> <span class="n">f12</span> <span class="k">else</span> <span class="n">f12</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"basis source"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"ORCA internal"</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">applies</span><span class="p">(</span><span class="s2">"functional"</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+            <span class="n">functional</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"functional"</span><span class="p">)</span>
+            <span class="n">record</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">functional</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="s2">"functional type"</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+    <span class="c1"># Methods renamed since flowcharts were saved: old name -&gt; current name</span>
+    <span class="n">renamed_methods</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1"># 2026-07-13: ORCA rejects the bare keyword; the canonical one has /RI</span>
+        <span class="s2">"CCSD(T)-F12D"</span><span class="p">:</span> <span class="s2">"CCSD(T)-F12D/RI"</span><span class="p">,</span>
+    <span class="p">}</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{},</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Initialize with the parameters above plus any overrides."""</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"EnergyParameters.__init__"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">renamed_methods</span><span class="p">:</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">renamed_methods</span><span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]]</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">EnergyParameters</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">},</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span>
         <span class="p">)</span></div>

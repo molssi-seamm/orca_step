@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.9.29 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=45a1f582"></script>
+    <script src="_static/documentation_options.js?v=65cfade2"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.9.29" />
+  <meta name="docsearch:version" content="2026.10.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,23 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.1 – Settings that depend on each other, and old flowcharts read again</dt><dd><ul class="simple">
+<li><p>The Energy, Optimization, Frequencies and BSSE dialogs show only the settings that
+apply with the current choices, and SEAMM’s flowchart tools use the same rules: no
+basis-set extrapolation for F12 methods or for steps that need a gradient or
+Hessian; only F12 bases (from ORCA) for an F12 method; the functionals of the
+functional type, and a functional implies its type. Frequencies and BSSE say which
+Energy settings they do not use.</p></li>
+<li><p>Bugfix: flowcharts saved before the BSSE settings were generalized could not be
+read. <code class="docutils literal notranslate"><span class="pre">fragment</span> <span class="pre">A</span> <span class="pre">atoms</span></code> is now read as <code class="docutils literal notranslate"><span class="pre">fragment</span> <span class="pre">atoms</span></code> <code class="docutils literal notranslate"><span class="pre">&quot;&lt;A&gt;;</span> <span class="pre">rest&quot;</span></code> (a last
+group <code class="docutils literal notranslate"><span class="pre">rest</span></code> means the remaining atoms) and <code class="docutils literal notranslate"><span class="pre">auto</span> <span class="pre">(2</span> <span class="pre">molecules)</span></code> as <code class="docutils literal notranslate"><span class="pre">auto</span>
+<span class="pre">(molecules)</span></code>. The method <code class="docutils literal notranslate"><span class="pre">CCSD(T)-F12D</span></code>, renamed <code class="docutils literal notranslate"><span class="pre">CCSD(T)-F12D/RI</span></code>, is
+translated too.</p></li>
+<li><p>Documented in the user guide. Needs seamm 2026.10.1.</p></li>
+<li><p>Internal: CI now installs the package’s declared dependencies with uv rather than
+a conda test environment.</p></li>
+</ul>
+</dd>
 <dt>2026.9.29 – Bugfix: ORCA is always run by its full path</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">=</span> <span class="pre">orca</span></code> in <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code> – a bare name, as in the template – ran ORCA by
 that name, but ORCA must be run by its full path to find its sub-programs. A bare

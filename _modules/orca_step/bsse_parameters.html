@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.bsse_parameters &#8212; SEAMM ORCA Plug-in 2026.9.29 documentation</title>
+    <title>orca_step.bsse_parameters &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=45a1f582"></script>
+    <script src="../../_static/documentation_options.js?v=65cfade2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.9.29" />
+  <meta name="docsearch:version" content="2026.10.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -529,6 +529,7 @@
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"fragment atoms"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"fragments"</span><span class="p">:</span> <span class="s2">"specified"</span><span class="p">},</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -540,7 +541,9 @@
                 <span class="s2">"'specified': one semicolon-separated group per fragment, each "</span>
                 <span class="s2">"a comma/space list and/or ranges of 1-based atom numbers, "</span>
                 <span class="s2">"e.g. '1-3; 4-6' for two fragments or '1-3; 4-6; 7' for three. "</span>
-                <span class="s2">"Ignored when the fragments are found automatically."</span>
+                <span class="s2">"The last group may be 'rest' for the atoms in no other group, "</span>
+                <span class="s2">"e.g. '1-3; rest'. Ignored when the fragments are found "</span>
+                <span class="s2">"automatically."</span>
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"fragment charges"</span><span class="p">:</span> <span class="p">{</span>
@@ -597,9 +600,38 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
+    <span class="c1"># The counterpoise gradient needs a real gradient, which an extrapolated energy</span>
+    <span class="c1"># lacks; and these Energy settings are not used by the BSSE step.</span>
+    <span class="n">extrapolation</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">unused</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"sthresh"</span><span class="p">,</span>
+        <span class="s2">"initial guess"</span><span class="p">,</span>
+        <span class="s2">"save orbital checkpoint"</span><span class="p">,</span>
+        <span class="s2">"checkpoint name"</span><span class="p">,</span>
+        <span class="s2">"extra blocks"</span><span class="p">,</span>
+        <span class="s2">"bond orders"</span><span class="p">,</span>
+        <span class="s2">"Hirshfeld charges"</span><span class="p">,</span>
+        <span class="s2">"polarizability"</span><span class="p">,</span>
+    <span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{},</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"BSSEParameters.__init__"</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">BSSEParameters</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">},</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_translate_old</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">BSSEParameters</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">},</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_translate_old</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Flowcharts saved before BSSE took N fragments (2026-08-04) had two:</span>
+<span class="sd">        'auto (2 molecules)', or 'fragment A atoms' with the rest as fragment B."""</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fragments"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"auto (2 molecules)"</span><span class="p">:</span>
+            <span class="n">entry</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"auto (molecules)"</span>
+        <span class="k">if</span> <span class="s2">"fragment A atoms"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">old</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"fragment A atoms"</span><span class="p">)</span>
+            <span class="n">atoms</span> <span class="o">=</span> <span class="n">old</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">old</span>
+            <span class="k">if</span> <span class="n">atoms</span> <span class="ow">and</span> <span class="s2">"fragment atoms"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="s2">"fragment atoms"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">atoms</span><span class="si">}</span><span class="s2">; rest"</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span></div>
 
 </pre></div>
 
