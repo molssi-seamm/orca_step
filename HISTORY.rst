@@ -1,6 +1,22 @@
 =======
 History
 =======
+2026.10.1 -- Settings that depend on each other, and old flowcharts read again
+    * The Energy, Optimization, Frequencies and BSSE dialogs show only the settings that
+      apply with the current choices, and SEAMM's flowchart tools use the same rules: no
+      basis-set extrapolation for F12 methods or for steps that need a gradient or
+      Hessian; only F12 bases (from ORCA) for an F12 method; the functionals of the
+      functional type, and a functional implies its type. Frequencies and BSSE say which
+      Energy settings they do not use.
+    * Bugfix: flowcharts saved before the BSSE settings were generalized could not be
+      read. ``fragment A atoms`` is now read as ``fragment atoms`` ``"<A>; rest"`` (a last
+      group ``rest`` means the remaining atoms) and ``auto (2 molecules)`` as ``auto
+      (molecules)``. The method ``CCSD(T)-F12D``, renamed ``CCSD(T)-F12D/RI``, is
+      translated too.
+    * Documented in the user guide. Needs seamm 2026.10.1.
+    * Internal: CI now installs the package's declared dependencies with uv rather than
+      a conda test environment.
+
 2026.9.29 -- Bugfix: ORCA is always run by its full path
     * ``code = orca`` in ``orca.ini`` -- a bare name, as in the template -- ran ORCA by
       that name, but ORCA must be run by its full path to find its sub-programs. A bare

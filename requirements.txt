@@ -1,5 +1,5 @@
 numpy
-seamm
+seamm>=2026.10.1
 molsystem
 seamm-util
 seamm-widgets>=2026.9.25

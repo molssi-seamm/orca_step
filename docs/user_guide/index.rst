@@ -80,7 +80,7 @@ sensible progression is a single ladder read top to bottom.
 Explicitly-correlated (F12) methods
 -----------------------------------
 
-The F12 methods (``CCSD(T)-F12D``, ``DLPNO-CCSD(T)-F12D``) reach near
+The F12 methods (``CCSD(T)-F12D/RI``, ``DLPNO-CCSD(T)-F12D``) reach near
 complete-basis-set accuracy from a modest basis, but they **must** be paired
 with one of ORCA's F12-optimized orbital bases — ``cc-pVDZ-F12``,
 ``cc-pVTZ-F12``, or ``cc-pVQZ-F12`` — and each of those needs a matching
@@ -429,9 +429,14 @@ Fragments
 * ``specified`` — the fragments come from **Fragment atoms**, shown only in
   this mode: one semicolon-separated group per fragment, each a comma/space
   list and/or ranges of 1-based atom numbers (as shown in the structure),
-  e.g. ``1-3; 4-6`` for two fragments or ``1-3; 4-6; 7`` for three.
+  e.g. ``1-3; 4-6`` for two fragments or ``1-3; 4-6; 7`` for three. The last
+  group may be ``rest``, meaning all the atoms not in an earlier group, e.g.
+  ``1-3; rest``.
 
-Any number of fragments ≥ 2 is supported.
+Any number of fragments ≥ 2 is supported. Flowcharts saved before these settings
+were generalized are read as before: their ``fragment A atoms`` becomes
+``fragment atoms`` ``"<A>; rest"`` and ``auto (2 molecules)`` becomes
+``auto (molecules)``.
 
 Fragment charges
 -----------------
@@ -704,6 +709,20 @@ series of nearby structures. Two consequences:
   that cheap engines see. Use an inexpensive functional for jobs that only need
   the energy surface to guide them (such as contact finding); reserve expensive,
   high-accuracy calculations for ordinary single-point steps.
+
+Settings that depend on each other
+==================================
+
+Which settings apply depends on others: the functional and its type only for DFT, basis-
+set extrapolation not for F12 methods or for steps that need a gradient or Hessian, and
+only F12 bases for an F12 method. The step's dialogs show only the settings that apply
+with the current choices, and the same rules are used when a flowchart is built or
+edited without the editor (``seamm-flowchart`` or SEAMM's MCP server): a setting that
+would have no effect is refused, with the reason, and a value that contradicts another
+is refused too. See "Flowcharts without the editor" in SEAMM's user guide.
+
+Frequencies and BSSE do not use some of the Energy settings, and say so if one is set.
+
 
 Indices and tables
 ==================
