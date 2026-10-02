@@ -285,7 +285,10 @@ Two free-text escape hatches cover anything without a dedicated control:
 
 * **Extra keywords** -- additional ORCA ``!`` keywords, appended after
   everything the other controls generate (e.g. ``RIJCOSX``, ``NoFrozenCore``,
-  ``SlowConv``).
+  ``SlowConv``). A keyword that repeats one the controls already produce (say
+  ``TightSCF`` with the SCF convergence at ``TIGHTSCF``) is dropped, since ORCA
+  refuses repeats. An SCF-convergence or integration-grid preset given here
+  overrides the control's, with a note in the output.
 * **Extra ORCA blocks** -- literal ORCA input (one or more ``%`` blocks),
   inserted verbatim right before the geometry, after the blocks the controls
   above generate. Use this for one-off SCF-stabilization tricks with no
