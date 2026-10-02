@@ -1,6 +1,20 @@
 =======
 History
 =======
+2026.10.2.1 -- Rerunning a job reuses ORCA calculations that had finished
+    * ORCA now runs through SEAMM's task layer. Rerunning a job in the same directory,
+      for example after it was stopped or ran out of time, reuses each ORCA calculation
+      that had already finished with the same input instead of computing it again; the
+      output says "ORCA had already finished this calculation, with the same input ...
+      using those results". A calculation whose input changed is run again.
+    * ORCA ends with a success code even after an "error termination", so such a run
+      used to look finished. It is now recognized as failed, is not reused, and is run
+      again when the job is rerun, up to three attempts in all.
+    * Otherwise nothing changes: the output files are where they always were and the
+      results are the same. The record of the calculations is in
+      ``tasks/manifest.json`` in the step's directory.
+    * Requires seamm-exec 2026.10.2 or later.
+
 2026.10.2 -- Bugfix: repeated keywords no longer stop ORCA
     * ORCA refuses a keyword that appears twice on its '!' line, ignoring case. A
       flowchart with, for example, 'TightSCF' in the extra keywords, made before the
