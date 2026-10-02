@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.2 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.2.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=52372788"></script>
+    <script src="../_static/documentation_options.js?v=77b25824"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.2" />
+  <meta name="docsearch:version" content="2026.10.2.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1154,6 +1154,33 @@ silently discard the module-provided ORCA libraries on a parallel run,
 failing with <code class="docutils literal notranslate"><span class="pre">error</span> <span class="pre">while</span> <span class="pre">loading</span> <span class="pre">shared</span> <span class="pre">libraries</span></code> even though the
 module load itself had succeeded).</p>
 </section>
+<section id="rerunning-a-job">
+<h2>Rerunning a job<a class="headerlink" href="#rerunning-a-job" title="Link to this heading">#</a></h2>
+<p>ORCA runs through SEAMM’s task layer, which keeps a record of each ORCA calculation in
+<code class="docutils literal notranslate"><span class="pre">tasks/manifest.json</span></code> in the step’s directory, with a <code class="docutils literal notranslate"><span class="pre">tasks/&lt;name&gt;/DONE</span></code> file for
+each one that finished. When a job is run again in the same directory – after it was
+stopped, lost its node, or ran out of time – a calculation that had finished with the
+same input is not repeated: its results are read from the files it left, and the output
+says:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ORCA</span> <span class="n">had</span> <span class="n">already</span> <span class="n">finished</span> <span class="n">this</span> <span class="n">calculation</span><span class="p">,</span> <span class="k">with</span> <span class="n">the</span> <span class="n">same</span> <span class="nb">input</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">directory</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="n">using</span> <span class="n">those</span> <span class="n">results</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>A calculation is run again when</p>
+<ul class="simple">
+<li><p>its input changed (the geometry, method, basis, keywords or blocks; the <code class="docutils literal notranslate"><span class="pre">%pal</span></code> and
+<code class="docutils literal notranslate"><span class="pre">%maxcore</span></code> lines are ignored, so a different number of cores or amount of memory
+does not count), or</p></li>
+<li><p>it did not finish: it failed, or the job was stopped while it was running. ORCA
+reports success to the operating system even after an “error termination”, so a run
+counts as finished only if <code class="docutils literal notranslate"><span class="pre">orca.out</span></code> ends with <code class="docutils literal notranslate"><span class="pre">ORCA</span> <span class="pre">TERMINATED</span> <span class="pre">NORMALLY</span></code>. A
+calculation is tried at most three times in all; after that the step stops with a
+message saying so. Changing its input, or deleting its entry in
+<code class="docutils literal notranslate"><span class="pre">tasks/manifest.json</span></code>, lets it run again.</p></li>
+</ul>
+<p>If the job was killed outright, an ORCA process from the earlier run may still be
+running; the rerun stops it before starting the calculation again.</p>
+</section>
 <section id="driving-orca-as-an-mdi-engine">
 <h2>Driving ORCA as an MDI engine<a class="headerlink" href="#driving-orca-as-an-mdi-engine" title="Link to this heading">#</a></h2>
 <p>Besides running as an ordinary flowchart step, ORCA can act as a persistent
@@ -1272,6 +1299,7 @@ is refused too. See “Flowcharts without the editor” in SEAMM’s user guide.
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-results-to-the-database">Saving results to the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-properties-and-outputs">Other properties and outputs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-orca-in-parallel">Running ORCA in parallel</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rerunning-a-job">Rerunning a job</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#driving-orca-as-an-mdi-engine">Driving ORCA as an MDI engine</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#settings-that-depend-on-each-other">Settings that depend on each other</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices-and-tables">Indices and tables</a></li>

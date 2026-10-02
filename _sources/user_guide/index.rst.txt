@@ -686,6 +686,34 @@ silently discard the module-provided ORCA libraries on a parallel run,
 failing with ``error while loading shared libraries`` even though the
 module load itself had succeeded).
 
+Rerunning a job
+===============
+
+ORCA runs through SEAMM's task layer, which keeps a record of each ORCA calculation in
+``tasks/manifest.json`` in the step's directory, with a ``tasks/<name>/DONE`` file for
+each one that finished. When a job is run again in the same directory -- after it was
+stopped, lost its node, or ran out of time -- a calculation that had finished with the
+same input is not repeated: its results are read from the files it left, and the output
+says::
+
+    ORCA had already finished this calculation, with the same input, in <directory>;
+    using those results.
+
+A calculation is run again when
+
+* its input changed (the geometry, method, basis, keywords or blocks; the ``%pal`` and
+  ``%maxcore`` lines are ignored, so a different number of cores or amount of memory
+  does not count), or
+* it did not finish: it failed, or the job was stopped while it was running. ORCA
+  reports success to the operating system even after an "error termination", so a run
+  counts as finished only if ``orca.out`` ends with ``ORCA TERMINATED NORMALLY``. A
+  calculation is tried at most three times in all; after that the step stops with a
+  message saying so. Changing its input, or deleting its entry in
+  ``tasks/manifest.json``, lets it run again.
+
+If the job was killed outright, an ORCA process from the earlier run may still be
+running; the rerun stops it before starting the calculation again.
+
 Driving ORCA as an MDI engine
 =============================
 
