@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=65cfade2"></script>
+    <script src="_static/documentation_options.js?v=52372788"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.1" />
+  <meta name="docsearch:version" content="2026.10.2" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,15 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.2 – Bugfix: repeated keywords no longer stop ORCA</dt><dd><ul class="simple">
+<li><p>ORCA refuses a keyword that appears twice on its ‘!’ line, ignoring case. A
+flowchart with, for example, ‘TightSCF’ in the extra keywords, made before the
+SCF convergence setting existed (which now defaults to TIGHTSCF), failed at once
+with “UNRECOGNIZED OR DUPLICATED KEYWORD(S)”. Repeated keywords are now dropped.</p></li>
+<li><p>An SCF-convergence or integration-grid preset in the extra keywords overrides the
+setting’s, with a note in the output, rather than giving ORCA two presets.</p></li>
+</ul>
+</dd>
 <dt>2026.10.1 – Settings that depend on each other, and old flowcharts read again</dt><dd><ul class="simple">
 <li><p>The Energy, Optimization, Frequencies and BSSE dialogs show only the settings that
 apply with the current choices, and SEAMM’s flowchart tools use the same rules: no

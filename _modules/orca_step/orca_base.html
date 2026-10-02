@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=65cfade2"></script>
+    <script src="../../_static/documentation_options.js?v=52372788"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.1" />
+  <meta name="docsearch:version" content="2026.10.2" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -521,6 +521,61 @@
 <span class="n">job</span> <span class="o">=</span> <span class="n">printing</span><span class="o">.</span><span class="n">getPrinter</span><span class="p">()</span>
 <span class="n">printer</span> <span class="o">=</span> <span class="n">printing</span><span class="o">.</span><span class="n">getPrinter</span><span class="p">(</span><span class="s2">"ORCA"</span><span class="p">)</span>
 
+<span class="c1"># Families of '!' keywords of which ORCA takes only one: the SCF convergence and the</span>
+<span class="c1"># integration grid presets.</span>
+<span class="n">_KEYWORD_FAMILIES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span>
+        <span class="s2">"SCF convergence"</span><span class="p">,</span>
+        <span class="p">{</span>
+            <span class="s2">"SLOPPYSCF"</span><span class="p">,</span>
+            <span class="s2">"LOOSESCF"</span><span class="p">,</span>
+            <span class="s2">"NORMALSCF"</span><span class="p">,</span>
+            <span class="s2">"STRONGSCF"</span><span class="p">,</span>
+            <span class="s2">"TIGHTSCF"</span><span class="p">,</span>
+            <span class="s2">"VERYTIGHTSCF"</span><span class="p">,</span>
+            <span class="s2">"EXTREMESCF"</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="s2">"integration grid"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"DEFGRID1"</span><span class="p">,</span> <span class="s2">"DEFGRID2"</span><span class="p">,</span> <span class="s2">"DEFGRID3"</span><span class="p">}),</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="tidy_keyword_line">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.tidy_keyword_line">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">tidy_keyword_line</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Remove repeated and conflicting keywords from an ORCA '!' line.</span>
+
+<span class="sd">    ORCA refuses a keyword given twice, ignoring case (e.g. the 'TIGHTSCF' from</span>
+<span class="sd">    the SCF convergence setting plus a 'TightSCF' in the extra keywords). An exact</span>
+<span class="sd">    repeat is dropped. Of several presets from one family (SCF convergence,</span>
+<span class="sd">    integration grid) only the last is kept: the extra keywords come last, so a</span>
+<span class="sd">    preset typed there overrides the setting.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (str, [str])</span>
+<span class="sd">        The tidied line, and a note for each preset that was overridden.</span>
+<span class="sd">    """</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">keyword_line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">words</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">word</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">keep</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+    <span class="n">notes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">family</span><span class="p">,</span> <span class="n">members</span> <span class="ow">in</span> <span class="n">_KEYWORD_FAMILIES</span><span class="p">:</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">words</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">members</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">keep</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">family</span><span class="si">}</span><span class="s2"> preset </span><span class="si">{</span><span class="n">words</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2"> is overridden by "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">words</span><span class="p">[</span><span class="n">found</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span><span class="si">}</span><span class="s2"> in the keywords."</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="n">keep</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span><span class="p">),</span> <span class="n">notes</span></div>
+
+
+
 <span class="c1"># Byte multipliers for parsing a memory string (SI 'GB' and binary 'GiB').</span>
 <span class="n">_MEMORY_UNITS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">""</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
@@ -805,7 +860,10 @@
         <span class="c1"># Resources (cores + per-process memory), shared with run_orca_compound.</span>
         <span class="n">n_cores</span><span class="p">,</span> <span class="n">memory_mb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resources</span><span class="p">()</span>
 
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"! </span><span class="si">{</span><span class="n">keyword_line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+        <span class="n">keyword_line</span><span class="p">,</span> <span class="n">notes</span> <span class="o">=</span> <span class="n">tidy_keyword_line</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">note</span> <span class="ow">in</span> <span class="n">notes</span><span class="p">:</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">__</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Note: </span><span class="si">{</span><span class="n">note</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">))</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"! </span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%pal nprocs </span><span class="si">{</span><span class="n">n_cores</span><span class="si">}</span><span class="s2"> end"</span><span class="p">)</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%maxcore </span><span class="si">{</span><span class="n">memory_mb</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
@@ -1242,7 +1300,7 @@
     <span class="k">pass</span>
 
 <span class="c1"># Re-export for convenience</span>
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ORCABase"</span><span class="p">,</span> <span class="s2">"printer"</span><span class="p">,</span> <span class="s2">"job"</span><span class="p">,</span> <span class="s2">"os"</span><span class="p">,</span> <span class="s2">"__"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ORCABase"</span><span class="p">,</span> <span class="s2">"tidy_keyword_line"</span><span class="p">,</span> <span class="s2">"printer"</span><span class="p">,</span> <span class="s2">"job"</span><span class="p">,</span> <span class="s2">"os"</span><span class="p">,</span> <span class="s2">"__"</span><span class="p">]</span>
 </pre></div>
 
                 </article>

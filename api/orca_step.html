@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=65cfade2"></script>
+    <script src="../_static/documentation_options.js?v=52372788"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.1" />
+  <meta name="docsearch:version" content="2026.10.2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1309,6 +1309,25 @@ density into an AIMPAC <code class="docutils literal notranslate"><span class="p
 
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.orca_base.tidy_keyword_line">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_base.</span></span><span class="sig-name descname"><span class="pre">tidy_keyword_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#tidy_keyword_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.tidy_keyword_line" title="Link to this definition">#</a></dt>
+<dd><p>Remove repeated and conflicting keywords from an ORCA ‘!’ line.</p>
+<p>ORCA refuses a keyword given twice, ignoring case (e.g. the ‘TIGHTSCF’ from
+the SCF convergence setting plus a ‘TightSCF’ in the extra keywords). An exact
+repeat is dropped. Of several presets from one family (SCF convergence,
+integration grid) only the last is kept: the extra keywords come last, so a
+preset typed there overrides the setting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The tidied line, and a note for each preset that was overridden.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, [str])</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-orca_step.orca_step">
 <span id="orca-step-orca-step-module"></span><h2>orca_step.orca_step module<a class="headerlink" href="#module-orca_step.orca_step" title="Link to this heading">#</a></h2>
@@ -1795,6 +1814,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.version"><code class="docutils literal notranslate"><span class="pre">ORCABase.version</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.tidy_keyword_line"><code class="docutils literal notranslate"><span class="pre">tidy_keyword_line()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.orca_step">orca_step.orca_step module</a><ul class="pst-show_toc_level nav section-nav flex-column">

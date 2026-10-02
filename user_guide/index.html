@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=65cfade2"></script>
+    <script src="../_static/documentation_options.js?v=52372788"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.1" />
+  <meta name="docsearch:version" content="2026.10.2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -773,7 +773,10 @@ extrapolation uses internally.</p>
 <ul>
 <li><p><strong>Extra keywords</strong> – additional ORCA <code class="docutils literal notranslate"><span class="pre">!</span></code> keywords, appended after
 everything the other controls generate (e.g. <code class="docutils literal notranslate"><span class="pre">RIJCOSX</span></code>, <code class="docutils literal notranslate"><span class="pre">NoFrozenCore</span></code>,
-<code class="docutils literal notranslate"><span class="pre">SlowConv</span></code>).</p></li>
+<code class="docutils literal notranslate"><span class="pre">SlowConv</span></code>). A keyword that repeats one the controls already produce (say
+<code class="docutils literal notranslate"><span class="pre">TightSCF</span></code> with the SCF convergence at <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code>) is dropped, since ORCA
+refuses repeats. An SCF-convergence or integration-grid preset given here
+overrides the control’s, with a note in the output.</p></li>
 <li><p><strong>Extra ORCA blocks</strong> – literal ORCA input (one or more <code class="docutils literal notranslate"><span class="pre">%</span></code> blocks),
 inserted verbatim right before the geometry, after the blocks the controls
 above generate. Use this for one-off SCF-stabilization tricks with no
