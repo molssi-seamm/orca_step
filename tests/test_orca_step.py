@@ -2655,3 +2655,35 @@ def test_bare_orca_name_becomes_the_full_path(monkeypatch):
     monkeypatch.setattr(orca_step.orca_step.shutil, "which", lambda name: None)
     assert full_orca_path("") == ""
     assert full_orca_path("orca") == "orca"
+
+
+def test_tidy_keyword_line_duplicate_scf():
+    """The SCF setting's TIGHTSCF plus 'TightSCF' in the extra keywords: ORCA
+    refuses the repeat, so it is dropped (Testing/test.flow, 2026-10-02)."""
+    from orca_step.orca_base import tidy_keyword_line
+
+    line, notes = tidy_keyword_line(
+        "B3LYP AutoAux TIGHTSCF keepdensity TightSCF NormalOpt"
+    )
+    assert line == "B3LYP AutoAux TIGHTSCF keepdensity NormalOpt"
+    assert notes == []
+
+
+def test_tidy_keyword_line_extra_preset_wins():
+    """A different preset typed in the extra keywords overrides the setting."""
+    from orca_step.orca_base import tidy_keyword_line
+
+    line, notes = tidy_keyword_line("B3LYP def2-SVP DEFGRID3 TIGHTSCF VeryTightSCF")
+    assert line == "B3LYP def2-SVP DEFGRID3 VeryTightSCF"
+    assert len(notes) == 1 and "TIGHTSCF" in notes[0] and "VeryTightSCF" in notes[0]
+    line, notes = tidy_keyword_line("B3LYP DEFGRID3 TIGHTSCF defgrid2")
+    assert line == "B3LYP TIGHTSCF defgrid2"
+    assert len(notes) == 1
+
+
+def test_tidy_keyword_line_unchanged():
+    """A clean line, including parenthesized keywords, is left exactly as is."""
+    from orca_step.orca_base import tidy_keyword_line
+
+    text = "DLPNO-CCSD(T) Extrapolate(2/3,cc) AutoAux TIGHTSCF EnGrad"
+    assert tidy_keyword_line(text) == (text, [])

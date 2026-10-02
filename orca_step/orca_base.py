@@ -29,6 +29,58 @@ logger = logging.getLogger(__name__)
 job = printing.getPrinter()
 printer = printing.getPrinter("ORCA")
 
+# Families of '!' keywords of which ORCA takes only one: the SCF convergence and the
+# integration grid presets.
+_KEYWORD_FAMILIES = (
+    (
+        "SCF convergence",
+        {
+            "SLOPPYSCF",
+            "LOOSESCF",
+            "NORMALSCF",
+            "STRONGSCF",
+            "TIGHTSCF",
+            "VERYTIGHTSCF",
+            "EXTREMESCF",
+        },
+    ),
+    ("integration grid", {"DEFGRID1", "DEFGRID2", "DEFGRID3"}),
+)
+
+
+def tidy_keyword_line(keyword_line):
+    """Remove repeated and conflicting keywords from an ORCA '!' line.
+
+    ORCA refuses a keyword given twice, ignoring case (e.g. the 'TIGHTSCF' from
+    the SCF convergence setting plus a 'TightSCF' in the extra keywords). An exact
+    repeat is dropped. Of several presets from one family (SCF convergence,
+    integration grid) only the last is kept: the extra keywords come last, so a
+    preset typed there overrides the setting.
+
+    Returns
+    -------
+    (str, [str])
+        The tidied line, and a note for each preset that was overridden.
+    """
+    words = keyword_line.split()
+    keep = [True] * len(words)
+    seen = set()
+    for i, word in enumerate(words):
+        if word.upper() in seen:
+            keep[i] = False
+        seen.add(word.upper())
+    notes = []
+    for family, members in _KEYWORD_FAMILIES:
+        found = [i for i, w in enumerate(words) if keep[i] and w.upper() in members]
+        for i in found[:-1]:
+            keep[i] = False
+            notes.append(
+                f"The {family} preset {words[i]} is overridden by "
+                f"{words[found[-1]]} in the keywords."
+            )
+    return " ".join(w for w, k in zip(words, keep) if k), notes
+
+
 # Byte multipliers for parsing a memory string (SI 'GB' and binary 'GiB').
 _MEMORY_UNITS = {
     "": 1,
@@ -300,7 +352,10 @@ class ORCABase(seamm.Node):
         # Resources (cores + per-process memory), shared with run_orca_compound.
         n_cores, memory_mb = self._resources()
 
-        lines = [f"! {keyword_line.strip()}"]
+        keyword_line, notes = tidy_keyword_line(keyword_line)
+        for note in notes:
+            printer.normal(__(f"Note: {note}", indent=self.indent + 4 * " "))
+        lines = [f"! {keyword_line}"]
         if n_cores > 1:
             lines.append(f"%pal nprocs {n_cores} end")
         lines.append(f"%maxcore {memory_mb}")
@@ -732,4 +787,4 @@ except Exception:  # pragma: no cover - non-fatal
     pass
 
 # Re-export for convenience
-__all__ = ["ORCABase", "printer", "job", "os", "__"]
+__all__ = ["ORCABase", "tidy_keyword_line", "printer", "job", "os", "__"]

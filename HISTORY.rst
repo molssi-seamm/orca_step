@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.2 -- Bugfix: repeated keywords no longer stop ORCA
+    * ORCA refuses a keyword that appears twice on its '!' line, ignoring case. A
+      flowchart with, for example, 'TightSCF' in the extra keywords, made before the
+      SCF convergence setting existed (which now defaults to TIGHTSCF), failed at once
+      with "UNRECOGNIZED OR DUPLICATED KEYWORD(S)". Repeated keywords are now dropped.
+    * An SCF-convergence or integration-grid preset in the extra keywords overrides the
+      setting's, with a note in the output, rather than giving ORCA two presets.
+
 2026.10.1 -- Settings that depend on each other, and old flowcharts read again
     * The Energy, Optimization, Frequencies and BSSE dialogs show only the settings that
       apply with the current choices, and SEAMM's flowchart tools use the same rules: no
