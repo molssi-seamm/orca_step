@@ -2719,3 +2719,37 @@ def test_estimated_seconds_orders_jobs_sensibly():
         "B3LYP def2-TZVPP", 3
     )
     assert estimated_seconds("revDSD-PBEP86-D4/2021 def2-QZVPP EnGrad", 12) > 60
+
+
+def test_orca_2aim_follows_the_code_path():
+    from orca_step.orca_base import _orca_2aim
+
+    assert _orca_2aim({"code": "/opt/orca_6/orca"}) == "{code_dir}/orca_2aim"
+    assert _orca_2aim({"code": "orca"}) == "orca_2aim"
+
+
+def test_check_task_result(tmp_path):
+    node = orca_step.BSSE()
+    node._id = ("1",)  # for its indentation in the output
+    TR = seamm_exec.TaskResult
+    node._check_task_result(TR(key="orca", state="finished", returncode=0), tmp_path)
+    # A failure that ran: noted, then parsed as always
+    node._check_task_result(
+        TR(key="orca", state="failed", returncode=0, reason="success check: x"),
+        tmp_path,
+    )
+    with pytest.raises(RuntimeError, match="attempts exhausted"):
+        node._check_task_result(
+            TR(
+                key="orca",
+                state="failed",
+                returncode=0,
+                reason="attempts exhausted: 3 attempts",
+            ),
+            tmp_path,
+        )
+    with pytest.raises(RuntimeError, match="could not be run"):
+        node._check_task_result(
+            TR(key="orca", state="failed", reason="the task could not be run"),
+            tmp_path,
+        )

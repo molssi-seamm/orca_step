@@ -178,6 +178,17 @@ def estimated_seconds(keyword_line, n_atoms):
     return 1.0 + 0.03 * n**2.5 * method * basis * extra
 
 
+def _orca_2aim(config):
+    """The command for orca_2aim, which lives beside the orca binary.
+
+    ``{code_dir}`` when ``code`` is a path, so the command names no absolute
+    path; a bare ``orca`` (conda, a container) means orca_2aim is on the PATH.
+    """
+    if Path(config["code"]).expanduser().parent != Path("."):
+        return "{code_dir}/orca_2aim"
+    return "orca_2aim"
+
+
 def _fingerprint(files, make_wfx):
     """Identify an ORCA run's inputs for restart, ignoring ``%pal``/``%maxcore``.
 
@@ -460,7 +471,7 @@ class ORCABase(seamm.Node):
         ]
         if make_wfx:
             # {code_dir} is the directory holding the orca binary.
-            cmd += ["&&", "{code_dir}/orca_2aim", "orca", ">", "orca_2aim.out", "2>&1"]
+            cmd += ["&&", _orca_2aim(config), "orca", ">", "orca_2aim.out", "2>&1"]
             return_files += ["orca.wfx", "orca_2aim.out"]
 
         n_atoms = configuration.n_atoms if atom_indices is None else len(atom_indices)
@@ -489,13 +500,32 @@ class ORCABase(seamm.Node):
             success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
         )
         result = seamm_exec.run_task(task, node=self, directory=run_directory)
-        if result.state == "failed" and result.returncode is None:
-            raise RuntimeError(
-                f"There was an error running ORCA in {run_directory}:\n" + result.stderr
-            )
+        self._check_task_result(result, run_directory)
         self._report_run_location(result, run_directory)
 
         return self._parse_output(run_directory / "orca.out")
+
+    def _check_task_result(self, result, directory):
+        """Report a failed ORCA task, and stop if its output can't be used.
+
+        A task that could not be run, or that was not run again because it has
+        used up its attempts (its output is stale), raises. Otherwise a failure
+        is noted and the output is parsed as always, so ORCA's own messages
+        decide what happens next.
+        """
+        if result.ok:
+            return
+        reason = result.reason or "unknown"
+        if result.returncode is None or reason.startswith("attempts exhausted"):
+            raise RuntimeError(
+                f"ORCA in {directory} did not run: {reason}\n{result.stderr}"
+            )
+        printer.normal(
+            __(
+                f"ORCA failed in {directory}: {reason}.",
+                indent=self.indent + 4 * " ",
+            )
+        )
 
     def _report_run_location(self, result, directory):
         """Note in step.out where ORCA actually ran -- the job directory, or
@@ -734,7 +764,7 @@ class ORCABase(seamm.Node):
         if make_wfx:
             cmd += [
                 "&&",
-                "{code_dir}/orca_2aim",
+                _orca_2aim(config),
                 wfx_step,
                 ">",
                 "orca_2aim.out",
@@ -763,10 +793,7 @@ class ORCABase(seamm.Node):
             success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
         )
         result = seamm_exec.run_task(task, node=self, directory=directory)
-        if result.state == "failed" and result.returncode is None:
-            raise RuntimeError(
-                "There was an error running the ORCA Compound job:\n" + result.stderr
-            )
+        self._check_task_result(result, directory)
         self._report_run_location(result, directory)
 
         # Read the corrected gradient from the EnGrad file the Compound wrote,
