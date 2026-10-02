@@ -13,6 +13,7 @@ from types import SimpleNamespace
 import pytest  # noqa: F401
 
 import orca_step
+import seamm_exec
 
 
 def _load_orca_mdi():
@@ -2117,7 +2118,9 @@ def test_geometry_block_atom_subset_and_ghosts():
     assert "Cl" not in block
 
 
-def test_run_orca_job_uses_explicit_geometry_charge_and_directory(tmp_path):
+def test_run_orca_job_uses_explicit_geometry_charge_and_directory(
+    tmp_path, monkeypatch
+):
     """run_orca_job must use its OWN charge/multiplicity/atom subset/directory
     arguments -- not the configuration's own charge/multiplicity or
     self.directory -- since a BSSE fragment sub-job differs from the node's
@@ -2131,12 +2134,12 @@ def test_run_orca_job_uses_explicit_geometry_charge_and_directory(tmp_path):
 
     captured = {}
 
-    def fake_run(cmd, config, directory, files, return_files, in_situ, shell, env):
-        captured["directory"] = directory
-        captured["orca.inp"] = files["orca.inp"]
-        return {"in_situ": True}
+    def fake_run_task(task, node=None, directory=None):
+        captured["directory"] = task.directory
+        captured["orca.inp"] = task.files["orca.inp"]
+        return seamm_exec.TaskResult(key=task.key, state="finished", returncode=0)
 
-    node.flowchart = SimpleNamespace(executor=SimpleNamespace(run=fake_run))
+    monkeypatch.setattr(seamm_exec, "run_task", fake_run_task)
 
     # The node's own configuration is neutral -- the job charge (1) must win.
     configuration = SimpleNamespace(
@@ -2156,7 +2159,7 @@ def test_run_orca_job_uses_explicit_geometry_charge_and_directory(tmp_path):
     )
 
     assert result == {"energy": -1.0, "success": True}
-    assert captured["directory"] == str(job_dir)
+    assert captured["directory"] == job_dir
     assert "* xyz 1 1" in captured["orca.inp"]
     assert "Cl" not in captured["orca.inp"]  # atom subset excluded it
     assert job_dir.exists()  # created even though it isn't self.directory
@@ -2687,3 +2690,66 @@ def test_tidy_keyword_line_unchanged():
 
     text = "DLPNO-CCSD(T) Extrapolate(2/3,cc) AutoAux TIGHTSCF EnGrad"
     assert tidy_keyword_line(text) == (text, [])
+
+
+def test_fingerprint_ignores_pal_and_maxcore():
+    """Restart must not redo a calculation because the machine changed size."""
+    from orca_step.orca_base import _fingerprint
+
+    def inp(ncores, maxcore):
+        return {
+            "orca.inp": f"! B3LYP def2-SVP\n%pal nprocs {ncores} end\n"
+            f"%maxcore {maxcore}\n* xyz 0 1\nO 0 0 0\n*\n"
+        }
+
+    assert _fingerprint(inp(4, 2000), False) == _fingerprint(inp(16, 6000), False)
+    assert _fingerprint(inp(4, 2000), False) != _fingerprint(inp(4, 2000), True)
+    other = {"orca.inp": inp(4, 2000)["orca.inp"].replace("O 0 0 0", "O 0 0 1")}
+    assert _fingerprint(inp(4, 2000), False) != _fingerprint(other, False)
+
+
+def test_estimated_seconds_orders_jobs_sensibly():
+    from orca_step.orca_base import estimated_seconds
+
+    water = estimated_seconds("B3LYP def2-SVP", 3)
+    assert water < 60  # inline-sized
+    assert estimated_seconds("B3LYP def2-SVP", 30) > water
+    assert estimated_seconds("CCSD(T) def2-SVP", 3) > water
+    assert estimated_seconds("B3LYP def2-TZVPPD", 3) > estimated_seconds(
+        "B3LYP def2-TZVPP", 3
+    )
+    assert estimated_seconds("revDSD-PBEP86-D4/2021 def2-QZVPP EnGrad", 12) > 60
+
+
+def test_orca_2aim_follows_the_code_path():
+    from orca_step.orca_base import _orca_2aim
+
+    assert _orca_2aim({"code": "/opt/orca_6/orca"}) == "{code_dir}/orca_2aim"
+    assert _orca_2aim({"code": "orca"}) == "orca_2aim"
+
+
+def test_check_task_result(tmp_path):
+    node = orca_step.BSSE()
+    node._id = ("1",)  # for its indentation in the output
+    TR = seamm_exec.TaskResult
+    node._check_task_result(TR(key="orca", state="finished", returncode=0), tmp_path)
+    # A failure that ran: noted, then parsed as always
+    node._check_task_result(
+        TR(key="orca", state="failed", returncode=0, reason="success check: x"),
+        tmp_path,
+    )
+    with pytest.raises(RuntimeError, match="attempts exhausted"):
+        node._check_task_result(
+            TR(
+                key="orca",
+                state="failed",
+                returncode=0,
+                reason="attempts exhausted: 3 attempts",
+            ),
+            tmp_path,
+        )
+    with pytest.raises(RuntimeError, match="could not be run"):
+        node._check_task_result(
+            TR(key="orca", state="failed", reason="the task could not be run"),
+            tmp_path,
+        )
