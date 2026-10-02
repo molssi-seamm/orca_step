@@ -10,6 +10,7 @@ MOPAC step.
 """
 
 import configparser
+import hashlib
 import importlib
 import logging
 import os
@@ -135,6 +136,67 @@ def _library_path_vars(n_cores, library_path, environ=None):
 
 
 # Hartree -> the energy unit ORCA reports (E_h); kept explicit for clarity.
+
+
+# The rough cost of one ORCA calculation, relative to a hybrid DFT one, by the
+# words in the "!" line (the first match wins) and by the basis set family.
+_METHOD_COST = (
+    (("ccsd(t)", "ccsd", "qcisd"), 30.0),
+    (("dlpno",), 8.0),
+    (("mp2", "dsd", "b2plyp", "pwpb95", "b2gp", "dsd-"), 4.0),
+    (("xtb", "am1", "pm3", "mndo", "zindo"), 0.01),
+    (("hf-3c", "pbeh-3c", "r2scan-3c", "b97-3c"), 0.3),
+)
+_BASIS_COST = (
+    (("qzv", "cc-pvqz", "pcseg-3"), 15.0),
+    (("tzv", "cc-pvtz", "pcseg-2"), 4.0),
+)
+
+
+def estimated_seconds(keyword_line, n_atoms):
+    """A rough estimate of an ORCA run's time, for the inline rule.
+
+    It only needs to tell a sub-minute job from a long one: about a second for
+    water at hybrid DFT/def2-SVP, scaling as the atom count to the 2.5 power, more
+    for correlated methods, larger and diffuse basis sets, and gradients.
+    """
+    words = keyword_line.lower()
+    method = 1.0
+    for keys, cost in _METHOD_COST:
+        if any(k in words for k in keys):
+            method = cost
+            break
+    basis = 1.0
+    for keys, cost in _BASIS_COST:
+        if any(k in words for k in keys):
+            basis = cost
+            break
+    if "aug-" in words or re.search(r"def2-\w+d\b", words):
+        basis *= 2.0
+    extra = 3.0 if ("engrad" in words or "opt" in words or "freq" in words) else 1.0
+    n = max(1, int(n_atoms))
+    return 1.0 + 0.03 * n**2.5 * method * basis * extra
+
+
+def _fingerprint(files, make_wfx):
+    """Identify an ORCA run's inputs for restart, ignoring ``%pal``/``%maxcore``.
+
+    Those lines come from the cores and memory of the machine the job happens
+    to run on, which must not force a finished calculation to be redone.
+    """
+    h = hashlib.sha256()
+    h.update(f"orca wfx={bool(make_wfx)}".encode())
+    for name in sorted(files):
+        data = files[name]
+        if name == "orca.inp" and isinstance(data, str):
+            data = "\n".join(
+                line
+                for line in data.splitlines()
+                if not line.lstrip().lower().startswith(("%pal", "%maxcore"))
+            )
+        h.update(b"\0" + name.encode() + b"\0")
+        h.update(data if isinstance(data, bytes) else str(data).encode())
+    return "orca:" + h.hexdigest()
 
 
 class ORCABase(seamm.Node):
@@ -397,14 +459,17 @@ class ORCABase(seamm.Node):
             "*.engrad",
         ]
         if make_wfx:
-            orca_2aim = str(Path(config["code"]).parent / "orca_2aim")
-            cmd += ["&&", orca_2aim, "orca", ">", "orca_2aim.out", "2>&1"]
+            # {code_dir} is the directory holding the orca binary.
+            cmd += ["&&", "{code_dir}/orca_2aim", "orca", ">", "orca_2aim.out", "2>&1"]
             return_files += ["orca.wfx", "orca_2aim.out"]
 
-        result = self.flowchart.executor.run(
+        n_atoms = configuration.n_atoms if atom_indices is None else len(atom_indices)
+        task = seamm_exec.Task(
+            key="orca",
+            program="orca",
             cmd=cmd,
             config=config,
-            directory=str(run_directory),
+            directory=run_directory,
             files=files,
             # Wildcards: ORCA writes orca.bibtex (suggested citations) and
             # orca.property.txt (and other *.txt depending on options); the
@@ -417,9 +482,17 @@ class ORCABase(seamm.Node):
             in_situ=None,
             shell=True,
             env=env,
+            resources=seamm_exec.Resources(ntasks=n_cores),
+            estimated_seconds=estimated_seconds(keyword_line, n_atoms),
+            fingerprint=_fingerprint(files, make_wfx),
+            # ORCA exits 0 even after an error termination.
+            success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
         )
-        if not result:
-            raise RuntimeError(f"There was an error running ORCA in {run_directory}.")
+        result = seamm_exec.run_task(task, node=self, directory=run_directory)
+        if result.state == "failed" and result.returncode is None:
+            raise RuntimeError(
+                f"There was an error running ORCA in {run_directory}:\n" + result.stderr
+            )
         self._report_run_location(result, run_directory)
 
         return self._parse_output(run_directory / "orca.out")
@@ -430,8 +503,18 @@ class ORCABase(seamm.Node):
         See molssi-seamm/orca_step#20: this distinction matters for diagnosing
         NFS-related failures and for knowing where any leftover scratch
         (e.g. after a crash) actually landed.
+
+        ``result`` is the :class:`seamm_exec.TaskResult` of the run.
         """
-        if result.get("in_situ", True):
+        if result.restored:
+            printer.normal(
+                __(
+                    "ORCA had already finished this calculation, with the same "
+                    f"input, in {directory}; using those results.",
+                    indent=self.indent + 4 * " ",
+                )
+            )
+        elif result.in_situ in (None, True):
             printer.normal(
                 __(
                     f"Ran ORCA directly in the job directory, {directory}.",
@@ -442,7 +525,7 @@ class ORCABase(seamm.Node):
             printer.normal(
                 __(
                     "Ran ORCA in node-local scratch "
-                    f"({result.get('directory')}), not the job directory, "
+                    f"({result.run_directory}), not the job directory, "
                     "because this job is running under a batch scheduler and "
                     "ORCA's MPI scratch I/O is not safe on NFS; only the "
                     "requested result files were copied back here.",
@@ -649,10 +732,9 @@ class ORCABase(seamm.Node):
         # for the Energy substep), for a following Atomic Charges (DDEC6) step.
         # wfx_step is the Compound sub-job that kept its density (the dimer).
         if make_wfx:
-            orca_2aim = str(Path(config["code"]).parent / "orca_2aim")
             cmd += [
                 "&&",
-                orca_2aim,
+                "{code_dir}/orca_2aim",
                 wfx_step,
                 ">",
                 "orca_2aim.out",
@@ -663,19 +745,28 @@ class ORCABase(seamm.Node):
                 "orca.wfx",
             ]
             return_files += ["orca.wfx", "orca_2aim.out"]
-        result = self.flowchart.executor.run(
+        task = seamm_exec.Task(
+            key="orca",
+            program="orca",
             cmd=cmd,
             config=config,
-            directory=self.directory,
+            directory=directory,
             files=files,
             return_files=return_files,
             # See the comment in run_orca -- molssi-seamm/orca_step#20.
             in_situ=None,
             shell=True,
             env=env,
+            resources=seamm_exec.Resources(ntasks=n_cores),
+            fingerprint=_fingerprint(files, make_wfx),
+            # ORCA exits 0 even after an error termination.
+            success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
         )
-        if not result:
-            raise RuntimeError("There was an error running the ORCA Compound job.")
+        result = seamm_exec.run_task(task, node=self, directory=directory)
+        if result.state == "failed" and result.returncode is None:
+            raise RuntimeError(
+                "There was an error running the ORCA Compound job:\n" + result.stderr
+            )
         self._report_run_location(result, directory)
 
         # Read the corrected gradient from the EnGrad file the Compound wrote,
