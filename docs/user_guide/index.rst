@@ -735,21 +735,35 @@ The sub-jobs of a counterpoise (BSSE) correction run together: concurrently on t
 machine when there are cores for more than one, or as separate calculations on the
 job's cluster queue.
 
+ORCA as a model chemistry
+=========================
+
+Steps that set up a *model chemistry* and then evaluate it at many structures --
+the **Energy** step, the **Dimer Builder**'s energy-based contact search,
+**Normal Mode Sampling** and LAMMPS QM-MD -- use ORCA without any settings in the
+ORCA step itself: put a **Model Chemistry** step in the flowchart and choose an ORCA
+model chemistry there (e.g. ``ORCA:DFT@B3LYP/def2-SVP``).
+
+How ORCA then runs is chosen for you, and gives the same numbers either way:
+
+* **As separate calculations**, one per structure, for the Energy step, the Dimer
+  Builder and Normal Mode Sampling's finite-difference Hessian. They run several at
+  a time on this machine, or on the cluster when the job's target sends its
+  calculations to a queue, and a rerun of the job reuses those that had finished.
+  ORCA starts afresh for each structure in any case, so running them side by side
+  is usually faster than one after another in an engine. Periodic structures are not run this way.
+* **As a persistent** `MDI <https://molssi-mdi.github.io/MDI_Library/>`_ **engine**
+  for steps that drive ORCA one geometry after another (LAMMPS QM-MD, Normal Mode
+  Sampling's analytic Hessian on this machine).
+
+The model chemistry's basis is used either way: any basis ORCA knows, or a basis
+from the Basis Set Exchange (``bse:NAME``), whose definition is fetched for the
+elements present and passed to ORCA exactly as the ORCA step does. A lone atom or
+ion runs without the COSX approximation (``NoCOSX``), as in the ORCA step, which
+avoids an artifact of several kJ/mol from COSX's grid on a single centre.
+
 Driving ORCA as an MDI engine
-=============================
-
-Besides running as an ordinary flowchart step, ORCA can act as a persistent
-`MDI <https://molssi-mdi.github.io/MDI_Library/>`_ engine for steps that set up a
-*model chemistry* and then evaluate it at many geometries -- for example the
-**Dimer Builder** step's energy-based contact search. You do not configure this
-in the ORCA step itself: put a **Model Chemistry** step in the flowchart, choose
-an ORCA model chemistry there (e.g. ``ORCA:DFT@B3LYP/def2-SVP``), and the driving
-step launches ORCA as the engine automatically.
-
-The engine uses the model chemistry's own basis: any basis ORCA knows, or a
-basis from the Basis Set Exchange (``bse:NAME``), whose definition the engine
-fetches for the elements present and passes to ORCA exactly as the ORCA step
-does.
+-----------------------------
 
 Because ORCA has no in-process interface, the engine runs the ``orca`` binary
 once per geometry in a persistent working directory, **reusing the previous
