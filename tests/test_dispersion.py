@@ -118,3 +118,19 @@ def test_energy_keyword_line_for_a_d4_variant():
         }
     )
     assert line == "R2SCAN D4 def2-SVP AutoAux"
+
+
+def test_accuracy_keywords_not_doubled():
+    """A method that already names an SCF preset or a grid keeps its own; ORCA
+    refuses two of a kind."""
+    from orca_step.batch import engine_helpers
+
+    helpers = engine_helpers()
+    assert helpers.accuracy_keywords("B3LYP") == "TIGHTSCF DEFGRID3"
+    assert helpers.accuracy_keywords("B3LYP VeryTightSCF") == "DEFGRID3"
+    assert helpers.accuracy_keywords("B3LYP DefGrid2") == "TIGHTSCF"
+    assert helpers.accuracy_keywords("B3LYP TIGHTSCF DEFGRID3") == ""
+    text = helpers.orca_input(
+        "B3LYP VeryTightSCF", "def2-SVP", 0, 1, ["H"], [[0, 0, 0]]
+    )
+    assert text.splitlines()[0] == "! B3LYP VeryTightSCF def2-SVP DEFGRID3 EnGrad"
