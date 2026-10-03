@@ -9,7 +9,8 @@ History
     * ORCA run as separate calculations or as an MDI engine (the Energy step, Dimer
       Builder, Normal Mode Sampling, MBE, LAMMPS QM-MD) now uses tight SCF convergence
       and the fine integration grid (``TIGHTSCF DEFGRID3``), which forces need. The
-      results change slightly, and the calculations take somewhat longer.
+      results change slightly, and the calculations take somewhat longer. A method
+      that already names an SCF preset or a grid keeps its own.
 2026.10.3.1 -- ORCA as separate calculations for many structures, on this machine or a cluster
     * With an ORCA model chemistry, the Energy step, the Dimer Builder and Normal Mode
       Sampling's finite-difference Hessian now run ORCA as separate calculations, one
