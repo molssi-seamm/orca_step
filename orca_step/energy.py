@@ -391,6 +391,7 @@ class Energy(orca_step.ORCABase):
         md = orca_step.metadata
         if self._is_dft(P):
             functional, _ = self._resolve_method_basis(P)
+            functional, _ = orca_step.split_dispersion(functional)
             rec = md["functionals"].get(functional)
             if rec is None:
                 rec = next(
@@ -943,6 +944,7 @@ class Energy(orca_step.ORCABase):
         if not self._is_dft(P):
             return
         method, _ = self._resolve_method_basis(P)
+        method, _ = orca_step.split_dispersion(method)
         funcs = orca_step.metadata.get("dft functionals", {})
         # Case-insensitive match on the ORCA functional keyword.
         keys = funcs.get(method)

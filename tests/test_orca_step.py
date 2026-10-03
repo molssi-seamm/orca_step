@@ -1148,7 +1148,7 @@ def test_orca_mdi_input():
         [[0.0, 0.0, 0.0], [0.0, 0.0, 0.96], [0.9, 0.0, -0.3]],
         ncores=1,
     )
-    assert text.startswith("! B3LYP AutoAux def2-SVP EnGrad")
+    assert text.startswith("! B3LYP AutoAux def2-SVP TIGHTSCF DEFGRID3 EnGrad")
     assert "* xyz 0 1" in text and text.rstrip().endswith("*")
     assert "%pal" not in text
     assert "%pal nprocs 4 end" in mod.orca_input(
@@ -1183,7 +1183,7 @@ def test_orca_mdi_hessian_input():
     text = mod.orca_hessian_input(
         "HF", "def2-SVP", 0, 1, ["H", "H"], [[0, 0, 0], [0, 0, 0.74]], ncores=1
     )
-    assert text.startswith("! HF def2-SVP AnFreq")
+    assert text.startswith("! HF def2-SVP TIGHTSCF DEFGRID3 AnFreq")
     assert "* xyz 0 1" in text
 
 
@@ -2634,7 +2634,9 @@ def test_dlpno_double_hybrid_mdi_engine(tmp_path):
         blocks="%mp2 DLPNO true end",
     )
     lines = text.splitlines()
-    assert lines[0] == "! REVDSD-PBEP86-D4/2021 AutoAux def2-SVP EnGrad"
+    assert (
+        lines[0] == "! REVDSD-PBEP86-D4/2021 AutoAux def2-SVP TIGHTSCF DEFGRID3 EnGrad"
+    )
     assert lines.index("%mp2 DLPNO true end") < lines.index("* xyz 0 1")
 
 
@@ -2803,7 +2805,7 @@ def test_orca_mdi_bse_basis_goes_to_a_basis_file(tmp_path):
         [[0, 0, 0], [0, 0, 1], [0, 1, 0]],
         blocks=block,
     )
-    assert inp.splitlines()[0] == "! B3LYP AutoAux EnGrad"
+    assert inp.splitlines()[0] == "! B3LYP AutoAux TIGHTSCF DEFGRID3 EnGrad"
     assert '%basis GTOName "basis.bas" end' in inp
     # An ORCA basis passes through
     assert mod.basis_keyword_and_block("def2-TZVP", [8], tmp_path) == (

@@ -56,6 +56,12 @@ _Z_TO_SYMBOL = {d["atomic number"]: sym for sym, d in element_data.items()}
 # ---------------------------------------------------------------------------
 # ORCA-specific helpers (pure; unit-testable without a socket or ORCA present)
 # ---------------------------------------------------------------------------
+#: Added to every calculation: tight SCF convergence and the fine integration
+#: grid. These calculations are mostly forces for training data, which need
+#: both; ORCA's defaults are NormalSCF and DEFGRID2.
+ACCURACY_KEYWORDS = "TIGHTSCF DEFGRID3"
+
+
 def orca_input(
     method, basis, charge, multiplicity, symbols, coords_ang, ncores=1, blocks=""
 ):
@@ -66,7 +72,9 @@ def orca_input(
     ``%mp2 DLPNO true end``). ORCA autostarts from an existing ``orca.gbw`` in
     the run directory, so no explicit guess keyword is needed here.
     """
-    lines = [" ".join(w for w in ("!", method, basis, "EnGrad") if w)]
+    lines = [
+        " ".join(w for w in ("!", method, basis, ACCURACY_KEYWORDS, "EnGrad") if w)
+    ]
     if ncores and ncores > 1:
         lines.append(f"%pal nprocs {ncores} end")
     if blocks:
@@ -138,7 +146,9 @@ def orca_hessian_input(
     energy+gradient input; ``AnFreq`` needs an analytic second derivative for the
     method (HF, most DFT, MP2). Methods without one should fall back to
     finite-differencing the gradient on the driver side."""
-    lines = [" ".join(w for w in ("!", method, basis, "AnFreq") if w)]
+    lines = [
+        " ".join(w for w in ("!", method, basis, ACCURACY_KEYWORDS, "AnFreq") if w)
+    ]
     if ncores and ncores > 1:
         lines.append(f"%pal nprocs {ncores} end")
     if blocks:

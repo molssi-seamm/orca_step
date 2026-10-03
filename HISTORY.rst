@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.10.3.2 -- D4-corrected functionals as model chemistries; tighter ORCA settings for many structures
+    * Functionals without a dispersion correction of their own are offered with the D4
+      correction as model chemistries, e.g. ``ORCA:DFT@R2SCAN-D4/def2-TZVP`` (``! R2SCAN
+      D4``), for the functionals the D4 model has parameters for. ORCA's own functionals
+      that include dispersion, such as ``WB97X-D4``, are unchanged.
+    * ORCA run as separate calculations or as an MDI engine (the Energy step, Dimer
+      Builder, Normal Mode Sampling, MBE, LAMMPS QM-MD) now uses tight SCF convergence
+      and the fine integration grid (``TIGHTSCF DEFGRID3``), which forces need. The
+      results change slightly, and the calculations take somewhat longer.
 2026.10.3.1 -- ORCA as separate calculations for many structures, on this machine or a cluster
     * With an ORCA model chemistry, the Energy step, the Dimer Builder and Normal Mode
       Sampling's finite-difference Hessian now run ORCA as separate calculations, one

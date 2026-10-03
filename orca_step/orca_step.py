@@ -34,6 +34,46 @@ def full_orca_path(code):
 # model_chemistry_step concern, not ORCA's.)
 _ADVERTISED_BASES = ("def2-SVP", "def2-TZVP", "def2-QZVP", "cc-pVTZ")
 
+# Functionals offered with the D4 dispersion correction as "<functional>-D4"
+# (written "! <functional> D4"): those without dispersion of their own that the
+# D4 model has parameters for (the dftd4 library's table). Double hybrids are
+# left out; the ones with D4 have it in their own keyword.
+D4_FUNCTIONALS = frozenset(
+    (
+        # GGA
+        "BLYP", "BP86", "GLYP", "MPWLYP", "MPWPW", "OLYP", "PBE", "PW91", "PWP",
+        "REVPBE", "RPBE", "RPW86PBE", "XLYP",
+        # meta-GGA
+        "M06L", "R2SCAN", "REVTPSS", "RSCAN", "SCANFUNC", "TPSS",
+        # global hybrid
+        "B1LYP", "B1P86", "B3LYP", "B3P86", "B3PW91", "BHANDHLYP", "M06",
+        "MPW1LYP", "MPW1PW", "O3LYP", "PBE0", "PW1PW", "PW6B95", "R2SCAN0",
+        "R2SCAN50", "R2SCANH", "REVPBE0", "REVPBE38", "TPSS0", "TPSSH", "X3LYP",
+        # range-separated hybrid
+        "CAM-B3LYP", "LC-BLYP", "WB97", "WB97X", "WR2SCAN",
+    )
+)  # fmt: skip
+
+
+def _is_orca_functional(name):
+    upper = name.upper()
+    return any(k.upper() == upper for k in orca_step.metadata["functionals"])
+
+
+def split_dispersion(method):
+    """``(functional, "D4")`` for a "<functional>-D4" model-chemistry method
+    whose functional is in :data:`D4_FUNCTIONALS`, otherwise ``(method, "")``.
+    Case-insensitive; the functional comes back as ORCA spells it. ORCA's own
+    functionals win: WB97X-D4 is ORCA's keyword, not WB97X plus D4."""
+    if _is_orca_functional(method):
+        return method, ""
+    if method.upper().endswith("-D4"):
+        base = method[:-3]
+        for name in D4_FUNCTIONALS:
+            if name.upper() == base.upper():
+                return name, "D4"
+    return method, ""
+
 
 def mc_method_alias(functional):
     """A model-chemistry-safe spelling of a DFT functional keyword.
@@ -60,6 +100,11 @@ def method_has_analytic_hessian(method):
     engine should advertise ``<HESSIAN``.
     """
     functionals = orca_step.metadata["functionals"]
+    # The D4 correction has analytic second derivatives in ORCA; the
+    # functional decides.
+    method, _ = split_dispersion(method)
+    if method.upper().endswith(" D4"):
+        method = method[:-3]
     rec = functionals.get(method) or next(
         (r for k, r in functionals.items() if k.upper() == method.upper()), None
     )
@@ -84,6 +129,9 @@ def orca_method_keyword(method):
     """The keyword to put on ORCA's '!' line for `method`: the parent functional
     for a DLPNO double hybrid (whose DLPNO-ness goes in a '%mp2' block, see
     :func:`orca_method_blocks`), otherwise `method` unchanged."""
+    base, dispersion = split_dispersion(method)
+    if dispersion:
+        return f"{base} {dispersion}"
     return dlpno_parent(method) or method
 
 
@@ -155,6 +203,19 @@ class ORCAStep(object):
                     )
                     for name, rec in orca_step.metadata["functionals"].items()
                 ]
+                # The D4-corrected variants, e.g. R2SCAN-D4 -> "! R2SCAN D4"
+                entries.extend(
+                    (
+                        f"{name}-D4",
+                        f"{name} D4",
+                        orca_step.metadata["functionals"][name].get(
+                            "gradients", "analytic"
+                        ),
+                    )
+                    for name in sorted(D4_FUNCTIONALS)
+                    if name in orca_step.metadata["functionals"]
+                    and not _is_orca_functional(f"{name}-D4")
+                )
             else:
                 entries = [(method, method, info.get("gradients", "analytic"))]
             for adv_method, real, gradients in entries:

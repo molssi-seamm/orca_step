@@ -762,6 +762,18 @@ elements present and passed to ORCA exactly as the ORCA step does. A lone atom o
 ion runs without the COSX approximation (``NoCOSX``), as in the ORCA step, which
 avoids an artifact of several kJ/mol from COSX's grid on a single centre.
 
+Every calculation run this way uses tight SCF convergence and the fine integration
+grid (``TIGHTSCF DEFGRID3``). These calculations are mostly forces for training
+data or for derivatives, which need both, rather than ORCA's looser defaults.
+
+Functionals without a dispersion correction of their own are also offered with
+Grimme's D4 correction, as ``<functional>-D4`` -- e.g. ``ORCA:DFT@R2SCAN-D4/def2-TZVP``,
+which runs ``! R2SCAN D4``. They are offered for the functionals the D4 model has
+parameters for; double hybrids are not, and functionals that already include
+dispersion (``WB97X-D4``, ``B97M-V``, ``R2SCAN-3C``, ...) are offered only as
+themselves. Method names are matched as written, so use the capitals shown in the
+Model Chemistry step's list.
+
 Driving ORCA as an MDI engine
 -----------------------------
 
