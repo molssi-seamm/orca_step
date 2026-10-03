@@ -726,6 +726,11 @@ if ORCA is installed differently (or not at all) where the job runs. Calculation
 estimated to take under a minute stay on the job's own machine when ORCA is installed
 there.
 
+On a site that provides ORCA through environment modules, give ``code`` as ORCA's
+**full path** in ``orca.ini`` (with ``installation = modules``): ORCA must be invoked by
+its full path to find its sub-programs for parallel runs, and a bare ``orca`` cannot be
+expanded before the module is loaded.
+
 The sub-jobs of a counterpoise (BSSE) correction run together: concurrently on this
 machine when there are cores for more than one, or as separate calculations on the
 job's cluster queue.

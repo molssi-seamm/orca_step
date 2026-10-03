@@ -46,13 +46,13 @@ def method_and_blocks(model_chemistry):
     a model chemistry -- exactly as ORCA's MDI engine is launched for it."""
     from .orca_step import dlpno_parent, mc_method_unalias, orca_method_keyword
 
-    options = model_chemistry.get("options") or {}
-    # The real ORCA keyword: the engine's, or (for methods with no MDI engine,
-    # e.g. CCSD(T), which the batch path can still run) the un-aliased method.
-    method = options.get("mdi_method_arg") or mc_method_unalias(
-        model_chemistry.get("method")
-    )
-    basis = options.get("mdi_basis_arg") or model_chemistry.get("basis")
+    from seamm_exec.evaluator import mdi_method_and_basis
+
+    # The basis rule lives once, in seamm_exec. The real ORCA keyword: the
+    # engine's, or (for methods with no MDI engine, e.g. CCSD(T), which the
+    # batch path can still run) the un-aliased method.
+    method, basis = mdi_method_and_basis(model_chemistry)
+    method = mc_method_unalias(method)
     blocks = []
     parent = dlpno_parent(method)
     keyword = orca_method_keyword(method)

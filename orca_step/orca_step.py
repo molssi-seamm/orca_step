@@ -183,6 +183,11 @@ class ORCAStep(object):
                         # The MDI engine runs ORCA once per structure, so many
                         # structures are better run as concurrent tasks.
                         "prefers_batch": True,
+                        # Whether ORCA has an analytic Hessian for the method,
+                        # so a step need not start an engine to ask.
+                        "analytic_hessian": bool(
+                            mdi_capable and method_has_analytic_hessian(real)
+                        ),
                     }
         return options
 
