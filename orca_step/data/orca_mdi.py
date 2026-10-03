@@ -61,6 +61,26 @@ _Z_TO_SYMBOL = {d["atomic number"]: sym for sym, d in element_data.items()}
 #: both; ORCA's defaults are NormalSCF and DEFGRID2.
 ACCURACY_KEYWORDS = "TIGHTSCF DEFGRID3"
 
+_SCF_PRESETS = {
+    "SLOPPYSCF", "LOOSESCF", "NORMALSCF", "STRONGSCF", "TIGHTSCF", "VERYTIGHTSCF",
+    "EXTREMESCF",
+}  # fmt: skip
+_GRIDS = {"DEFGRID1", "DEFGRID2", "DEFGRID3"}
+
+
+def accuracy_keywords(method):
+    """:data:`ACCURACY_KEYWORDS`, less any of the same kind the method words
+    already give: ORCA refuses two SCF presets or two grids."""
+    given = {w.upper() for w in method.split()}
+    words = []
+    for word in ACCURACY_KEYWORDS.split():
+        for kind in (_SCF_PRESETS, _GRIDS):
+            if word in kind and given & kind:
+                break
+        else:
+            words.append(word)
+    return " ".join(words)
+
 
 def orca_input(
     method, basis, charge, multiplicity, symbols, coords_ang, ncores=1, blocks=""
@@ -73,7 +93,9 @@ def orca_input(
     the run directory, so no explicit guess keyword is needed here.
     """
     lines = [
-        " ".join(w for w in ("!", method, basis, ACCURACY_KEYWORDS, "EnGrad") if w)
+        " ".join(
+            w for w in ("!", method, basis, accuracy_keywords(method), "EnGrad") if w
+        )
     ]
     if ncores and ncores > 1:
         lines.append(f"%pal nprocs {ncores} end")
@@ -147,7 +169,9 @@ def orca_hessian_input(
     method (HF, most DFT, MP2). Methods without one should fall back to
     finite-differencing the gradient on the driver side."""
     lines = [
-        " ".join(w for w in ("!", method, basis, ACCURACY_KEYWORDS, "AnFreq") if w)
+        " ".join(
+            w for w in ("!", method, basis, accuracy_keywords(method), "AnFreq") if w
+        )
     ]
     if ncores and ncores > 1:
         lines.append(f"%pal nprocs {ncores} end")
