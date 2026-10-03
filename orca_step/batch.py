@@ -61,6 +61,18 @@ def method_and_blocks(model_chemistry):
     return f"{keyword} AutoAux", basis or "def2-SVP", blocks
 
 
+def can_run_task(configuration, model_chemistry, *, options=None):
+    """Whether :func:`get_task` can run this structure: molecules only (ORCA has
+    no periodic mode here), and no open-shell DLPNO double hybrid."""
+    options = dict(options or {})
+    data = structure_data(configuration)
+    if data["periodicity"] != 0:
+        return False
+    multiplicity = int(options.get("multiplicity", data["multiplicity"]))
+    _, _, blocks = method_and_blocks(model_chemistry)
+    return not (blocks and multiplicity != 1)
+
+
 def get_task(
     configuration,
     model_chemistry,
@@ -75,6 +87,13 @@ def get_task(
     options = dict(options or {})
     helpers = engine_helpers()
     data = structure_data(configuration)
+    if data["periodicity"] != 0:
+        raise ValueError(
+            "ORCA calculations are molecular: a periodic structure cannot run as "
+            "an ORCA task."
+        )
+    if options.get("guess") is not None:
+        raise ValueError("ORCA tasks do not take an initial guess yet.")
 
     atom_indices = options.get("atom_indices")
     if atom_indices is None:
@@ -115,7 +134,7 @@ def get_task(
 
     gradients = "gradients" in properties
     text = helpers.orca_input(
-        method,
+        helpers.single_center_method(method, len(symbols)),
         basis,
         charge,
         multiplicity,

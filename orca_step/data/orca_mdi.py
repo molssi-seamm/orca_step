@@ -79,6 +79,26 @@ def orca_input(
     return "\n".join(lines)
 
 
+# Exchange schemes a user may have chosen; one of them means "leave it alone".
+_EXCHANGE_SCHEME_KEYWORDS = {"RIJCOSX", "COSX", "NOCOSX", "RIJK", "RIJONX", "NORI"}
+
+
+def single_center_method(method, n_centers):
+    """``method`` plus ``NoCOSX`` for a one-center job (a lone atom or ion).
+
+    ORCA 6.1.1's default RIJCOSX exchange mis-builds the d-type virtuals of some
+    lone atoms when the SCF starts from scratch (~5 kJ/mol in the MP2 part of a
+    double hybrid for Na, Na+, Mg), as the ORCA step knows
+    (``Energy.single_center_keywords``). Exact exchange is right and cheap for
+    one center. Ghost atoms count as centers; a scheme already chosen is kept.
+    """
+    if n_centers != 1:
+        return method
+    if {w.upper() for w in method.split()} & _EXCHANGE_SCHEME_KEYWORDS:
+        return method
+    return f"{method} NoCOSX"
+
+
 def basis_keyword_and_block(basis, atomic_numbers, workdir):
     """The basis for the '!' line and any '%basis' block it needs.
 
@@ -334,7 +354,7 @@ def main():
             b for b in (basis_block, "%mp2 DLPNO true end" if args.dlpno else "") if b
         )
         text = orca_input(
-            method,
+            single_center_method(method, natoms),
             basis,
             charge,
             multiplicity,
@@ -375,7 +395,7 @@ def main():
             args.basis, atomic_numbers, workdir
         )
         text = orca_hessian_input(
-            method,
+            single_center_method(method, natoms),
             basis,
             charge,
             multiplicity,
