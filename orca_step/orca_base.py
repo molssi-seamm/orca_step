@@ -504,6 +504,44 @@ class ORCABase(seamm.Node):
         dict
             Parsed results, at least ``{"energy": <E_h>, "success": bool}``.
         """
+        task = self.orca_job_task(
+            keyword_line,
+            configuration,
+            charge,
+            multiplicity,
+            atom_indices=atom_indices,
+            ghost_atoms=ghost_atoms,
+            directory=directory,
+            extra_blocks=extra_blocks,
+            extra_files=extra_files,
+            make_wfx=make_wfx,
+        )
+        run_directory = Path(task.directory)
+        result = seamm_exec.run_task(task, node=self, directory=run_directory)
+        self._check_task_result(result, run_directory)
+        self._report_run_location(result, run_directory)
+
+        return self._parse_output(run_directory / "orca.out")
+
+    def orca_job_task(
+        self,
+        keyword_line,
+        configuration,
+        charge,
+        multiplicity,
+        atom_indices=None,
+        ghost_atoms=None,
+        directory=None,
+        extra_blocks="",
+        extra_files=None,
+        make_wfx=False,
+        key="orca",
+    ):
+        """The :class:`seamm_exec.Task` that :meth:`run_orca_job` runs, built
+        without running it, so that a step can run several at once (a BSSE
+        correction's sub-jobs) in one ``TaskSet``. ``key`` names it in that
+        ``TaskSet``; the other arguments are those of :meth:`run_orca_job`.
+        """
         run_directory = (
             Path(directory) if directory is not None else Path(self.directory)
         )
@@ -563,7 +601,7 @@ class ORCABase(seamm.Node):
 
         n_atoms = configuration.n_atoms if atom_indices is None else len(atom_indices)
         task = seamm_exec.Task(
-            key="orca",
+            key=key,
             program="orca",
             cmd=cmd,
             directory=run_directory,
@@ -584,11 +622,7 @@ class ORCABase(seamm.Node):
             # ORCA exits 0 even after an error termination.
             success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
         )
-        result = seamm_exec.run_task(task, node=self, directory=run_directory)
-        self._check_task_result(result, run_directory)
-        self._report_run_location(result, run_directory)
-
-        return self._parse_output(run_directory / "orca.out")
+        return task
 
     def _check_task_result(self, result, directory):
         """Report a failed ORCA task, and stop if its output can't be used.
