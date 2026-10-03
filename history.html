@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.2.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.3 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=77b25824"></script>
+    <script src="_static/documentation_options.js?v=f64fa391"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.2.1" />
+  <meta name="docsearch:version" content="2026.10.3" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,16 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.3 – Bugfix: the MDI engine runs the chosen basis, including Basis Set Exchange bases</dt><dd><ul class="simple">
+<li><p>Together with model_chemistry_step 2026.10.3, ORCA driven as an MDI engine
+(the Energy, Dimer Builder, Normal Mode Sampling and LAMMPS steps) now runs
+the model chemistry’s basis; it used to run def2-SVP whatever basis was
+chosen.</p></li>
+<li><p>The MDI engine accepts Basis Set Exchange bases (<code class="docutils literal notranslate"><span class="pre">bse:NAME</span></code>): it fetches
+the definition for the elements present and passes it to ORCA as the ORCA
+step does, with the same energy as ORCA’s own copy of the basis.</p></li>
+</ul>
+</dd>
 <dt>2026.10.2.1 – Rerunning a job reuses ORCA calculations that had finished</dt><dd><ul class="simple">
 <li><p>ORCA now runs through SEAMM’s task layer. Rerunning a job in the same directory,
 for example after it was stopped or ran out of time, reuses each ORCA calculation

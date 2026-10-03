@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.2.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.3 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=77b25824"></script>
+    <script src="../_static/documentation_options.js?v=f64fa391"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.2.1" />
+  <meta name="docsearch:version" content="2026.10.3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1190,6 +1190,10 @@ running; the rerun stops it before starting the calculation again.</p>
 in the ORCA step itself: put a <strong>Model Chemistry</strong> step in the flowchart, choose
 an ORCA model chemistry there (e.g. <code class="docutils literal notranslate"><span class="pre">ORCA:DFT&#64;B3LYP/def2-SVP</span></code>), and the driving
 step launches ORCA as the engine automatically.</p>
+<p>The engine uses the model chemistry’s own basis: any basis ORCA knows, or a
+basis from the Basis Set Exchange (<code class="docutils literal notranslate"><span class="pre">bse:NAME</span></code>), whose definition the engine
+fetches for the elements present and passes to ORCA exactly as the ORCA step
+does.</p>
 <p>Because ORCA has no in-process interface, the engine runs the <code class="docutils literal notranslate"><span class="pre">orca</span></code> binary
 once per geometry in a persistent working directory, <strong>reusing the previous
 geometry’s orbitals</strong> (<code class="docutils literal notranslate"><span class="pre">orca.gbw</span></code>) as the SCF guess – the main saving for a
