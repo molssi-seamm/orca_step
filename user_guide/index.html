@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.3.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.3.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=0667127d"></script>
+    <script src="../_static/documentation_options.js?v=319f9817"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3.1" />
+  <meta name="docsearch:version" content="2026.10.3.2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1223,6 +1223,16 @@ from the Basis Set Exchange (<code class="docutils literal notranslate"><span cl
 elements present and passed to ORCA exactly as the ORCA step does. A lone atom or
 ion runs without the COSX approximation (<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>), as in the ORCA step, which
 avoids an artifact of several kJ/mol from COSX’s grid on a single centre.</p>
+<p>Every calculation run this way uses tight SCF convergence and the fine integration
+grid (<code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span> <span class="pre">DEFGRID3</span></code>). These calculations are mostly forces for training
+data or for derivatives, which need both, rather than ORCA’s looser defaults.</p>
+<p>Functionals without a dispersion correction of their own are also offered with
+Grimme’s D4 correction, as <code class="docutils literal notranslate"><span class="pre">&lt;functional&gt;-D4</span></code> – e.g. <code class="docutils literal notranslate"><span class="pre">ORCA:DFT&#64;R2SCAN-D4/def2-TZVP</span></code>,
+which runs <code class="docutils literal notranslate"><span class="pre">!</span> <span class="pre">R2SCAN</span> <span class="pre">D4</span></code>. They are offered for the functionals the D4 model has
+parameters for; double hybrids are not, and functionals that already include
+dispersion (<code class="docutils literal notranslate"><span class="pre">WB97X-D4</span></code>, <code class="docutils literal notranslate"><span class="pre">B97M-V</span></code>, <code class="docutils literal notranslate"><span class="pre">R2SCAN-3C</span></code>, …) are offered only as
+themselves. Method names are matched as written, so use the capitals shown in the
+Model Chemistry step’s list.</p>
 <section id="driving-orca-as-an-mdi-engine">
 <h3>Driving ORCA as an MDI engine<a class="headerlink" href="#driving-orca-as-an-mdi-engine" title="Link to this heading">#</a></h3>
 <p>Because ORCA has no in-process interface, the engine runs the <code class="docutils literal notranslate"><span class="pre">orca</span></code> binary

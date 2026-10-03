@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.10.3.1 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.10.3.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=0667127d"></script>
+    <script src="../../_static/documentation_options.js?v=319f9817"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3.1" />
+  <meta name="docsearch:version" content="2026.10.3.2" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -529,6 +529,49 @@
 <span class="c1"># model_chemistry_step concern, not ORCA's.)</span>
 <span class="n">_ADVERTISED_BASES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"def2-SVP"</span><span class="p">,</span> <span class="s2">"def2-TZVP"</span><span class="p">,</span> <span class="s2">"def2-QZVP"</span><span class="p">,</span> <span class="s2">"cc-pVTZ"</span><span class="p">)</span>
 
+<span class="c1"># Functionals offered with the D4 dispersion correction as "&lt;functional&gt;-D4"</span>
+<span class="c1"># (written "! &lt;functional&gt; D4"): those without dispersion of their own that the</span>
+<span class="c1"># D4 model has parameters for (the dftd4 library's table). Double hybrids are</span>
+<span class="c1"># left out; the ones with D4 have it in their own keyword.</span>
+<span class="n">D4_FUNCTIONALS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="p">(</span>
+        <span class="c1"># GGA</span>
+        <span class="s2">"BLYP"</span><span class="p">,</span> <span class="s2">"BP86"</span><span class="p">,</span> <span class="s2">"GLYP"</span><span class="p">,</span> <span class="s2">"MPWLYP"</span><span class="p">,</span> <span class="s2">"MPWPW"</span><span class="p">,</span> <span class="s2">"OLYP"</span><span class="p">,</span> <span class="s2">"PBE"</span><span class="p">,</span> <span class="s2">"PW91"</span><span class="p">,</span> <span class="s2">"PWP"</span><span class="p">,</span>
+        <span class="s2">"REVPBE"</span><span class="p">,</span> <span class="s2">"RPBE"</span><span class="p">,</span> <span class="s2">"RPW86PBE"</span><span class="p">,</span> <span class="s2">"XLYP"</span><span class="p">,</span>
+        <span class="c1"># meta-GGA</span>
+        <span class="s2">"M06L"</span><span class="p">,</span> <span class="s2">"R2SCAN"</span><span class="p">,</span> <span class="s2">"REVTPSS"</span><span class="p">,</span> <span class="s2">"RSCAN"</span><span class="p">,</span> <span class="s2">"SCANFUNC"</span><span class="p">,</span> <span class="s2">"TPSS"</span><span class="p">,</span>
+        <span class="c1"># global hybrid</span>
+        <span class="s2">"B1LYP"</span><span class="p">,</span> <span class="s2">"B1P86"</span><span class="p">,</span> <span class="s2">"B3LYP"</span><span class="p">,</span> <span class="s2">"B3P86"</span><span class="p">,</span> <span class="s2">"B3PW91"</span><span class="p">,</span> <span class="s2">"BHANDHLYP"</span><span class="p">,</span> <span class="s2">"M06"</span><span class="p">,</span>
+        <span class="s2">"MPW1LYP"</span><span class="p">,</span> <span class="s2">"MPW1PW"</span><span class="p">,</span> <span class="s2">"O3LYP"</span><span class="p">,</span> <span class="s2">"PBE0"</span><span class="p">,</span> <span class="s2">"PW1PW"</span><span class="p">,</span> <span class="s2">"PW6B95"</span><span class="p">,</span> <span class="s2">"R2SCAN0"</span><span class="p">,</span>
+        <span class="s2">"R2SCAN50"</span><span class="p">,</span> <span class="s2">"R2SCANH"</span><span class="p">,</span> <span class="s2">"REVPBE0"</span><span class="p">,</span> <span class="s2">"REVPBE38"</span><span class="p">,</span> <span class="s2">"TPSS0"</span><span class="p">,</span> <span class="s2">"TPSSH"</span><span class="p">,</span> <span class="s2">"X3LYP"</span><span class="p">,</span>
+        <span class="c1"># range-separated hybrid</span>
+        <span class="s2">"CAM-B3LYP"</span><span class="p">,</span> <span class="s2">"LC-BLYP"</span><span class="p">,</span> <span class="s2">"WB97"</span><span class="p">,</span> <span class="s2">"WB97X"</span><span class="p">,</span> <span class="s2">"WR2SCAN"</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>  <span class="c1"># fmt: skip</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_orca_functional</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="n">upper</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">upper</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="split_dispersion">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.split_dispersion">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_dispersion</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``(functional, "D4")`` for a "&lt;functional&gt;-D4" model-chemistry method</span>
+<span class="sd">    whose functional is in :data:`D4_FUNCTIONALS`, otherwise ``(method, "")``.</span>
+<span class="sd">    Case-insensitive; the functional comes back as ORCA spells it. ORCA's own</span>
+<span class="sd">    functionals win: WB97X-D4 is ORCA's keyword, not WB97X plus D4."""</span>
+    <span class="k">if</span> <span class="n">_is_orca_functional</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"-D4"</span><span class="p">):</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">method</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">D4_FUNCTIONALS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">base</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"D4"</span>
+    <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="s2">""</span></div>
+
+
 
 <div class="viewcode-block" id="mc_method_alias">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.mc_method_alias">[docs]</a>
@@ -560,6 +603,11 @@
 <span class="sd">    engine should advertise ``&lt;HESSIAN``.</span>
 <span class="sd">    """</span>
     <span class="n">functionals</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]</span>
+    <span class="c1"># The D4 correction has analytic second derivatives in ORCA; the</span>
+    <span class="c1"># functional decides.</span>
+    <span class="n">method</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_dispersion</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">" D4"</span><span class="p">):</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
     <span class="n">rec</span> <span class="o">=</span> <span class="n">functionals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">next</span><span class="p">(</span>
         <span class="p">(</span><span class="n">r</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">functionals</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()),</span> <span class="kc">None</span>
     <span class="p">)</span>
@@ -590,6 +638,9 @@
 <span class="w">    </span><span class="sd">"""The keyword to put on ORCA's '!' line for `method`: the parent functional</span>
 <span class="sd">    for a DLPNO double hybrid (whose DLPNO-ness goes in a '%mp2' block, see</span>
 <span class="sd">    :func:`orca_method_blocks`), otherwise `method` unchanged."""</span>
+    <span class="n">base</span><span class="p">,</span> <span class="n">dispersion</span> <span class="o">=</span> <span class="n">split_dispersion</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dispersion</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">dispersion</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">return</span> <span class="n">dlpno_parent</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">or</span> <span class="n">method</span></div>
 
 
@@ -672,6 +723,19 @@
                     <span class="p">)</span>
                     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="p">]</span>
+                <span class="c1"># The D4-corrected variants, e.g. R2SCAN-D4 -&gt; "! R2SCAN D4"</span>
+                <span class="n">entries</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">-D4"</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> D4"</span><span class="p">,</span>
+                        <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                            <span class="s2">"gradients"</span><span class="p">,</span> <span class="s2">"analytic"</span>
+                        <span class="p">),</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">D4_FUNCTIONALS</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]</span>
+                    <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_orca_functional</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">-D4"</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">entries</span> <span class="o">=</span> <span class="p">[(</span><span class="n">method</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"gradients"</span><span class="p">,</span> <span class="s2">"analytic"</span><span class="p">))]</span>
             <span class="k">for</span> <span class="n">adv_method</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">gradients</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
