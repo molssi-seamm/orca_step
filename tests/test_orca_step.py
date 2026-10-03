@@ -2753,3 +2753,71 @@ def test_check_task_result(tmp_path):
             TR(key="orca", state="failed", reason="the task could not be run"),
             tmp_path,
         )
+
+
+def test_orca_mdi_bse_basis_goes_to_a_basis_file(tmp_path):
+    """A 'bse:NAME' basis is fetched from the Basis Set Exchange into basis.bas
+    and named with %basis GTOName; the '!' line then has no basis."""
+    mod = _load_orca_mdi()
+    basis, block = mod.basis_keyword_and_block("bse:def2-SVP", [8, 1, 1], tmp_path)
+    assert basis == ""
+    assert block == '%basis GTOName "basis.bas" end'
+    text = (tmp_path / "basis.bas").read_text()
+    assert "OXYGEN" in text.upper() and "HYDROGEN" in text.upper()
+    inp = mod.orca_input(
+        "B3LYP AutoAux",
+        basis,
+        0,
+        1,
+        ["O", "H", "H"],
+        [[0, 0, 0], [0, 0, 1], [0, 1, 0]],
+        blocks=block,
+    )
+    assert inp.splitlines()[0] == "! B3LYP AutoAux EnGrad"
+    assert '%basis GTOName "basis.bas" end' in inp
+    # An ORCA basis passes through
+    assert mod.basis_keyword_and_block("def2-TZVP", [8], tmp_path) == (
+        "def2-TZVP",
+        "",
+    )
+
+
+def test_orca_mdi_bse_basis_with_a_real_orca(tmp_path):
+    """End to end through the engine's input path with the real binary."""
+    import shutil
+    import subprocess
+
+    orca = shutil.which("orca")
+    if orca is None:
+        pytest.skip("ORCA is not installed")
+    mod = _load_orca_mdi()
+    basis, block = mod.basis_keyword_and_block("bse:def2-SVP", [8, 1, 1], tmp_path)
+    inp = mod.orca_input(
+        "HF",
+        basis,
+        0,
+        1,
+        ["O", "H", "H"],
+        [[0.0, 0.0, 0.117], [0.0, 0.757, -0.469], [0.0, -0.757, -0.469]],
+        blocks=block,
+    )
+    (tmp_path / "orca.inp").write_text(inp)
+    out = subprocess.run(
+        [orca, "orca.inp"], cwd=tmp_path, capture_output=True, text=True
+    ).stdout
+    e_bse = mod.parse_energy(out)
+    (tmp_path / "orca.inp").write_text(
+        mod.orca_input(
+            "HF",
+            "def2-SVP",
+            0,
+            1,
+            ["O", "H", "H"],
+            [[0.0, 0.0, 0.117], [0.0, 0.757, -0.469], [0.0, -0.757, -0.469]],
+        )
+    )
+    out = subprocess.run(
+        [orca, "orca.inp"], cwd=tmp_path, capture_output=True, text=True
+    ).stdout
+    e_orca = mod.parse_energy(out)
+    assert e_bse is not None and abs(e_bse - e_orca) < 1e-6

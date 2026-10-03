@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.10.3 -- Bugfix: the MDI engine runs the chosen basis, including Basis Set Exchange bases
+    * Together with model_chemistry_step 2026.10.3, ORCA driven as an MDI engine
+      (the Energy, Dimer Builder, Normal Mode Sampling and LAMMPS steps) now runs
+      the model chemistry's basis; it used to run def2-SVP whatever basis was
+      chosen.
+    * The MDI engine accepts Basis Set Exchange bases (``bse:NAME``): it fetches
+      the definition for the elements present and passes it to ORCA as the ORCA
+      step does, with the same energy as ORCA's own copy of the basis.
+
 2026.10.2.1 -- Rerunning a job reuses ORCA calculations that had finished
     * ORCA now runs through SEAMM's task layer. Rerunning a job in the same directory,
       for example after it was stopped or ran out of time, reuses each ORCA calculation

@@ -66,7 +66,7 @@ def orca_input(
     ``%mp2 DLPNO true end``). ORCA autostarts from an existing ``orca.gbw`` in
     the run directory, so no explicit guess keyword is needed here.
     """
-    lines = [f"! {method} {basis} EnGrad"]
+    lines = [" ".join(w for w in ("!", method, basis, "EnGrad") if w)]
     if ncores and ncores > 1:
         lines.append(f"%pal nprocs {ncores} end")
     if blocks:
@@ -79,6 +79,31 @@ def orca_input(
     return "\n".join(lines)
 
 
+def basis_keyword_and_block(basis, atomic_numbers, workdir):
+    """The basis for the '!' line and any '%basis' block it needs.
+
+    A ``bse:NAME`` basis comes from the Basis Set Exchange, as in the ORCA step:
+    its ORCA-format definition for the elements present is written to
+    ``basis.bas`` in the work directory and named with ``%basis GTOName``, and
+    the '!' line carries no basis.
+    """
+    if basis and basis.strip().lower().startswith("bse:"):
+        name = basis.split(":", 1)[1].strip()
+        import basis_set_exchange as bse
+
+        elements = sorted({int(z) for z in atomic_numbers})
+        try:
+            text = bse.get_basis(name, elements=elements, fmt="orca", header=False)
+        except Exception as e:
+            raise RuntimeError(
+                f"Could not get basis set '{name}' from the Basis Set Exchange for "
+                f"elements {elements}: {e}"
+            )
+        (Path(workdir) / "basis.bas").write_text(text)
+        return "", '%basis GTOName "basis.bas" end'
+    return basis, ""
+
+
 def parse_energy(out_text):
     """The final single-point energy (hartree) from ORCA's stdout, or None."""
     matches = re.findall(r"FINAL SINGLE POINT ENERGY\s+(-?\d+\.\d+)", out_text)
@@ -86,16 +111,18 @@ def parse_energy(out_text):
 
 
 def orca_hessian_input(
-    method, basis, charge, multiplicity, symbols, coords_ang, ncores=1
+    method, basis, charge, multiplicity, symbols, coords_ang, ncores=1, blocks=""
 ):
     """ORCA input for an analytic Hessian (``! AnFreq``), which writes an
     ``orca.hess`` file. Same geometry/charge/multiplicity handling as the
     energy+gradient input; ``AnFreq`` needs an analytic second derivative for the
     method (HF, most DFT, MP2). Methods without one should fall back to
     finite-differencing the gradient on the driver side."""
-    lines = [f"! {method} {basis} AnFreq"]
+    lines = [" ".join(w for w in ("!", method, basis, "AnFreq") if w)]
     if ncores and ncores > 1:
         lines.append(f"%pal nprocs {ncores} end")
+    if blocks:
+        lines.append(blocks)
     lines.append(f"* xyz {charge} {multiplicity}")
     for sym, (x, y, z) in zip(symbols, coords_ang):
         lines.append(f"{sym:2s} {x:18.10f} {y:18.10f} {z:18.10f}")
@@ -300,15 +327,21 @@ def main():
             )
         symbols = [_Z_TO_SYMBOL[int(z)] for z in atomic_numbers]
         coords_ang = coords_bohr.reshape(natoms, 3) * ANG_PER_BOHR
+        basis, basis_block = basis_keyword_and_block(
+            args.basis, atomic_numbers, workdir
+        )
+        blocks = "\n".join(
+            b for b in (basis_block, "%mp2 DLPNO true end" if args.dlpno else "") if b
+        )
         text = orca_input(
             method,
-            args.basis,
+            basis,
             charge,
             multiplicity,
             symbols,
             coords_ang,
             args.ncores,
-            blocks="%mp2 DLPNO true end" if args.dlpno else "",
+            blocks=blocks,
         )
         (workdir / "orca.inp").write_text(text)
         t0 = time.perf_counter()
@@ -338,8 +371,18 @@ def main():
         nonlocal hessian
         symbols = [_Z_TO_SYMBOL[int(z)] for z in atomic_numbers]
         coords_ang = coords_bohr.reshape(natoms, 3) * ANG_PER_BOHR
+        basis, basis_block = basis_keyword_and_block(
+            args.basis, atomic_numbers, workdir
+        )
         text = orca_hessian_input(
-            method, args.basis, charge, multiplicity, symbols, coords_ang, args.ncores
+            method,
+            basis,
+            charge,
+            multiplicity,
+            symbols,
+            coords_ang,
+            args.ncores,
+            blocks=basis_block,
         )
         (workdir / "orca.inp").write_text(text)
         t0 = time.perf_counter()

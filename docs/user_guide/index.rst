@@ -725,6 +725,11 @@ in the ORCA step itself: put a **Model Chemistry** step in the flowchart, choose
 an ORCA model chemistry there (e.g. ``ORCA:DFT@B3LYP/def2-SVP``), and the driving
 step launches ORCA as the engine automatically.
 
+The engine uses the model chemistry's own basis: any basis ORCA knows, or a
+basis from the Basis Set Exchange (``bse:NAME``), whose definition the engine
+fetches for the elements present and passes to ORCA exactly as the ORCA step
+does.
+
 Because ORCA has no in-process interface, the engine runs the ``orca`` binary
 once per geometry in a persistent working directory, **reusing the previous
 geometry's orbitals** (``orca.gbw``) as the SCF guess -- the main saving for a
