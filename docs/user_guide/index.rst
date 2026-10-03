@@ -714,6 +714,22 @@ A calculation is run again when
 If the job was killed outright, an ORCA process from the earlier run may still be
 running; the rerun stops it before starting the calculation again.
 
+Where ORCA runs
+===============
+
+An ORCA calculation names only the program; how to run ORCA is worked out on the
+machine that runs it, from that machine's ``orca.ini`` (``[local]``: the path to ORCA,
+or ``installation = modules`` with the modules to load, and ``library-path`` for the
+OpenMPI ORCA was built with), falling back to ``orca`` on the PATH. So a job whose
+target sends its calculations to a cluster runs ORCA with the cluster's own ORCA, even
+if ORCA is installed differently (or not at all) where the job runs. Calculations
+estimated to take under a minute stay on the job's own machine when ORCA is installed
+there.
+
+The sub-jobs of a counterpoise (BSSE) correction run together: concurrently on this
+machine when there are cores for more than one, or as separate calculations on the
+job's cluster queue.
+
 Driving ORCA as an MDI engine
 =============================
 
