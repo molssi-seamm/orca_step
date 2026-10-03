@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.10.3 documentation</title>
+    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.10.3.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=f64fa391"></script>
+    <script src="../../_static/documentation_options.js?v=0667127d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3" />
+  <meta name="docsearch:version" content="2026.10.3.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -525,6 +525,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.energy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Energy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seamm</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seamm_bsse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seamm_exec</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q_</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_util.printing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FormattedText</span> <span class="k">as</span> <span class="n">__</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seamm_util.printing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">printing</span>
@@ -860,7 +861,11 @@
         <span class="c1"># DLPNO double hybrid); every sub-job must run the same method.</span>
         <span class="n">method_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_blocks</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
 
-        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Every sub-job is built first, then they run together as one TaskSet:</span>
+        <span class="c1"># concurrently in the local pool, or bundled on the job's queue, and a</span>
+        <span class="c1"># rerun keeps the finished ones.</span>
+        <span class="n">task_set</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">TaskSet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">directories</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">specs</span><span class="p">:</span>
             <span class="n">job_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">spec</span><span class="o">.</span><span class="n">label</span>
             <span class="n">keyword_line</span> <span class="o">=</span> <span class="n">base_keyword_line</span>
@@ -879,17 +884,31 @@
             <span class="k">if</span> <span class="n">single_center</span><span class="p">:</span>
                 <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">single_center</span><span class="si">}</span><span class="s2">"</span>
 
-            <span class="n">outcome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_orca_job</span><span class="p">(</span>
-                <span class="n">keyword_line</span><span class="p">,</span>
-                <span class="n">configuration</span><span class="p">,</span>
-                <span class="n">spec</span><span class="o">.</span><span class="n">charge</span><span class="p">,</span>
-                <span class="n">spec</span><span class="o">.</span><span class="n">multiplicity</span><span class="p">,</span>
-                <span class="n">atom_indices</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">,</span>
-                <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">ghost_indices</span><span class="p">,</span>
-                <span class="n">directory</span><span class="o">=</span><span class="n">job_directory</span><span class="p">,</span>
-                <span class="n">extra_blocks</span><span class="o">=</span><span class="n">method_blocks</span><span class="p">,</span>
-                <span class="n">make_wfx</span><span class="o">=</span><span class="n">job_make_wfx</span><span class="p">,</span>
+            <span class="n">task_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">orca_job_task</span><span class="p">(</span>
+                    <span class="n">keyword_line</span><span class="p">,</span>
+                    <span class="n">configuration</span><span class="p">,</span>
+                    <span class="n">spec</span><span class="o">.</span><span class="n">charge</span><span class="p">,</span>
+                    <span class="n">spec</span><span class="o">.</span><span class="n">multiplicity</span><span class="p">,</span>
+                    <span class="n">atom_indices</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">,</span>
+                    <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">ghost_indices</span><span class="p">,</span>
+                    <span class="n">directory</span><span class="o">=</span><span class="n">job_directory</span><span class="p">,</span>
+                    <span class="n">extra_blocks</span><span class="o">=</span><span class="n">method_blocks</span><span class="p">,</span>
+                    <span class="n">make_wfx</span><span class="o">=</span><span class="n">job_make_wfx</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">)</span>
+            <span class="n">directories</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">job_directory</span>
+
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">task_set</span><span class="o">.</span><span class="n">run</span><span class="p">():</span>
+            <span class="n">job_directory</span> <span class="o">=</span> <span class="n">directories</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_task_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">job_directory</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">job_directory</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">specs</span><span class="p">:</span>
+            <span class="n">job_directory</span> <span class="o">=</span> <span class="n">directories</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">label</span><span class="p">]</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">job_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span><span class="p">)</span>
             <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_gradients</span><span class="p">(</span><span class="n">job_directory</span><span class="p">)</span> <span class="k">if</span> <span class="n">want_gradient</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">want_gradient</span> <span class="ow">and</span> <span class="n">gradient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>

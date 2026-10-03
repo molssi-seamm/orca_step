@@ -4,6 +4,14 @@ orca\_step package
 Submodules
 ----------
 
+orca\_step.batch module
+-----------------------
+
+.. automodule:: orca_step.batch
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 orca\_step.bsse module
 ----------------------
 
@@ -136,6 +144,14 @@ orca\_step.orca\_step module
 ----------------------------
 
 .. automodule:: orca_step.orca_step
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+orca\_step.resolver module
+--------------------------
+
+.. automodule:: orca_step.resolver
    :members:
    :show-inheritance:
    :undoc-members:

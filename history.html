@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.3 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.3.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=f64fa391"></script>
+    <script src="_static/documentation_options.js?v=0667127d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3" />
+  <meta name="docsearch:version" content="2026.10.3.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,30 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.3.1 – ORCA as separate calculations for many structures, on this machine or a cluster</dt><dd><ul class="simple">
+<li><p>With an ORCA model chemistry, the Energy step, the Dimer Builder and Normal Mode
+Sampling’s finite-difference Hessian now run ORCA as separate calculations, one
+per structure: several at a time on this machine, or on the cluster when the
+job’s target sends its calculations to a queue. A rerun reuses the ones that
+had finished. The numbers are the same as through ORCA’s MDI engine.</p></li>
+<li><p>The sub-jobs of a counterpoise (BSSE) correction run together, concurrently
+when there are cores for more than one, or as separate calculations on the
+job’s cluster queue.</p></li>
+<li><p>How ORCA is run (its full path, the OpenMPI it was built with, <code class="docutils literal notranslate"><span class="pre">orca_2aim</span></code>)
+is now worked out on the machine that runs it, from that machine’s
+<code class="docutils literal notranslate"><span class="pre">orca.ini</span></code>, so a job can send ORCA calculations to a cluster whose ORCA is
+installed differently, or where ORCA is not installed on the job’s machine.
+On a site with environment modules, <code class="docutils literal notranslate"><span class="pre">code</span></code> in <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code> should be ORCA’s
+full path.</p></li>
+<li><p>Behaviour change: ORCA’s MDI engine now runs a lone atom or ion without COSX
+(<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>), as the ORCA step already did. Single-centre energies from the
+engine (e.g. Li⁺, Na⁺) move by about 5 kJ/mol from before, removing a COSX
+grid artifact; values computed with earlier versions differ by that much.</p></li>
+<li><p>Normal Mode Sampling knows from the model chemistry whether an ORCA method has
+an analytic Hessian, without starting ORCA to ask.</p></li>
+<li><p>Requires seamm-exec 2026.10.3 or later.</p></li>
+</ul>
+</dd>
 <dt>2026.10.3 – Bugfix: the MDI engine runs the chosen basis, including Basis Set Exchange bases</dt><dd><ul class="simple">
 <li><p>Together with model_chemistry_step 2026.10.3, ORCA driven as an MDI engine
 (the Energy, Dimer Builder, Normal Mode Sampling and LAMMPS steps) now runs

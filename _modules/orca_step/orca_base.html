@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.3 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.3.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=f64fa391"></script>
+    <script src="../../_static/documentation_options.js?v=0667127d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3" />
+  <meta name="docsearch:version" content="2026.10.3.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -705,6 +705,93 @@
     <span class="k">return</span> <span class="s2">"orca:"</span> <span class="o">+</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">mpi_env</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(env, lib_prefix)`` for launching a (possibly parallel) ORCA.</span>
+
+<span class="sd">    Parallel ORCA needs a matching OpenMPI runtime. Two things must line up</span>
+<span class="sd">    and they are handled differently:</span>
+
+<span class="sd">      1. mpirun (PATH): ORCA launches its workers with whatever ``mpirun`` it</span>
+<span class="sd">         finds on PATH; it MUST be the same OpenMPI as the libraries the</span>
+<span class="sd">         workers link, or the ranks corrupt each other's data (ORCA aborts</span>
+<span class="sd">         with a "BLAS-ERROR: incompatible matrices"). We prepend the OpenMPI</span>
+<span class="sd">         bin (the sibling of the lib dir given by library-path) so a</span>
+<span class="sd">         different mpirun on PATH (e.g. a newer Homebrew OpenMPI) is not used.</span>
+<span class="sd">         PATH is an ordinary variable, so it reaches ORCA's children.</span>
+
+<span class="sd">      2. libmpi (dynamic-loader path): on Linux, LD_LIBRARY_PATH is honored</span>
+<span class="sd">         and inherited, so exporting it is enough. On macOS, ORCA does NOT</span>
+<span class="sd">         pass DYLD_* to the MPI sub-processes it spawns (and SIP strips DYLD_*</span>
+<span class="sd">         through /bin/sh anyway), so the OpenMPI libraries must instead be on</span>
+<span class="sd">         dyld's default search path -- e.g. symlink libmpi.*.dylib into</span>
+<span class="sd">         /usr/local/lib. That is a one-time machine setup, documented in the</span>
+<span class="sd">         User Guide; nothing here can substitute for it. We still export the</span>
+<span class="sd">         loader variables for Linux.</span>
+
+<span class="sd">      3. Core binding: ORCA calls its own ``mpirun`` internally once it</span>
+<span class="sd">         parses ``%pal``, so we never see that command line -- but its</span>
+<span class="sd">         environment is ours to set. On an unmanaged, interactive host</span>
+<span class="sd">         (no SLURM etc. coordinating which cores belong to which job),</span>
+<span class="sd">         every independent ``mpirun`` invocation applies OpenMPI's</span>
+<span class="sd">         default binding policy (bind each rank to a core, starting from</span>
+<span class="sd">         a low core number) with no knowledge of other concurrently-</span>
+<span class="sd">         running ORCA jobs, so several jobs launched at once all pile</span>
+<span class="sd">         onto the same one or two cores instead of spreading across the</span>
+<span class="sd">         machine. Disabling binding (``OMPI_MCA_hwloc_base_binding_policy</span>
+<span class="sd">         =none``, the environment-variable spelling of ``mpirun</span>
+<span class="sd">         --bind-to none``, same on Linux and macOS -- no ``DYLD_*``/SIP</span>
+<span class="sd">         wrinkle here) lets the OS scheduler load-balance ranks from</span>
+<span class="sd">         concurrent jobs across all cores instead. Under a real</span>
+<span class="sd">         scheduler this is unnecessary and can be counter-productive: a</span>
+<span class="sd">         SLURM allocation already restricts the job to specific cores</span>
+<span class="sd">         (cgroups), so we leave OpenMPI's binding on in that case, the</span>
+<span class="sd">         same ``SLURM_JOB_ID`` check seamm_exec's ``in_situ`` auto-</span>
+<span class="sd">         detection and ``computational_environment()`` use.</span>
+
+<span class="sd">    The OpenMPI library directory is part of *how to run ORCA*, so it comes</span>
+<span class="sd">    from the executor config (~/SEAMM/orca.ini), not the user-facing</span>
+<span class="sd">    [orca-step] options. configparser lower-cases keys.</span>
+<span class="sd">    """</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">lib_prefix</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">library_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"library-path"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+    <span class="n">quoted_library_path</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_library_path_vars</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">library_path</span><span class="p">):</span>
+        <span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="c1"># Prepend at shell *runtime*, not with this Python-computed</span>
+        <span class="c1"># snapshot of os.environ: an installation=modules code</span>
+        <span class="c1"># (seamm_exec.Local.exec()) runs `module load ...` earlier in</span>
+        <span class="c1"># this same generated script, which Python's os.environ can't</span>
+        <span class="c1"># see yet at this point -- a static value here would silently</span>
+        <span class="c1"># discard whatever that module load just added (confirmed for</span>
+        <span class="c1"># real: ORCA's own liborca_tools_*.so disappeared from a</span>
+        <span class="c1"># parallel run's LD_LIBRARY_PATH this way).</span>
+        <span class="c1">#</span>
+        <span class="c1"># Deliberately brace-free (an if/then/else, not</span>
+        <span class="c1"># ``${VAR:+...}`` parameter expansion): this text is later run</span>
+        <span class="c1"># through seamm_exec.local.Local.exec()'s own</span>
+        <span class="c1"># ``command.format(**config, **ce)`` (for ITS "{code}"-style</span>
+        <span class="c1"># placeholders), called in a loop *until the output stops</span>
+        <span class="c1"># changing* -- a single-braced ``${VAR:+...}`` here survives</span>
+        <span class="c1"># exactly one pass (mistaken for one of its own fields on the</span>
+        <span class="c1"># next), and even doubling the braces only buys one extra</span>
+        <span class="c1"># pass before the same KeyError (confirmed for real, both</span>
+        <span class="c1"># ways). A construct with no braces at all is immune</span>
+        <span class="c1"># regardless of how many passes run.</span>
+        <span class="n">lib_prefix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">'if [ -n "$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1">" ]; then '</span>
+            <span class="sa">f</span><span class="s2">"export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">:$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; "</span>
+            <span class="sa">f</span><span class="s2">"else export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">; fi;"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">library_path</span><span class="p">:</span>
+        <span class="n">bindir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"bin"</span>
+        <span class="k">if</span> <span class="n">bindir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="n">lib_prefix</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"export PATH=</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">bindir</span><span class="p">))</span><span class="si">}</span><span class="s2">:$PATH;"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s2">"SLURM_JOB_ID"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+        <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_hwloc_base_binding_policy"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"none"</span>
+    <span class="k">return</span> <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span>
+
+
 <div class="viewcode-block" id="ORCABase">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ORCABase</span><span class="p">(</span><span class="n">seamm</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
@@ -925,6 +1012,47 @@
 <span class="sd">        dict</span>
 <span class="sd">            Parsed results, at least ``{"energy": &lt;E_h&gt;, "success": bool}``.</span>
 <span class="sd">        """</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orca_job_task</span><span class="p">(</span>
+            <span class="n">keyword_line</span><span class="p">,</span>
+            <span class="n">configuration</span><span class="p">,</span>
+            <span class="n">charge</span><span class="p">,</span>
+            <span class="n">multiplicity</span><span class="p">,</span>
+            <span class="n">atom_indices</span><span class="o">=</span><span class="n">atom_indices</span><span class="p">,</span>
+            <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">ghost_atoms</span><span class="p">,</span>
+            <span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span>
+            <span class="n">extra_blocks</span><span class="o">=</span><span class="n">extra_blocks</span><span class="p">,</span>
+            <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span>
+            <span class="n">make_wfx</span><span class="o">=</span><span class="n">make_wfx</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">run_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">run_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">run_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_task_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ORCABase.orca_job_task">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.orca_job_task">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">orca_job_task</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">keyword_line</span><span class="p">,</span>
+        <span class="n">configuration</span><span class="p">,</span>
+        <span class="n">charge</span><span class="p">,</span>
+        <span class="n">multiplicity</span><span class="p">,</span>
+        <span class="n">atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ghost_atoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span>
+        <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="s2">"orca"</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The :class:`seamm_exec.Task` that :meth:`run_orca_job` runs, built</span>
+<span class="sd">        without running it, so that a step can run several at once (a BSSE</span>
+<span class="sd">        correction's sub-jobs) in one ``TaskSet``. ``key`` names it in that</span>
+<span class="sd">        ``TaskSet``; the other arguments are those of :meth:`run_orca_job`.</span>
+<span class="sd">        """</span>
         <span class="n">run_directory</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
         <span class="p">)</span>
@@ -959,14 +1087,14 @@
             <span class="n">files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_files</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"orca.inp (</span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">):</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="n">input_text</span><span class="p">)</span>
 
-        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orca_config</span><span class="p">()</span>
-        <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mpi_env</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-
-        <span class="c1"># ORCA must be invoked by its full path so it can find its sub-programs.</span>
-        <span class="c1"># When a wavefunction file is wanted, chain orca_2aim (which lives next</span>
-        <span class="c1"># to the orca binary) in the same shell so it runs in this directory</span>
-        <span class="c1"># right after ORCA, reading the just-written orca.gbw/orca.densities.</span>
-        <span class="n">cmd</span> <span class="o">=</span> <span class="n">lib_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"</span><span class="si">{code}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca.inp"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca.out"</span><span class="p">,</span> <span class="s2">"2&gt;"</span><span class="p">,</span> <span class="s2">"orca.err"</span><span class="p">]</span>
+        <span class="c1"># The task names only the program; where it runs, the 'orca' resolver</span>
+        <span class="c1"># (orca_step.resolver) supplies ORCA's full path -- ORCA must be invoked</span>
+        <span class="c1"># by it to find its sub-programs -- and, for a parallel run, the</span>
+        <span class="c1"># OpenMPI paths, from that machine's orca.ini. When a wavefunction file</span>
+        <span class="c1"># is wanted, chain orca_2aim (which lives next to the orca binary) in</span>
+        <span class="c1"># the same shell so it runs in this directory right after ORCA, reading</span>
+        <span class="c1"># the just-written orca.gbw/orca.densities.</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"</span><span class="si">{code}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca.inp"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca.out"</span><span class="p">,</span> <span class="s2">"2&gt;"</span><span class="p">,</span> <span class="s2">"orca.err"</span><span class="p">]</span>
         <span class="n">return_files</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">"orca.out"</span><span class="p">,</span>
             <span class="s2">"orca.err"</span><span class="p">,</span>
@@ -978,16 +1106,15 @@
             <span class="s2">"*.engrad"</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
-            <span class="c1"># {code_dir} is the directory holding the orca binary.</span>
-            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"&amp;&amp;"</span><span class="p">,</span> <span class="n">_orca_2aim</span><span class="p">(</span><span class="n">config</span><span class="p">),</span> <span class="s2">"orca"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">,</span> <span class="s2">"2&gt;&amp;1"</span><span class="p">]</span>
+            <span class="c1"># {orca_2aim} comes from the resolver: beside the orca binary.</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"&amp;&amp;"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{orca_2aim}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">,</span> <span class="s2">"2&gt;&amp;1"</span><span class="p">]</span>
             <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"orca.wfx"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">]</span>
 
         <span class="n">n_atoms</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">n_atoms</span> <span class="k">if</span> <span class="n">atom_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">atom_indices</span><span class="p">)</span>
         <span class="n">task</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">"orca"</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
             <span class="n">program</span><span class="o">=</span><span class="s2">"orca"</span><span class="p">,</span>
             <span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span>
-            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
             <span class="n">directory</span><span class="o">=</span><span class="n">run_directory</span><span class="p">,</span>
             <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
             <span class="c1"># Wildcards: ORCA writes orca.bibtex (suggested citations) and</span>
@@ -1000,18 +1127,13 @@
             <span class="c1"># otherwise. See molssi-seamm/orca_step#20.</span>
             <span class="n">in_situ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
             <span class="n">resources</span><span class="o">=</span><span class="n">seamm_exec</span><span class="o">.</span><span class="n">Resources</span><span class="p">(</span><span class="n">ntasks</span><span class="o">=</span><span class="n">n_cores</span><span class="p">),</span>
             <span class="n">estimated_seconds</span><span class="o">=</span><span class="n">estimated_seconds</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">),</span>
             <span class="n">fingerprint</span><span class="o">=</span><span class="n">_fingerprint</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">make_wfx</span><span class="p">),</span>
             <span class="c1"># ORCA exits 0 even after an error termination.</span>
             <span class="n">success_text</span><span class="o">=</span><span class="p">{</span><span class="s2">"orca.out"</span><span class="p">:</span> <span class="s2">"ORCA TERMINATED NORMALLY"</span><span class="p">},</span>
         <span class="p">)</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">run_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">run_directory</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_task_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">task</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_task_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
@@ -1123,90 +1245,9 @@
         <span class="k">return</span> <span class="n">n_cores</span><span class="p">,</span> <span class="n">memory_mb</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_mpi_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_cores</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Return ``(env, lib_prefix)`` for launching a (possibly parallel) ORCA.</span>
-
-<span class="sd">        Parallel ORCA needs a matching OpenMPI runtime. Two things must line up</span>
-<span class="sd">        and they are handled differently:</span>
-
-<span class="sd">          1. mpirun (PATH): ORCA launches its workers with whatever ``mpirun`` it</span>
-<span class="sd">             finds on PATH; it MUST be the same OpenMPI as the libraries the</span>
-<span class="sd">             workers link, or the ranks corrupt each other's data (ORCA aborts</span>
-<span class="sd">             with a "BLAS-ERROR: incompatible matrices"). We prepend the OpenMPI</span>
-<span class="sd">             bin (the sibling of the lib dir given by library-path) so a</span>
-<span class="sd">             different mpirun on PATH (e.g. a newer Homebrew OpenMPI) is not used.</span>
-<span class="sd">             PATH is an ordinary variable, so it reaches ORCA's children.</span>
-
-<span class="sd">          2. libmpi (dynamic-loader path): on Linux, LD_LIBRARY_PATH is honored</span>
-<span class="sd">             and inherited, so exporting it is enough. On macOS, ORCA does NOT</span>
-<span class="sd">             pass DYLD_* to the MPI sub-processes it spawns (and SIP strips DYLD_*</span>
-<span class="sd">             through /bin/sh anyway), so the OpenMPI libraries must instead be on</span>
-<span class="sd">             dyld's default search path -- e.g. symlink libmpi.*.dylib into</span>
-<span class="sd">             /usr/local/lib. That is a one-time machine setup, documented in the</span>
-<span class="sd">             User Guide; nothing here can substitute for it. We still export the</span>
-<span class="sd">             loader variables for Linux.</span>
-
-<span class="sd">          3. Core binding: ORCA calls its own ``mpirun`` internally once it</span>
-<span class="sd">             parses ``%pal``, so we never see that command line -- but its</span>
-<span class="sd">             environment is ours to set. On an unmanaged, interactive host</span>
-<span class="sd">             (no SLURM etc. coordinating which cores belong to which job),</span>
-<span class="sd">             every independent ``mpirun`` invocation applies OpenMPI's</span>
-<span class="sd">             default binding policy (bind each rank to a core, starting from</span>
-<span class="sd">             a low core number) with no knowledge of other concurrently-</span>
-<span class="sd">             running ORCA jobs, so several jobs launched at once all pile</span>
-<span class="sd">             onto the same one or two cores instead of spreading across the</span>
-<span class="sd">             machine. Disabling binding (``OMPI_MCA_hwloc_base_binding_policy</span>
-<span class="sd">             =none``, the environment-variable spelling of ``mpirun</span>
-<span class="sd">             --bind-to none``, same on Linux and macOS -- no ``DYLD_*``/SIP</span>
-<span class="sd">             wrinkle here) lets the OS scheduler load-balance ranks from</span>
-<span class="sd">             concurrent jobs across all cores instead. Under a real</span>
-<span class="sd">             scheduler this is unnecessary and can be counter-productive: a</span>
-<span class="sd">             SLURM allocation already restricts the job to specific cores</span>
-<span class="sd">             (cgroups), so we leave OpenMPI's binding on in that case, the</span>
-<span class="sd">             same ``SLURM_JOB_ID`` check seamm_exec's ``in_situ`` auto-</span>
-<span class="sd">             detection and ``computational_environment()`` use.</span>
-
-<span class="sd">        The OpenMPI library directory is part of *how to run ORCA*, so it comes</span>
-<span class="sd">        from the executor config (~/SEAMM/orca.ini), not the user-facing</span>
-<span class="sd">        [orca-step] options. configparser lower-cases keys.</span>
-<span class="sd">        """</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">lib_prefix</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">library_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"library-path"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
-        <span class="n">quoted_library_path</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_library_path_vars</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">library_path</span><span class="p">):</span>
-            <span class="n">env</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-            <span class="c1"># Prepend at shell *runtime*, not with this Python-computed</span>
-            <span class="c1"># snapshot of os.environ: an installation=modules code</span>
-            <span class="c1"># (seamm_exec.Local.exec()) runs `module load ...` earlier in</span>
-            <span class="c1"># this same generated script, which Python's os.environ can't</span>
-            <span class="c1"># see yet at this point -- a static value here would silently</span>
-            <span class="c1"># discard whatever that module load just added (confirmed for</span>
-            <span class="c1"># real: ORCA's own liborca_tools_*.so disappeared from a</span>
-            <span class="c1"># parallel run's LD_LIBRARY_PATH this way).</span>
-            <span class="c1">#</span>
-            <span class="c1"># Deliberately brace-free (an if/then/else, not</span>
-            <span class="c1"># ``${VAR:+...}`` parameter expansion): this text is later run</span>
-            <span class="c1"># through seamm_exec.local.Local.exec()'s own</span>
-            <span class="c1"># ``command.format(**config, **ce)`` (for ITS "{code}"-style</span>
-            <span class="c1"># placeholders), called in a loop *until the output stops</span>
-            <span class="c1"># changing* -- a single-braced ``${VAR:+...}`` here survives</span>
-            <span class="c1"># exactly one pass (mistaken for one of its own fields on the</span>
-            <span class="c1"># next), and even doubling the braces only buys one extra</span>
-            <span class="c1"># pass before the same KeyError (confirmed for real, both</span>
-            <span class="c1"># ways). A construct with no braces at all is immune</span>
-            <span class="c1"># regardless of how many passes run.</span>
-            <span class="n">lib_prefix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s1">'if [ -n "$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1">" ]; then '</span>
-                <span class="sa">f</span><span class="s2">"export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">:$</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; "</span>
-                <span class="sa">f</span><span class="s2">"else export </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quoted_library_path</span><span class="si">}</span><span class="s2">; fi;"</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">library_path</span><span class="p">:</span>
-            <span class="n">bindir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"bin"</span>
-            <span class="k">if</span> <span class="n">bindir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-                <span class="n">lib_prefix</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"export PATH=</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">bindir</span><span class="p">))</span><span class="si">}</span><span class="s2">:$PATH;"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s2">"SLURM_JOB_ID"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
-            <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_hwloc_base_binding_policy"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"none"</span>
-        <span class="k">return</span> <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span>
+<span class="w">        </span><span class="sd">"""``(env, lib_prefix)`` for a (possibly parallel) ORCA: see</span>
+<span class="sd">        :func:`mpi_env`."""</span>
+        <span class="k">return</span> <span class="n">mpi_env</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ORCABase.run_orca_compound">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.run_orca_compound">[docs]</a>
@@ -1249,8 +1290,6 @@
         <span class="n">directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">n_cores</span><span class="p">,</span> <span class="n">memory_mb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resources</span><span class="p">()</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orca_config</span><span class="p">()</span>
-        <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mpi_env</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -1268,14 +1307,15 @@
         <span class="n">return_files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"orca.out"</span><span class="p">,</span> <span class="s2">"orca.err"</span><span class="p">,</span> <span class="s2">"*.bibtex"</span><span class="p">,</span> <span class="s2">"*.txt"</span><span class="p">,</span> <span class="s2">"*.engrad"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">engrad</span><span class="p">:</span>
             <span class="n">return_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">engrad</span><span class="p">)</span>
-        <span class="n">cmd</span> <span class="o">=</span> <span class="n">lib_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"</span><span class="si">{code}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca.inp"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca.out"</span><span class="p">,</span> <span class="s2">"2&gt;"</span><span class="p">,</span> <span class="s2">"orca.err"</span><span class="p">]</span>
+        <span class="c1"># ORCA's full path and OpenMPI paths come from the resolver (run_orca_job)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"</span><span class="si">{code}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca.inp"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca.out"</span><span class="p">,</span> <span class="s2">"2&gt;"</span><span class="p">,</span> <span class="s2">"orca.err"</span><span class="p">]</span>
         <span class="c1"># Convert the dimer step's retained density into a .wfx (as run_orca does</span>
         <span class="c1"># for the Energy substep), for a following Atomic Charges (DDEC6) step.</span>
         <span class="c1"># wfx_step is the Compound sub-job that kept its density (the dimer).</span>
         <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
             <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span>
                 <span class="s2">"&amp;&amp;"</span><span class="p">,</span>
-                <span class="n">_orca_2aim</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+                <span class="s2">"</span><span class="si">{orca_2aim}</span><span class="s2">"</span><span class="p">,</span>
                 <span class="n">wfx_step</span><span class="p">,</span>
                 <span class="s2">"&gt;"</span><span class="p">,</span>
                 <span class="s2">"orca_2aim.out"</span><span class="p">,</span>
@@ -1290,14 +1330,12 @@
             <span class="n">key</span><span class="o">=</span><span class="s2">"orca"</span><span class="p">,</span>
             <span class="n">program</span><span class="o">=</span><span class="s2">"orca"</span><span class="p">,</span>
             <span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span>
-            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
             <span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span>
             <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
             <span class="n">return_files</span><span class="o">=</span><span class="n">return_files</span><span class="p">,</span>
             <span class="c1"># See the comment in run_orca -- molssi-seamm/orca_step#20.</span>
             <span class="n">in_situ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
             <span class="n">resources</span><span class="o">=</span><span class="n">seamm_exec</span><span class="o">.</span><span class="n">Resources</span><span class="p">(</span><span class="n">ntasks</span><span class="o">=</span><span class="n">n_cores</span><span class="p">),</span>
             <span class="n">fingerprint</span><span class="o">=</span><span class="n">_fingerprint</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">make_wfx</span><span class="p">),</span>
             <span class="c1"># ORCA exits 0 even after an error termination.</span>

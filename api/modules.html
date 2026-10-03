@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step &#8212; SEAMM ORCA Plug-in 2026.10.3 documentation</title>
+    <title>orca_step &#8212; SEAMM ORCA Plug-in 2026.10.3.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=f64fa391"></script>
+    <script src="../_static/documentation_options.js?v=0667127d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="API Documentation" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3" />
+  <meta name="docsearch:version" content="2026.10.3.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -523,6 +523,12 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="orca_step.html">orca_step package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="orca_step.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orca_step.html#module-orca_step.batch">orca_step.batch module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.batch.AnalysisError"><code class="docutils literal notranslate"><span class="pre">AnalysisError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.batch.analyze_task"><code class="docutils literal notranslate"><span class="pre">analyze_task()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.batch.get_task"><code class="docutils literal notranslate"><span class="pre">get_task()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="orca_step.html#module-orca_step.bsse">orca_step.bsse module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.bsse.BSSE"><code class="docutils literal notranslate"><span class="pre">BSSE</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.bsse.BSSE.analyze"><code class="docutils literal notranslate"><span class="pre">BSSE.analyze()</span></code></a></li>
@@ -669,6 +675,7 @@
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_base.ORCABase.geometry_block"><code class="docutils literal notranslate"><span class="pre">ORCABase.geometry_block()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_base.ORCABase.git_revision"><code class="docutils literal notranslate"><span class="pre">ORCABase.git_revision</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_base.ORCABase.is_runable"><code class="docutils literal notranslate"><span class="pre">ORCABase.is_runable</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_base.ORCABase.orca_job_task"><code class="docutils literal notranslate"><span class="pre">ORCABase.orca_job_task()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_base.ORCABase.run_orca"><code class="docutils literal notranslate"><span class="pre">ORCABase.run_orca()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_base.ORCABase.run_orca_compound"><code class="docutils literal notranslate"><span class="pre">ORCABase.run_orca_compound()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_base.ORCABase.run_orca_job"><code class="docutils literal notranslate"><span class="pre">ORCABase.run_orca_job()</span></code></a></li>
@@ -680,12 +687,15 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="orca_step.html#module-orca_step.orca_step">orca_step.orca_step module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep"><code class="docutils literal notranslate"><span class="pre">ORCAStep</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.analyze_task"><code class="docutils literal notranslate"><span class="pre">ORCAStep.analyze_task()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.can_run_task"><code class="docutils literal notranslate"><span class="pre">ORCAStep.can_run_task()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.create_node"><code class="docutils literal notranslate"><span class="pre">ORCAStep.create_node()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.create_tk_node"><code class="docutils literal notranslate"><span class="pre">ORCAStep.create_tk_node()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.description"><code class="docutils literal notranslate"><span class="pre">ORCAStep.description()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.get_executor_config"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_executor_config()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.get_mdi_engine_command"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_mdi_engine_command()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.get_model_chemistry_options"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_model_chemistry_options()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.get_task"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_task()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.orca_step.ORCAStep.my_description"><code class="docutils literal notranslate"><span class="pre">ORCAStep.my_description</span></code></a></li>
 </ul>
 </li>
@@ -696,6 +706,10 @@
 <li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.orca_step.method_has_analytic_hessian"><code class="docutils literal notranslate"><span class="pre">method_has_analytic_hessian()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.orca_step.orca_method_blocks"><code class="docutils literal notranslate"><span class="pre">orca_method_blocks()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.orca_step.orca_method_keyword"><code class="docutils literal notranslate"><span class="pre">orca_method_keyword()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="orca_step.html#module-orca_step.resolver">orca_step.resolver module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.resolver.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="orca_step.html#module-orca_step.tk_bsse">orca_step.tk_bsse module</a><ul>

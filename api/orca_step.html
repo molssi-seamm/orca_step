@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.3 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.3.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=f64fa391"></script>
+    <script src="../_static/documentation_options.js?v=0667127d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3" />
+  <meta name="docsearch:version" content="2026.10.3.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -524,6 +524,37 @@
 <h1>orca_step package<a class="headerlink" href="#orca-step-package" title="Link to this heading">#</a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+</section>
+<section id="module-orca_step.batch">
+<span id="orca-step-batch-module"></span><h2>orca_step.batch module<a class="headerlink" href="#module-orca_step.batch" title="Link to this heading">#</a></h2>
+<p>ORCA’s side of the Model Chemistry batch contract.</p>
+<p><code class="docutils literal notranslate"><span class="pre">get_task</span></code> writes the same ORCA input the MDI engine writes for a structure
+(the helpers are those of <code class="docutils literal notranslate"><span class="pre">data/orca_mdi.py</span></code>: method, AutoAux, basis –
+<code class="docutils literal notranslate"><span class="pre">bse:</span></code> included – <code class="docutils literal notranslate"><span class="pre">EnGrad</span></code>, the DLPNO block), and <code class="docutils literal notranslate"><span class="pre">analyze_task</span></code> reads it
+back with the engine’s parsers, so the batch path and the MDI path give the same
+numbers. <code class="docutils literal notranslate"><span class="pre">options</span></code> adds what fragments need: <code class="docutils literal notranslate"><span class="pre">atom_indices</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ghost_atoms</span></code>, <code class="docutils literal notranslate"><span class="pre">charge</span></code> and <code class="docutils literal notranslate"><span class="pre">multiplicity</span></code>.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="orca_step.batch.AnalysisError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.batch.</span></span><span class="sig-name descname"><span class="pre">AnalysisError</span></span><a class="reference internal" href="../_modules/seamm_exec/evaluator.html#AnalysisError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.batch.AnalysisError" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<p>A task’s results lack a requested property.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.batch.analyze_task">
+<span class="sig-prename descclassname"><span class="pre">orca_step.batch.</span></span><span class="sig-name descname"><span class="pre">analyze_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_chemistry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('energy',</span> <span class="pre">'gradients')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/batch.html#analyze_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.batch.analyze_task" title="Link to this definition">#</a></dt>
+<dd><p>The energy (kJ/mol) and gradients ((n, 3) kJ/mol/Å) of a finished task,
+converted exactly as the MDI path converts the engine’s atomic units.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.batch.get_task">
+<span class="sig-prename descclassname"><span class="pre">orca_step.batch.</span></span><span class="sig-name descname"><span class="pre">get_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_chemistry</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('energy',</span> <span class="pre">'gradients')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/batch.html#get_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.batch.get_task" title="Link to this definition">#</a></dt>
+<dd><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">seamm_exec.Task</span></code> computing ORCA’s energy (and gradient) for one
+structure. See the module docstring.</p>
+</dd></dl>
+
 </section>
 <section id="module-orca_step.bsse">
 <span id="orca-step-bsse-module"></span><h2>orca_step.bsse module<a class="headerlink" href="#module-orca_step.bsse" title="Link to this heading">#</a></h2>
@@ -1195,6 +1226,15 @@ atom as real.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_base.ORCABase.orca_job_task">
+<span class="sig-name descname"><span class="pre">orca_job_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ghost_atoms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_blocks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_wfx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'orca'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#ORCABase.orca_job_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.ORCABase.orca_job_task" title="Link to this definition">#</a></dt>
+<dd><p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">seamm_exec.Task</span></code> that <a class="reference internal" href="#orca_step.orca_base.ORCABase.run_orca_job" title="orca_step.orca_base.ORCABase.run_orca_job"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_orca_job()</span></code></a> runs, built
+without running it, so that a step can run several at once (a BSSE
+correction’s sub-jobs) in one <code class="docutils literal notranslate"><span class="pre">TaskSet</span></code>. <code class="docutils literal notranslate"><span class="pre">key</span></code> names it in that
+<code class="docutils literal notranslate"><span class="pre">TaskSet</span></code>; the other arguments are those of <a class="reference internal" href="#orca_step.orca_base.ORCABase.run_orca_job" title="orca_step.orca_base.ORCABase.run_orca_job"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_orca_job()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="orca_step.orca_base.ORCABase.run_orca">
 <span class="sig-name descname"><span class="pre">run_orca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_blocks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_wfx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#ORCABase.run_orca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.ORCABase.run_orca" title="Link to this definition">#</a></dt>
 <dd><p>Write the ORCA input for the node’s own configuration, run ORCA,
@@ -1338,6 +1378,19 @@ preset typed there overrides the setting.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Helper class for the stevedore integration of the ORCA step.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.analyze_task">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">analyze_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_chemistry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.analyze_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.analyze_task" title="Link to this definition">#</a></dt>
+<dd><p>The energy (kJ/mol) and gradients (kJ/mol/Å) of a finished task from
+<a class="reference internal" href="#orca_step.orca_step.ORCAStep.get_task" title="orca_step.orca_step.ORCAStep.get_task"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_task()</span></code></a>. See <a class="reference internal" href="#module-orca_step.batch" title="orca_step.batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">orca_step.batch</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.can_run_task">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">can_run_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_chemistry</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.can_run_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.can_run_task" title="Link to this definition">#</a></dt>
+<dd><p>Whether <a class="reference internal" href="#orca_step.orca_step.ORCAStep.get_task" title="orca_step.orca_step.ORCAStep.get_task"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_task()</span></code></a> can run this structure (molecules only).</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.create_node">
 <span class="sig-name descname"><span class="pre">create_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.create_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.create_node" title="Link to this definition">#</a></dt>
 <dd><p>Return a new ORCA node.</p>
@@ -1391,6 +1444,13 @@ metadata paired with a curated set of basis sets. ORCA is molecular, so
 drivable through the <code class="docutils literal notranslate"><span class="pre">orca_mdi.py</span></code> engine – those with an analytic
 gradient (the engine always requests EnGrad); each such option carries
 the real ORCA keyword and basis in <code class="docutils literal notranslate"><span class="pre">mdi_method_arg</span></code>/<code class="docutils literal notranslate"><span class="pre">mdi_basis_arg</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.get_task">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_chemistry</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.get_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.get_task" title="Link to this definition">#</a></dt>
+<dd><p>A task computing ORCA’s energy (and gradient) for one structure: the
+batch half of the Model Chemistry contract. See <a class="reference internal" href="#module-orca_step.batch" title="orca_step.batch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">orca_step.batch</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1463,6 +1523,34 @@ double hybrid needs <code class="docutils literal notranslate"><span class="pre"
 <dd><p>The keyword to put on ORCA’s ‘!’ line for <cite>method</cite>: the parent functional
 for a DLPNO double hybrid (whose DLPNO-ness goes in a ‘%mp2’ block, see
 <a class="reference internal" href="#orca_step.orca_step.orca_method_blocks" title="orca_step.orca_step.orca_method_blocks"><code class="xref py py-func docutils literal notranslate"><span class="pre">orca_method_blocks()</span></code></a>), otherwise <cite>method</cite> unchanged.</p>
+</dd></dl>
+
+</section>
+<section id="module-orca_step.resolver">
+<span id="orca-step-resolver-module"></span><h2>orca_step.resolver module<a class="headerlink" href="#module-orca_step.resolver" title="Link to this heading">#</a></h2>
+<p>Resolve ORCA on the machine that runs it (seamm_exec’s resolver hook).</p>
+<p>A task names the program <code class="docutils literal notranslate"><span class="pre">orca</span></code> and a bare command (<code class="docutils literal notranslate"><span class="pre">{code}</span> <span class="pre">orca.inp</span> <span class="pre">&gt;</span> <span class="pre">...</span></code>);
+where it runs, <code class="docutils literal notranslate"><span class="pre">seamm_exec</span></code> reads the <code class="docutils literal notranslate"><span class="pre">[local]</span></code> section of that machine’s
+<code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/orca.ini</span></code> and calls <a class="reference internal" href="#orca_step.resolver.resolve" title="orca_step.resolver.resolve"><code class="xref py py-func docutils literal notranslate"><span class="pre">resolve()</span></code></a> with the task’s share of the
+machine. This does there what the ORCA step used to do in the evaluator: ORCA
+must be invoked by its full path, and a parallel run needs the OpenMPI it was
+built against on the paths (see <code class="xref py py-func docutils literal notranslate"><span class="pre">orca_step.orca_base.mpi_env()</span></code>).</p>
+<p>Registered as the entry point <code class="docutils literal notranslate"><span class="pre">orca</span></code> in <code class="docutils literal notranslate"><span class="pre">org.molssi.seamm.exec.resolvers</span></code>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.resolver.resolve">
+<span class="sig-prename descclassname"><span class="pre">orca_step.resolver.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ce</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/resolver.html#resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.resolver.resolve" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(config,</span> <span class="pre">cmd,</span> <span class="pre">env)</span></code> for running ORCA here.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>dict</em>) – This machine’s <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code> section (empty if there is none).</p></li>
+<li><p><strong>cmd</strong> (<em>[</em><em>str</em><em>]</em>) – The task’s command template.</p></li>
+<li><p><strong>env</strong> (<em>dict</em>) – The task’s extra environment.</p></li>
+<li><p><strong>ce</strong> (<em>dict</em>) – The task’s computational environment (<code class="docutils literal notranslate"><span class="pre">NTASKS</span></code>, …).</p></li>
+<li><p><strong>root</strong> (<em>str</em><em> or </em><em>Path</em>) – The SEAMM root holding <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -1662,6 +1750,12 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.batch">orca_step.batch module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.batch.AnalysisError"><code class="docutils literal notranslate"><span class="pre">AnalysisError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.batch.analyze_task"><code class="docutils literal notranslate"><span class="pre">analyze_task()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.batch.get_task"><code class="docutils literal notranslate"><span class="pre">get_task()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.bsse">orca_step.bsse module</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.bsse.BSSE"><code class="docutils literal notranslate"><span class="pre">BSSE</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.bsse.BSSE.analyze"><code class="docutils literal notranslate"><span class="pre">BSSE.analyze()</span></code></a></li>
@@ -1808,6 +1902,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.geometry_block"><code class="docutils literal notranslate"><span class="pre">ORCABase.geometry_block()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.git_revision"><code class="docutils literal notranslate"><span class="pre">ORCABase.git_revision</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.is_runable"><code class="docutils literal notranslate"><span class="pre">ORCABase.is_runable</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.orca_job_task"><code class="docutils literal notranslate"><span class="pre">ORCABase.orca_job_task()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.run_orca"><code class="docutils literal notranslate"><span class="pre">ORCABase.run_orca()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.run_orca_compound"><code class="docutils literal notranslate"><span class="pre">ORCABase.run_orca_compound()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.run_orca_job"><code class="docutils literal notranslate"><span class="pre">ORCABase.run_orca_job()</span></code></a></li>
@@ -1819,12 +1914,15 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.orca_step">orca_step.orca_step module</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep"><code class="docutils literal notranslate"><span class="pre">ORCAStep</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.analyze_task"><code class="docutils literal notranslate"><span class="pre">ORCAStep.analyze_task()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.can_run_task"><code class="docutils literal notranslate"><span class="pre">ORCAStep.can_run_task()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.create_node"><code class="docutils literal notranslate"><span class="pre">ORCAStep.create_node()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.create_tk_node"><code class="docutils literal notranslate"><span class="pre">ORCAStep.create_tk_node()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.description"><code class="docutils literal notranslate"><span class="pre">ORCAStep.description()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_executor_config"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_executor_config()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_mdi_engine_command"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_mdi_engine_command()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_model_chemistry_options"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_model_chemistry_options()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_task"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_task()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.my_description"><code class="docutils literal notranslate"><span class="pre">ORCAStep.my_description</span></code></a></li>
 </ul>
 </li>
@@ -1835,6 +1933,10 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.method_has_analytic_hessian"><code class="docutils literal notranslate"><span class="pre">method_has_analytic_hessian()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.orca_method_blocks"><code class="docutils literal notranslate"><span class="pre">orca_method_blocks()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.orca_method_keyword"><code class="docutils literal notranslate"><span class="pre">orca_method_keyword()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.resolver">orca_step.resolver module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.resolver.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.tk_bsse">orca_step.tk_bsse module</a><ul class="pst-show_toc_level nav section-nav flex-column">

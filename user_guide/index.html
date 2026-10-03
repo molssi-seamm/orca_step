@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.3 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.3.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=f64fa391"></script>
+    <script src="../_static/documentation_options.js?v=0667127d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3" />
+  <meta name="docsearch:version" content="2026.10.3.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1181,19 +1181,50 @@ message saying so. Changing its input, or deleting its entry in
 <p>If the job was killed outright, an ORCA process from the earlier run may still be
 running; the rerun stops it before starting the calculation again.</p>
 </section>
+<section id="where-orca-runs">
+<h2>Where ORCA runs<a class="headerlink" href="#where-orca-runs" title="Link to this heading">#</a></h2>
+<p>An ORCA calculation names only the program; how to run ORCA is worked out on the
+machine that runs it, from that machine’s <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code> (<code class="docutils literal notranslate"><span class="pre">[local]</span></code>: the path to ORCA,
+or <code class="docutils literal notranslate"><span class="pre">installation</span> <span class="pre">=</span> <span class="pre">modules</span></code> with the modules to load, and <code class="docutils literal notranslate"><span class="pre">library-path</span></code> for the
+OpenMPI ORCA was built with), falling back to <code class="docutils literal notranslate"><span class="pre">orca</span></code> on the PATH. So a job whose
+target sends its calculations to a cluster runs ORCA with the cluster’s own ORCA, even
+if ORCA is installed differently (or not at all) where the job runs. Calculations
+estimated to take under a minute stay on the job’s own machine when ORCA is installed
+there.</p>
+<p>On a site that provides ORCA through environment modules, give <code class="docutils literal notranslate"><span class="pre">code</span></code> as ORCA’s
+<strong>full path</strong> in <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code> (with <code class="docutils literal notranslate"><span class="pre">installation</span> <span class="pre">=</span> <span class="pre">modules</span></code>): ORCA must be invoked by
+its full path to find its sub-programs for parallel runs, and a bare <code class="docutils literal notranslate"><span class="pre">orca</span></code> cannot be
+expanded before the module is loaded.</p>
+<p>The sub-jobs of a counterpoise (BSSE) correction run together: concurrently on this
+machine when there are cores for more than one, or as separate calculations on the
+job’s cluster queue.</p>
+</section>
+<section id="orca-as-a-model-chemistry">
+<h2>ORCA as a model chemistry<a class="headerlink" href="#orca-as-a-model-chemistry" title="Link to this heading">#</a></h2>
+<p>Steps that set up a <em>model chemistry</em> and then evaluate it at many structures –
+the <strong>Energy</strong> step, the <strong>Dimer Builder</strong>’s energy-based contact search,
+<strong>Normal Mode Sampling</strong> and LAMMPS QM-MD – use ORCA without any settings in the
+ORCA step itself: put a <strong>Model Chemistry</strong> step in the flowchart and choose an ORCA
+model chemistry there (e.g. <code class="docutils literal notranslate"><span class="pre">ORCA:DFT&#64;B3LYP/def2-SVP</span></code>).</p>
+<p>How ORCA then runs is chosen for you, and gives the same numbers either way:</p>
+<ul class="simple">
+<li><p><strong>As separate calculations</strong>, one per structure, for the Energy step, the Dimer
+Builder and Normal Mode Sampling’s finite-difference Hessian. They run several at
+a time on this machine, or on the cluster when the job’s target sends its
+calculations to a queue, and a rerun of the job reuses those that had finished.
+ORCA starts afresh for each structure in any case, so running them side by side
+is usually faster than one after another in an engine. Periodic structures are not run this way.</p></li>
+<li><p><strong>As a persistent</strong> <a class="reference external" href="https://molssi-mdi.github.io/MDI_Library/">MDI</a> <strong>engine</strong>
+for steps that drive ORCA one geometry after another (LAMMPS QM-MD, Normal Mode
+Sampling’s analytic Hessian on this machine).</p></li>
+</ul>
+<p>The model chemistry’s basis is used either way: any basis ORCA knows, or a basis
+from the Basis Set Exchange (<code class="docutils literal notranslate"><span class="pre">bse:NAME</span></code>), whose definition is fetched for the
+elements present and passed to ORCA exactly as the ORCA step does. A lone atom or
+ion runs without the COSX approximation (<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>), as in the ORCA step, which
+avoids an artifact of several kJ/mol from COSX’s grid on a single centre.</p>
 <section id="driving-orca-as-an-mdi-engine">
-<h2>Driving ORCA as an MDI engine<a class="headerlink" href="#driving-orca-as-an-mdi-engine" title="Link to this heading">#</a></h2>
-<p>Besides running as an ordinary flowchart step, ORCA can act as a persistent
-<a class="reference external" href="https://molssi-mdi.github.io/MDI_Library/">MDI</a> engine for steps that set up a
-<em>model chemistry</em> and then evaluate it at many geometries – for example the
-<strong>Dimer Builder</strong> step’s energy-based contact search. You do not configure this
-in the ORCA step itself: put a <strong>Model Chemistry</strong> step in the flowchart, choose
-an ORCA model chemistry there (e.g. <code class="docutils literal notranslate"><span class="pre">ORCA:DFT&#64;B3LYP/def2-SVP</span></code>), and the driving
-step launches ORCA as the engine automatically.</p>
-<p>The engine uses the model chemistry’s own basis: any basis ORCA knows, or a
-basis from the Basis Set Exchange (<code class="docutils literal notranslate"><span class="pre">bse:NAME</span></code>), whose definition the engine
-fetches for the elements present and passes to ORCA exactly as the ORCA step
-does.</p>
+<h3>Driving ORCA as an MDI engine<a class="headerlink" href="#driving-orca-as-an-mdi-engine" title="Link to this heading">#</a></h3>
 <p>Because ORCA has no in-process interface, the engine runs the <code class="docutils literal notranslate"><span class="pre">orca</span></code> binary
 once per geometry in a persistent working directory, <strong>reusing the previous
 geometry’s orbitals</strong> (<code class="docutils literal notranslate"><span class="pre">orca.gbw</span></code>) as the SCF guess – the main saving for a
@@ -1210,6 +1241,7 @@ that cheap engines see. Use an inexpensive functional for jobs that only need
 the energy surface to guide them (such as contact finding); reserve expensive,
 high-accuracy calculations for ordinary single-point steps.</p></li>
 </ul>
+</section>
 </section>
 <section id="settings-that-depend-on-each-other">
 <h2>Settings that depend on each other<a class="headerlink" href="#settings-that-depend-on-each-other" title="Link to this heading">#</a></h2>
@@ -1304,7 +1336,11 @@ is refused too. See “Flowcharts without the editor” in SEAMM’s user guide.
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-properties-and-outputs">Other properties and outputs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-orca-in-parallel">Running ORCA in parallel</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rerunning-a-job">Rerunning a job</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#driving-orca-as-an-mdi-engine">Driving ORCA as an MDI engine</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-orca-runs">Where ORCA runs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#orca-as-a-model-chemistry">ORCA as a model chemistry</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#driving-orca-as-an-mdi-engine">Driving ORCA as an MDI engine</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#settings-that-depend-on-each-other">Settings that depend on each other</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
