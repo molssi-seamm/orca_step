@@ -42,6 +42,8 @@ from .orca_step import (  # noqa: F401
     method_has_analytic_hessian,
     orca_method_blocks,
     orca_method_keyword,
+    split_dispersion,
+    D4_FUNCTIONALS,
 )
 
 # Versioneer

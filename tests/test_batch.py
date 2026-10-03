@@ -169,7 +169,7 @@ def test_single_center_gets_nocosx_on_both_paths():
 
     task = get_task(Geometry([11], [[0, 0, 0]], charge=1), _mc(), key="na")
     assert task.files["orca.inp"].splitlines()[0] == (
-        "! B3LYP AutoAux NoCOSX def2-SVP EnGrad"
+        "! B3LYP AutoAux NoCOSX def2-SVP TIGHTSCF DEFGRID3 EnGrad"
     )
     # A ghost atom is a center: a fragment in the cluster basis keeps RIJCOSX
     task = get_task(
