@@ -92,6 +92,9 @@ setup(
             'BSSE = orca_step:BSSEStep',
             'Frequencies = orca_step:FrequenciesStep',
         ],
+        'org.molssi.seamm.exec.resolvers': [
+            'orca = orca_step.resolver:resolve',
+        ],
         'org.molssi.seamm.orca.tk': [
             'Energy = orca_step:EnergyStep',
             'Optimization = orca_step:OptimizationStep',

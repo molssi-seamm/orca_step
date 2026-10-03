@@ -210,6 +210,93 @@ def _fingerprint(files, make_wfx):
     return "orca:" + h.hexdigest()
 
 
+def mpi_env(n_cores, config):
+    """Return ``(env, lib_prefix)`` for launching a (possibly parallel) ORCA.
+
+    Parallel ORCA needs a matching OpenMPI runtime. Two things must line up
+    and they are handled differently:
+
+      1. mpirun (PATH): ORCA launches its workers with whatever ``mpirun`` it
+         finds on PATH; it MUST be the same OpenMPI as the libraries the
+         workers link, or the ranks corrupt each other's data (ORCA aborts
+         with a "BLAS-ERROR: incompatible matrices"). We prepend the OpenMPI
+         bin (the sibling of the lib dir given by library-path) so a
+         different mpirun on PATH (e.g. a newer Homebrew OpenMPI) is not used.
+         PATH is an ordinary variable, so it reaches ORCA's children.
+
+      2. libmpi (dynamic-loader path): on Linux, LD_LIBRARY_PATH is honored
+         and inherited, so exporting it is enough. On macOS, ORCA does NOT
+         pass DYLD_* to the MPI sub-processes it spawns (and SIP strips DYLD_*
+         through /bin/sh anyway), so the OpenMPI libraries must instead be on
+         dyld's default search path -- e.g. symlink libmpi.*.dylib into
+         /usr/local/lib. That is a one-time machine setup, documented in the
+         User Guide; nothing here can substitute for it. We still export the
+         loader variables for Linux.
+
+      3. Core binding: ORCA calls its own ``mpirun`` internally once it
+         parses ``%pal``, so we never see that command line -- but its
+         environment is ours to set. On an unmanaged, interactive host
+         (no SLURM etc. coordinating which cores belong to which job),
+         every independent ``mpirun`` invocation applies OpenMPI's
+         default binding policy (bind each rank to a core, starting from
+         a low core number) with no knowledge of other concurrently-
+         running ORCA jobs, so several jobs launched at once all pile
+         onto the same one or two cores instead of spreading across the
+         machine. Disabling binding (``OMPI_MCA_hwloc_base_binding_policy
+         =none``, the environment-variable spelling of ``mpirun
+         --bind-to none``, same on Linux and macOS -- no ``DYLD_*``/SIP
+         wrinkle here) lets the OS scheduler load-balance ranks from
+         concurrent jobs across all cores instead. Under a real
+         scheduler this is unnecessary and can be counter-productive: a
+         SLURM allocation already restricts the job to specific cores
+         (cgroups), so we leave OpenMPI's binding on in that case, the
+         same ``SLURM_JOB_ID`` check seamm_exec's ``in_situ`` auto-
+         detection and ``computational_environment()`` use.
+
+    The OpenMPI library directory is part of *how to run ORCA*, so it comes
+    from the executor config (~/SEAMM/orca.ini), not the user-facing
+    [orca-step] options. configparser lower-cases keys.
+    """
+    env = {}
+    lib_prefix = []
+    library_path = config.get("library-path", "") or ""
+    quoted_library_path = shlex.quote(library_path)
+    for var, value in _library_path_vars(n_cores, library_path):
+        env[var] = value
+        # Prepend at shell *runtime*, not with this Python-computed
+        # snapshot of os.environ: an installation=modules code
+        # (seamm_exec.Local.exec()) runs `module load ...` earlier in
+        # this same generated script, which Python's os.environ can't
+        # see yet at this point -- a static value here would silently
+        # discard whatever that module load just added (confirmed for
+        # real: ORCA's own liborca_tools_*.so disappeared from a
+        # parallel run's LD_LIBRARY_PATH this way).
+        #
+        # Deliberately brace-free (an if/then/else, not
+        # ``${VAR:+...}`` parameter expansion): this text is later run
+        # through seamm_exec.local.Local.exec()'s own
+        # ``command.format(**config, **ce)`` (for ITS "{code}"-style
+        # placeholders), called in a loop *until the output stops
+        # changing* -- a single-braced ``${VAR:+...}`` here survives
+        # exactly one pass (mistaken for one of its own fields on the
+        # next), and even doubling the braces only buys one extra
+        # pass before the same KeyError (confirmed for real, both
+        # ways). A construct with no braces at all is immune
+        # regardless of how many passes run.
+        lib_prefix.append(
+            f'if [ -n "${var}" ]; then '
+            f"export {var}={quoted_library_path}:${var}; "
+            f"else export {var}={quoted_library_path}; fi;"
+        )
+    if n_cores > 1 and library_path:
+        bindir = Path(library_path).expanduser().parent / "bin"
+        if bindir.is_dir():
+            lib_prefix.insert(0, f"export PATH={shlex.quote(str(bindir))}:$PATH;")
+    if n_cores > 1 and "SLURM_JOB_ID" not in os.environ:
+        env["OMPI_MCA_hwloc_base_binding_policy"] = "none"
+    return env, lib_prefix
+
+
 class ORCABase(seamm.Node):
     """Common functionality for ORCA nodes."""
 
@@ -451,14 +538,14 @@ class ORCABase(seamm.Node):
             files.update(extra_files)
         logger.debug(f"orca.inp ({run_directory}):\n" + input_text)
 
-        config = self._orca_config()
-        env, lib_prefix = self._mpi_env(n_cores, config)
-
-        # ORCA must be invoked by its full path so it can find its sub-programs.
-        # When a wavefunction file is wanted, chain orca_2aim (which lives next
-        # to the orca binary) in the same shell so it runs in this directory
-        # right after ORCA, reading the just-written orca.gbw/orca.densities.
-        cmd = lib_prefix + ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
+        # The task names only the program; where it runs, the 'orca' resolver
+        # (orca_step.resolver) supplies ORCA's full path -- ORCA must be invoked
+        # by it to find its sub-programs -- and, for a parallel run, the
+        # OpenMPI paths, from that machine's orca.ini. When a wavefunction file
+        # is wanted, chain orca_2aim (which lives next to the orca binary) in
+        # the same shell so it runs in this directory right after ORCA, reading
+        # the just-written orca.gbw/orca.densities.
+        cmd = ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
         return_files = [
             "orca.out",
             "orca.err",
@@ -470,8 +557,8 @@ class ORCABase(seamm.Node):
             "*.engrad",
         ]
         if make_wfx:
-            # {code_dir} is the directory holding the orca binary.
-            cmd += ["&&", _orca_2aim(config), "orca", ">", "orca_2aim.out", "2>&1"]
+            # {orca_2aim} comes from the resolver: beside the orca binary.
+            cmd += ["&&", "{orca_2aim}", "orca", ">", "orca_2aim.out", "2>&1"]
             return_files += ["orca.wfx", "orca_2aim.out"]
 
         n_atoms = configuration.n_atoms if atom_indices is None else len(atom_indices)
@@ -479,7 +566,6 @@ class ORCABase(seamm.Node):
             key="orca",
             program="orca",
             cmd=cmd,
-            config=config,
             directory=run_directory,
             files=files,
             # Wildcards: ORCA writes orca.bibtex (suggested citations) and
@@ -492,7 +578,6 @@ class ORCABase(seamm.Node):
             # otherwise. See molssi-seamm/orca_step#20.
             in_situ=None,
             shell=True,
-            env=env,
             resources=seamm_exec.Resources(ntasks=n_cores),
             estimated_seconds=estimated_seconds(keyword_line, n_atoms),
             fingerprint=_fingerprint(files, make_wfx),
@@ -614,90 +699,9 @@ class ORCABase(seamm.Node):
         return n_cores, memory_mb
 
     def _mpi_env(self, n_cores, config):
-        """Return ``(env, lib_prefix)`` for launching a (possibly parallel) ORCA.
-
-        Parallel ORCA needs a matching OpenMPI runtime. Two things must line up
-        and they are handled differently:
-
-          1. mpirun (PATH): ORCA launches its workers with whatever ``mpirun`` it
-             finds on PATH; it MUST be the same OpenMPI as the libraries the
-             workers link, or the ranks corrupt each other's data (ORCA aborts
-             with a "BLAS-ERROR: incompatible matrices"). We prepend the OpenMPI
-             bin (the sibling of the lib dir given by library-path) so a
-             different mpirun on PATH (e.g. a newer Homebrew OpenMPI) is not used.
-             PATH is an ordinary variable, so it reaches ORCA's children.
-
-          2. libmpi (dynamic-loader path): on Linux, LD_LIBRARY_PATH is honored
-             and inherited, so exporting it is enough. On macOS, ORCA does NOT
-             pass DYLD_* to the MPI sub-processes it spawns (and SIP strips DYLD_*
-             through /bin/sh anyway), so the OpenMPI libraries must instead be on
-             dyld's default search path -- e.g. symlink libmpi.*.dylib into
-             /usr/local/lib. That is a one-time machine setup, documented in the
-             User Guide; nothing here can substitute for it. We still export the
-             loader variables for Linux.
-
-          3. Core binding: ORCA calls its own ``mpirun`` internally once it
-             parses ``%pal``, so we never see that command line -- but its
-             environment is ours to set. On an unmanaged, interactive host
-             (no SLURM etc. coordinating which cores belong to which job),
-             every independent ``mpirun`` invocation applies OpenMPI's
-             default binding policy (bind each rank to a core, starting from
-             a low core number) with no knowledge of other concurrently-
-             running ORCA jobs, so several jobs launched at once all pile
-             onto the same one or two cores instead of spreading across the
-             machine. Disabling binding (``OMPI_MCA_hwloc_base_binding_policy
-             =none``, the environment-variable spelling of ``mpirun
-             --bind-to none``, same on Linux and macOS -- no ``DYLD_*``/SIP
-             wrinkle here) lets the OS scheduler load-balance ranks from
-             concurrent jobs across all cores instead. Under a real
-             scheduler this is unnecessary and can be counter-productive: a
-             SLURM allocation already restricts the job to specific cores
-             (cgroups), so we leave OpenMPI's binding on in that case, the
-             same ``SLURM_JOB_ID`` check seamm_exec's ``in_situ`` auto-
-             detection and ``computational_environment()`` use.
-
-        The OpenMPI library directory is part of *how to run ORCA*, so it comes
-        from the executor config (~/SEAMM/orca.ini), not the user-facing
-        [orca-step] options. configparser lower-cases keys.
-        """
-        env = {}
-        lib_prefix = []
-        library_path = config.get("library-path", "") or ""
-        quoted_library_path = shlex.quote(library_path)
-        for var, value in _library_path_vars(n_cores, library_path):
-            env[var] = value
-            # Prepend at shell *runtime*, not with this Python-computed
-            # snapshot of os.environ: an installation=modules code
-            # (seamm_exec.Local.exec()) runs `module load ...` earlier in
-            # this same generated script, which Python's os.environ can't
-            # see yet at this point -- a static value here would silently
-            # discard whatever that module load just added (confirmed for
-            # real: ORCA's own liborca_tools_*.so disappeared from a
-            # parallel run's LD_LIBRARY_PATH this way).
-            #
-            # Deliberately brace-free (an if/then/else, not
-            # ``${VAR:+...}`` parameter expansion): this text is later run
-            # through seamm_exec.local.Local.exec()'s own
-            # ``command.format(**config, **ce)`` (for ITS "{code}"-style
-            # placeholders), called in a loop *until the output stops
-            # changing* -- a single-braced ``${VAR:+...}`` here survives
-            # exactly one pass (mistaken for one of its own fields on the
-            # next), and even doubling the braces only buys one extra
-            # pass before the same KeyError (confirmed for real, both
-            # ways). A construct with no braces at all is immune
-            # regardless of how many passes run.
-            lib_prefix.append(
-                f'if [ -n "${var}" ]; then '
-                f"export {var}={quoted_library_path}:${var}; "
-                f"else export {var}={quoted_library_path}; fi;"
-            )
-        if n_cores > 1 and library_path:
-            bindir = Path(library_path).expanduser().parent / "bin"
-            if bindir.is_dir():
-                lib_prefix.insert(0, f"export PATH={shlex.quote(str(bindir))}:$PATH;")
-        if n_cores > 1 and "SLURM_JOB_ID" not in os.environ:
-            env["OMPI_MCA_hwloc_base_binding_policy"] = "none"
-        return env, lib_prefix
+        """``(env, lib_prefix)`` for a (possibly parallel) ORCA: see
+        :func:`mpi_env`."""
+        return mpi_env(n_cores, config)
 
     def run_orca_compound(
         self,
@@ -738,8 +742,6 @@ class ORCABase(seamm.Node):
         directory.mkdir(parents=True, exist_ok=True)
 
         n_cores, memory_mb = self._resources()
-        config = self._orca_config()
-        env, lib_prefix = self._mpi_env(n_cores, config)
 
         lines = []
         if n_cores > 1:
@@ -757,14 +759,15 @@ class ORCABase(seamm.Node):
         return_files = ["orca.out", "orca.err", "*.bibtex", "*.txt", "*.engrad"]
         if engrad:
             return_files.append(engrad)
-        cmd = lib_prefix + ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
+        # ORCA's full path and OpenMPI paths come from the resolver (run_orca_job)
+        cmd = ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
         # Convert the dimer step's retained density into a .wfx (as run_orca does
         # for the Energy substep), for a following Atomic Charges (DDEC6) step.
         # wfx_step is the Compound sub-job that kept its density (the dimer).
         if make_wfx:
             cmd += [
                 "&&",
-                _orca_2aim(config),
+                "{orca_2aim}",
                 wfx_step,
                 ">",
                 "orca_2aim.out",
@@ -779,14 +782,12 @@ class ORCABase(seamm.Node):
             key="orca",
             program="orca",
             cmd=cmd,
-            config=config,
             directory=directory,
             files=files,
             return_files=return_files,
             # See the comment in run_orca -- molssi-seamm/orca_step#20.
             in_situ=None,
             shell=True,
-            env=env,
             resources=seamm_exec.Resources(ntasks=n_cores),
             fingerprint=_fingerprint(files, make_wfx),
             # ORCA exits 0 even after an error termination.
