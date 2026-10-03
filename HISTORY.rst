@@ -1,6 +1,29 @@
 =======
 History
 =======
+2026.10.3.1 -- ORCA as separate calculations for many structures, on this machine or a cluster
+    * With an ORCA model chemistry, the Energy step, the Dimer Builder and Normal Mode
+      Sampling's finite-difference Hessian now run ORCA as separate calculations, one
+      per structure: several at a time on this machine, or on the cluster when the
+      job's target sends its calculations to a queue. A rerun reuses the ones that
+      had finished. The numbers are the same as through ORCA's MDI engine.
+    * The sub-jobs of a counterpoise (BSSE) correction run together, concurrently
+      when there are cores for more than one, or as separate calculations on the
+      job's cluster queue.
+    * How ORCA is run (its full path, the OpenMPI it was built with, ``orca_2aim``)
+      is now worked out on the machine that runs it, from that machine's
+      ``orca.ini``, so a job can send ORCA calculations to a cluster whose ORCA is
+      installed differently, or where ORCA is not installed on the job's machine.
+      On a site with environment modules, ``code`` in ``orca.ini`` should be ORCA's
+      full path.
+    * Behaviour change: ORCA's MDI engine now runs a lone atom or ion without COSX
+      (``NoCOSX``), as the ORCA step already did. Single-centre energies from the
+      engine (e.g. Li⁺, Na⁺) move by about 5 kJ/mol from before, removing a COSX
+      grid artifact; values computed with earlier versions differ by that much.
+    * Normal Mode Sampling knows from the model chemistry whether an ORCA method has
+      an analytic Hessian, without starting ORCA to ask.
+    * Requires seamm-exec 2026.10.3 or later.
+
 2026.10.3 -- Bugfix: the MDI engine runs the chosen basis, including Basis Set Exchange bases
     * Together with model_chemistry_step 2026.10.3, ORCA driven as an MDI engine
       (the Energy, Dimer Builder, Normal Mode Sampling and LAMMPS steps) now runs

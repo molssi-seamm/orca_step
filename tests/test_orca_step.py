@@ -2365,7 +2365,7 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
     }
     calls = []
 
-    def fake_run_orca_job(
+    def fake_orca_job_task(
         keyword_line,
         config,
         charge,
@@ -2375,8 +2375,10 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
         directory=None,
         extra_blocks="",
         make_wfx=False,
+        key="orca",
     ):
         label = Path(directory).name
+        assert key == label
         calls.append(
             {
                 "label": label,
@@ -2388,9 +2390,34 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
                 "extra_blocks": extra_blocks,
             }
         )
-        return {"energy": energies[label], "success": True}
+        return SimpleNamespace(key=key, directory=directory)
 
-    node.run_orca_job = fake_run_orca_job
+    class FakeTaskSet:
+        """All the sub-jobs run together in one TaskSet."""
+
+        instances = []
+
+        def __init__(self, node, directory=None):
+            self.tasks = []
+            FakeTaskSet.instances.append(self)
+
+        def add(self, task):
+            self.tasks.append(task)
+
+        def run(self):
+            for task in self.tasks:
+                yield SimpleNamespace(key=task.key, ok=True)
+
+    import orca_step.bsse as bsse_module
+
+    monkeypatch.setattr(bsse_module.seamm_exec, "TaskSet", FakeTaskSet)
+    node.orca_job_task = fake_orca_job_task
+    node._check_task_result = lambda result, directory: None
+    node._report_run_location = lambda result, directory: None
+    node._parse_output = lambda path: {
+        "energy": energies[Path(path).parent.name],
+        "success": True,
+    }
 
     captured_analyze = {}
     node.analyze = lambda **kwargs: captured_analyze.update(kwargs)
@@ -2422,6 +2449,9 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
     # Per-job charge threading: fragment 1 (Na, +1) and fragment 2 (Cl, -1),
     # the cluster job neutral, each -in-cluster job at its OWN fragment's
     # charge (not the cluster's), each -alone job likewise.
+    # One TaskSet held all five sub-jobs
+    assert len(FakeTaskSet.instances) == 1
+    assert len(FakeTaskSet.instances[0].tasks) == 5
     by_label = {c["label"]: c for c in calls}
     # HF needs no method-specific '%' blocks.
     assert all(c["extra_blocks"] == "" for c in calls)

@@ -180,8 +180,39 @@ class ORCAStep(object):
                         # needs, or None when not MDI-capable.
                         "mdi_method_arg": real if mdi_capable else None,
                         "mdi_basis_arg": basis if mdi_capable else None,
+                        # The MDI engine runs ORCA once per structure, so many
+                        # structures are better run as concurrent tasks.
+                        "prefers_batch": True,
+                        # Whether ORCA has an analytic Hessian for the method,
+                        # so a step need not start an engine to ask.
+                        "analytic_hessian": bool(
+                            mdi_capable and method_has_analytic_hessian(real)
+                        ),
                     }
         return options
+
+    @classmethod
+    def get_task(cls, configuration, model_chemistry, **kwargs):
+        """A task computing ORCA's energy (and gradient) for one structure: the
+        batch half of the Model Chemistry contract. See :mod:`orca_step.batch`."""
+        from .batch import get_task
+
+        return get_task(configuration, model_chemistry, **kwargs)
+
+    @classmethod
+    def can_run_task(cls, configuration, model_chemistry, **kwargs):
+        """Whether :meth:`get_task` can run this structure (molecules only)."""
+        from .batch import can_run_task
+
+        return can_run_task(configuration, model_chemistry, **kwargs)
+
+    @classmethod
+    def analyze_task(cls, result, model_chemistry, configuration, **kwargs):
+        """The energy (kJ/mol) and gradients (kJ/mol/Å) of a finished task from
+        :meth:`get_task`. See :mod:`orca_step.batch`."""
+        from .batch import analyze_task
+
+        return analyze_task(result, model_chemistry, configuration, **kwargs)
 
     @classmethod
     def get_executor_config(cls, executor, seamm_options):

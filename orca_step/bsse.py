@@ -33,6 +33,7 @@ import orca_step
 from .energy import Energy
 import seamm
 import seamm_bsse
+import seamm_exec
 from seamm_util import Q_
 from seamm_util.printing import FormattedText as __
 import seamm_util.printing as printing
@@ -361,7 +362,11 @@ class BSSE(Energy):
         # DLPNO double hybrid); every sub-job must run the same method.
         method_blocks = self.method_blocks(P)
 
-        results = {}
+        # Every sub-job is built first, then they run together as one TaskSet:
+        # concurrently in the local pool, or bundled on the job's queue, and a
+        # rerun keeps the finished ones.
+        task_set = seamm_exec.TaskSet(self, directory=self.directory)
+        directories = {}
         for spec in specs:
             job_directory = Path(self.directory) / spec.label
             keyword_line = base_keyword_line
@@ -380,17 +385,31 @@ class BSSE(Energy):
             if single_center:
                 keyword_line = f"{keyword_line} {single_center}"
 
-            outcome = self.run_orca_job(
-                keyword_line,
-                configuration,
-                spec.charge,
-                spec.multiplicity,
-                atom_indices=spec.atom_indices,
-                ghost_atoms=spec.ghost_indices,
-                directory=job_directory,
-                extra_blocks=method_blocks,
-                make_wfx=job_make_wfx,
+            task_set.add(
+                self.orca_job_task(
+                    keyword_line,
+                    configuration,
+                    spec.charge,
+                    spec.multiplicity,
+                    atom_indices=spec.atom_indices,
+                    ghost_atoms=spec.ghost_indices,
+                    directory=job_directory,
+                    extra_blocks=method_blocks,
+                    make_wfx=job_make_wfx,
+                    key=spec.label,
+                )
             )
+            directories[spec.label] = job_directory
+
+        for result in task_set.run():
+            job_directory = directories[result.key]
+            self._check_task_result(result, job_directory)
+            self._report_run_location(result, job_directory)
+
+        results = {}
+        for spec in specs:
+            job_directory = directories[spec.label]
+            outcome = self._parse_output(job_directory / "orca.out")
             gradient = self._parse_gradients(job_directory) if want_gradient else None
             if want_gradient and gradient is None:
                 raise RuntimeError(
