@@ -652,7 +652,8 @@ class Energy(orca_step.ORCABase):
         """
         name = (name or "").strip()
 
-        job_root = Path(self.flowchart.root_directory)
+        job_root = self.job_path
+        own_job = True
         parsed = self._parse_job_reference(name)
         if parsed is not None:
             job_no, tail = parsed
@@ -664,6 +665,7 @@ class Energy(orca_step.ORCABase):
                         "job -- a job cannot write into another job."
                     )
                 job_root = self._other_job_path(job_no)
+                own_job = False
             name = tail.strip()
 
         if not name or name == "default":
@@ -677,6 +679,17 @@ class Energy(orca_step.ORCABase):
             path = job_root / "checkpoints" / safe
         if path.suffix.lower() != ".gbw":
             path = path.with_name(path.name + ".gbw")
+        if read_only and own_job and not path.exists():
+            # An iteration of a parallel loop keeps its checkpoints apart, and
+            # reads the job's own from before the loop.
+            try:
+                relative = path.relative_to(job_root)
+            except ValueError:
+                relative = None
+            if relative is not None:
+                other = Path(self.flowchart.root_directory) / relative
+                if other.exists():
+                    return other
         return path
 
     def _save_orbital_checkpoint(self, P):
