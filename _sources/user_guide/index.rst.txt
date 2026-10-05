@@ -189,18 +189,43 @@ See the ORCA manual's `basis-set section
 <https://orca-manual.mpi-muelheim.mpg.de/contents/essentialelements/basisset.html>`_
 for the full discussion of linear dependence and its automatic removal.
 
+Exact exchange for lone atoms and some elements
+===============================================
+
+ORCA's default approximation for exact exchange, RIJCOSX, integrates part of
+the exchange on a grid. ORCA 6.1.1 gets some cases wrong without a warning
+(revDSD-PBEP86-D4/def2-TZVPPD, DEFGRID3):
+
+* For a single atom or ion, COSX can build wrong virtual orbitals. This puts the
+  MP2 part of a double hybrid off by ~5 kJ/mol for Na\ :sup:`+` and
+  Mg\ :sup:`2+`, and 13.9 kJ/mol for Zn\ :sup:`2+`.
+* For structures containing Na, even in a molecule, COSX gives spurious forces.
+  Na--Cl at 2.28 Å has a net force of 10.8 meV/Å with RIJCOSX, against
+  0.06 meV/Å without it.
+* For BF\ :sub:`4`\ :sup:`-` and PF\ :sub:`6`\ :sup:`-`, COSX's force errors
+  near equilibrium are 9--11 meV/Å.
+
+So a calculation with a single atom, or with any atom of Na, Mg, Zn, B or P,
+runs with exact exchange, ``NoCOSX``. Ghost atoms count, so the jobs of a
+counterpoise correction are treated the same way. The output notes when it is
+used.
+
+Other elements keep COSX, which is about three times cheaper for a fragment the
+size of ethylene carbonate. COSX's force errors are small for Li\ :sup:`+`,
+F\ :sup:`-` and Cl\ :sup:`-`, and moderate (3--6.5 meV/Å) for K, Ca, Rb, Cs, Sr
+and Ba, which can be added where that matters (see below).
+
+An exchange scheme given in the extra keywords is respected, so adding
+``RIJCOSX`` there uses COSX anyway. The same rule applies when ORCA runs for
+another step as a model chemistry (see below).
+
 Initial guess and wavefunction restart
 =======================================
 
 Single atoms and open-shell transition metals are often the hardest systems to
 converge -- a superposition of atomic densities (ORCA's default ``SAD`` guess)
 has little meaning for one atomic center, and can converge to the wrong
-electronic state entirely. (Whatever the guess, a single-atom system is run with
-exact exchange, ``NoCOSX``: ORCA's default COSX approximation can build wrong
-virtual orbitals for a lone atom, which puts the MP2 part of a double hybrid off
-by up to ~5 kJ/mol, e.g. for Na, Na\ :sup:`+` and Mg, with no warning. This also
-applies to the bare single-atom fragments of a counterpoise correction. An
-exchange scheme given in the extra keywords is respected.) The **Initial
+electronic state entirely. The **Initial
 guess** control sets ORCA's SCF starting guess (``Guess`` in the ``%scf``
 block):
 
@@ -762,8 +787,12 @@ How ORCA then runs is chosen for you, and gives the same numbers either way:
 The model chemistry's basis is used either way: any basis ORCA knows, or a basis
 from the Basis Set Exchange (``bse:NAME``), whose definition is fetched for the
 elements present and passed to ORCA exactly as the ORCA step does. A lone atom or
-ion runs without the COSX approximation (``NoCOSX``), as in the ORCA step, which
-avoids an artifact of several kJ/mol from COSX's grid on a single centre.
+ion, or a structure with an atom of Na, Mg, Zn, B or P (ghosts included), runs
+with exact exchange (``NoCOSX``), as in the ORCA step (see `Exact exchange for
+lone atoms and some elements`_). A program driving ORCA this way can change the
+element set with the ``exact_exchange_elements`` option, for example
+``"Na Mg Zn B P K Ca"`` to add K and Ca, or ``"none"`` to keep COSX for
+everything but single atoms.
 
 Every calculation run this way uses tight SCF convergence and the fine integration
 grid (``TIGHTSCF DEFGRID3``). These calculations are mostly forces for training

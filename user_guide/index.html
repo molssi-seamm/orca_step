@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.5 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.5.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=99beb745"></script>
+    <script src="../_static/documentation_options.js?v=f9e9a9ea"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.5" />
+  <meta name="docsearch:version" content="2026.10.5.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -680,17 +680,39 @@ can vary discontinuously from one structure to the next.</p>
 <p>See the ORCA manual’s <a class="reference external" href="https://orca-manual.mpi-muelheim.mpg.de/contents/essentialelements/basisset.html">basis-set section</a>
 for the full discussion of linear dependence and its automatic removal.</p>
 </section>
+<section id="exact-exchange-for-lone-atoms-and-some-elements">
+<h2>Exact exchange for lone atoms and some elements<a class="headerlink" href="#exact-exchange-for-lone-atoms-and-some-elements" title="Link to this heading">#</a></h2>
+<p>ORCA’s default approximation for exact exchange, RIJCOSX, integrates part of
+the exchange on a grid. ORCA 6.1.1 gets some cases wrong without a warning
+(revDSD-PBEP86-D4/def2-TZVPPD, DEFGRID3):</p>
+<ul class="simple">
+<li><p>For a single atom or ion, COSX can build wrong virtual orbitals. This puts the
+MP2 part of a double hybrid off by ~5 kJ/mol for Na<sup>+</sup> and
+Mg<sup>2+</sup>, and 13.9 kJ/mol for Zn<sup>2+</sup>.</p></li>
+<li><p>For structures containing Na, even in a molecule, COSX gives spurious forces.
+Na–Cl at 2.28 Å has a net force of 10.8 meV/Å with RIJCOSX, against
+0.06 meV/Å without it.</p></li>
+<li><p>For BF<sub>4</sub><sup>-</sup> and PF<sub>6</sub><sup>-</sup>, COSX’s force errors
+near equilibrium are 9–11 meV/Å.</p></li>
+</ul>
+<p>So a calculation with a single atom, or with any atom of Na, Mg, Zn, B or P,
+runs with exact exchange, <code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>. Ghost atoms count, so the jobs of a
+counterpoise correction are treated the same way. The output notes when it is
+used.</p>
+<p>Other elements keep COSX, which is about three times cheaper for a fragment the
+size of ethylene carbonate. COSX’s force errors are small for Li<sup>+</sup>,
+F<sup>-</sup> and Cl<sup>-</sup>, and moderate (3–6.5 meV/Å) for K, Ca, Rb, Cs, Sr
+and Ba, which can be added where that matters (see below).</p>
+<p>An exchange scheme given in the extra keywords is respected, so adding
+<code class="docutils literal notranslate"><span class="pre">RIJCOSX</span></code> there uses COSX anyway. The same rule applies when ORCA runs for
+another step as a model chemistry (see below).</p>
+</section>
 <section id="initial-guess-and-wavefunction-restart">
 <h2>Initial guess and wavefunction restart<a class="headerlink" href="#initial-guess-and-wavefunction-restart" title="Link to this heading">#</a></h2>
 <p>Single atoms and open-shell transition metals are often the hardest systems to
 converge – a superposition of atomic densities (ORCA’s default <code class="docutils literal notranslate"><span class="pre">SAD</span></code> guess)
 has little meaning for one atomic center, and can converge to the wrong
-electronic state entirely. (Whatever the guess, a single-atom system is run with
-exact exchange, <code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>: ORCA’s default COSX approximation can build wrong
-virtual orbitals for a lone atom, which puts the MP2 part of a double hybrid off
-by up to ~5 kJ/mol, e.g. for Na, Na<sup>+</sup> and Mg, with no warning. This also
-applies to the bare single-atom fragments of a counterpoise correction. An
-exchange scheme given in the extra keywords is respected.) The <strong>Initial
+electronic state entirely. The <strong>Initial
 guess</strong> control sets ORCA’s SCF starting guess (<code class="docutils literal notranslate"><span class="pre">Guess</span></code> in the <code class="docutils literal notranslate"><span class="pre">%scf</span></code>
 block):</p>
 <ul class="simple">
@@ -1224,8 +1246,12 @@ Sampling’s analytic Hessian on this machine).</p></li>
 <p>The model chemistry’s basis is used either way: any basis ORCA knows, or a basis
 from the Basis Set Exchange (<code class="docutils literal notranslate"><span class="pre">bse:NAME</span></code>), whose definition is fetched for the
 elements present and passed to ORCA exactly as the ORCA step does. A lone atom or
-ion runs without the COSX approximation (<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>), as in the ORCA step, which
-avoids an artifact of several kJ/mol from COSX’s grid on a single centre.</p>
+ion, or a structure with an atom of Na, Mg, Zn, B or P (ghosts included), runs
+with exact exchange (<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>), as in the ORCA step (see <a class="reference internal" href="#exact-exchange-for-lone-atoms-and-some-elements">Exact exchange for
+lone atoms and some elements</a>). A program driving ORCA this way can change the
+element set with the <code class="docutils literal notranslate"><span class="pre">exact_exchange_elements</span></code> option, for example
+<code class="docutils literal notranslate"><span class="pre">&quot;Na</span> <span class="pre">Mg</span> <span class="pre">Zn</span> <span class="pre">B</span> <span class="pre">P</span> <span class="pre">K</span> <span class="pre">Ca&quot;</span></code> to add K and Ca, or <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> to keep COSX for
+everything but single atoms.</p>
 <p>Every calculation run this way uses tight SCF convergence and the fine integration
 grid (<code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span> <span class="pre">DEFGRID3</span></code>). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA’s looser defaults.</p>
@@ -1333,6 +1359,7 @@ is refused too. See “Flowcharts without the editor” in SEAMM’s user guide.
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-grid">Integration grid</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-convergence">SCF convergence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-sthresh-linear-dependence">SCF SThresh (linear dependence)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exact-exchange-for-lone-atoms-and-some-elements">Exact exchange for lone atoms and some elements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initial-guess-and-wavefunction-restart">Initial guess and wavefunction restart</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extra-keywords-and-extra-orca-blocks">Extra keywords and extra ORCA blocks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energies-gradients-and-forces">Energies, gradients, and forces</a></li>

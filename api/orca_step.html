@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.5 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.5.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=99beb745"></script>
+    <script src="../_static/documentation_options.js?v=f9e9a9ea"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.5" />
+  <meta name="docsearch:version" content="2026.10.5.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -534,6 +534,11 @@
 back with the engine’s parsers, so the batch path and the MDI path give the same
 numbers. <code class="docutils literal notranslate"><span class="pre">options</span></code> adds what fragments need: <code class="docutils literal notranslate"><span class="pre">atom_indices</span></code>,
 <code class="docutils literal notranslate"><span class="pre">ghost_atoms</span></code>, <code class="docutils literal notranslate"><span class="pre">charge</span></code> and <code class="docutils literal notranslate"><span class="pre">multiplicity</span></code>.</p>
+<p>A job with one center, or with any atom of Na, Mg, Zn, B or P (ghosts
+included), uses exact exchange (<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>), as on every ORCA path
+(orca_step#44). <code class="docutils literal notranslate"><span class="pre">options[&quot;exact_exchange_elements&quot;]</span></code>, or the same key in the
+model chemistry’s options, changes the element set (“none” for one-center jobs
+only).</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="orca_step.batch.AnalysisError">
 <span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.batch.</span></span><span class="sig-name descname"><span class="pre">AnalysisError</span></span><a class="reference internal" href="../_modules/seamm_exec/evaluator.html#AnalysisError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.batch.AnalysisError" title="Link to this definition">#</a></dt>
@@ -761,6 +766,23 @@ nothing could be computed at all.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy.Energy.exact_exchange_keywords">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">exact_exchange_keywords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.exact_exchange_keywords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.exact_exchange_keywords" title="Link to this definition">#</a></dt>
+<dd><p>‘NoCOSX’ when ORCA’s default RIJCOSX is not reliable for a job, else ‘’.</p>
+<p>That is a one-center job (a lone atom or bare atomic ion), or one with
+any atom, ghosts included, of Na, Mg, Zn, B or P (orca_step#44). ORCA
+6.1.1’s RIJCOSX mis-builds the d-type virtual orbitals of some lone
+atoms from scratch (the MP2 part of a double hybrid off by 4.7-13.9
+kJ/mol for Na+, Mg2+ and Zn2+, with no warning), and gives spurious
+forces for Na in molecules (Na-Cl net force 10.8 meV/Å, against 0.06
+with exact exchange) and for BF4- and PF6- (9-11 meV/Å). Exact
+exchange is affordable at these sizes. An exchange scheme the user
+already chose (e.g. ‘RIJCOSX’ in the extra keywords) is respected,
+which is how to override the guard. The rule is the MDI engine’s and
+the batch path’s (<code class="docutils literal notranslate"><span class="pre">exact_exchange_method</span></code> in <code class="docutils literal notranslate"><span class="pre">data/orca_mdi.py</span></code>).</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="orca_step.energy.Energy.extra_input">
 <span class="sig-name descname"><span class="pre">extra_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.extra_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.extra_input" title="Link to this definition">#</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">(extra_blocks,</span> <span class="pre">extra_files)</span></code> for the ORCA input: the BSE
@@ -796,19 +818,6 @@ the parent functional (see <code class="docutils literal notranslate"><span clas
 set up printing and cited the plug-in. So (like the Gaussian step) it does
 NOT call <code class="docutils literal notranslate"><span class="pre">super().run()</span></code> – doing so would cite the plug-in a second
 time. The working directory is created by <code class="docutils literal notranslate"><span class="pre">run_orca</span></code>.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="orca_step.energy.Energy.single_center_keywords">
-<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">single_center_keywords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_centers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.single_center_keywords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.single_center_keywords" title="Link to this definition">#</a></dt>
-<dd><p>‘NoCOSX’ for a one-center job (a lone atom or bare atomic ion), else ‘’.</p>
-<p>ORCA 6.1.1 with its default RIJCOSX exchange mis-builds the d-type
-virtual orbitals of some lone atoms when the SCF starts from scratch:
-the SCF energy is right, but the MP2 part of a double hybrid is off by
-~5 kJ/mol (Na 5.0, Na+ 4.9, Mg 4.6), with no warning. Exact exchange
-(NoCOSX) is right and cheap for one center. Ghost atoms count as
-centers, so only a bare fragment qualifies. An exchange scheme the
-user already chose is respected.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1799,11 +1808,11 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.calculate_energy_of_formation"><code class="docutils literal notranslate"><span class="pre">Energy.calculate_energy_of_formation()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.cleanup"><code class="docutils literal notranslate"><span class="pre">Energy.cleanup()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.description_text"><code class="docutils literal notranslate"><span class="pre">Energy.description_text()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.exact_exchange_keywords"><code class="docutils literal notranslate"><span class="pre">Energy.exact_exchange_keywords()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.extra_input"><code class="docutils literal notranslate"><span class="pre">Energy.extra_input()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.keyword_line"><code class="docutils literal notranslate"><span class="pre">Energy.keyword_line()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.method_blocks"><code class="docutils literal notranslate"><span class="pre">Energy.method_blocks()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.run"><code class="docutils literal notranslate"><span class="pre">Energy.run()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.single_center_keywords"><code class="docutils literal notranslate"><span class="pre">Energy.single_center_keywords()</span></code></a></li>
 </ul>
 </li>
 </ul>

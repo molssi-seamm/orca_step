@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.10.5 documentation</title>
+    <title>orca_step.bsse &#8212; SEAMM ORCA Plug-in 2026.10.5.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=99beb745"></script>
+    <script src="../../_static/documentation_options.js?v=f9e9a9ea"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.5" />
+  <meta name="docsearch:version" content="2026.10.5.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -876,13 +876,14 @@
             <span class="n">job_make_wfx</span> <span class="o">=</span> <span class="n">make_wfx</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">seamm_bsse</span><span class="o">.</span><span class="n">CLUSTER</span>
             <span class="k">if</span> <span class="n">job_make_wfx</span><span class="p">:</span>
                 <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2"> keepdensity"</span>
-            <span class="c1"># A bare single-atom fragment (e.g. Na+ alone) needs exact</span>
-            <span class="c1"># exchange; see Energy.single_center_keywords.</span>
-            <span class="n">single_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_center_keywords</span><span class="p">(</span>
-                <span class="n">keyword_line</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">)</span>
+            <span class="c1"># A bare single-atom fragment (e.g. Cl- alone), or any job with an</span>
+            <span class="c1"># atom of Na, Mg, Zn, B or P (ghosts included), needs exact</span>
+            <span class="c1"># exchange; see Energy.exact_exchange_keywords.</span>
+            <span class="n">exact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exact_exchange_keywords</span><span class="p">(</span>
+                <span class="n">keyword_line</span><span class="p">,</span> <span class="p">[</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">atom_indices</span><span class="p">]</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">single_center</span><span class="p">:</span>
-                <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">single_center</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">if</span> <span class="n">exact</span><span class="p">:</span>
+                <span class="n">keyword_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">exact</span><span class="si">}</span><span class="s2">"</span>
 
             <span class="n">task_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">orca_job_task</span><span class="p">(</span>
