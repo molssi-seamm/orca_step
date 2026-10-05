@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.5.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.5.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=f9e9a9ea"></script>
+    <script src="../../_static/documentation_options.js?v=ce112380"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.5.1" />
+  <meta name="docsearch:version" content="2026.10.5.2" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -673,6 +673,226 @@
     <span class="k">return</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.03</span> <span class="o">*</span> <span class="n">n</span><span class="o">**</span><span class="mf">2.5</span> <span class="o">*</span> <span class="n">method</span> <span class="o">*</span> <span class="n">basis</span> <span class="o">*</span> <span class="n">extra</span>
 
 
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="c1"># Timing records (seamm_exec.timing; campaign seamm_exec 2026-10-05)</span>
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="c1">#: ORCA keywords that mark a correlated or semiempirical method, for</span>
+<span class="c1">#: :func:`method_class` when the method name is not known</span>
+<span class="n">_CC_PREFIXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ccsd"</span><span class="p">,</span> <span class="s2">"qcisd"</span><span class="p">,</span> <span class="s2">"cepa"</span><span class="p">,</span> <span class="s2">"ri-ccsd"</span><span class="p">,</span> <span class="s2">"cisd"</span><span class="p">,</span> <span class="s2">"ncisd"</span><span class="p">)</span>
+<span class="n">_SEMIEMPIRICAL</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"xtb"</span><span class="p">,</span>
+    <span class="s2">"xtb0"</span><span class="p">,</span>
+    <span class="s2">"xtb1"</span><span class="p">,</span>
+    <span class="s2">"xtb2"</span><span class="p">,</span>
+    <span class="s2">"gfn-xtb"</span><span class="p">,</span>
+    <span class="s2">"gfn2-xtb"</span><span class="p">,</span>
+    <span class="s2">"am1"</span><span class="p">,</span>
+    <span class="s2">"pm3"</span><span class="p">,</span>
+    <span class="s2">"mndo"</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_HF</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"hf"</span><span class="p">,</span> <span class="s2">"rhf"</span><span class="p">,</span> <span class="s2">"uhf"</span><span class="p">,</span> <span class="s2">"rohf"</span><span class="p">,</span> <span class="s2">"hf-3c"</span><span class="p">,</span> <span class="s2">"ri-hf"</span><span class="p">,</span> <span class="s2">"rijk-hf"</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="task_kind">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.task_kind">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">task_kind</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""What kind of calculation an ORCA '!' line asks for, for the timing</span>
+<span class="sd">    records: ``numfreq``, ``freq``, ``opt``, ``numgrad``, ``gradient`` or</span>
+<span class="sd">    ``energy`` (the most expensive that applies)."""</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">keyword_line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">if</span> <span class="s2">"numfreq"</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"numfreq"</span>
+    <span class="k">if</span> <span class="s2">"freq"</span> <span class="ow">in</span> <span class="n">words</span> <span class="ow">or</span> <span class="s2">"anfreq"</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"freq"</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"opt"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">w</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"opt"</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"opt"</span>
+    <span class="k">if</span> <span class="s2">"numgrad"</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"numgrad"</span>
+    <span class="k">if</span> <span class="s2">"engrad"</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"gradient"</span>
+    <span class="k">return</span> <span class="s2">"energy"</span></div>
+
+
+
+<div class="viewcode-block" id="method_class">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.method_class">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">method_class</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keyword_line</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The class of a method, for the timing records: ``HF``, a DFT category</span>
+<span class="sd">    from the step's metadata (``local``, ``GGA``, ``meta-GGA``, ``global</span>
+<span class="sd">    hybrid``, ``range-separated hybrid``, ``global double-hybrid``,</span>
+<span class="sd">    ``range-separated double-hybrid``), ``MP2``, ``DLPNO-CC``, ``CC``,</span>
+<span class="sd">    ``semiempirical``, or ``""`` if it cannot be told.</span>
+
+<span class="sd">    ``method`` is the step's method name (``B3LYP``, ``DLPNO-CCSD(T)``, ...);</span>
+<span class="sd">    when it is not known the '!' line is scanned instead.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">orca_step</span>
+
+    <span class="n">functionals</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"methods"</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="p">(</span><span class="n">method</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">functionals</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+            <span class="c1"># The metadata's spelling, whatever the case given (wB97X-D3)</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">functionals</span><span class="p">,</span> <span class="o">*</span><span class="n">methods</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">lower</span><span class="p">),</span> <span class="n">name</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">functionals</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">functionals</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">"category"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+            <span class="n">kind</span> <span class="o">=</span> <span class="n">methods</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">"type"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"QC"</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">"DLPNO-CC"</span> <span class="k">if</span> <span class="s2">"dlpno"</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"CC"</span>
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"DFT"</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">"DFT"</span>
+            <span class="k">return</span> <span class="n">kind</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">keyword_line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">word</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"dlpno-cc"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">"DLPNO-CC"</span>
+        <span class="k">if</span> <span class="n">word</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_CC_PREFIXES</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">"CC"</span>
+    <span class="n">by_lower</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">v</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">functionals</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">by_lower</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">by_lower</span><span class="p">[</span><span class="n">word</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"mp2"</span> <span class="ow">in</span> <span class="n">word</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"MP2"</span>
+        <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">_SEMIEMPIRICAL</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"semiempirical"</span>
+        <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">_HF</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"HF"</span>
+    <span class="k">return</span> <span class="s2">""</span></div>
+
+
+
+<div class="viewcode-block" id="timing_descriptors">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.timing_descriptors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">timing_descriptors</span><span class="p">(</span>
+    <span class="n">input_text</span><span class="p">,</span>
+    <span class="n">output_text</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_atoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_heavy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_ghosts</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">charge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">multiplicity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The descriptors of an ORCA run for its timing record: the numbers a</span>
+<span class="sd">    cost model is fitted to (see the seamm_exec campaign of 2026-10-05).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_text : str or None</span>
+<span class="sd">        ``orca.inp``: the '!' line, ``%pal`` and ``%maxcore``.</span>
+<span class="sd">    output_text : str or None</span>
+<span class="sd">        ``orca.out``: electrons, basis functions, SCF runs and cycles, ORCA's</span>
+<span class="sd">        own run time.</span>
+<span class="sd">    model : str, optional</span>
+<span class="sd">        The step's ``type@method/basis`` string, for the method and basis.</span>
+<span class="sd">    n_atoms, n_heavy, n_ghosts, charge, multiplicity : optional</span>
+<span class="sd">        Of the system as run (ghosts not counted in the atoms).</span>
+<span class="sd">    """</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">keyword_line</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">input_text</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">input_text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"!"</span><span class="p">):</span>
+                <span class="n">keyword_line</span> <span class="o">=</span> <span class="p">(</span><span class="n">keyword_line</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"%pal\s+nprocs\s+(\d+)"</span><span class="p">,</span> <span class="n">input_text</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"nprocs"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">m</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"%maxcore\s+(\d+)"</span><span class="p">,</span> <span class="n">input_text</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="s2">"maxcore_mb"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">method</span> <span class="o">=</span> <span class="n">basis</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">model</span><span class="p">:</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"@"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">method</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"task"</span><span class="p">]</span> <span class="o">=</span> <span class="n">task_kind</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">)</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"method_class"</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_class</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">)</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"basis"</span><span class="p">]</span> <span class="o">=</span> <span class="n">basis</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"model"</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span> <span class="ow">or</span> <span class="s2">""</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"keywords"</span><span class="p">]</span> <span class="o">=</span> <span class="n">keyword_line</span>
+
+    <span class="n">words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">keyword_line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">if</span> <span class="s2">"nocosx"</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"ri"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"NoCOSX"</span>
+    <span class="k">elif</span> <span class="s2">"rijcosx"</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"ri"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"RIJCOSX"</span>
+    <span class="k">elif</span> <span class="s2">"rijk"</span> <span class="ow">in</span> <span class="n">words</span> <span class="ow">or</span> <span class="s2">"ri-jk"</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"ri"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"RIJK"</span>
+    <span class="k">elif</span> <span class="s2">"nori"</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"ri"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"NoRI"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"ri"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"dispersion"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">w</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">keyword_line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"d4"</span><span class="p">,</span> <span class="s2">"d3bj"</span><span class="p">,</span> <span class="s2">"d3"</span><span class="p">,</span> <span class="s2">"d3zero"</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">d</span><span class="p">[</span><span class="s2">"n_atoms"</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_atoms</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"n_heavy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_heavy</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"n_ghosts"</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_ghosts</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"charge"</span><span class="p">]</span> <span class="o">=</span> <span class="n">charge</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">"multiplicity"</span><span class="p">]</span> <span class="o">=</span> <span class="n">multiplicity</span>
+
+    <span class="k">if</span> <span class="n">output_text</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">output_text</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Number of Electrons\s+NEL\s+\.+\s+(\d+)"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"n_electrons"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">m</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Number of basis functions\s+\.+\s+(\d+)"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"nbf"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">m</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Number of auxiliary basis functions\s*\.+\s+(\d+)"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"n_aux"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">m</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Hartree-Fock type\s+HFTyp\s+\.+\s+(\w+)"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"hf_type"</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">cycles</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">"SCF (?:CONVERGED|NOT CONVERGED) AFTER\s+(\d+)\s+CYCLES"</span><span class="p">,</span> <span class="n">text</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"scf_runs"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cycles</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"scf_cycles"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cycles</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"geometry_steps"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"GEOMETRY OPTIMIZATION CYCLE\s+\d+"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s2">"TOTAL RUN TIME:\s+(\d+) days (\d+) hours (\d+) minutes (\d+) seconds"</span>
+            <span class="sa">r</span><span class="s2">" (\d+) msec"</span><span class="p">,</span>
+            <span class="n">text</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">days</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="n">msec</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">groups</span><span class="p">())</span>
+            <span class="n">d</span><span class="p">[</span><span class="s2">"code_seconds"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">((</span><span class="n">days</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">+</span> <span class="n">hours</span><span class="p">)</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="n">minutes</span><span class="p">)</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="n">seconds</span> <span class="o">+</span> <span class="n">msec</span> <span class="o">/</span> <span class="mf">1000.0</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="s2">"code_seconds"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"terminated_normally"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"ORCA TERMINATED NORMALLY"</span> <span class="ow">in</span> <span class="n">text</span>
+    <span class="k">return</span> <span class="n">d</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_heavy_atoms</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ghost_atoms</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""(n_atoms, n_heavy, n_ghosts) of the atoms ORCA was given."""</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">atomic_numbers</span><span class="p">)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">))</span> <span class="k">if</span> <span class="n">atom_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">atom_indices</span>
+    <span class="n">ghosts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ghost_atoms</span> <span class="ow">or</span> <span class="p">())</span>
+    <span class="n">real</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ghosts</span><span class="p">]</span>
+    <span class="n">n_heavy</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">real</span> <span class="k">if</span> <span class="n">numbers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">real</span><span class="p">),</span> <span class="n">n_heavy</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ghosts</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_orca_2aim</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The command for orca_2aim, which lives beside the orca binary.</span>
 
@@ -1028,8 +1248,58 @@
         <span class="n">result</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">run_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">run_directory</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_task_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_timing</span><span class="p">(</span>
+            <span class="n">task</span><span class="p">,</span>
+            <span class="n">result</span><span class="p">,</span>
+            <span class="n">run_directory</span><span class="p">,</span>
+            <span class="n">configuration</span><span class="p">,</span>
+            <span class="n">charge</span><span class="p">,</span>
+            <span class="n">multiplicity</span><span class="p">,</span>
+            <span class="n">atom_indices</span><span class="o">=</span><span class="n">atom_indices</span><span class="p">,</span>
+            <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">ghost_atoms</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ORCABase.record_timing">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.record_timing">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record_timing</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">task</span><span class="p">,</span>
+        <span class="n">result</span><span class="p">,</span>
+        <span class="n">run_directory</span><span class="p">,</span>
+        <span class="n">configuration</span><span class="p">,</span>
+        <span class="n">charge</span><span class="p">,</span>
+        <span class="n">multiplicity</span><span class="p">,</span>
+        <span class="n">atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ghost_atoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Append this ORCA run's timing record (``~/.seamm.d/timing/orca.csv``)</span>
+<span class="sd">        -- the common columns from the task layer, the descriptors from</span>
+<span class="sd">        :func:`timing_descriptors`. Never raises; a restored result is not</span>
+<span class="sd">        recorded. See seamm_exec's campaign of 2026-10-05.</span>
+<span class="sd">        """</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">restored</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">n_atoms</span><span class="p">,</span> <span class="n">n_heavy</span><span class="p">,</span> <span class="n">n_ghosts</span> <span class="o">=</span> <span class="n">_heavy_atoms</span><span class="p">(</span>
+                <span class="n">configuration</span><span class="p">,</span> <span class="n">atom_indices</span><span class="p">,</span> <span class="n">ghost_atoms</span>
+            <span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">run_directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"orca.out"</span>
+            <span class="n">descriptors</span> <span class="o">=</span> <span class="n">timing_descriptors</span><span class="p">(</span>
+                <span class="n">task</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"orca.inp"</span><span class="p">),</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span> <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"model"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">n_atoms</span><span class="o">=</span><span class="n">n_atoms</span><span class="p">,</span>
+                <span class="n">n_heavy</span><span class="o">=</span><span class="n">n_heavy</span><span class="p">,</span>
+                <span class="n">n_ghosts</span><span class="o">=</span><span class="n">n_ghosts</span><span class="p">,</span>
+                <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">,</span>
+                <span class="n">multiplicity</span><span class="o">=</span><span class="n">multiplicity</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">seamm_exec</span><span class="o">.</span><span class="n">record_task_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">descriptors</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - must never stop the step</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not record the timing of the ORCA run: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ORCABase.orca_job_task">
@@ -1456,7 +1726,17 @@
     <span class="k">pass</span>
 
 <span class="c1"># Re-export for convenience</span>
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ORCABase"</span><span class="p">,</span> <span class="s2">"tidy_keyword_line"</span><span class="p">,</span> <span class="s2">"printer"</span><span class="p">,</span> <span class="s2">"job"</span><span class="p">,</span> <span class="s2">"os"</span><span class="p">,</span> <span class="s2">"__"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"ORCABase"</span><span class="p">,</span>
+    <span class="s2">"tidy_keyword_line"</span><span class="p">,</span>
+    <span class="s2">"task_kind"</span><span class="p">,</span>
+    <span class="s2">"method_class"</span><span class="p">,</span>
+    <span class="s2">"timing_descriptors"</span><span class="p">,</span>
+    <span class="s2">"printer"</span><span class="p">,</span>
+    <span class="s2">"job"</span><span class="p">,</span>
+    <span class="s2">"os"</span><span class="p">,</span>
+    <span class="s2">"__"</span><span class="p">,</span>
+<span class="p">]</span>
 </pre></div>
 
                 </article>

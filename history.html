@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.5.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.5.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=f9e9a9ea"></script>
+    <script src="_static/documentation_options.js?v=ce112380"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.5.1" />
+  <meta name="docsearch:version" content="2026.10.5.2" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,28 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.5.2 – Timing records for a cost model; ORCA found through orca.ini again</dt><dd><ul class="simple">
+<li><p>Bugfix: since 2026.10.3.1 ORCA’s calculations did not read <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code> and
+took <code class="docutils literal notranslate"><span class="pre">orca</span></code> from the PATH instead – on Debian and Ubuntu systems a screen
+reader of the same name, and nothing on clusters that load ORCA as a module.
+Fixed in seamm-exec 2026.10.5.2; ORCA must be started by its full path,
+which <code class="docutils literal notranslate"><span class="pre">orca.ini</span></code> gives.</p></li>
+<li><p>Every ORCA run – Energy, Optimization, Frequencies, the counterpoise
+sub-jobs, and a model-chemistry task when <code class="docutils literal notranslate"><span class="pre">analyze_task</span></code> is given its task
+– appends a record to <code class="docutils literal notranslate"><span class="pre">~/.seamm.d/timing/orca.csv</span></code> through
+<code class="docutils literal notranslate"><span class="pre">seamm_exec.record_task_timing</span></code>: the machine class, cores and memory, wall
+time and outcome from the task layer, and the descriptors of the calculation
+– the kind of task, the method’s class (HF, the DFT categories, MP2,
+DLPNO-CC, CC), method, basis, atoms, heavy atoms, ghosts, charge and
+multiplicity, and from the output the electrons, basis functions, SCF runs
+and cycles, geometry steps and ORCA’s own run time. These replace the hand
+estimate in <code class="docutils literal notranslate"><span class="pre">estimated_seconds</span></code> once fitted; see seamm_exec’s campaign of
+2026-10-05.</p></li>
+<li><p>An end-to-end test of the run path, with a fake ORCA in CI and the real one
+where it is installed.</p></li>
+<li><p>Requires seamm-exec 2026.10.5.2.</p></li>
+</ul>
+</dd>
 <dt>2026.10.5.1 – Bugfix: exact exchange for Na, Mg, Zn, B and P</dt><dd><ul class="simple">
 <li><p>ORCA’s default RIJCOSX exchange gives wrong results for some elements, not
 only for lone atoms: spurious forces for Na in molecules (Na-Cl has a net force

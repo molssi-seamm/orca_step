@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.10.5.1 documentation</title>
+    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.10.5.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=f9e9a9ea"></script>
+    <script src="../../_static/documentation_options.js?v=ce112380"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.5.1" />
+  <meta name="docsearch:version" content="2026.10.5.2" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -509,6 +509,7 @@
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 
@@ -519,6 +520,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q_</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_fingerprint</span><span class="p">,</span> <span class="n">estimated_seconds</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">_ENGINE</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"orca_mdi.py"</span>
 <span class="n">_engine</span> <span class="o">=</span> <span class="kc">None</span>
@@ -682,12 +685,18 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">properties</span><span class="o">=</span><span class="p">(</span><span class="s2">"energy"</span><span class="p">,</span> <span class="s2">"gradients"</span><span class="p">),</span>
     <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The energy (kJ/mol) and gradients ((n, 3) kJ/mol/Å) of a finished task,</span>
-<span class="sd">    converted exactly as the MDI path converts the engine's atomic units."""</span>
+<span class="sd">    converted exactly as the MDI path converts the engine's atomic units.</span>
+
+<span class="sd">    Given the ``task`` that produced the result, its timing record is appended</span>
+<span class="sd">    too (``seamm_exec.record_task_timing``), as the ORCA step's own runs do."""</span>
     <span class="n">helpers</span> <span class="o">=</span> <span class="n">engine_helpers</span><span class="p">()</span>
     <span class="n">options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">options</span> <span class="ow">or</span> <span class="p">{})</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">_text</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"orca.out"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_record_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
     <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">energy</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">parse_energy</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="k">if</span> <span class="n">out</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">energy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -708,6 +717,34 @@
     <span class="n">check_properties</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"The ORCA calculation '</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_record_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The timing record of a model-chemistry task; never raises."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_exec.evaluator</span><span class="w"> </span><span class="kn">import</span> <span class="n">mdi_method_and_basis</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_heavy_atoms</span><span class="p">,</span> <span class="n">timing_descriptors</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_step</span><span class="w"> </span><span class="kn">import</span> <span class="n">mc_method_unalias</span>
+
+        <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">mdi_method_and_basis</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">mc_method_unalias</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="n">atom_indices</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"atom_indices"</span><span class="p">)</span>
+        <span class="n">ghosts</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ghost_atoms"</span><span class="p">)</span>
+        <span class="n">n_atoms</span><span class="p">,</span> <span class="n">n_heavy</span><span class="p">,</span> <span class="n">n_ghosts</span> <span class="o">=</span> <span class="n">_heavy_atoms</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">atom_indices</span><span class="p">,</span> <span class="n">ghosts</span><span class="p">)</span>
+        <span class="n">descriptors</span> <span class="o">=</span> <span class="n">timing_descriptors</span><span class="p">(</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"orca.inp"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_text</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"orca.inp"</span><span class="p">),</span>
+            <span class="n">out</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">basis</span> <span class="k">else</span> <span class="n">method</span><span class="p">,</span>
+            <span class="n">n_ghosts</span><span class="o">=</span><span class="n">n_ghosts</span><span class="p">,</span>
+            <span class="n">n_atoms</span><span class="o">=</span><span class="n">n_atoms</span><span class="p">,</span>
+            <span class="n">n_heavy</span><span class="o">=</span><span class="n">n_heavy</span><span class="p">,</span>
+            <span class="n">charge</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"charge"</span><span class="p">,</span> <span class="n">configuration</span><span class="o">.</span><span class="n">charge</span><span class="p">),</span>
+            <span class="n">multiplicity</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplicity"</span><span class="p">,</span> <span class="n">configuration</span><span class="o">.</span><span class="n">spin_multiplicity</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">seamm_exec</span><span class="o">.</span><span class="n">record_task_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">descriptors</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not record the timing of ORCA task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_text</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
