@@ -1,6 +1,11 @@
 =======
 History
 =======
+2026.10.5 -- Job-level files for parallel loops
+    * Files named ``/name`` are written to the job's own directory (``Node.job_path``)
+      and read from it or, in an iteration of a parallel loop (loop_step 2026.10.5),
+      from the enclosing iterations and the job. Nothing changes for other jobs.
+    * Requires seamm 2026.10.5.
 2026.10.3.2 -- D4-corrected functionals as model chemistries; tighter ORCA settings for many structures
     * Functionals without a dispersion correction of their own are offered with the D4
       correction as model chemistries, e.g. ``ORCA:DFT@R2SCAN-D4/def2-TZVP`` (``! R2SCAN
