@@ -1,6 +1,19 @@
 =======
 History
 =======
+2026.10.6 -- Timing records that a cost model can be fitted to
+    * Every ORCA run -- Energy, Optimization, Frequencies, the counterpoise
+      sub-jobs, and a model-chemistry task when ``analyze_task`` is given its task
+      -- appends a record to ``~/.seamm.d/timing/orca.csv`` through
+      ``seamm_exec.record_task_timing``: the machine class, cores and memory, wall
+      time and outcome from the task layer, and the descriptors of the calculation
+      -- the kind of task, the method's class (HF, the DFT categories, MP2,
+      DLPNO-CC, CC), method, basis, atoms, heavy atoms, ghosts, charge and
+      multiplicity, and from the output the electrons, basis functions, SCF runs
+      and cycles, geometry steps and ORCA's own run time. These replace the hand
+      estimate in ``estimated_seconds`` once fitted; see seamm_exec's campaign of
+      2026-10-05.
+    * Requires seamm-exec 2026.10.6.
 2026.10.5.1 -- Bugfix: exact exchange for Na, Mg, Zn, B and P
     * ORCA's default RIJCOSX exchange gives wrong results for some elements, not
       only for lone atoms: spurious forces for Na in molecules (Na-Cl has a net force

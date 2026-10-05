@@ -17,6 +17,7 @@ only).
 """
 
 import importlib.util
+import logging
 from pathlib import Path
 import tempfile
 
@@ -27,6 +28,8 @@ from seamm_exec.evaluator import AnalysisError, check_properties, structure_data
 from seamm_util import Q_
 
 from .orca_base import _fingerprint, estimated_seconds
+
+logger = logging.getLogger(__name__)
 
 _ENGINE = Path(__file__).parent / "data" / "orca_mdi.py"
 _engine = None
@@ -185,12 +188,18 @@ def analyze_task(
     *,
     properties=("energy", "gradients"),
     options=None,
+    task=None,
 ):
     """The energy (kJ/mol) and gradients ((n, 3) kJ/mol/Å) of a finished task,
-    converted exactly as the MDI path converts the engine's atomic units."""
+    converted exactly as the MDI path converts the engine's atomic units.
+
+    Given the ``task`` that produced the result, its timing record is appended
+    too (``seamm_exec.record_task_timing``), as the ORCA step's own runs do."""
     helpers = engine_helpers()
     options = dict(options or {})
     out = _text(result, "orca.out")
+    if task is not None:
+        _record_timing(task, result, out, model_chemistry, configuration, options)
     data = {}
     energy = helpers.parse_energy(out) if out else None
     if energy is not None:
@@ -210,6 +219,34 @@ def analyze_task(
             ).m_as("kJ/mol/Å")
     check_properties(data, properties, f"The ORCA calculation '{result.key}'")
     return data
+
+
+def _record_timing(task, result, out, model_chemistry, configuration, options):
+    """The timing record of a model-chemistry task; never raises."""
+    try:
+        from seamm_exec.evaluator import mdi_method_and_basis
+
+        from .orca_base import _heavy_atoms, timing_descriptors
+        from .orca_step import mc_method_unalias
+
+        method, basis = mdi_method_and_basis(model_chemistry)
+        method = mc_method_unalias(method)
+        atom_indices = options.get("atom_indices")
+        ghosts = options.get("ghost_atoms")
+        n_atoms, n_heavy, n_ghosts = _heavy_atoms(configuration, atom_indices, ghosts)
+        descriptors = timing_descriptors(
+            task.files.get("orca.inp") or _text(result, "orca.inp"),
+            out,
+            model=f"{method}/{basis}" if basis else method,
+            n_ghosts=n_ghosts,
+            n_atoms=n_atoms,
+            n_heavy=n_heavy,
+            charge=options.get("charge", configuration.charge),
+            multiplicity=options.get("multiplicity", configuration.spin_multiplicity),
+        )
+        seamm_exec.record_task_timing(task, result, descriptors)
+    except Exception as e:  # pragma: no cover
+        logger.warning(f"Could not record the timing of ORCA task {task.key}: {e}")
 
 
 def _text(result, name):
