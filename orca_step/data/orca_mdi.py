@@ -113,20 +113,63 @@ def orca_input(
 _EXCHANGE_SCHEME_KEYWORDS = {"RIJCOSX", "COSX", "NOCOSX", "RIJK", "RIJONX", "NORI"}
 
 
-def single_center_method(method, n_centers):
-    """``method`` plus ``NoCOSX`` for a one-center job (a lone atom or ion).
+#: Elements whose atoms make ORCA 6.1.1's default RIJCOSX exchange unreliable,
+#: so a job containing any of them (ghosts included) uses exact exchange
+#: (orca_step#44; science's screen at revDSD-PBEP86-D4/def2-TZVPPD, DEFGRID3):
+#: Na, Mg and Zn get wrong virtuals as lone ions (MP2 part off by 4.7-13.9
+#: kJ/mol), Na gives spurious forces in molecules (Na-Cl net force 10.8 meV/Å
+#: with RIJCOSX, 0.06 without), and B and P (BF4-, PF6-) force errors of
+#: 9-11 meV/Å near equilibrium. K, Ca, Rb, Cs, Sr and Ba (3-6.5 meV/Å) and Li,
+#: F and Cl (small) keep COSX, which is ~3x cheaper for EC-sized fragments.
+EXACT_EXCHANGE_ELEMENTS = frozenset({"Na", "Mg", "Zn", "B", "P"})
 
-    ORCA 6.1.1's default RIJCOSX exchange mis-builds the d-type virtuals of some
-    lone atoms when the SCF starts from scratch (~5 kJ/mol in the MP2 part of a
-    double hybrid for Na, Na+, Mg), as the ORCA step knows
-    (``Energy.single_center_keywords``). Exact exchange is right and cheap for
-    one center. Ghost atoms count as centers; a scheme already chosen is kept.
+
+def exact_exchange_elements(value=None):
+    """The element set for the exact-exchange guard from an option.
+
+    ``None`` (or "default") gives :data:`EXACT_EXCHANGE_ELEMENTS`; "none" or an
+    empty value gives no elements, so only one-center jobs get exact exchange;
+    otherwise element symbols, as a string separated by spaces or commas, or an
+    iterable.
     """
-    if n_centers != 1:
-        return method
+    if value is None:
+        return EXACT_EXCHANGE_ELEMENTS
+    if isinstance(value, str):
+        if value.strip().lower() == "default":
+            return EXACT_EXCHANGE_ELEMENTS
+        if value.strip().lower() == "none":
+            return frozenset()
+        value = value.replace(",", " ").split()
+    return frozenset(e.strip().capitalize() for e in value if e.strip())
+
+
+def exact_exchange_method(method, symbols, elements=None):
+    """``method`` plus ``NoCOSX`` when ORCA's default RIJCOSX is not reliable.
+
+    That is a one-center job (a lone atom or ion: ORCA 6.1.1 mis-builds the
+    d-type virtuals of some lone atoms from scratch, ~5 kJ/mol in the MP2 part
+    of a double hybrid for Na, Na+, Mg), or a job with any atom, ghosts
+    included, of ``elements`` (see :func:`exact_exchange_elements`; by default
+    Na, Mg, Zn, B and P, for which COSX gives wrong lone-ion energies or
+    spurious forces). Exact exchange is affordable at these sizes. An exchange
+    scheme already in ``method`` is kept.
+
+    Parameters
+    ----------
+    method : str
+        The method words of the '!' line.
+    symbols : [str]
+        The element symbols of the job's atoms; ghost atoms may carry ORCA's
+        trailing ':'.
+    elements : str or iterable or None
+        The element set; None for the default.
+    """
     if {w.upper() for w in method.split()} & _EXCHANGE_SCHEME_KEYWORDS:
         return method
-    return f"{method} NoCOSX"
+    present = {s.rstrip(":").strip().capitalize() for s in symbols}
+    if len(symbols) == 1 or present & exact_exchange_elements(elements):
+        return f"{method} NoCOSX"
+    return method
 
 
 def basis_keyword_and_block(basis, atomic_numbers, workdir):
@@ -269,6 +312,13 @@ def parse_args():
         help="Auxiliary/fitting basis, appended to the method (default AutoAux). "
         "'none' omits it.",
     )
+    p.add_argument(
+        "--exact-exchange-elements",
+        default=None,
+        help="Elements whose presence makes the engine use exact exchange "
+        "(NoCOSX), e.g. 'Li Na'; 'none' for one-center jobs only. Default: the "
+        "elements Na, Mg, Zn, B and P.",
+    )
     p.add_argument("--charge", type=int, default=0, help="Total charge (default 0).")
     p.add_argument(
         "--multiplicity",
@@ -388,7 +438,7 @@ def main():
             b for b in (basis_block, "%mp2 DLPNO true end" if args.dlpno else "") if b
         )
         text = orca_input(
-            single_center_method(method, natoms),
+            exact_exchange_method(method, symbols, args.exact_exchange_elements),
             basis,
             charge,
             multiplicity,
@@ -429,7 +479,7 @@ def main():
             args.basis, atomic_numbers, workdir
         )
         text = orca_hessian_input(
-            single_center_method(method, natoms),
+            exact_exchange_method(method, symbols, args.exact_exchange_elements),
             basis,
             charge,
             multiplicity,

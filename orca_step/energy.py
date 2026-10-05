@@ -47,7 +47,7 @@ _FALLBACK_GUESS = {
 
 # The 'initial guess' enum entries (energy_parameters.py) that are direct ORCA
 # Simple-input keywords that choose how ORCA evaluates exact exchange. If the
-# user picked one, the single-center COSX guard (Energy.single_center_keywords)
+# user picked one, the exact-exchange guard (Energy.exact_exchange_keywords)
 # leaves it alone.
 _EXCHANGE_SCHEME_KEYWORDS = {"RIJCOSX", "COSX", "NOCOSX", "RIJK", "RIJONX", "NORI"}
 
@@ -423,23 +423,27 @@ class Energy(orca_step.ORCABase):
         return orca_step.orca_method_blocks(method)
 
     @staticmethod
-    def single_center_keywords(keyword_line, n_centers):
-        """'NoCOSX' for a one-center job (a lone atom or bare atomic ion), else ''.
+    def exact_exchange_keywords(keyword_line, symbols, elements=None):
+        """'NoCOSX' when ORCA's default RIJCOSX is not reliable for a job, else ''.
 
-        ORCA 6.1.1 with its default RIJCOSX exchange mis-builds the d-type
-        virtual orbitals of some lone atoms when the SCF starts from scratch:
-        the SCF energy is right, but the MP2 part of a double hybrid is off by
-        ~5 kJ/mol (Na 5.0, Na+ 4.9, Mg 4.6), with no warning. Exact exchange
-        (NoCOSX) is right and cheap for one center. Ghost atoms count as
-        centers, so only a bare fragment qualifies. An exchange scheme the
-        user already chose is respected.
+        That is a one-center job (a lone atom or bare atomic ion), or one with
+        any atom, ghosts included, of Na, Mg, Zn, B or P (orca_step#44). ORCA
+        6.1.1's RIJCOSX mis-builds the d-type virtual orbitals of some lone
+        atoms from scratch (the MP2 part of a double hybrid off by 4.7-13.9
+        kJ/mol for Na+, Mg2+ and Zn2+, with no warning), and gives spurious
+        forces for Na in molecules (Na-Cl net force 10.8 meV/Å, against 0.06
+        with exact exchange) and for BF4- and PF6- (9-11 meV/Å). Exact
+        exchange is affordable at these sizes. An exchange scheme the user
+        already chose (e.g. 'RIJCOSX' in the extra keywords) is respected,
+        which is how to override the guard. The rule is the MDI engine's and
+        the batch path's (``exact_exchange_method`` in ``data/orca_mdi.py``).
         """
-        if n_centers != 1:
-            return ""
-        words = {w.upper() for w in keyword_line.split()}
-        if words & _EXCHANGE_SCHEME_KEYWORDS:
-            return ""
-        return "NoCOSX"
+        from .batch import engine_helpers
+
+        method = engine_helpers().exact_exchange_method(
+            keyword_line, list(symbols), elements
+        )
+        return "NoCOSX" if method != keyword_line else ""
 
     def _check_dlpno_open_shell(self, method, keyword_line, multiplicity):
         """Stop early when an open-shell DLPNO double hybrid needs a gradient.
@@ -836,15 +840,24 @@ class Energy(orca_step.ORCABase):
         self._check_dlpno_open_shell(
             method, keyword_line, configuration.spin_multiplicity
         )
-        single_center = self.single_center_keywords(keyword_line, configuration.n_atoms)
-        if single_center:
-            keyword_line += " " + single_center
+        exact = self.exact_exchange_keywords(keyword_line, configuration.atoms.symbols)
+        if exact:
+            keyword_line += " " + exact
+            if configuration.n_atoms == 1:
+                reason = (
+                    "this single atom, because ORCA's default COSX "
+                    "approximation can give wrong virtual orbitals, and so "
+                    "wrong MP2 energies, for some lone atoms."
+                )
+            else:
+                reason = (
+                    "this structure, because ORCA's default COSX approximation "
+                    "gives spurious forces for Na, Mg, Zn, B and P."
+                )
             printer.important(
                 __(
-                    "Note: using exact exchange (NoCOSX) for this single "
-                    "atom, because ORCA's default COSX approximation can "
-                    "give wrong virtual orbitals, and so wrong MP2 energies, "
-                    "for some lone atoms.",
+                    f"Note: using exact exchange (NoCOSX) for {reason} Add "
+                    "'RIJCOSX' to the extra keywords to use COSX anyway.",
                     indent=self.indent + 4 * " ",
                 )
             )

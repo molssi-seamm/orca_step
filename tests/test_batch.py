@@ -164,25 +164,51 @@ def test_periodic_open_shell_dlpno_and_guess_are_not_tasks():
         get_task(water, _mc(), key="g", options={"guess": "orca.gbw"})
 
 
-def test_single_center_gets_nocosx_on_both_paths():
+def test_exact_exchange_on_both_paths():
     from orca_step.batch import engine_helpers, get_task
 
     task = get_task(Geometry([11], [[0, 0, 0]], charge=1), _mc(), key="na")
     assert task.files["orca.inp"].splitlines()[0] == (
         "! B3LYP AutoAux NoCOSX def2-SVP TIGHTSCF DEFGRID3 EnGrad"
     )
-    # A ghost atom is a center: a fragment in the cluster basis keeps RIJCOSX
+    # Na in a molecule, or as a ghost, also gets exact exchange (orca_step#44)
+    nacl = Geometry([11, 17], [[0, 0, 0], [2.4, 0, 0]])
+    task = get_task(nacl, _mc(), key="nacl")
+    assert "NoCOSX" in task.files["orca.inp"].splitlines()[0]
     task = get_task(
-        Geometry([11, 17], [[0, 0, 0], [2.4, 0, 0]]),
+        nacl, _mc(), key="cl-in-cluster", options={"ghost_atoms": [0], "charge": -1}
+    )
+    assert "NoCOSX" in task.files["orca.inp"].splitlines()[0]
+    # ... unless the element set says otherwise, from the task or the model
+    # chemistry
+    task = get_task(nacl, _mc(), key="n", options={"exact_exchange_elements": "none"})
+    assert "NoCOSX" not in task.files["orca.inp"]
+    mc = _mc()
+    mc["options"] = {**(mc.get("options") or {}), "exact_exchange_elements": "none"}
+    assert "NoCOSX" not in get_task(nacl, mc, key="m").files["orca.inp"]
+    # A ghost atom of another element is a center: Cl- in the cluster basis of
+    # water keeps RIJCOSX
+    task = get_task(
+        Geometry(
+            [17, 8, 1, 1], [[0, 0, 0], [3.1, 0, 0], [3.7, 0.76, 0], [3.7, -0.76, 0]]
+        ),
         _mc(),
-        key="na-in-cluster",
-        options={"ghost_atoms": [1], "charge": 1},
+        key="cl-in-cluster",
+        options={"ghost_atoms": [1, 2, 3], "charge": -1},
     )
     assert "NoCOSX" not in task.files["orca.inp"]
     helpers = engine_helpers()
-    assert helpers.single_center_method("B3LYP AutoAux", 1) == "B3LYP AutoAux NoCOSX"
-    assert helpers.single_center_method("B3LYP RIJK", 1) == "B3LYP RIJK"
-    assert helpers.single_center_method("B3LYP", 2) == "B3LYP"
+    method = helpers.exact_exchange_method
+    assert method("B3LYP AutoAux", ["Na"]) == "B3LYP AutoAux NoCOSX"
+    assert method("B3LYP RIJK", ["Na"]) == "B3LYP RIJK"
+    assert method("B3LYP", ["O", "H"]) == "B3LYP"
+    assert method("B3LYP", ["Na", "O"]) == "B3LYP NoCOSX"
+    assert method("B3LYP", ["Na", "O"], "none") == "B3LYP"
+    assert method("B3LYP", ["Li", "O"]) == "B3LYP"
+    assert method("B3LYP", ["Li", "O"], "Li") == "B3LYP NoCOSX"
+    assert helpers.exact_exchange_elements(None) == helpers.EXACT_EXCHANGE_ELEMENTS
+    assert helpers.exact_exchange_elements("li, NA") == {"Li", "Na"}
+    assert helpers.exact_exchange_elements("") == frozenset()
 
 
 def test_lone_ion_batch_equals_mdi(tmp_path):

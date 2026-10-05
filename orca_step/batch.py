@@ -8,6 +8,12 @@
 back with the engine's parsers, so the batch path and the MDI path give the same
 numbers. ``options`` adds what fragments need: ``atom_indices``,
 ``ghost_atoms``, ``charge`` and ``multiplicity``.
+
+A job with one center, or with any atom of Na, Mg, Zn, B or P (ghosts
+included), uses exact exchange (``NoCOSX``), as on every ORCA path
+(orca_step#44). ``options["exact_exchange_elements"]``, or the same key in the
+model chemistry's options, changes the element set ("none" for one-center jobs
+only).
 """
 
 import importlib.util
@@ -109,6 +115,13 @@ def get_task(
     charge = int(options.get("charge", data["charge"]))
     multiplicity = int(options.get("multiplicity", data["multiplicity"]))
 
+    # The exact-exchange guard's elements: the task's option, else the model
+    # chemistry's, else the default (orca_step#44)
+    elements = options.get(
+        "exact_exchange_elements",
+        (model_chemistry.get("options") or {}).get("exact_exchange_elements"),
+    )
+
     method, basis, blocks = method_and_blocks(model_chemistry)
     if multiplicity != 1 and blocks:
         raise ValueError(
@@ -134,7 +147,7 @@ def get_task(
 
     gradients = "gradients" in properties
     text = helpers.orca_input(
-        helpers.single_center_method(method, len(symbols)),
+        helpers.exact_exchange_method(method, symbols, elements),
         basis,
         charge,
         multiplicity,
