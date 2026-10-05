@@ -1,6 +1,18 @@
 =======
 History
 =======
+2026.10.5.1 -- Bugfix: exact exchange for Na, Mg, Zn, B and P
+    * ORCA's default RIJCOSX exchange gives wrong results for some elements, not
+      only for lone atoms: spurious forces for Na in molecules (Na-Cl has a net force
+      of 10.8 meV/Å with RIJCOSX against 0.06 meV/Å without it) and for BF4- and
+      PF6- (9-11 meV/Å), and wrong MP2 energies for lone Na+, Mg2+ and Zn2+ (up to
+      13.9 kJ/mol). A calculation containing any atom of Na, Mg, Zn, B or P, ghosts
+      included, now uses exact exchange (NoCOSX), as single atoms already did. This
+      applies in the Energy and counterpoise calculations, for ORCA as a model
+      chemistry, and in the MDI engine.
+    * An exchange scheme in the extra keywords, e.g. RIJCOSX, is still respected.
+      Programs using ORCA as a model chemistry can change the element set with the
+      ``exact_exchange_elements`` option.
 2026.10.5 -- Job-level files for parallel loops
     * Files named ``/name`` are written to the job's own directory (``Node.job_path``)
       and read from it or, in an iteration of a parallel loop (loop_step 2026.10.5),

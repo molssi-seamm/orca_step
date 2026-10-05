@@ -2455,10 +2455,10 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
     by_label = {c["label"]: c for c in calls}
     # HF needs no method-specific '%' blocks.
     assert all(c["extra_blocks"] == "" for c in calls)
-    # The bare single-ion jobs (Na+ alone, Cl- alone) get exact exchange;
-    # every job with more than one center (ghosts included) keeps COSX.
+    # Every job has Na (ghosts included) or is a bare ion, so every job uses
+    # exact exchange (orca_step#44).
     for label, c in by_label.items():
-        assert ("NoCOSX" in c["keyword_line"].split()) == label.endswith("-alone")
+        assert "NoCOSX" in c["keyword_line"].split(), label
     assert by_label["cluster"]["charge"] == 0
     assert by_label["1-in-cluster"]["charge"] == 1
     assert by_label["2-in-cluster"]["charge"] == -1
@@ -2645,16 +2645,30 @@ def test_dlpno_double_hybrid_frequencies_numerical():
     assert orca_step.method_has_analytic_hessian("DLPNO-B2PLYP") is False
 
 
-def test_single_center_keywords():
-    """A lone atom or bare ion gets NoCOSX (ORCA's default COSX mis-builds the
-    virtuals of e.g. Na/Mg from scratch, ~5 kJ/mol in the MP2 part); more
-    than one center, or a user-chosen exchange scheme, is left alone."""
-    kw = orca_step.Energy.single_center_keywords
+def test_exact_exchange_keywords():
+    """A lone atom or bare ion, or any job with an atom of Na, Mg, Zn, B or P
+    (ghosts included), gets NoCOSX: ORCA's default COSX mis-builds the virtuals
+    of e.g. Na+/Mg2+/Zn2+ from scratch and gives spurious forces for Na, BF4-
+    and PF6- (orca_step#44). Other jobs, or a user-chosen exchange scheme, are
+    left alone."""
+    kw = orca_step.Energy.exact_exchange_keywords
     line = "REVDSD-PBEP86-D4/2021 def2-TZVPPD AutoAux TIGHTSCF"
-    assert kw(line, 1) == "NoCOSX"
-    assert kw(line, 2) == ""
+    assert kw(line, ["O"]) == "NoCOSX"
+    assert kw(line, ["O", "H", "H"]) == ""
+    assert kw(line, ["Cl", "O", "H", "H"]) == ""
+    for element in ("Na", "Mg", "Zn", "B", "P"):
+        assert kw(line, [element, "O", "H", "H"]) == "NoCOSX", element
+    # Small or moderate COSX errors, and exact exchange is ~3x dearer
+    for element in ("Li", "K", "Ca", "Rb", "Cs", "Sr", "Ba", "F"):
+        assert kw(line, [element, "O", "H", "H"]) == "", element
+    assert kw(line, ["Li", "O", "H", "H"], elements="Li Na") == "NoCOSX"
+    assert kw(line, ["Cl", "Na:"]) == "NoCOSX"  # a ghost Na counts
+    assert kw(line, ["Na", "Cl"], elements="none") == ""
+    assert kw(line, ["Na"], elements="none") == "NoCOSX"  # still one center
+    assert kw(line, ["Cl", "O"], elements="Cl") == "NoCOSX"
     for scheme in ("RIJK", "rijcosx", "NoCOSX", "NORI", "RIJONX"):
-        assert kw(f"{line} {scheme}", 1) == ""
+        assert kw(f"{line} {scheme}", ["Na"]) == ""
+        assert kw(f"{line} {scheme}", ["Na", "Cl"]) == ""
 
 
 def test_template_leaves_code_to_the_path(tmp_path, monkeypatch):
