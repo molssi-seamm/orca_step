@@ -253,7 +253,10 @@ Saving a checkpoint for a later step to read is a separate pair of controls:
   reset automatically when an outer loop moves to a new atom. Any other bare
   name is stored under a ``checkpoints`` folder at the top of the job; an
   absolute path is used as-is, e.g. to keep a checkpoint outside this job and
-  reuse it across separate flowchart runs.
+  reuse it across separate flowchart runs. In a loop whose iterations run in
+  parallel, each iteration writes its checkpoints in its own folder (under the
+  iteration's ``_evaluator``) and reads one written before the loop from the
+  job's.
 
 .. note::
 
