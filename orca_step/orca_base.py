@@ -178,6 +178,217 @@ def estimated_seconds(keyword_line, n_atoms):
     return 1.0 + 0.03 * n**2.5 * method * basis * extra
 
 
+# ----------------------------------------------------------------------
+# Timing records (seamm_exec.timing; campaign seamm_exec 2026-10-05)
+# ----------------------------------------------------------------------
+#: ORCA keywords that mark a correlated or semiempirical method, for
+#: :func:`method_class` when the method name is not known
+_CC_PREFIXES = ("ccsd", "qcisd", "cepa", "ri-ccsd", "cisd", "ncisd")
+_SEMIEMPIRICAL = {
+    "xtb",
+    "xtb0",
+    "xtb1",
+    "xtb2",
+    "gfn-xtb",
+    "gfn2-xtb",
+    "am1",
+    "pm3",
+    "mndo",
+}
+_HF = {"hf", "rhf", "uhf", "rohf", "hf-3c", "ri-hf", "rijk-hf"}
+
+
+def task_kind(keyword_line):
+    """What kind of calculation an ORCA '!' line asks for, for the timing
+    records: ``numfreq``, ``freq``, ``opt``, ``numgrad``, ``gradient`` or
+    ``energy`` (the most expensive that applies)."""
+    words = set(keyword_line.lower().split())
+    if "numfreq" in words:
+        return "numfreq"
+    if "freq" in words or "anfreq" in words:
+        return "freq"
+    if any(w.endswith("opt") or w.startswith("opt") for w in words):
+        return "opt"
+    if "numgrad" in words:
+        return "numgrad"
+    if "engrad" in words:
+        return "gradient"
+    return "energy"
+
+
+def method_class(method=None, keyword_line=""):
+    """The class of a method, for the timing records: ``HF``, a DFT category
+    from the step's metadata (``local``, ``GGA``, ``meta-GGA``, ``global
+    hybrid``, ``range-separated hybrid``, ``global double-hybrid``,
+    ``range-separated double-hybrid``), ``MP2``, ``DLPNO-CC``, ``CC``,
+    ``semiempirical``, or ``""`` if it cannot be told.
+
+    ``method`` is the step's method name (``B3LYP``, ``DLPNO-CCSD(T)``, ...);
+    when it is not known the '!' line is scanned instead.
+    """
+    import orca_step
+
+    functionals = orca_step.metadata["functionals"]
+    methods = orca_step.metadata["methods"]
+    name = (method or "").strip()
+    if name:
+        if name not in functionals and name not in methods:
+            # The metadata's spelling, whatever the case given (wB97X-D3)
+            lower = name.lower()
+            name = next(
+                (k for k in (*functionals, *methods) if k.lower() == lower), name
+            )
+        if name in functionals:
+            return functionals[name]["category"]
+        if name in methods:
+            kind = methods[name]["type"]
+            if kind == "QC":
+                return "DLPNO-CC" if "dlpno" in name.lower() else "CC"
+            if kind == "DFT":
+                return "DFT"
+            return kind
+    words = keyword_line.lower().split()
+    for word in words:
+        if word.startswith("dlpno-cc"):
+            return "DLPNO-CC"
+        if word.startswith(_CC_PREFIXES):
+            return "CC"
+    by_lower = {k.lower(): v["category"] for k, v in functionals.items()}
+    for word in words:
+        if word in by_lower:
+            return by_lower[word]
+    for word in words:
+        if "mp2" in word:
+            return "MP2"
+        if word in _SEMIEMPIRICAL:
+            return "semiempirical"
+        if word in _HF:
+            return "HF"
+    return ""
+
+
+def timing_descriptors(
+    input_text,
+    output_text,
+    *,
+    model=None,
+    n_atoms=None,
+    n_heavy=None,
+    n_ghosts=0,
+    charge=None,
+    multiplicity=None,
+):
+    """The descriptors of an ORCA run for its timing record: the numbers a
+    cost model is fitted to (see the seamm_exec campaign of 2026-10-05).
+
+    Parameters
+    ----------
+    input_text : str or None
+        ``orca.inp``: the '!' line, ``%pal`` and ``%maxcore``.
+    output_text : str or None
+        ``orca.out``: electrons, basis functions, SCF runs and cycles, ORCA's
+        own run time.
+    model : str, optional
+        The step's ``type@method/basis`` string, for the method and basis.
+    n_atoms, n_heavy, n_ghosts, charge, multiplicity : optional
+        Of the system as run (ghosts not counted in the atoms).
+    """
+    d = {}
+    keyword_line = ""
+    if input_text:
+        for line in input_text.splitlines():
+            if line.lstrip().startswith("!"):
+                keyword_line = (keyword_line + " " + line.lstrip()[1:].strip()).strip()
+        m = re.search(r"%pal\s+nprocs\s+(\d+)", input_text, re.IGNORECASE)
+        d["nprocs"] = int(m.group(1)) if m else 1
+        m = re.search(r"%maxcore\s+(\d+)", input_text, re.IGNORECASE)
+        if m:
+            d["maxcore_mb"] = int(m.group(1))
+
+    method = basis = ""
+    if model:
+        level = model.split("@", 1)[-1]
+        method, _, basis = level.partition("/")
+    d["task"] = task_kind(keyword_line)
+    d["method_class"] = method_class(method, keyword_line)
+    d["method"] = method
+    d["basis"] = basis
+    d["model"] = model or ""
+    d["keywords"] = keyword_line
+
+    words = set(keyword_line.lower().split())
+    if "nocosx" in words:
+        d["ri"] = "NoCOSX"
+    elif "rijcosx" in words:
+        d["ri"] = "RIJCOSX"
+    elif "rijk" in words or "ri-jk" in words:
+        d["ri"] = "RIJK"
+    elif "nori" in words:
+        d["ri"] = "NoRI"
+    else:
+        d["ri"] = ""
+    d["dispersion"] = next(
+        (
+            w
+            for w in keyword_line.split()
+            if w.lower() in ("d4", "d3bj", "d3", "d3zero")
+        ),
+        "",
+    )
+
+    d["n_atoms"] = n_atoms
+    d["n_heavy"] = n_heavy
+    d["n_ghosts"] = n_ghosts
+    d["charge"] = charge
+    d["multiplicity"] = multiplicity
+
+    if output_text:
+        text = output_text
+        m = re.search(r"Number of Electrons\s+NEL\s+\.+\s+(\d+)", text)
+        d["n_electrons"] = int(m.group(1)) if m else None
+        m = re.search(r"Number of basis functions\s+\.+\s+(\d+)", text)
+        d["nbf"] = int(m.group(1)) if m else None
+        m = re.search(r"Number of auxiliary basis functions\s*\.+\s+(\d+)", text)
+        d["n_aux"] = int(m.group(1)) if m else None
+        m = re.search(r"Hartree-Fock type\s+HFTyp\s+\.+\s+(\w+)", text)
+        d["hf_type"] = m.group(1) if m else ""
+        cycles = [
+            int(n)
+            for n in re.findall(
+                r"SCF (?:CONVERGED|NOT CONVERGED) AFTER\s+(\d+)\s+CYCLES", text
+            )
+        ]
+        d["scf_runs"] = len(cycles)
+        d["scf_cycles"] = sum(cycles)
+        d["geometry_steps"] = len(
+            re.findall(r"GEOMETRY OPTIMIZATION CYCLE\s+\d+", text)
+        )
+        m = re.search(
+            r"TOTAL RUN TIME:\s+(\d+) days (\d+) hours (\d+) minutes (\d+) seconds"
+            r" (\d+) msec",
+            text,
+        )
+        if m:
+            days, hours, minutes, seconds, msec = (int(x) for x in m.groups())
+            d["code_seconds"] = (
+                ((days * 24 + hours) * 60 + minutes) * 60 + seconds + msec / 1000.0
+            )
+        else:
+            d["code_seconds"] = None
+        d["terminated_normally"] = "ORCA TERMINATED NORMALLY" in text
+    return d
+
+
+def _heavy_atoms(configuration, atom_indices=None, ghost_atoms=None):
+    """(n_atoms, n_heavy, n_ghosts) of the atoms ORCA was given."""
+    numbers = list(configuration.atoms.atomic_numbers)
+    indices = range(len(numbers)) if atom_indices is None else atom_indices
+    ghosts = set(ghost_atoms or ())
+    real = [i for i in indices if i not in ghosts]
+    n_heavy = sum(1 for i in real if numbers[i] > 1)
+    return len(real), n_heavy, len(ghosts)
+
+
 def _orca_2aim(config):
     """The command for orca_2aim, which lives beside the orca binary.
 
@@ -520,8 +731,55 @@ class ORCABase(seamm.Node):
         result = seamm_exec.run_task(task, node=self, directory=run_directory)
         self._check_task_result(result, run_directory)
         self._report_run_location(result, run_directory)
+        self.record_timing(
+            task,
+            result,
+            run_directory,
+            configuration,
+            charge,
+            multiplicity,
+            atom_indices=atom_indices,
+            ghost_atoms=ghost_atoms,
+        )
 
         return self._parse_output(run_directory / "orca.out")
+
+    def record_timing(
+        self,
+        task,
+        result,
+        run_directory,
+        configuration,
+        charge,
+        multiplicity,
+        atom_indices=None,
+        ghost_atoms=None,
+    ):
+        """Append this ORCA run's timing record (``~/.seamm.d/timing/orca.csv``)
+        -- the common columns from the task layer, the descriptors from
+        :func:`timing_descriptors`. Never raises; a restored result is not
+        recorded. See seamm_exec's campaign of 2026-10-05.
+        """
+        try:
+            if result.restored:
+                return
+            n_atoms, n_heavy, n_ghosts = _heavy_atoms(
+                configuration, atom_indices, ghost_atoms
+            )
+            out = Path(run_directory) / "orca.out"
+            descriptors = timing_descriptors(
+                task.files.get("orca.inp"),
+                out.read_text(errors="replace") if out.exists() else None,
+                model=getattr(self, "model", None),
+                n_atoms=n_atoms,
+                n_heavy=n_heavy,
+                n_ghosts=n_ghosts,
+                charge=charge,
+                multiplicity=multiplicity,
+            )
+            seamm_exec.record_task_timing(task, result, descriptors)
+        except Exception as e:  # pragma: no cover - must never stop the step
+            logger.warning(f"Could not record the timing of the ORCA run: {e}")
 
     def orca_job_task(
         self,
@@ -940,4 +1198,14 @@ except Exception:  # pragma: no cover - non-fatal
     pass
 
 # Re-export for convenience
-__all__ = ["ORCABase", "tidy_keyword_line", "printer", "job", "os", "__"]
+__all__ = [
+    "ORCABase",
+    "tidy_keyword_line",
+    "task_kind",
+    "method_class",
+    "timing_descriptors",
+    "printer",
+    "job",
+    "os",
+    "__",
+]

@@ -367,6 +367,8 @@ class BSSE(Energy):
         # rerun keeps the finished ones.
         task_set = seamm_exec.TaskSet(self, directory=self.directory)
         directories = {}
+        tasks = {}
+        by_label = {}
         for spec in specs:
             job_directory = Path(self.directory) / spec.label
             keyword_line = base_keyword_line
@@ -386,26 +388,38 @@ class BSSE(Energy):
             if exact:
                 keyword_line = f"{keyword_line} {exact}"
 
-            task_set.add(
-                self.orca_job_task(
-                    keyword_line,
-                    configuration,
-                    spec.charge,
-                    spec.multiplicity,
-                    atom_indices=spec.atom_indices,
-                    ghost_atoms=spec.ghost_indices,
-                    directory=job_directory,
-                    extra_blocks=method_blocks,
-                    make_wfx=job_make_wfx,
-                    key=spec.label,
-                )
+            task = self.orca_job_task(
+                keyword_line,
+                configuration,
+                spec.charge,
+                spec.multiplicity,
+                atom_indices=spec.atom_indices,
+                ghost_atoms=spec.ghost_indices,
+                directory=job_directory,
+                extra_blocks=method_blocks,
+                make_wfx=job_make_wfx,
+                key=spec.label,
             )
+            task_set.add(task)
             directories[spec.label] = job_directory
+            tasks[spec.label] = task
+            by_label[spec.label] = spec
 
         for result in task_set.run():
             job_directory = directories[result.key]
             self._check_task_result(result, job_directory)
             self._report_run_location(result, job_directory)
+            spec = by_label[result.key]
+            self.record_timing(
+                tasks[result.key],
+                result,
+                job_directory,
+                configuration,
+                spec.charge,
+                spec.multiplicity,
+                atom_indices=spec.atom_indices,
+                ghost_atoms=spec.ghost_indices,
+            )
 
         results = {}
         for spec in specs:
