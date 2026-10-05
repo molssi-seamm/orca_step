@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.10.3.2 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.10.5 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=319f9817"></script>
+    <script src="../../_static/documentation_options.js?v=99beb745"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3.2" />
+  <meta name="docsearch:version" content="2026.10.5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1161,7 +1161,8 @@
 <span class="sd">        """</span>
         <span class="n">name</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
-        <span class="n">job_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">root_directory</span><span class="p">)</span>
+        <span class="n">job_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_path</span>
+        <span class="n">own_job</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">parsed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_job_reference</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">parsed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">job_no</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">parsed</span>
@@ -1173,6 +1174,7 @@
                         <span class="s2">"job -- a job cannot write into another job."</span>
                     <span class="p">)</span>
                 <span class="n">job_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_other_job_path</span><span class="p">(</span><span class="n">job_no</span><span class="p">)</span>
+                <span class="n">own_job</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">tail</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"default"</span><span class="p">:</span>
@@ -1186,6 +1188,17 @@
             <span class="n">path</span> <span class="o">=</span> <span class="n">job_root</span> <span class="o">/</span> <span class="s2">"checkpoints"</span> <span class="o">/</span> <span class="n">safe</span>
         <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">".gbw"</span><span class="p">:</span>
             <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">".gbw"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">read_only</span> <span class="ow">and</span> <span class="n">own_job</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="c1"># An iteration of a parallel loop keeps its checkpoints apart, and</span>
+            <span class="c1"># reads the job's own from before the loop.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">relative</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">job_root</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">relative</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">relative</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">other</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">root_directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">relative</span>
+                <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="n">other</span>
         <span class="k">return</span> <span class="n">path</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_save_orbital_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>

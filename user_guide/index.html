@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.3.2 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.5 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=319f9817"></script>
+    <script src="../_static/documentation_options.js?v=99beb745"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.3.2" />
+  <meta name="docsearch:version" content="2026.10.5" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -742,7 +742,10 @@ state, shared across an inner loop (e.g. over basis sets) for that atom, and
 reset automatically when an outer loop moves to a new atom. Any other bare
 name is stored under a <code class="docutils literal notranslate"><span class="pre">checkpoints</span></code> folder at the top of the job; an
 absolute path is used as-is, e.g. to keep a checkpoint outside this job and
-reuse it across separate flowchart runs.</p></li>
+reuse it across separate flowchart runs. In a loop whose iterations run in
+parallel, each iteration writes its checkpoints in its own folder (under the
+iteration’s <code class="docutils literal notranslate"><span class="pre">_evaluator</span></code>) and reads one written before the loop from the
+job’s.</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
