@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.5.2 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=ce112380"></script>
+    <script src="../_static/documentation_options.js?v=ae463d2f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Getting Started" href="../getting_started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.5.2" />
+  <meta name="docsearch:version" content="2026.10.6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1143,7 +1143,12 @@ with a
 </div>
 <p>then set <code class="docutils literal notranslate"><span class="pre">library-path</span></code> to that env’s <code class="docutils literal notranslate"><span class="pre">lib</span></code> directory. The step
 automatically puts the matching <code class="docutils literal notranslate"><span class="pre">mpirun</span></code> (the sibling <code class="docutils literal notranslate"><span class="pre">bin</span></code> directory) on
-<code class="docutils literal notranslate"><span class="pre">PATH</span></code> so ORCA launches its workers with the correct OpenMPI.</p>
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code> so ORCA launches its workers with the correct OpenMPI. Before a
+parallel run the step checks the <code class="docutils literal notranslate"><span class="pre">mpirun</span></code> ORCA will use – that one, or
+without <code class="docutils literal notranslate"><span class="pre">library-path</span></code> the first on <code class="docutils literal notranslate"><span class="pre">PATH</span></code> – and stops with a message
+saying what to set if it is OpenMPI 5 (Homebrew’s, for example), or if there
+is none, rather than letting ORCA’s workers abort in its start-up. The check is
+skipped for <code class="docutils literal notranslate"><span class="pre">installation</span> <span class="pre">=</span> <span class="pre">modules</span></code>, whose module supplies <code class="docutils literal notranslate"><span class="pre">mpirun</span></code>.</p>
 </li>
 </ul>
 <div class="admonition note">

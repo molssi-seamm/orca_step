@@ -676,7 +676,12 @@ come from two files with different jobs:
 
   then set ``library-path`` to that env's ``lib`` directory. The step
   automatically puts the matching ``mpirun`` (the sibling ``bin`` directory) on
-  ``PATH`` so ORCA launches its workers with the correct OpenMPI.
+  ``PATH`` so ORCA launches its workers with the correct OpenMPI. Before a
+  parallel run the step checks the ``mpirun`` ORCA will use -- that one, or
+  without ``library-path`` the first on ``PATH`` -- and stops with a message
+  saying what to set if it is OpenMPI 5 (Homebrew's, for example), or if there
+  is none, rather than letting ORCA's workers abort in its start-up. The check is
+  skipped for ``installation = modules``, whose module supplies ``mpirun``.
 
 .. note::
 
