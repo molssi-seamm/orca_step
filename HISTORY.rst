@@ -1,6 +1,17 @@
 =======
 History
 =======
+2026.10.6.2 -- Guard against ORCA 6.1.1's wrong batched correlated gradients
+    * ORCA 6.1.1 computes the RI-MP2 and double-hybrid gradient wrongly -- the energy
+      is unchanged -- whenever its memory per process makes it split the gradient's
+      MO loop into more than one batch. Seen with exact exchange (NoCOSX, which this
+      step chooses for Na, Mg, Zn, B and P): 417 meV/Å rms on Na+(H2O)6 with four
+      batches, forces about 2 eV/Å wrong on 35-atom clusters, and three of 392
+      production labels. After such a run the step, and a model-chemistry task,
+      now stop with an error naming the remedy (fewer ranks, a larger memory per
+      core) instead of returning a gradient that looks fine, and the Energy step
+      warns beforehand when exact exchange meets a correlated gradient.
+
 2026.10.6.1 -- The expected time of a run from the fitted cost model
     * A task's ``estimated_seconds`` -- the step's own runs and the model-chemistry
       tasks -- now comes from the cost model fitted to the timing records

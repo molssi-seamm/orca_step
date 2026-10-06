@@ -18,6 +18,7 @@ from tabulate import tabulate
 
 from molsystem import elements
 import orca_step
+from .orca_base import method_class
 import seamm
 from seamm_util import ureg, Q_  # noqa: F401
 import seamm_util.printing as printing
@@ -843,6 +844,23 @@ class Energy(orca_step.ORCABase):
         exact = self.exact_exchange_keywords(keyword_line, configuration.atoms.symbols)
         if exact:
             keyword_line += " " + exact
+            if self._wants_gradients(P) and method_class(method, keyword_line) in (
+                "MP2",
+                "global double-hybrid",
+                "range-separated double-hybrid",
+                "DLPNO-CC",
+                "CC",
+            ):
+                printer.important(
+                    __(
+                        "Note: a correlated gradient with exact exchange needs enough "
+                        "memory per process for ORCA to treat every MO in one batch; "
+                        "ORCA 6.1.1 computes the gradient wrongly otherwise, and this "
+                        "step then stops with an error. If that happens, use fewer "
+                        "ranks with a larger 'memory' per core.",
+                        indent=self.indent + 4 * " ",
+                    )
+                )
             if configuration.n_atoms == 1:
                 reason = (
                     "this single atom, because ORCA's default COSX "
