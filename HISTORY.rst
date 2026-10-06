@@ -1,6 +1,21 @@
 =======
 History
 =======
+2026.10.6.1 -- The expected time of a run from the fitted cost model
+    * A task's ``estimated_seconds`` -- the step's own runs and the model-chemistry
+      tasks -- now comes from the cost model fitted to the timing records
+      (``seamm_exec.timing_model.predict``, seamm-exec 2026.10.6.1) when this
+      installation has one, with the basis functions counted from the Basis Set
+      Exchange's definition of the basis and the atoms (ghosts included). The
+      median is used, since the task layer adds its own margin. Without a model, or
+      with an older seamm-exec, the hand estimate is used as before.
+    * The step declares what its cost model is made of (``orca_base.TIMING_SPEC``:
+      basis functions, electrons and atoms as size variables, the method class, the
+      task, SCF runs as the unit) and passes it when it records a run, so the model
+      is fitted from the step's own description of its records rather than a table
+      in seamm-exec.
+    * Removed the unused Docker option from the orca.ini template.
+
 2026.10.6 -- A clear error instead of ORCA's start-up abort with OpenMPI 5
     * Before a parallel run, the step checks the ``mpirun`` ORCA will start its
       workers with -- the one beside ``library-path`` in ``orca.ini``, else the first

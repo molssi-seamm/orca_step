@@ -180,8 +180,168 @@ def estimated_seconds(keyword_line, n_atoms):
 
 
 # ----------------------------------------------------------------------
+# Predicted time (seamm_exec.timing_model; campaign seamm_exec 2026-10-05, Phase 3)
+# ----------------------------------------------------------------------
+_nbf_cache = {}
+
+#: Basis functions per atom when the basis is not known to the Basis Set
+#: Exchange: a double-zeta-plus-polarization count (def2-SVP: 5 for H, 14 for
+#: C-Ne, 18 for Na-Ar, more beyond)
+_NBF_FALLBACK = {1: 5, 2: 5}
+
+
+def _fallback_nbf(z):
+    if z in _NBF_FALLBACK:
+        return _NBF_FALLBACK[z]
+    if z <= 10:
+        return 14
+    if z <= 18:
+        return 18
+    if z <= 36:
+        return 32
+    return 40
+
+
+def estimated_basis_functions(basis, atomic_numbers):
+    """The number of (spherical) basis functions ``basis`` gives these atoms,
+    counted from the Basis Set Exchange's definition when it has the basis,
+    else from a double-zeta-plus-polarization estimate. Ghost centres count
+    like atoms. Cached per basis and element."""
+    name = (basis or "").strip()
+    if name.lower().startswith("bse:"):
+        name = name[4:]
+    total = 0
+    for z in atomic_numbers:
+        key = (name.lower(), int(z))
+        if key not in _nbf_cache:
+            count = None
+            if name:
+                try:
+                    import basis_set_exchange as bse
+
+                    data = bse.get_basis(name, elements=[int(z)])
+                    shells = data["elements"][str(int(z))]["electron_shells"]
+                    count = sum(
+                        len(shell["coefficients"]) * (2 * am + 1)
+                        for shell in shells
+                        for am in shell["angular_momentum"]
+                    )
+                except Exception:
+                    count = None
+            _nbf_cache[key] = count if count else _fallback_nbf(int(z))
+        total += _nbf_cache[key]
+    return total
+
+
+def _atomic_numbers(configuration):
+    """The configuration's atomic numbers, from its symbols if it has no
+    numbers (a test's stand-in), else carbon for every atom: this only feeds
+    a time estimate."""
+    try:
+        numbers = configuration.atoms.atomic_numbers
+        if numbers is not None:
+            return [int(z) for z in numbers]
+    except Exception:
+        pass
+    try:
+        from molsystem.elements import to_atnos
+
+        return [int(z) for z in to_atnos(list(configuration.atoms.symbols))]
+    except Exception:
+        pass
+    try:
+        return [6] * int(configuration.n_atoms)
+    except Exception:
+        return []
+
+
+def predicted_seconds(
+    keyword_line,
+    atomic_numbers,
+    *,
+    ghost_numbers=(),
+    model=None,
+    basis=None,
+    charge=0,
+    multiplicity=1,
+    ntasks=1,
+    quantile=0.5,
+):
+    """The expected time of an ORCA run, from the fitted cost model when there
+    is one (``seamm_exec.timing_model.predict``), else :func:`estimated_seconds`.
+
+    The task layer adds its own margin to a task's ``estimated_seconds`` (the
+    bundle walltime is twice the estimate plus ten minutes), so the median is
+    returned by default; ask for ``quantile=0.95`` for a figure to submit as is.
+    The descriptors are those the run's record will carry, with the basis
+    functions estimated from the basis and the atoms (ghosts included).
+
+    Parameters
+    ----------
+    keyword_line : str
+        The '!' line.
+    atomic_numbers : sequence of int
+        The real atoms.
+    ghost_numbers : sequence of int
+        The ghost centres' atomic numbers (basis functions, no electrons).
+    model : str, optional
+        The ``type@method/basis`` string; the method and basis come from it
+        unless ``basis`` is given.
+    """
+    numbers = [int(z) for z in atomic_numbers]
+    n_atoms = len(numbers)
+    try:
+        from seamm_exec import timing_model
+
+        method = ""
+        if model:
+            level = str(model).split("@", 1)[-1]
+            method, _, model_basis = level.partition("/")
+            basis = basis or model_basis
+        descriptors = {
+            "task": task_kind(keyword_line),
+            "method_class": method_class(method, keyword_line),
+            "method": method,
+            "basis": basis or "",
+            "n_atoms": n_atoms,
+            "n_heavy": sum(1 for z in numbers if z > 1),
+            "n_ghosts": len(ghost_numbers),
+            "charge": charge,
+            "multiplicity": multiplicity,
+            "n_electrons": sum(numbers) - int(charge or 0),
+            "nbf": estimated_basis_functions(basis, [*numbers, *ghost_numbers]),
+        }
+        result = timing_model.predict(
+            "orca", descriptors, ntasks=ntasks, quantile=quantile
+        )
+        if result is not None:
+            return float(result["seconds"])
+    except Exception as e:  # the hand estimate is the fallback
+        logger.debug(f"No model prediction for the ORCA run: {e}")
+    return estimated_seconds(keyword_line, n_atoms)
+
+
+# ----------------------------------------------------------------------
 # Timing records (seamm_exec.timing; campaign seamm_exec 2026-10-05)
 # ----------------------------------------------------------------------
+#: What ORCA's cost model is made of (seamm_exec.timing_model.Spec as plain
+#: data): the size variables, the method class, the task and the unit count.
+#: Written beside the records when a run is recorded.
+TIMING_SPEC = {
+    "size": ["nbf", "n_electrons", "n_atoms"],
+    "klass": ["method_class"],
+    "task": "task",
+    "units": "scf_runs",
+    "multiplier": None,
+    "default_alpha": 0.8,
+}
+
+
+def _record_kwargs():
+    """``spec=`` for seamm-exec releases that take it (2026.10.6.1 on)."""
+    return {"spec": TIMING_SPEC} if hasattr(seamm_exec, "TimingSpec") else {}
+
+
 #: ORCA keywords that mark a correlated or semiempirical method, for
 #: :func:`method_class` when the method name is not known
 _CC_PREFIXES = ("ccsd", "qcisd", "cepa", "ri-ccsd", "cisd", "ncisd")
@@ -394,7 +554,7 @@ def _orca_2aim(config):
     """The command for orca_2aim, which lives beside the orca binary.
 
     ``{code_dir}`` when ``code`` is a path, so the command names no absolute
-    path; a bare ``orca`` (conda, a container) means orca_2aim is on the PATH.
+    path; a bare ``orca`` (e.g. from conda) means orca_2aim is on the PATH.
     """
     if Path(config["code"]).expanduser().parent != Path("."):
         return "{code_dir}/orca_2aim"
@@ -845,7 +1005,7 @@ class ORCABase(seamm.Node):
                 charge=charge,
                 multiplicity=multiplicity,
             )
-            seamm_exec.record_task_timing(task, result, descriptors)
+            seamm_exec.record_task_timing(task, result, descriptors, **_record_kwargs())
         except Exception as e:  # pragma: no cover - must never stop the step
             logger.warning(f"Could not record the timing of the ORCA run: {e}")
 
@@ -925,7 +1085,20 @@ class ORCABase(seamm.Node):
             cmd += ["&&", "{orca_2aim}", "orca", ">", "orca_2aim.out", "2>&1"]
             return_files += ["orca.wfx", "orca_2aim.out"]
 
-        n_atoms = configuration.n_atoms if atom_indices is None else len(atom_indices)
+        all_numbers = _atomic_numbers(configuration)
+        indices = range(len(all_numbers)) if atom_indices is None else atom_indices
+        ghosts = set(ghost_atoms or ())
+        real_numbers = [all_numbers[i] for i in indices if i not in ghosts]
+        ghost_numbers = [all_numbers[i] for i in indices if i in ghosts]
+        estimate = predicted_seconds(
+            keyword_line,
+            real_numbers,
+            ghost_numbers=ghost_numbers,
+            model=getattr(self, "model", None),
+            charge=charge,
+            multiplicity=multiplicity,
+            ntasks=n_cores,
+        )
         task = seamm_exec.Task(
             key=key,
             program="orca",
@@ -943,7 +1116,7 @@ class ORCABase(seamm.Node):
             in_situ=None,
             shell=True,
             resources=seamm_exec.Resources(ntasks=n_cores),
-            estimated_seconds=estimated_seconds(keyword_line, n_atoms),
+            estimated_seconds=estimate,
             fingerprint=_fingerprint(files, make_wfx),
             # ORCA exits 0 even after an error termination.
             success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
@@ -1272,6 +1445,8 @@ __all__ = [
     "task_kind",
     "method_class",
     "timing_descriptors",
+    "predicted_seconds",
+    "estimated_basis_functions",
     "printer",
     "job",
     "os",
