@@ -9,6 +9,11 @@ History
       Exchange's definition of the basis and the atoms (ghosts included). The
       median is used, since the task layer adds its own margin. Without a model, or
       with an older seamm-exec, the hand estimate is used as before.
+    * The step declares what its cost model is made of (``orca_base.TIMING_SPEC``:
+      basis functions, electrons and atoms as size variables, the method class, the
+      task, SCF runs as the unit) and passes it when it records a run, so the model
+      is fitted from the step's own description of its records rather than a table
+      in seamm-exec.
 
 2026.10.6 -- A clear error instead of ORCA's start-up abort with OpenMPI 5
     * Before a parallel run, the step checks the ``mpirun`` ORCA will start its

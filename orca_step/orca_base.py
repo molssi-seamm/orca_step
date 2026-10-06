@@ -324,6 +324,24 @@ def predicted_seconds(
 # ----------------------------------------------------------------------
 # Timing records (seamm_exec.timing; campaign seamm_exec 2026-10-05)
 # ----------------------------------------------------------------------
+#: What ORCA's cost model is made of (seamm_exec.timing_model.Spec as plain
+#: data): the size variables, the method class, the task and the unit count.
+#: Written beside the records when a run is recorded.
+TIMING_SPEC = {
+    "size": ["nbf", "n_electrons", "n_atoms"],
+    "klass": ["method_class"],
+    "task": "task",
+    "units": "scf_runs",
+    "multiplier": None,
+    "default_alpha": 0.8,
+}
+
+
+def _record_kwargs():
+    """``spec=`` for seamm-exec releases that take it (2026.10.7 on)."""
+    return {"spec": TIMING_SPEC} if hasattr(seamm_exec, "TimingSpec") else {}
+
+
 #: ORCA keywords that mark a correlated or semiempirical method, for
 #: :func:`method_class` when the method name is not known
 _CC_PREFIXES = ("ccsd", "qcisd", "cepa", "ri-ccsd", "cisd", "ncisd")
@@ -987,7 +1005,7 @@ class ORCABase(seamm.Node):
                 charge=charge,
                 multiplicity=multiplicity,
             )
-            seamm_exec.record_task_timing(task, result, descriptors)
+            seamm_exec.record_task_timing(task, result, descriptors, **_record_kwargs())
         except Exception as e:  # pragma: no cover - must never stop the step
             logger.warning(f"Could not record the timing of the ORCA run: {e}")
 

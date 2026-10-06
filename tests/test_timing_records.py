@@ -161,3 +161,13 @@ def test_predicted_seconds_uses_the_model_or_falls_back(monkeypatch):
 
     monkeypatch.setattr(timing_model, "predict", boom)
     assert predicted_seconds(line, [8, 1, 1]) == estimated_seconds(line, 3)
+
+
+def test_timing_spec_is_passed_when_recording(monkeypatch):
+    from orca_step import orca_base
+
+    assert orca_base.TIMING_SPEC["size"][0] == "nbf"
+    assert orca_base.TIMING_SPEC["units"] == "scf_runs"
+    assert orca_base._record_kwargs() == {"spec": orca_base.TIMING_SPEC}
+    monkeypatch.delattr(seamm_exec, "TimingSpec", raising=False)
+    assert orca_base._record_kwargs() == {}  # an older seamm-exec: no spec
