@@ -7,8 +7,9 @@ resolver, the task, the output and its analysis (seamm_exec.testing).
 * With a fake ``orca`` replaying a real run's output, so the path runs in CI.
 * With the real ORCA when it is installed (skipped otherwise, as in CI).
 
-One core: ORCA 6.1.1 aborts water in its start-up on 11 MPI processes ("the
-number of points read from the grid does not match the expectation").
+One core, for speed. (A start-up abort seen once with 11 processes came from
+ORCA launching Homebrew's OpenMPI 5 before orca.ini was read -- the sub-step
+root bug fixed in seamm-exec 2026.10.5.2 -- not from the number of processes.)
 """
 
 from pathlib import Path
