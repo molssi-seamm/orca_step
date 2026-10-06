@@ -176,17 +176,26 @@ def test_timing_spec_is_passed_when_recording(monkeypatch):
 # ----------------------------------------------------------------------
 # ORCA 6.1.1: a batched correlated gradient is wrong (science, 2026-10-06)
 # ----------------------------------------------------------------------
-BATCHED = """\
---------------------------------------
-RI-MP2 GRADIENT CALCULATION
---------------------------------------
-Number of MOs treated per batch                  ...     1
-Number of batches necessary                      ...     4
-                             ****ORCA TERMINATED NORMALLY****
-"""
-ONE_BATCH = BATCHED.replace("...     1\n", "...     4\n", 1).replace(
-    "necessary                      ...     4",
-    "necessary                      ...     1",
+# The exact text of a failing run (Owl, ORCA 6.1.1, 8 ranks, %maxcore 1200;
+# the trailing spaces are ORCA's)
+BATCHED = (
+    "Dimension of the basis                    ...  479\n"
+    "Memory devoted for MP2                    ... 1200 MB   \n"
+    "Memory needed for all in one shot         ... 1681 MB\n"
+    "Number of MOs that can be treated together...    1      \n"
+    "MP2 density construction                  ... relaxed\n"
+    "The MP2 gradient is requested => amplitudes will be stored on disk\n"
+    "Total number of MOs              ...   28\n"
+    "Number of MOs treated per batch  ...    1 \n"
+    "Number of batches necessary      ...    4 \n"
+    "                             ****ORCA TERMINATED NORMALLY****\n"
+)
+# The same block from a healthy run (enough memory: one batch of 4 MOs)
+ONE_BATCH = (
+    BATCHED.replace("... 1200 MB   ", "... 6000 MB   ")
+    .replace("together...    1      ", "together...    4      ")
+    .replace("per batch  ...    1 ", "per batch  ...    4 ")
+    .replace("necessary      ...    4 ", "necessary      ...    1 ")
 )
 
 
@@ -198,6 +207,7 @@ def test_gradient_batching_problem():
     )
     assert problem is not None
     assert "4 batches" in problem and "1 per batch" in problem and "NoCOSX" in problem
+    assert "needed 1681 MB" in problem and "had 1200 MB" in problem
     assert "more memory per process" in problem
     assert gradient_batching_problem(ONE_BATCH, "x NoCOSX EnGrad") is None
     assert gradient_batching_problem("no such section", "x") is None

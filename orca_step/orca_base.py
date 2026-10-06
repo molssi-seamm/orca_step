@@ -326,6 +326,8 @@ def predicted_seconds(
 # ----------------------------------------------------------------------
 _BATCHES = re.compile(r"Number of batches necessary\s*\.*\s*(\d+)")
 _MOS_PER_BATCH = re.compile(r"Number of MOs treated per batch\s*\.*\s*(\d+)")
+_MEMORY_NEEDED = re.compile(r"Memory needed for all in one shot\s*\.*\s*(\d+)\s*MB")
+_MEMORY_GIVEN = re.compile(r"Memory devoted for MP2\s*\.*\s*(\d+)\s*MB")
 
 
 def gradient_batching_problem(output_text, keyword_line=""):
@@ -346,15 +348,23 @@ def gradient_batching_problem(output_text, keyword_line=""):
     if not batches or max(batches) <= 1:
         return None
     mos = _MOS_PER_BATCH.findall(output_text)
+    needed = _MEMORY_NEEDED.findall(output_text)
+    given = _MEMORY_GIVEN.findall(output_text)
     exchange = "NoCOSX" if "nocosx" in (keyword_line or "").lower() else "this exchange"
+    memory = ""
+    if needed and given:
+        memory = (
+            f" It needed {needed[-1]} MB per process for one batch and had "
+            f"{given[-1]} MB (%maxcore)."
+        )
     return (
         f"ORCA split the correlated gradient into {max(batches)} batches of MOs"
         + (f" ({mos[0]} per batch)" if mos else "")
         + ", and ORCA 6.1.1 then computes the RI-MP2/double-hybrid gradient "
-        f"wrongly with {exchange} while the energy stays correct. Give ORCA more "
-        "memory per process so one batch holds every MO: fewer ranks and a larger "
-        "'memory' per core in orca.ini or the [orca-step] options (e.g. 4 ranks x "
-        "8 GB instead of 16 x 2 GB). The gradient of this run is not used."
+        f"wrongly with {exchange} while the energy stays correct.{memory} Give ORCA "
+        "more memory per process so one batch holds every MO: fewer ranks and a "
+        "larger 'memory' per core in orca.ini or the [orca-step] options (e.g. 4 "
+        "ranks x 8 GB instead of 16 x 2 GB). The gradient of this run is not used."
     )
 
 
