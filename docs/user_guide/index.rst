@@ -210,6 +210,19 @@ runs with exact exchange, ``NoCOSX``. Ghost atoms count, so the jobs of a
 counterpoise correction are treated the same way. The output notes when it is
 used.
 
+Exact exchange has a hazard of its own in ORCA 6.1.1: the RI-MP2 and
+double-hybrid *gradient* is wrong -- the energy unchanged to the last digit --
+whenever the memory per process (``%maxcore``, the ``memory`` option) makes
+ORCA split the gradient's MO loop into more than one batch. A sodium-water
+cluster at revDSD/def2-TZVPPD with four batches had its forces off by 417 meV/Å
+rms; 35-atom clusters were off by about 2 eV/Å. ORCA prints the split
+("Number of batches necessary ... N"), so the step reads it after every
+correlated gradient run and stops with an error when N is above one, naming
+the figures (memory needed for one batch against memory given) and the remedy:
+fewer ranks with a larger ``memory`` per core, e.g. 4 ranks at 8 GB instead of
+16 at 2 GB. A model-chemistry task fails the same way, so a label never carries
+a wrong force. The Energy step also notes the hazard before such a run.
+
 Other elements keep COSX, which is about three times cheaper for a fragment the
 size of ethylene carbonate. COSX's force errors are small for Li\ :sup:`+`,
 F\ :sup:`-` and Cl\ :sup:`-`, and moderate (3--6.5 meV/Å) for K, Ca, Rb, Cs, Sr
