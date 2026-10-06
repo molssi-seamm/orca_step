@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.6 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.6.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=ae463d2f"></script>
+    <script src="../_static/documentation_options.js?v=6b967701"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="orca_step" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.6" />
+  <meta name="docsearch:version" content="2026.10.6.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1370,6 +1370,15 @@ density into an AIMPAC <code class="docutils literal notranslate"><span class="p
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="orca_step.orca_base.estimated_basis_functions">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_base.</span></span><span class="sig-name descname"><span class="pre">estimated_basis_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_numbers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#estimated_basis_functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.estimated_basis_functions" title="Link to this definition">#</a></dt>
+<dd><p>The number of (spherical) basis functions <code class="docutils literal notranslate"><span class="pre">basis</span></code> gives these atoms,
+counted from the Basis Set Exchange’s definition when it has the basis,
+else from a double-zeta-plus-polarization estimate. Ghost centres count
+like atoms. Cached per basis and element.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="orca_step.orca_base.method_class">
 <span class="sig-prename descclassname"><span class="pre">orca_step.orca_base.</span></span><span class="sig-name descname"><span class="pre">method_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#method_class"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.method_class" title="Link to this definition">#</a></dt>
 <dd><p>The class of a method, for the timing records: <code class="docutils literal notranslate"><span class="pre">HF</span></code>, a DFT category
@@ -1379,6 +1388,29 @@ from the step’s metadata (<code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">semiempirical</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> if it cannot be told.</p>
 <p><code class="docutils literal notranslate"><span class="pre">method</span></code> is the step’s method name (<code class="docutils literal notranslate"><span class="pre">B3LYP</span></code>, <code class="docutils literal notranslate"><span class="pre">DLPNO-CCSD(T)</span></code>, …);
 when it is not known the ‘!’ line is scanned instead.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.orca_base.predicted_seconds">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_base.</span></span><span class="sig-name descname"><span class="pre">predicted_seconds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_numbers</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ghost_numbers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#predicted_seconds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.predicted_seconds" title="Link to this definition">#</a></dt>
+<dd><p>The expected time of an ORCA run, from the fitted cost model when there
+is one (<code class="docutils literal notranslate"><span class="pre">seamm_exec.timing_model.predict</span></code>), else <code class="xref py py-func docutils literal notranslate"><span class="pre">estimated_seconds()</span></code>.</p>
+<p>The task layer adds its own margin to a task’s <code class="docutils literal notranslate"><span class="pre">estimated_seconds</span></code> (the
+bundle walltime is twice the estimate plus ten minutes), so the median is
+returned by default; ask for <code class="docutils literal notranslate"><span class="pre">quantile=0.95</span></code> for a figure to submit as is.
+The descriptors are those the run’s record will carry, with the basis
+functions estimated from the basis and the atoms (ghosts included).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keyword_line</strong> (<em>str</em>) – The ‘!’ line.</p></li>
+<li><p><strong>atomic_numbers</strong> (<em>sequence</em><em> of </em><em>int</em>) – The real atoms.</p></li>
+<li><p><strong>ghost_numbers</strong> (<em>sequence</em><em> of </em><em>int</em>) – The ghost centres’ atomic numbers (basis functions, no electrons).</p></li>
+<li><p><strong>model</strong> (<em>str</em><em>, </em><em>optional</em>) – The <code class="docutils literal notranslate"><span class="pre">type&#64;method/basis</span></code> string; the method and basis come from it
+unless <code class="docutils literal notranslate"><span class="pre">basis</span></code> is given.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -1981,7 +2013,9 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.ORCABase.version"><code class="docutils literal notranslate"><span class="pre">ORCABase.version</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.estimated_basis_functions"><code class="docutils literal notranslate"><span class="pre">estimated_basis_functions()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.method_class"><code class="docutils literal notranslate"><span class="pre">method_class()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.predicted_seconds"><code class="docutils literal notranslate"><span class="pre">predicted_seconds()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.task_kind"><code class="docutils literal notranslate"><span class="pre">task_kind()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.tidy_keyword_line"><code class="docutils literal notranslate"><span class="pre">tidy_keyword_line()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_base.timing_descriptors"><code class="docutils literal notranslate"><span class="pre">timing_descriptors()</span></code></a></li>

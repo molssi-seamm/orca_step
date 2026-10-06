@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.10.6 documentation</title>
+    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.10.6.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=ae463d2f"></script>
+    <script src="../../_static/documentation_options.js?v=6b967701"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.6" />
+  <meta name="docsearch:version" content="2026.10.6.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -519,7 +519,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_exec.evaluator</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalysisError</span><span class="p">,</span> <span class="n">check_properties</span><span class="p">,</span> <span class="n">structure_data</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q_</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_fingerprint</span><span class="p">,</span> <span class="n">estimated_seconds</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_fingerprint</span><span class="p">,</span> <span class="n">predicted_seconds</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -669,7 +669,15 @@
         <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
         <span class="n">return_files</span><span class="o">=</span><span class="p">[</span><span class="s2">"orca.out"</span><span class="p">,</span> <span class="s2">"orca.err"</span><span class="p">,</span> <span class="s2">"orca.engrad"</span><span class="p">],</span>
         <span class="n">resources</span><span class="o">=</span><span class="n">resources</span><span class="p">,</span>
-        <span class="n">estimated_seconds</span><span class="o">=</span><span class="n">estimated_seconds</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)),</span>
+        <span class="n">estimated_seconds</span><span class="o">=</span><span class="n">predicted_seconds</span><span class="p">(</span>
+            <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"! "</span><span class="p">),</span>
+            <span class="p">[</span><span class="n">z</span> <span class="k">for</span> <span class="n">z</span><span class="p">,</span> <span class="n">sym</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">symbols</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">sym</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">":"</span><span class="p">)],</span>
+            <span class="n">ghost_numbers</span><span class="o">=</span><span class="p">[</span><span class="n">z</span> <span class="k">for</span> <span class="n">z</span><span class="p">,</span> <span class="n">sym</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">symbols</span><span class="p">)</span> <span class="k">if</span> <span class="n">sym</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">":"</span><span class="p">)],</span>
+            <span class="n">model</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">method</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">,</span>
+            <span class="n">multiplicity</span><span class="o">=</span><span class="n">multiplicity</span><span class="p">,</span>
+            <span class="n">ntasks</span><span class="o">=</span><span class="n">ntasks</span><span class="p">,</span>
+        <span class="p">),</span>
         <span class="n">fingerprint</span><span class="o">=</span><span class="n">_fingerprint</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
         <span class="n">success_text</span><span class="o">=</span><span class="p">{</span><span class="s2">"orca.out"</span><span class="p">:</span> <span class="s2">"ORCA TERMINATED NORMALLY"</span><span class="p">},</span>
     <span class="p">)</span></div>
@@ -724,7 +732,7 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_exec.evaluator</span><span class="w"> </span><span class="kn">import</span> <span class="n">mdi_method_and_basis</span>
 
-        <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_heavy_atoms</span><span class="p">,</span> <span class="n">timing_descriptors</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_heavy_atoms</span><span class="p">,</span> <span class="n">_record_kwargs</span><span class="p">,</span> <span class="n">timing_descriptors</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_step</span><span class="w"> </span><span class="kn">import</span> <span class="n">mc_method_unalias</span>
 
         <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">mdi_method_and_basis</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
@@ -742,7 +750,7 @@
             <span class="n">charge</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"charge"</span><span class="p">,</span> <span class="n">configuration</span><span class="o">.</span><span class="n">charge</span><span class="p">),</span>
             <span class="n">multiplicity</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplicity"</span><span class="p">,</span> <span class="n">configuration</span><span class="o">.</span><span class="n">spin_multiplicity</span><span class="p">),</span>
         <span class="p">)</span>
-        <span class="n">seamm_exec</span><span class="o">.</span><span class="n">record_task_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">descriptors</span><span class="p">)</span>
+        <span class="n">seamm_exec</span><span class="o">.</span><span class="n">record_task_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">descriptors</span><span class="p">,</span> <span class="o">**</span><span class="n">_record_kwargs</span><span class="p">())</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not record the timing of ORCA task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.6 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.6.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=ae463d2f"></script>
+    <script src="../../_static/documentation_options.js?v=6b967701"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.6" />
+  <meta name="docsearch:version" content="2026.10.6.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -675,8 +675,174 @@
 
 
 <span class="c1"># ----------------------------------------------------------------------</span>
+<span class="c1"># Predicted time (seamm_exec.timing_model; campaign seamm_exec 2026-10-05, Phase 3)</span>
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="n">_nbf_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1">#: Basis functions per atom when the basis is not known to the Basis Set</span>
+<span class="c1">#: Exchange: a double-zeta-plus-polarization count (def2-SVP: 5 for H, 14 for</span>
+<span class="c1">#: C-Ne, 18 for Na-Ar, more beyond)</span>
+<span class="n">_NBF_FALLBACK</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mi">5</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fallback_nbf</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">_NBF_FALLBACK</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_NBF_FALLBACK</span><span class="p">[</span><span class="n">z</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">z</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">14</span>
+    <span class="k">if</span> <span class="n">z</span> <span class="o">&lt;=</span> <span class="mi">18</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">18</span>
+    <span class="k">if</span> <span class="n">z</span> <span class="o">&lt;=</span> <span class="mi">36</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">32</span>
+    <span class="k">return</span> <span class="mi">40</span>
+
+
+<div class="viewcode-block" id="estimated_basis_functions">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.estimated_basis_functions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">estimated_basis_functions</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The number of (spherical) basis functions ``basis`` gives these atoms,</span>
+<span class="sd">    counted from the Basis Set Exchange's definition when it has the basis,</span>
+<span class="sd">    else from a double-zeta-plus-polarization estimate. Ghost centres count</span>
+<span class="sd">    like atoms. Cached per basis and element."""</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="p">(</span><span class="n">basis</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"bse:"</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">atomic_numbers</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_nbf_cache</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="kn">import</span><span class="w"> </span><span class="nn">basis_set_exchange</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bse</span>
+
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">bse</span><span class="o">.</span><span class="n">get_basis</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">)])</span>
+                    <span class="n">shells</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"elements"</span><span class="p">][</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">))][</span><span class="s2">"electron_shells"</span><span class="p">]</span>
+                    <span class="n">count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="n">shell</span><span class="p">[</span><span class="s2">"coefficients"</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">am</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">shell</span> <span class="ow">in</span> <span class="n">shells</span>
+                        <span class="k">for</span> <span class="n">am</span> <span class="ow">in</span> <span class="n">shell</span><span class="p">[</span><span class="s2">"angular_momentum"</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">count</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">_nbf_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">count</span> <span class="k">if</span> <span class="n">count</span> <span class="k">else</span> <span class="n">_fallback_nbf</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="n">_nbf_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">total</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_atomic_numbers</span><span class="p">(</span><span class="n">configuration</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The configuration's atomic numbers, from its symbols if it has no</span>
+<span class="sd">    numbers (a test's stand-in), else carbon for every atom: this only feeds</span>
+<span class="sd">    a time estimate."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">atomic_numbers</span>
+        <span class="k">if</span> <span class="n">numbers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">molsystem.elements</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_atnos</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">to_atnos</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">))]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">configuration</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+
+<div class="viewcode-block" id="predicted_seconds">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.predicted_seconds">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">predicted_seconds</span><span class="p">(</span>
+    <span class="n">keyword_line</span><span class="p">,</span>
+    <span class="n">atomic_numbers</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">ghost_numbers</span><span class="o">=</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">multiplicity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">ntasks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">quantile</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The expected time of an ORCA run, from the fitted cost model when there</span>
+<span class="sd">    is one (``seamm_exec.timing_model.predict``), else :func:`estimated_seconds`.</span>
+
+<span class="sd">    The task layer adds its own margin to a task's ``estimated_seconds`` (the</span>
+<span class="sd">    bundle walltime is twice the estimate plus ten minutes), so the median is</span>
+<span class="sd">    returned by default; ask for ``quantile=0.95`` for a figure to submit as is.</span>
+<span class="sd">    The descriptors are those the run's record will carry, with the basis</span>
+<span class="sd">    functions estimated from the basis and the atoms (ghosts included).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    keyword_line : str</span>
+<span class="sd">        The '!' line.</span>
+<span class="sd">    atomic_numbers : sequence of int</span>
+<span class="sd">        The real atoms.</span>
+<span class="sd">    ghost_numbers : sequence of int</span>
+<span class="sd">        The ghost centres' atomic numbers (basis functions, no electrons).</span>
+<span class="sd">    model : str, optional</span>
+<span class="sd">        The ``type@method/basis`` string; the method and basis come from it</span>
+<span class="sd">        unless ``basis`` is given.</span>
+<span class="sd">    """</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">atomic_numbers</span><span class="p">]</span>
+    <span class="n">n_atoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_exec</span><span class="w"> </span><span class="kn">import</span> <span class="n">timing_model</span>
+
+        <span class="n">method</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"@"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">method</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">model_basis</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+            <span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span> <span class="ow">or</span> <span class="n">model_basis</span>
+        <span class="n">descriptors</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"task"</span><span class="p">:</span> <span class="n">task_kind</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">),</span>
+            <span class="s2">"method_class"</span><span class="p">:</span> <span class="n">method_class</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">),</span>
+            <span class="s2">"method"</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+            <span class="s2">"basis"</span><span class="p">:</span> <span class="n">basis</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"n_atoms"</span><span class="p">:</span> <span class="n">n_atoms</span><span class="p">,</span>
+            <span class="s2">"n_heavy"</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">numbers</span> <span class="k">if</span> <span class="n">z</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">"n_ghosts"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">ghost_numbers</span><span class="p">),</span>
+            <span class="s2">"charge"</span><span class="p">:</span> <span class="n">charge</span><span class="p">,</span>
+            <span class="s2">"multiplicity"</span><span class="p">:</span> <span class="n">multiplicity</span><span class="p">,</span>
+            <span class="s2">"n_electrons"</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">charge</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="s2">"nbf"</span><span class="p">:</span> <span class="n">estimated_basis_functions</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="p">[</span><span class="o">*</span><span class="n">numbers</span><span class="p">,</span> <span class="o">*</span><span class="n">ghost_numbers</span><span class="p">]),</span>
+        <span class="p">}</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">timing_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+            <span class="s2">"orca"</span><span class="p">,</span> <span class="n">descriptors</span><span class="p">,</span> <span class="n">ntasks</span><span class="o">=</span><span class="n">ntasks</span><span class="p">,</span> <span class="n">quantile</span><span class="o">=</span><span class="n">quantile</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">"seconds"</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># the hand estimate is the fallback</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No model prediction for the ORCA run: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">estimated_seconds</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ----------------------------------------------------------------------</span>
 <span class="c1"># Timing records (seamm_exec.timing; campaign seamm_exec 2026-10-05)</span>
 <span class="c1"># ----------------------------------------------------------------------</span>
+<span class="c1">#: What ORCA's cost model is made of (seamm_exec.timing_model.Spec as plain</span>
+<span class="c1">#: data): the size variables, the method class, the task and the unit count.</span>
+<span class="c1">#: Written beside the records when a run is recorded.</span>
+<span class="n">TIMING_SPEC</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"size"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"nbf"</span><span class="p">,</span> <span class="s2">"n_electrons"</span><span class="p">,</span> <span class="s2">"n_atoms"</span><span class="p">],</span>
+    <span class="s2">"klass"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"method_class"</span><span class="p">],</span>
+    <span class="s2">"task"</span><span class="p">:</span> <span class="s2">"task"</span><span class="p">,</span>
+    <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"scf_runs"</span><span class="p">,</span>
+    <span class="s2">"multiplier"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">"default_alpha"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_record_kwargs</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""``spec=`` for seamm-exec releases that take it (2026.10.6.1 on)."""</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"spec"</span><span class="p">:</span> <span class="n">TIMING_SPEC</span><span class="p">}</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">seamm_exec</span><span class="p">,</span> <span class="s2">"TimingSpec"</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+
+
 <span class="c1">#: ORCA keywords that mark a correlated or semiempirical method, for</span>
 <span class="c1">#: :func:`method_class` when the method name is not known</span>
 <span class="n">_CC_PREFIXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ccsd"</span><span class="p">,</span> <span class="s2">"qcisd"</span><span class="p">,</span> <span class="s2">"cepa"</span><span class="p">,</span> <span class="s2">"ri-ccsd"</span><span class="p">,</span> <span class="s2">"cisd"</span><span class="p">,</span> <span class="s2">"ncisd"</span><span class="p">)</span>
@@ -898,7 +1064,7 @@
 <span class="w">    </span><span class="sd">"""The command for orca_2aim, which lives beside the orca binary.</span>
 
 <span class="sd">    ``{code_dir}`` when ``code`` is a path, so the command names no absolute</span>
-<span class="sd">    path; a bare ``orca`` (conda, a container) means orca_2aim is on the PATH.</span>
+<span class="sd">    path; a bare ``orca`` (e.g. from conda) means orca_2aim is on the PATH.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"code"</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">!=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"."</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">"</span><span class="si">{code_dir}</span><span class="s2">/orca_2aim"</span>
@@ -1365,7 +1531,7 @@
                 <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">,</span>
                 <span class="n">multiplicity</span><span class="o">=</span><span class="n">multiplicity</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">seamm_exec</span><span class="o">.</span><span class="n">record_task_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">descriptors</span><span class="p">)</span>
+            <span class="n">seamm_exec</span><span class="o">.</span><span class="n">record_task_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">descriptors</span><span class="p">,</span> <span class="o">**</span><span class="n">_record_kwargs</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - must never stop the step</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not record the timing of the ORCA run: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
@@ -1448,7 +1614,20 @@
             <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"&amp;&amp;"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{orca_2aim}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">,</span> <span class="s2">"2&gt;&amp;1"</span><span class="p">]</span>
             <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"orca.wfx"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">]</span>
 
-        <span class="n">n_atoms</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">n_atoms</span> <span class="k">if</span> <span class="n">atom_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">atom_indices</span><span class="p">)</span>
+        <span class="n">all_numbers</span> <span class="o">=</span> <span class="n">_atomic_numbers</span><span class="p">(</span><span class="n">configuration</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_numbers</span><span class="p">))</span> <span class="k">if</span> <span class="n">atom_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">atom_indices</span>
+        <span class="n">ghosts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ghost_atoms</span> <span class="ow">or</span> <span class="p">())</span>
+        <span class="n">real_numbers</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_numbers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ghosts</span><span class="p">]</span>
+        <span class="n">ghost_numbers</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_numbers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ghosts</span><span class="p">]</span>
+        <span class="n">estimate</span> <span class="o">=</span> <span class="n">predicted_seconds</span><span class="p">(</span>
+            <span class="n">keyword_line</span><span class="p">,</span>
+            <span class="n">real_numbers</span><span class="p">,</span>
+            <span class="n">ghost_numbers</span><span class="o">=</span><span class="n">ghost_numbers</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"model"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">,</span>
+            <span class="n">multiplicity</span><span class="o">=</span><span class="n">multiplicity</span><span class="p">,</span>
+            <span class="n">ntasks</span><span class="o">=</span><span class="n">n_cores</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">task</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">Task</span><span class="p">(</span>
             <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
             <span class="n">program</span><span class="o">=</span><span class="s2">"orca"</span><span class="p">,</span>
@@ -1466,7 +1645,7 @@
             <span class="n">in_situ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">resources</span><span class="o">=</span><span class="n">seamm_exec</span><span class="o">.</span><span class="n">Resources</span><span class="p">(</span><span class="n">ntasks</span><span class="o">=</span><span class="n">n_cores</span><span class="p">),</span>
-            <span class="n">estimated_seconds</span><span class="o">=</span><span class="n">estimated_seconds</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">,</span> <span class="n">n_atoms</span><span class="p">),</span>
+            <span class="n">estimated_seconds</span><span class="o">=</span><span class="n">estimate</span><span class="p">,</span>
             <span class="n">fingerprint</span><span class="o">=</span><span class="n">_fingerprint</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">make_wfx</span><span class="p">),</span>
             <span class="c1"># ORCA exits 0 even after an error termination.</span>
             <span class="n">success_text</span><span class="o">=</span><span class="p">{</span><span class="s2">"orca.out"</span><span class="p">:</span> <span class="s2">"ORCA TERMINATED NORMALLY"</span><span class="p">},</span>
@@ -1800,6 +1979,8 @@
     <span class="s2">"task_kind"</span><span class="p">,</span>
     <span class="s2">"method_class"</span><span class="p">,</span>
     <span class="s2">"timing_descriptors"</span><span class="p">,</span>
+    <span class="s2">"predicted_seconds"</span><span class="p">,</span>
+    <span class="s2">"estimated_basis_functions"</span><span class="p">,</span>
     <span class="s2">"printer"</span><span class="p">,</span>
     <span class="s2">"job"</span><span class="p">,</span>
     <span class="s2">"os"</span><span class="p">,</span>
