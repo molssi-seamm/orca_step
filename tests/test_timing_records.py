@@ -171,3 +171,71 @@ def test_timing_spec_is_passed_when_recording(monkeypatch):
     assert orca_base._record_kwargs() == {"spec": orca_base.TIMING_SPEC}
     monkeypatch.delattr(seamm_exec, "TimingSpec", raising=False)
     assert orca_base._record_kwargs() == {}  # an older seamm-exec: no spec
+
+
+# ----------------------------------------------------------------------
+# ORCA 6.1.1: a batched correlated gradient is wrong (science, 2026-10-06)
+# ----------------------------------------------------------------------
+# The exact text of a failing run (Owl, ORCA 6.1.1, 8 ranks, %maxcore 1200;
+# the trailing spaces are ORCA's)
+BATCHED = (
+    "Dimension of the basis                    ...  479\n"
+    "Memory devoted for MP2                    ... 1200 MB   \n"
+    "Memory needed for all in one shot         ... 1681 MB\n"
+    "Number of MOs that can be treated together...    1      \n"
+    "MP2 density construction                  ... relaxed\n"
+    "The MP2 gradient is requested => amplitudes will be stored on disk\n"
+    "Total number of MOs              ...   28\n"
+    "Number of MOs treated per batch  ...    1 \n"
+    "Number of batches necessary      ...    4 \n"
+    "                             ****ORCA TERMINATED NORMALLY****\n"
+)
+# The same block from a healthy run (enough memory: one batch of 4 MOs)
+ONE_BATCH = (
+    BATCHED.replace("... 1200 MB   ", "... 6000 MB   ")
+    .replace("together...    1      ", "together...    4      ")
+    .replace("per batch  ...    1 ", "per batch  ...    4 ")
+    .replace("necessary      ...    4 ", "necessary      ...    1 ")
+)
+
+
+def test_gradient_batching_problem():
+    from orca_step.orca_base import gradient_batching_problem
+
+    problem = gradient_batching_problem(
+        BATCHED, "revDSD-PBEP86-D4/2021 def2-TZVPPD NoCOSX EnGrad"
+    )
+    assert problem is not None
+    assert "4 batches" in problem and "1 per batch" in problem and "NoCOSX" in problem
+    assert "needed 1681 MB" in problem and "had 1200 MB" in problem
+    assert "more memory per process" in problem
+    assert gradient_batching_problem(ONE_BATCH, "x NoCOSX EnGrad") is None
+    assert gradient_batching_problem("no such section", "x") is None
+    assert gradient_batching_problem("", "x") is None
+
+
+def test_batch_task_with_a_batched_gradient_fails(tmp_path):
+    from types import SimpleNamespace
+
+    import pytest
+    from seamm_exec.evaluator import AnalysisError
+
+    from orca_step.batch import analyze_task
+
+    directory = tmp_path / "t"
+    directory.mkdir()
+    (directory / "orca.out").write_text(BATCHED + "FINAL SINGLE POINT ENERGY  -1.0\n")
+    result = SimpleNamespace(key="k", files={}, directory=directory)
+    conf = SimpleNamespace(
+        atoms=SimpleNamespace(atomic_numbers=[11, 8, 1, 1]),
+        charge=1,
+        spin_multiplicity=1,
+    )
+    with pytest.raises(AnalysisError) as e:
+        analyze_task(
+            result,
+            {"method": "MP2", "basis": "def2-SVP"},
+            conf,
+            properties=("energy", "gradients"),
+        )
+    assert "4 batches" in str(e.value)

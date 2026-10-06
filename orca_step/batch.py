@@ -27,7 +27,7 @@ import seamm_exec
 from seamm_exec.evaluator import AnalysisError, check_properties, structure_data
 from seamm_util import Q_
 
-from .orca_base import _fingerprint, predicted_seconds
+from .orca_base import _fingerprint, gradient_batching_problem, predicted_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +208,14 @@ def analyze_task(
     out = _text(result, "orca.out")
     if task is not None:
         _record_timing(task, result, out, model_chemistry, configuration, options)
+    if "gradients" in properties:
+        keyword_line = ""
+        if task is not None:
+            inp = task.files.get("orca.inp") or ""
+            keyword_line = inp.splitlines()[0] if inp else ""
+        problem = gradient_batching_problem(out, keyword_line)
+        if problem is not None:
+            raise AnalysisError(f"The ORCA calculation '{result.key}': {problem}")
     data = {}
     energy = helpers.parse_energy(out) if out else None
     if energy is not None:

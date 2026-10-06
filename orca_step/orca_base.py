@@ -322,6 +322,53 @@ def predicted_seconds(
 
 
 # ----------------------------------------------------------------------
+# ORCA 6.1.1: a correlated gradient with exact exchange is wrong when batched
+# ----------------------------------------------------------------------
+_BATCHES = re.compile(r"Number of batches necessary\s*\.*\s*(\d+)")
+_MOS_PER_BATCH = re.compile(r"Number of MOs treated per batch\s*\.*\s*(\d+)")
+_MEMORY_NEEDED = re.compile(r"Memory needed for all in one shot\s*\.*\s*(\d+)\s*MB")
+_MEMORY_GIVEN = re.compile(r"Memory devoted for MP2\s*\.*\s*(\d+)\s*MB")
+
+
+def gradient_batching_problem(output_text, keyword_line=""):
+    """Why an ORCA gradient in ``output_text`` cannot be trusted, or None.
+
+    ORCA 6.1.1 computes the RI-MP2 / double-hybrid gradient wrongly -- the
+    energy is unchanged to the last digit -- whenever ``%maxcore`` makes it
+    split the gradient's MO loop into more than one batch ("Number of batches
+    necessary ... N" with N > 1 in the output). Seen with exact exchange
+    (NoCOSX, which this step chooses for Na, Mg, Zn, B and P): 417 meV/Å rms on
+    Na+(H2O)6 at revDSD/def2-TZVPPD with 4 batches, forces ~2 eV/Å wrong on
+    35-atom clusters (2026-10-06). A RIJCOSX run does not print the section.
+    The remedy is more memory per process: fewer ranks, a larger %maxcore.
+    """
+    if not output_text:
+        return None
+    batches = [int(m) for m in _BATCHES.findall(output_text)]
+    if not batches or max(batches) <= 1:
+        return None
+    mos = _MOS_PER_BATCH.findall(output_text)
+    needed = _MEMORY_NEEDED.findall(output_text)
+    given = _MEMORY_GIVEN.findall(output_text)
+    exchange = "NoCOSX" if "nocosx" in (keyword_line or "").lower() else "this exchange"
+    memory = ""
+    if needed and given:
+        memory = (
+            f" It needed {needed[-1]} MB per process for one batch and had "
+            f"{given[-1]} MB (%maxcore)."
+        )
+    return (
+        f"ORCA split the correlated gradient into {max(batches)} batches of MOs"
+        + (f" ({mos[0]} per batch)" if mos else "")
+        + ", and ORCA 6.1.1 then computes the RI-MP2/double-hybrid gradient "
+        f"wrongly with {exchange} while the energy stays correct.{memory} Give ORCA "
+        "more memory per process so one batch holds every MO: fewer ranks and a "
+        "larger 'memory' per core in orca.ini or the [orca-step] options (e.g. 4 "
+        "ranks x 8 GB instead of 16 x 2 GB). The gradient of this run is not used."
+    )
+
+
+# ----------------------------------------------------------------------
 # Timing records (seamm_exec.timing; campaign seamm_exec 2026-10-05)
 # ----------------------------------------------------------------------
 #: What ORCA's cost model is made of (seamm_exec.timing_model.Spec as plain
@@ -970,7 +1017,24 @@ class ORCABase(seamm.Node):
             ghost_atoms=ghost_atoms,
         )
 
-        return self._parse_output(run_directory / "orca.out")
+        data = self._parse_output(run_directory / "orca.out")
+        problem = gradient_batching_problem(
+            (
+                (run_directory / "orca.out").read_text(errors="replace")
+                if (run_directory / "orca.out").exists()
+                else ""
+            ),
+            keyword_line,
+        )
+        if problem is not None and task_kind(keyword_line) in (
+            "gradient",
+            "opt",
+            "freq",
+            "numgrad",
+            "numfreq",
+        ):
+            raise RuntimeError(f"ORCA in {run_directory}: {problem}")
+        return data
 
     def record_timing(
         self,
@@ -1447,6 +1511,7 @@ __all__ = [
     "timing_descriptors",
     "predicted_seconds",
     "estimated_basis_functions",
+    "gradient_batching_problem",
     "printer",
     "job",
     "os",
