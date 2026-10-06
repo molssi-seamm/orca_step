@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.6.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.6.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=6b967701"></script>
+    <script src="_static/documentation_options.js?v=5c6efd6b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.6.1" />
+  <meta name="docsearch:version" content="2026.10.6.2" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,18 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.6.2 – Guard against ORCA 6.1.1’s wrong batched correlated gradients</dt><dd><ul class="simple">
+<li><p>ORCA 6.1.1 computes the RI-MP2 and double-hybrid gradient wrongly – the energy
+is unchanged – whenever its memory per process makes it split the gradient’s
+MO loop into more than one batch. Seen with exact exchange (NoCOSX, which this
+step chooses for Na, Mg, Zn, B and P): 417 meV/Å rms on Na+(H2O)6 with four
+batches, forces about 2 eV/Å wrong on 35-atom clusters, and three of 392
+production labels. After such a run the step, and a model-chemistry task,
+now stop with an error naming the remedy (fewer ranks, a larger memory per
+core) instead of returning a gradient that looks fine, and the Energy step
+warns beforehand when exact exchange meets a correlated gradient.</p></li>
+</ul>
+</dd>
 <dt>2026.10.6.1 – The expected time of a run from the fitted cost model</dt><dd><ul class="simple">
 <li><p>A task’s <code class="docutils literal notranslate"><span class="pre">estimated_seconds</span></code> – the step’s own runs and the model-chemistry
 tasks – now comes from the cost model fitted to the timing records

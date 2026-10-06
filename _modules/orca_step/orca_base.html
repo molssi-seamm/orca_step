@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.6.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.6.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=6b967701"></script>
+    <script src="../../_static/documentation_options.js?v=5c6efd6b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.6.1" />
+  <meta name="docsearch:version" content="2026.10.6.2" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -823,6 +823,56 @@
 
 
 <span class="c1"># ----------------------------------------------------------------------</span>
+<span class="c1"># ORCA 6.1.1: a correlated gradient with exact exchange is wrong when batched</span>
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="n">_BATCHES</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Number of batches necessary\s*\.*\s*(\d+)"</span><span class="p">)</span>
+<span class="n">_MOS_PER_BATCH</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Number of MOs treated per batch\s*\.*\s*(\d+)"</span><span class="p">)</span>
+<span class="n">_MEMORY_NEEDED</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Memory needed for all in one shot\s*\.*\s*(\d+)\s*MB"</span><span class="p">)</span>
+<span class="n">_MEMORY_GIVEN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Memory devoted for MP2\s*\.*\s*(\d+)\s*MB"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="gradient_batching_problem">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.gradient_batching_problem">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gradient_batching_problem</span><span class="p">(</span><span class="n">output_text</span><span class="p">,</span> <span class="n">keyword_line</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Why an ORCA gradient in ``output_text`` cannot be trusted, or None.</span>
+
+<span class="sd">    ORCA 6.1.1 computes the RI-MP2 / double-hybrid gradient wrongly -- the</span>
+<span class="sd">    energy is unchanged to the last digit -- whenever ``%maxcore`` makes it</span>
+<span class="sd">    split the gradient's MO loop into more than one batch ("Number of batches</span>
+<span class="sd">    necessary ... N" with N &gt; 1 in the output). Seen with exact exchange</span>
+<span class="sd">    (NoCOSX, which this step chooses for Na, Mg, Zn, B and P): 417 meV/Å rms on</span>
+<span class="sd">    Na+(H2O)6 at revDSD/def2-TZVPPD with 4 batches, forces ~2 eV/Å wrong on</span>
+<span class="sd">    35-atom clusters (2026-10-06). A RIJCOSX run does not print the section.</span>
+<span class="sd">    The remedy is more memory per process: fewer ranks, a larger %maxcore.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_text</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">batches</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_BATCHES</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">output_text</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">batches</span> <span class="ow">or</span> <span class="nb">max</span><span class="p">(</span><span class="n">batches</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">mos</span> <span class="o">=</span> <span class="n">_MOS_PER_BATCH</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
+    <span class="n">needed</span> <span class="o">=</span> <span class="n">_MEMORY_NEEDED</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
+    <span class="n">given</span> <span class="o">=</span> <span class="n">_MEMORY_GIVEN</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
+    <span class="n">exchange</span> <span class="o">=</span> <span class="s2">"NoCOSX"</span> <span class="k">if</span> <span class="s2">"nocosx"</span> <span class="ow">in</span> <span class="p">(</span><span class="n">keyword_line</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"this exchange"</span>
+    <span class="n">memory</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">needed</span> <span class="ow">and</span> <span class="n">given</span><span class="p">:</span>
+        <span class="n">memory</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">" It needed </span><span class="si">{</span><span class="n">needed</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> MB per process for one batch and had "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">given</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> MB (%maxcore)."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"ORCA split the correlated gradient into </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">batches</span><span class="p">)</span><span class="si">}</span><span class="s2"> batches of MOs"</span>
+        <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">" (</span><span class="si">{</span><span class="n">mos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> per batch)"</span> <span class="k">if</span> <span class="n">mos</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s2">", and ORCA 6.1.1 then computes the RI-MP2/double-hybrid gradient "</span>
+        <span class="sa">f</span><span class="s2">"wrongly with </span><span class="si">{</span><span class="n">exchange</span><span class="si">}</span><span class="s2"> while the energy stays correct.</span><span class="si">{</span><span class="n">memory</span><span class="si">}</span><span class="s2"> Give ORCA "</span>
+        <span class="s2">"more memory per process so one batch holds every MO: fewer ranks and a "</span>
+        <span class="s2">"larger 'memory' per core in orca.ini or the [orca-step] options (e.g. 4 "</span>
+        <span class="s2">"ranks x 8 GB instead of 16 x 2 GB). The gradient of this run is not used."</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ----------------------------------------------------------------------</span>
 <span class="c1"># Timing records (seamm_exec.timing; campaign seamm_exec 2026-10-05)</span>
 <span class="c1"># ----------------------------------------------------------------------</span>
 <span class="c1">#: What ORCA's cost model is made of (seamm_exec.timing_model.Spec as plain</span>
@@ -1493,7 +1543,24 @@
             <span class="n">ghost_atoms</span><span class="o">=</span><span class="n">ghost_atoms</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span><span class="p">)</span></div>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span><span class="p">)</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="n">gradient_batching_problem</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+                <span class="k">else</span> <span class="s2">""</span>
+            <span class="p">),</span>
+            <span class="n">keyword_line</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">task_kind</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">"gradient"</span><span class="p">,</span>
+            <span class="s2">"opt"</span><span class="p">,</span>
+            <span class="s2">"freq"</span><span class="p">,</span>
+            <span class="s2">"numgrad"</span><span class="p">,</span>
+            <span class="s2">"numfreq"</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ORCA in </span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
 
 
 <div class="viewcode-block" id="ORCABase.record_timing">
@@ -1981,6 +2048,7 @@
     <span class="s2">"timing_descriptors"</span><span class="p">,</span>
     <span class="s2">"predicted_seconds"</span><span class="p">,</span>
     <span class="s2">"estimated_basis_functions"</span><span class="p">,</span>
+    <span class="s2">"gradient_batching_problem"</span><span class="p">,</span>
     <span class="s2">"printer"</span><span class="p">,</span>
     <span class="s2">"job"</span><span class="p">,</span>
     <span class="s2">"os"</span><span class="p">,</span>
