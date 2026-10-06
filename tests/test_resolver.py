@@ -70,6 +70,10 @@ def test_resolver_gives_the_old_command(tmp_path, n_cores, make_wfx, monkeypatch
     lib = tmp_path / "openmpi" / "lib"
     (tmp_path / "openmpi" / "bin").mkdir(parents=True)
     lib.mkdir()
+    # The OpenMPI 4.1 beside library-path, as a real installation has
+    mpirun = tmp_path / "openmpi" / "bin" / "mpirun"
+    mpirun.write_text("#!/bin/sh\necho 'mpirun (Open MPI) 4.1.6'\n")
+    mpirun.chmod(0o755)
     (tmp_path / "orca.ini").write_text(
         f"[local]\ninstallation = local\ncode = {orca}\nlibrary-path = {lib}\n"
     )
