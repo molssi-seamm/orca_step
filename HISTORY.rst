@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.6 -- A clear error instead of ORCA's start-up abort with OpenMPI 5
+    * Before a parallel run, the step checks the ``mpirun`` ORCA will start its
+      workers with -- the one beside ``library-path`` in ``orca.ini``, else the first
+      on the PATH. If it is OpenMPI 5 (Homebrew's on a Mac, for one), which ORCA 6
+      cannot use, or there is none, the step stops with a message saying what to set,
+      instead of ORCA's workers aborting in its start-up. Not checked on one core, or
+      for ``installation = modules``, whose module supplies ``mpirun``.
+
 2026.10.5.2 -- Timing records for a cost model; ORCA found through orca.ini again
     * Bugfix: since 2026.10.3.1 ORCA's calculations did not read ``orca.ini`` and
       took ``orca`` from the PATH instead -- on Debian and Ubuntu systems a screen

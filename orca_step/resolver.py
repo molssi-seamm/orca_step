@@ -14,7 +14,7 @@ Registered as the entry point ``orca`` in ``org.molssi.seamm.exec.resolvers``.
 
 import shutil
 
-from .orca_base import _orca_2aim, mpi_env
+from .orca_base import _orca_2aim, check_mpirun, mpi_env
 from .orca_step import full_orca_path
 
 
@@ -50,6 +50,7 @@ def resolve(config, cmd, env, ce, root):
         config["code"] = full_orca_path(code)
 
     n_cores = max(1, int(ce.get("NTASKS", 1) or 1))
+    check_mpirun(n_cores, config)
     extra_env, lib_prefix = mpi_env(n_cores, config)
     env = dict(env)
     for name, value in extra_env.items():

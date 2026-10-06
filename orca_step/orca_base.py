@@ -18,6 +18,7 @@ from pathlib import Path
 import re
 import shlex
 import shutil
+import subprocess
 
 import seamm
 import seamm_exec
@@ -506,6 +507,73 @@ def mpi_env(n_cores, config):
     if n_cores > 1 and "SLURM_JOB_ID" not in os.environ:
         env["OMPI_MCA_hwloc_base_binding_policy"] = "none"
     return env, lib_prefix
+
+
+def _mpirun_version(mpirun):
+    """``(implementation, major)`` of an ``mpirun``, e.g. ("Open MPI", 5), or
+    ``(None, None)`` if it cannot be told."""
+    try:
+        result = subprocess.run(
+            [str(mpirun), "--version"], capture_output=True, text=True, timeout=20
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None, None
+    match = re.search(r"\(Open MPI\)\s+(\d+)\.", result.stdout + result.stderr)
+    if match is None:
+        return None, None
+    return "Open MPI", int(match.group(1))
+
+
+def check_mpirun(n_cores, config, path=None):
+    """Stop a parallel run that ORCA would start with an unusable ``mpirun``.
+
+    ORCA 6 is built with OpenMPI 4.1 and starts its parallel workers with the
+    first ``mpirun`` on the PATH; with OpenMPI 5 -- Homebrew's, on a Mac -- the
+    workers abort in ORCA's start-up with an obscure error. ``mpi_env`` puts
+    the OpenMPI beside ``library-path`` first on the PATH, so this checks that
+    one if ``orca.ini`` gives it, else the first on the PATH, and raises a
+    clear error instead.
+
+    Not checked: one core; ``installation = modules``, whose module, loaded in
+    the job's script, supplies the ``mpirun`` Python cannot see beforehand; and
+    an MPI that cannot be identified (not Open MPI).
+
+    Parameters
+    ----------
+    n_cores : int
+        The processes ORCA will be asked for (``%pal``).
+    config : dict
+        This machine's ``orca.ini`` section.
+    path : str, optional
+        The PATH to search; default the environment's.
+    """
+    if n_cores <= 1 or (config.get("installation") or "").strip() == "modules":
+        return
+    library_path = (config.get("library-path") or "").strip()
+    mpirun = None
+    if library_path:
+        candidate = Path(library_path).expanduser().parent / "bin" / "mpirun"
+        if candidate.is_file():
+            mpirun = candidate
+    if mpirun is None:
+        mpirun = shutil.which("mpirun", path=path)
+    where = "the [local] section of orca.ini"
+    if mpirun is None:
+        raise RuntimeError(
+            f"ORCA was asked for {n_cores} processes, but there is no 'mpirun' on "
+            "the PATH. Parallel ORCA needs OpenMPI 4.1: set 'library-path' in "
+            f"{where} to the 'lib' directory of an OpenMPI 4.1 installation, or "
+            "run ORCA on one core."
+        )
+    implementation, major = _mpirun_version(mpirun)
+    if implementation == "Open MPI" and major is not None and major >= 5:
+        raise RuntimeError(
+            f"ORCA was asked for {n_cores} processes, but the 'mpirun' it would "
+            f"use, {mpirun}, is Open MPI {major}. ORCA 6 needs OpenMPI 4.1; with "
+            "a newer one its workers abort in start-up. Set 'library-path' in "
+            f"{where} to the 'lib' directory of an OpenMPI 4.1 installation (its "
+            "'bin/mpirun' is then used), or run ORCA on one core."
+        )
 
 
 class ORCABase(seamm.Node):
