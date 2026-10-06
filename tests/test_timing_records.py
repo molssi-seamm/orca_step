@@ -111,3 +111,53 @@ def test_record_through_seamm_exec(tmp_path, monkeypatch):
     assert row["nbf"] == "24" and row["scf_cycles"] == "11"
     assert row["task"] == "gradient" and row["method_class"] == "global hybrid"
     assert row["terminated_normally"] == "1"
+
+
+def test_estimated_basis_functions():
+    from orca_step.orca_base import estimated_basis_functions
+
+    # Water at def2-SVP: 14 + 2 x 5 = 24, as the ORCA output says
+    assert estimated_basis_functions("def2-SVP", [8, 1, 1]) == 24
+    assert estimated_basis_functions("bse:def2-SVP", [8, 1, 1]) == 24
+    # A ghost centre carries its basis functions too
+    assert estimated_basis_functions("def2-SVP", [8, 1, 1, 8]) == 38
+    # An unknown basis falls back to a double-zeta count
+    assert estimated_basis_functions("no-such-basis", [6, 1, 1, 1, 1]) == 14 + 4 * 5
+    assert estimated_basis_functions("", [26]) == 32
+
+
+def test_predicted_seconds_uses_the_model_or_falls_back(monkeypatch):
+    from seamm_exec import timing_model
+
+    from orca_step.orca_base import estimated_seconds, predicted_seconds
+
+    line = "B3LYP def2-SVP TightSCF EnGrad"
+    seen = {}
+
+    def fake_predict(program, descriptors, ntasks=1, quantile=0.95, **kw):
+        seen.update(program=program, descriptors=descriptors, ntasks=ntasks, q=quantile)
+        return {"seconds": 42.0}
+
+    monkeypatch.setattr(timing_model, "predict", fake_predict)
+    t = predicted_seconds(
+        line, [8, 1, 1], model="DFT@B3LYP/def2-SVP", ntasks=4, charge=0, multiplicity=1
+    )
+    assert t == 42.0
+    d = seen["descriptors"]
+    assert seen["program"] == "orca" and seen["ntasks"] == 4 and seen["q"] == 0.5
+    assert d["task"] == "gradient" and d["method_class"] == "global hybrid"
+    assert d["method"] == "B3LYP" and d["basis"] == "def2-SVP"
+    assert d["nbf"] == 24 and d["n_electrons"] == 10 and d["n_atoms"] == 3
+
+    # No model: the hand estimate
+    monkeypatch.setattr(timing_model, "predict", lambda *a, **k: None)
+    assert predicted_seconds(line, [8, 1, 1], model="DFT@B3LYP/def2-SVP") == (
+        estimated_seconds(line, 3)
+    )
+
+    # A failure inside the model never stops the step
+    def boom(*a, **k):
+        raise RuntimeError("no")
+
+    monkeypatch.setattr(timing_model, "predict", boom)
+    assert predicted_seconds(line, [8, 1, 1]) == estimated_seconds(line, 3)

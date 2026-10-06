@@ -27,7 +27,7 @@ import seamm_exec
 from seamm_exec.evaluator import AnalysisError, check_properties, structure_data
 from seamm_util import Q_
 
-from .orca_base import _fingerprint, estimated_seconds
+from .orca_base import _fingerprint, predicted_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +175,15 @@ def get_task(
         files=files,
         return_files=["orca.out", "orca.err", "orca.engrad"],
         resources=resources,
-        estimated_seconds=estimated_seconds(text.splitlines()[0], len(symbols)),
+        estimated_seconds=predicted_seconds(
+            text.splitlines()[0].lstrip("! "),
+            [z for z, sym in zip(numbers, symbols) if not sym.endswith(":")],
+            ghost_numbers=[z for z, sym in zip(numbers, symbols) if sym.endswith(":")],
+            model=f"{method.split()[0]}/{basis}",
+            charge=charge,
+            multiplicity=multiplicity,
+            ntasks=ntasks,
+        ),
         fingerprint=_fingerprint(files, False),
         success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
     )
