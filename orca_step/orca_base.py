@@ -554,7 +554,7 @@ def _orca_2aim(config):
     """The command for orca_2aim, which lives beside the orca binary.
 
     ``{code_dir}`` when ``code`` is a path, so the command names no absolute
-    path; a bare ``orca`` (conda, a container) means orca_2aim is on the PATH.
+    path; a bare ``orca`` (e.g. from conda) means orca_2aim is on the PATH.
     """
     if Path(config["code"]).expanduser().parent != Path("."):
         return "{code_dir}/orca_2aim"

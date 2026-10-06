@@ -14,6 +14,7 @@ History
       task, SCF runs as the unit) and passes it when it records a run, so the model
       is fitted from the step's own description of its records rather than a table
       in seamm-exec.
+    * Removed the unused Docker option from the orca.ini template.
 
 2026.10.6 -- A clear error instead of ORCA's start-up abort with OpenMPI 5
     * Before a parallel run, the step checks the ``mpirun`` ORCA will start its
