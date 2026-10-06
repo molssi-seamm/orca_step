@@ -1,10 +1,10 @@
 =======
 History
 =======
-2026.10.7 -- The expected time of a run from the fitted cost model
+2026.10.6.1 -- The expected time of a run from the fitted cost model
     * A task's ``estimated_seconds`` -- the step's own runs and the model-chemistry
       tasks -- now comes from the cost model fitted to the timing records
-      (``seamm_exec.timing_model.predict``, seamm-exec 2026.10.7) when this
+      (``seamm_exec.timing_model.predict``, seamm-exec 2026.10.6.1) when this
       installation has one, with the basis functions counted from the Basis Set
       Exchange's definition of the basis and the atoms (ghosts included). The
       median is used, since the task layer adds its own margin. Without a model, or
