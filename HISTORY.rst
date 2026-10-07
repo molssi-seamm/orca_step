@@ -8,6 +8,7 @@ History
       energies, gradients and optimizations, with size limits per tier. A model
       fitted from a core sweep of it covers the labelling runs' class, task and
       sizes and the parallel exponent that production records cannot give.
+    * Requires Python 3.12 and seamm-exec 2026.10.6.1.
 
 2026.10.6.2 -- Guard against ORCA 6.1.1's wrong batched correlated gradients
     * ORCA 6.1.1 computes the RI-MP2 and double-hybrid gradient wrongly -- the energy

@@ -37,6 +37,7 @@ setup(
     # Which Python importable modules should be included when your package is
     # installed, handled automatically by setuptools. Use 'exclude' to prevent
     # some specific subpackage(s) from being added, if needed
+    python_requires='>=3.12',
     packages=find_packages(include=['orca_step']),
 
     # Optional include package data to ship with your package. Customize
@@ -73,8 +74,7 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.12',
     ],
     entry_points={
         'console_scripts': [
