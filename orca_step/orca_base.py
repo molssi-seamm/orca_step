@@ -384,6 +384,51 @@ TIMING_SPEC = {
 }
 
 
+#: The molecules the timing benchmark runs, by size (atoms): two orders of
+#: magnitude, each built from SMILES
+_BENCHMARK_MOLECULES = (
+    ("water", "O", 3),
+    ("ethanol", "CCO", 9),
+    ("toluene", "Cc1ccccc1", 15),
+    ("caffeine", "Cn1cnc2c1c(=O)n(C)c(=O)n2C", 24),
+    ("icosane", "C" * 20, 62),
+    ("hectane", "C" * 100, 302),
+)
+
+#: The step's timing benchmark (seamm_exec.timing_benchmark): the systems that
+#: drive ORCA's cost and the chemistries, tasks and variants to run on them,
+#: with the largest size (atoms) each runs at per tier. "quick" keeps the set
+#: to a few minutes on one node per core count; "full" to an hour or two. The
+#: MLFF labelling level, REVDSD-PBEP86-D4_2021/def2-TZVPPD, is in so that the records
+#: cover that class and those sizes, and every energy also runs as a gradient,
+#: the labelling runs' task.
+TIMING_BENCHMARK = {
+    "program": "orca",
+    "step": "ORCA",
+    "section": "orca-step",
+    "parallel": True,
+    "systems": [
+        {
+            "name": name,
+            "size": n_atoms,
+            "steps": [{"FromSMILESStep": {"smiles string": smiles}}],
+        }
+        for name, smiles, n_atoms in _BENCHMARK_MOLECULES
+    ],
+    "chemistries": {
+        "ORCA:DFT@B3LYP/def2-SVP": {"quick": 24, "full": 62},
+        "ORCA:HF@HF/def2-SVP": {"quick": 24, "full": 62},
+        "ORCA:MP2@MP2/def2-SVP": {"quick": 15, "full": 24},
+        "ORCA:DFT@REVDSD-PBEP86-D4_2021/def2-TZVPPD": {"quick": 15, "full": 24},
+    },
+    "tasks": {
+        "Energy": {"quick": 62, "full": 302},
+        "Optimization": {"quick": 9, "full": 15},
+    },
+    "variants": {"Energy": [{}, {"results": {"gradients": {}}}]},
+}
+
+
 def _record_kwargs():
     """``spec=`` for seamm-exec releases that take it (2026.10.6.1 on)."""
     return {"spec": TIMING_SPEC} if hasattr(seamm_exec, "TimingSpec") else {}

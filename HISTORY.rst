@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.7 -- The step declares its timing benchmark
+    * ``orca_step.TIMING_BENCHMARK`` tells seamm_exec's seed benchmark what to run
+      for ORCA: six molecules from water to a 300-atom alkane, B3LYP, HF and MP2 in
+      def2-SVP and the MLFF labelling level REVDSD-PBEP86-D4_2021/def2-TZVPPD, as
+      energies, gradients and optimizations, with size limits per tier. A model
+      fitted from a core sweep of it covers the labelling runs' class, task and
+      sizes and the parallel exponent that production records cannot give.
+
 2026.10.6.2 -- Guard against ORCA 6.1.1's wrong batched correlated gradients
     * ORCA 6.1.1 computes the RI-MP2 and double-hybrid gradient wrongly -- the energy
       is unchanged -- whenever its memory per process makes it split the gradient's
