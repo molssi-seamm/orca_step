@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.6.2 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.7 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=5c6efd6b"></script>
+    <script src="_static/documentation_options.js?v=0a3eb936"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Development Team" href="authors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.6.2" />
+  <meta name="docsearch:version" content="2026.10.7" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -510,6 +510,16 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.7 – The step declares its timing benchmark</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">orca_step.TIMING_BENCHMARK</span></code> tells seamm_exec’s seed benchmark what to run
+for ORCA: six molecules from water to a 300-atom alkane, B3LYP, HF and MP2 in
+def2-SVP and the MLFF labelling level REVDSD-PBEP86-D4_2021/def2-TZVPPD, as
+energies, gradients and optimizations, with size limits per tier. A model
+fitted from a core sweep of it covers the labelling runs’ class, task and
+sizes and the parallel exponent that production records cannot give.</p></li>
+<li><p>Requires Python 3.12 and seamm-exec 2026.10.6.1.</p></li>
+</ul>
+</dd>
 <dt>2026.10.6.2 – Guard against ORCA 6.1.1’s wrong batched correlated gradients</dt><dd><ul class="simple">
 <li><p>ORCA 6.1.1 computes the RI-MP2 and double-hybrid gradient wrongly – the energy
 is unchanged – whenever its memory per process makes it split the gradient’s
