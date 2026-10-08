@@ -1,6 +1,17 @@
 =======
 History
 =======
+2026.10.8.3 -- Bugfix: no single-copy warnings where ptrace is restricted
+    * Where the kernel restricts ptrace between processes (Yama ``ptrace_scope`` above
+      0, as on ChemAI), OpenMPI's single-copy shared memory (CMA) cannot work: it fell
+      back to copying through the shared segment, but wrote a long
+      "cma-permission-denied" warning to ``orca.err`` for every rank of a parallel
+      run. There a parallel run now asks for no single-copy mechanism
+      (``OMPI_MCA_btl_vader_single_copy_mechanism=none``, ``btl_sm_...`` with
+      OpenMPI 5), which is what OpenMPI used anyway, and the warnings are gone.
+      Where CMA is allowed (TinkerCliffs) it is left on, being faster for large
+      messages.
+
 2026.10.8.2 -- The neighbour count in the timing records; the whole basis name
     * Each timing record carries ``neighbours``, the mean number of atoms (ghosts
       included) within 8 Å of an atom, and ``TIMING_SPEC`` uses it as a size variable:

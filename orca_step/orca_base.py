@@ -771,6 +771,16 @@ def mpi_env(n_cores, config):
          shared memory anyway. The shared-memory transport is ``vader`` in
          OpenMPI 4 (which ORCA 6 requires) and ``sm`` in 5.
 
+         Its single-copy mechanism, CMA, reads another process's memory and
+         so needs ptrace permission. Where the kernel's Yama setting forbids
+         that between sibling processes (``ptrace_scope`` above 0, e.g.
+         ChemAI), OpenMPI falls back to copying through the shared segment
+         anyway, but writes a long "cma-permission-denied" warning to
+         ``orca.err`` for every rank. There we ask for no single-copy
+         mechanism, which is what OpenMPI would use, without the warning.
+         Where CMA is allowed (TinkerCliffs) it is left on: it is faster for
+         large messages. The check runs where ORCA runs, on the compute node.
+
     The OpenMPI library directory is part of *how to run ORCA*, so it comes
     from the executor config (~/SEAMM/orca.ini), not the user-facing
     [orca-step] options. configparser lower-cases keys.
@@ -816,7 +826,25 @@ def mpi_env(n_cores, config):
         env["OMPI_MCA_pml"] = "ob1"
         env["OMPI_MCA_btl"] = f"self,{_shared_memory_btl(library_path)}"
         env["OMPI_MCA_osc"] = "^ucx"
+        if not _cma_allowed():
+            btl = _shared_memory_btl(library_path)
+            env[f"OMPI_MCA_btl_{btl}_single_copy_mechanism"] = "none"
     return env, lib_prefix
+
+
+YAMA_PTRACE_SCOPE = "/proc/sys/kernel/yama/ptrace_scope"
+
+
+def _cma_allowed(path=None):
+    """Whether OpenMPI's single-copy shared memory (CMA) may work here: CMA
+    needs ptrace permission between the ranks, which Yama forbids for
+    non-descendant processes when ``ptrace_scope`` is above 0. Hosts without
+    Yama (macOS, kernels without it) are taken to allow it."""
+    try:
+        with open(path or YAMA_PTRACE_SCOPE) as fd:
+            return int(fd.read().strip() or 0) == 0
+    except (OSError, ValueError):
+        return True
 
 
 def _shared_memory_btl(library_path):

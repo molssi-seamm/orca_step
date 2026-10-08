@@ -2869,6 +2869,30 @@ def test_orca_mdi_bse_basis_with_a_real_orca(tmp_path):
     assert e_bse is not None and abs(e_bse - e_orca) < 1e-6
 
 
+def test_mpi_env_single_copy_follows_ptrace_scope(monkeypatch, tmp_path):
+    """Where Yama forbids ptrace between the ranks, CMA single-copy cannot work
+    and OpenMPI floods orca.err with warnings (ChemAI, 2026-10-08): ask for no
+    single-copy mechanism there, and leave it alone where CMA is allowed."""
+    from orca_step import orca_base
+
+    scope = tmp_path / "ptrace_scope"
+    monkeypatch.setattr(orca_base, "YAMA_PTRACE_SCOPE", str(scope))
+
+    def env_for(value, n_cores=4):
+        if value is None:
+            scope.unlink(missing_ok=True)
+        else:
+            scope.write_text(f"{value}\n")
+        return orca_base.mpi_env(n_cores, {"installation": "modules"})[0]
+
+    key = "OMPI_MCA_btl_vader_single_copy_mechanism"
+    assert env_for(1)[key] == "none"
+    assert env_for(2)[key] == "none"
+    assert key not in env_for(0)
+    assert key not in env_for(None)  # no Yama: macOS
+    assert key not in env_for(1, n_cores=1)  # serial: no MPI at all
+
+
 def test_mpi_env_uses_shared_memory_for_parallel_runs(monkeypatch, tmp_path):
     """A parallel ORCA run is always on one node, so it uses shared memory and
     not InfiniBand: on a busy InfiniBand node UCX runs out of queue pairs and

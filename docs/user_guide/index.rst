@@ -720,6 +720,15 @@ ucx cannot be selected``. On a machine without InfiniBand the setting changes
 nothing. It is set under SLURM as well, and with OpenMPI 5 the transport is
 called ``sm``.
 
+Some Linux machines restrict ``ptrace`` between processes (the kernel's Yama
+setting, ``/proc/sys/kernel/yama/ptrace_scope`` above 0). There OpenMPI cannot
+use its single-copy shared memory (CMA). It falls back to copying through the
+shared segment, but it also writes a long "cma-permission-denied" warning for
+every process. On such a machine the step also sets
+``OMPI_MCA_btl_vader_single_copy_mechanism=none``, which keeps the fallback
+and drops the warnings. Where ``ptrace_scope`` is 0 the faster single copy
+stays on. The step checks the setting on the machine where ORCA runs.
+
 **Environment-modules clusters.** If ORCA is provided via a cluster's
 ``module`` system rather than a fixed path you manage yourself, use
 ``installation = modules`` instead of ``local``, naming the module(s) to
