@@ -420,6 +420,22 @@ TIMING_BENCHMARK = {
         "ORCA:HF@HF/def2-SVP": {"quick": 24, "full": 62},
         "ORCA:MP2@MP2/def2-SVP": {"quick": 15, "full": 24},
         "ORCA:DFT@REVDSD-PBEP86-D4_2021/def2-TZVPPD": {"quick": 15, "full": 24},
+        # A basis-set ladder: the same molecules (water, ethanol, toluene) from
+        # def2-SVP to def2-QZVPPD at one electron count each, with a hybrid and
+        # the double hybrid, so a fit can tell the cost of basis functions from
+        # that of electrons, and of the basis from that of the method. Energies
+        # and gradients only.
+        **{
+            f"ORCA:DFT@{method}/{basis}": {
+                "quick": 15,
+                "full": 24,
+                "tasks": ["Energy"],
+            }
+            for method in ("B3LYP", "REVDSD-PBEP86-D4_2021")
+            for basis in ("def2-SVP", "def2-TZVP", "def2-TZVPPD", "def2-QZVPPD")
+            if (method, basis)
+            not in (("B3LYP", "def2-SVP"), ("REVDSD-PBEP86-D4_2021", "def2-TZVPPD"))
+        },
     },
     "tasks": {
         "Energy": {"quick": 62, "full": 302},

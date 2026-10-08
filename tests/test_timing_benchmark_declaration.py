@@ -16,6 +16,11 @@ def test_declaration_shape():
     for limits in (*d["chemistries"].values(), *d["tasks"].values()):
         assert limits["quick"] <= limits["full"]
     assert {"results": {"gradients": {}}} in d["variants"]["Energy"]
+    # The basis-set ladder: SVP to QZVPPD for a hybrid and the double hybrid
+    for method in ("B3LYP", "REVDSD-PBEP86-D4_2021"):
+        for basis in ("def2-SVP", "def2-TZVP", "def2-TZVPPD", "def2-QZVPPD"):
+            assert f"ORCA:DFT@{method}/{basis}" in d["chemistries"]
+    assert d["chemistries"]["ORCA:DFT@B3LYP/def2-QZVPPD"]["tasks"] == ["Energy"]
 
 
 def test_spec_builds():
@@ -24,7 +29,9 @@ def test_spec_builds():
         pytest.skip("seamm_exec without benchmark discovery")
     assert tb.declarations(refresh=True).get("orca") is orca_step.TIMING_BENCHMARK
     text = tb.build_spec(("orca",), "quick")
-    assert (
-        text.count("REVDSD-PBEP86-D4_2021") == 8
-    )  # water..toluene x (energy, gradient) + 2 opts
+    # TZVPPD: water..toluene x (energy, gradient) + 2 optimizations = 8; the
+    # ladder's SVP, TZVP and QZVPPD: 3 x 3 molecules x (energy, gradient) = 18
+    # (seamm-exec before 2026.10.7.2 also optimizes at the ladder's levels)
+    assert text.count("REVDSD-PBEP86-D4_2021") >= 26
+    assert text.count("def2-QZVPPD") >= 12
     assert "Optimization" in text
