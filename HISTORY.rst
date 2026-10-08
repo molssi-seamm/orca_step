@@ -9,7 +9,7 @@ History
       run. There a parallel run now asks for no single-copy mechanism
       (``OMPI_MCA_btl_vader_single_copy_mechanism=none``, ``btl_sm_...`` with
       OpenMPI 5), which is what OpenMPI used anyway, and the warnings are gone.
-      Where CMA is allowed (TinkerCliffs, Owl) it is left on, being faster for large
+      Where CMA is allowed (TinkerCliffs) it is left on, being faster for large
       messages.
 
 2026.10.8.2 -- The neighbour count in the timing records; the whole basis name
