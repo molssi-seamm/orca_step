@@ -375,7 +375,9 @@ def gradient_batching_problem(output_text, keyword_line=""):
 #: data): the size variables, the method class, the task and the unit count.
 #: Written beside the records when a run is recorded.
 TIMING_SPEC = {
-    "size": ["nbf", "n_electrons", "n_atoms"],
+    # neighbours: how crowded the structure is (seamm_exec.neighbour_count), which
+    # decides how many integrals survive prescreening as well as the size does
+    "size": ["nbf", "neighbours", "n_electrons", "n_atoms"],
     "klass": ["method_class"],
     "task": "task",
     "units": "scf_runs",
@@ -577,7 +579,9 @@ def timing_descriptors(
     method = basis = ""
     if model:
         level = model.split("@", 1)[-1]
-        method, _, basis = level.partition("/")
+        # The basis follows the last "/": a method's ORCA keyword may contain
+        # one (REVDSD-PBEP86-D4/2021)
+        method, _, basis = level.rpartition("/")
     d["task"] = task_kind(keyword_line)
     d["method_class"] = method_class(method, keyword_line)
     d["method"] = method
@@ -646,6 +650,26 @@ def timing_descriptors(
             d["code_seconds"] = None
         d["terminated_normally"] = "ORCA TERMINATED NORMALLY" in text
     return d
+
+
+def _neighbours(configuration, atom_indices=None):
+    """``{"neighbours": mean atoms within 8 Å}`` of the centres ORCA was given,
+    ghosts included (they carry basis functions), for the timing record; empty
+    with a seamm-exec that cannot count them, or on any problem."""
+    count = getattr(seamm_exec, "neighbour_count", None)
+    if count is None:
+        return {}
+    try:
+        from seamm_exec.evaluator import structure_data
+
+        data = structure_data(configuration)
+        xyz = data["coordinates"]
+        if atom_indices is not None:
+            xyz = [xyz[i] for i in atom_indices]
+        n = count(xyz, data.get("cell"))
+        return {} if n is None else {"neighbours": round(n, 2)}
+    except Exception:
+        return {}
 
 
 def _heavy_atoms(configuration, atom_indices=None, ghost_atoms=None):
@@ -1161,6 +1185,7 @@ class ORCABase(seamm.Node):
                 charge=charge,
                 multiplicity=multiplicity,
             )
+            descriptors.update(_neighbours(configuration, atom_indices))
             seamm_exec.record_task_timing(task, result, descriptors, **_record_kwargs())
         except Exception as e:  # pragma: no cover - must never stop the step
             logger.warning(f"Could not record the timing of the ORCA run: {e}")
