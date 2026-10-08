@@ -2867,3 +2867,33 @@ def test_orca_mdi_bse_basis_with_a_real_orca(tmp_path):
     ).stdout
     e_orca = mod.parse_energy(out)
     assert e_bse is not None and abs(e_bse - e_orca) < 1e-6
+
+
+def test_mpi_env_uses_shared_memory_for_parallel_runs(monkeypatch, tmp_path):
+    """A parallel ORCA run is always on one node, so it uses shared memory and
+    not InfiniBand: on a busy InfiniBand node UCX runs out of queue pairs and
+    runs die at random (Owl, 2026-10-08). Set under SLURM too."""
+    from orca_step import orca_base
+
+    for slurm in (False, True):
+        if slurm:
+            monkeypatch.setenv("SLURM_JOB_ID", "123")
+        else:
+            monkeypatch.delenv("SLURM_JOB_ID", raising=False)
+        env, _ = orca_base.mpi_env(4, {"installation": "modules"})
+        assert env["OMPI_MCA_pml"] == "ob1"
+        assert env["OMPI_MCA_btl"] == "self,vader"
+        assert env["OMPI_MCA_osc"] == "^ucx"
+    env, _ = orca_base.mpi_env(1, {"installation": "modules"})
+    assert not any(k.startswith("OMPI_MCA_") for k in env)
+
+    # OpenMPI 5 calls the shared-memory transport "sm"
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    (bindir / "mpirun").write_text("")
+    monkeypatch.setattr(orca_base, "_mpirun_version", lambda m: ("Open MPI", 5))
+    env, _ = orca_base.mpi_env(4, {"library-path": str(tmp_path / "lib")})
+    assert env["OMPI_MCA_btl"] == "self,sm"
+    monkeypatch.setattr(orca_base, "_mpirun_version", lambda m: ("Open MPI", 4))
+    env, _ = orca_base.mpi_env(4, {"library-path": str(tmp_path / "lib")})
+    assert env["OMPI_MCA_btl"] == "self,vader"
