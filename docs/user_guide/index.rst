@@ -60,7 +60,9 @@ energy but not forces, an optimization, or frequencies, and the step stops
 with an error if you ask for any of those. Energies of formation for a DLPNO
 double hybrid use the canonical functional's atomic reference energies (DLPNO
 changes an isolated atom's energy by less than 0.07 kJ/mol, and cannot treat
-H at all), and the thermochemistry report says so.
+H at all), and the thermochemistry report says so. Steps that put ORCA
+energies on the DfE0 scale themselves, such as the MBE step, get the same
+references through the step's ``thermochemistry_reference`` hook.
 
 Basis set
 ---------
