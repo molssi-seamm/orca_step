@@ -710,6 +710,16 @@ come from two files with different jobs:
 
 If you do not have a matching OpenMPI, set ``ncores = 1`` to run serially.
 
+**Shared memory, not the network.** A parallel ORCA run is always on one node,
+so the step tells OpenMPI to use shared memory only (``OMPI_MCA_pml=ob1``,
+``OMPI_MCA_btl=self,vader``, ``OMPI_MCA_osc=^ucx``). On a cluster with
+InfiniBand, OpenMPI otherwise opens queue pairs on the adapter even for a
+single-node run, and when many ORCA jobs share a node the adapter runs out of
+them: runs then die at random with ``UCX ERROR ... Remote I/O error`` or ``PML
+ucx cannot be selected``. On a machine without InfiniBand the setting changes
+nothing. It is set under SLURM as well, and with OpenMPI 5 the transport is
+called ``sm``.
+
 **Environment-modules clusters.** If ORCA is provided via a cluster's
 ``module`` system rather than a fixed path you manage yourself, use
 ``installation = modules`` instead of ``local``, naming the module(s) to

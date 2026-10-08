@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.8 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.8.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=e2241af4"></script>
+    <script src="_static/documentation_options.js?v=ac5092dc"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.8" />
+  <meta name="docsearch:version" content="2026.10.8.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,17 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.8.1 – Bugfix: parallel ORCA on InfiniBand clusters uses shared memory</dt><dd><ul class="simple">
+<li><p>A parallel ORCA run uses OpenMPI’s shared-memory transport only
+(<code class="docutils literal notranslate"><span class="pre">OMPI_MCA_pml=ob1</span></code>, <code class="docutils literal notranslate"><span class="pre">OMPI_MCA_btl=self,vader</span></code>, <code class="docutils literal notranslate"><span class="pre">OMPI_MCA_osc=^ucx</span></code>). ORCA
+always runs on one node, but on a cluster with InfiniBand OpenMPI opened queue
+pairs on the adapter even so, and when many ORCA jobs shared a node the
+adapter ran out of them: runs died at random, at start-up or in mid-run, with
+“UCX ERROR … Remote I/O error” and “PML ucx cannot be selected” (Owl). The
+setting changes nothing on machines without InfiniBand. With OpenMPI 5 the
+transport is named <code class="docutils literal notranslate"><span class="pre">sm</span></code>.</p></li>
+</ul>
+</dd>
 <dt>2026.10.8 – A basis-set ladder in the timing benchmark</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">TIMING_BENCHMARK</span></code> adds a basis-set ladder: water, ethanol and toluene from
 def2-SVP through def2-TZVP and def2-TZVPPD to def2-QZVPPD, with B3LYP and the

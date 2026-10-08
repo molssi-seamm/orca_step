@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.8 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.8.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=e2241af4"></script>
+    <script src="../../_static/documentation_options.js?v=ac5092dc"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.8" />
+  <meta name="docsearch:version" content="2026.10.8.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1247,6 +1247,20 @@
 <span class="sd">         same ``SLURM_JOB_ID`` check seamm_exec's ``in_situ`` auto-</span>
 <span class="sd">         detection and ``computational_environment()`` use.</span>
 
+<span class="sd">      4. Transport: shared memory only. SEAMM always runs ORCA on one node</span>
+<span class="sd">         (ORCA starts its own ``mpirun`` from ``%pal``, with no hostfile), yet</span>
+<span class="sd">         OpenMPI on a cluster with InfiniBand opens queue pairs on the adapter</span>
+<span class="sd">         even for a single-node run, through UCX. When many ORCA jobs share a</span>
+<span class="sd">         node -- a batch of labels, a task worker's pool -- the adapter runs</span>
+<span class="sd">         out of them and runs die at random, at start-up or in mid-run:</span>
+<span class="sd">         "UCX ERROR mlx5dv_devx_obj_create(QP) failed ... Remote I/O error",</span>
+<span class="sd">         "PML ucx cannot be selected" (Owl, 2026-10-08). So a parallel run uses</span>
+<span class="sd">         the ob1 messaging layer over shared memory and self, and no UCX for</span>
+<span class="sd">         one-sided communication. Set under SLURM too, since that is where it</span>
+<span class="sd">         happens; a no-op on hosts without InfiniBand, where OpenMPI chooses</span>
+<span class="sd">         shared memory anyway. The shared-memory transport is ``vader`` in</span>
+<span class="sd">         OpenMPI 4 (which ORCA 6 requires) and ``sm`` in 5.</span>
+
 <span class="sd">    The OpenMPI library directory is part of *how to run ORCA*, so it comes</span>
 <span class="sd">    from the executor config (~/SEAMM/orca.ini), not the user-facing</span>
 <span class="sd">    [orca-step] options. configparser lower-cases keys.</span>
@@ -1288,7 +1302,24 @@
             <span class="n">lib_prefix</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"export PATH=</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">bindir</span><span class="p">))</span><span class="si">}</span><span class="s2">:$PATH;"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s2">"SLURM_JOB_ID"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
         <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_hwloc_base_binding_policy"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"none"</span>
+    <span class="k">if</span> <span class="n">n_cores</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_pml"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"ob1"</span>
+        <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_btl"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"self,</span><span class="si">{</span><span class="n">_shared_memory_btl</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_osc"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"^ucx"</span>
     <span class="k">return</span> <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_shared_memory_btl</span><span class="p">(</span><span class="n">library_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""OpenMPI's shared-memory transport: ``vader`` in OpenMPI 4 (which ORCA 6</span>
+<span class="sd">    requires, and the default when the ``mpirun`` cannot be seen beforehand, as</span>
+<span class="sd">    with ``installation = modules``), ``sm`` in OpenMPI 5."""</span>
+    <span class="k">if</span> <span class="n">library_path</span><span class="p">:</span>
+        <span class="n">mpirun</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"bin"</span> <span class="o">/</span> <span class="s2">"mpirun"</span>
+        <span class="k">if</span> <span class="n">mpirun</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">implementation</span><span class="p">,</span> <span class="n">major</span> <span class="o">=</span> <span class="n">_mpirun_version</span><span class="p">(</span><span class="n">mpirun</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">implementation</span> <span class="o">==</span> <span class="s2">"Open MPI"</span> <span class="ow">and</span> <span class="n">major</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">major</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">"sm"</span>
+    <span class="k">return</span> <span class="s2">"vader"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_mpirun_version</span><span class="p">(</span><span class="n">mpirun</span><span class="p">):</span>
