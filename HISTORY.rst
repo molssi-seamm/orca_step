@@ -1,13 +1,13 @@
 =======
 History
 =======
-2026.10.7.1 -- A basis-set ladder in the timing benchmark
+2026.10.8 -- A basis-set ladder in the timing benchmark
     * ``TIMING_BENCHMARK`` adds a basis-set ladder: water, ethanol and toluene from
       def2-SVP through def2-TZVP and def2-TZVPPD to def2-QZVPPD, with B3LYP and the
       double hybrid REVDSD-PBEP86-D4_2021, energies and gradients. At one electron
       count each the basis grows fourfold, so a fitted cost model can tell the
       cost of basis functions from that of electrons, and of a larger basis from
-      that of a costlier method. Needs seamm-exec 2026.10.7.2 to leave out
+      that of a costlier method. Needs seamm-exec 2026.10.8 to leave out
       optimizations at these levels.
 
 2026.10.7 -- The step declares its timing benchmark
