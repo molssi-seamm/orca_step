@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.8.2 -- The neighbour count in the timing records; the whole basis name
+    * Each timing record carries ``neighbours``, the mean number of atoms (ghosts
+      included) within 8 Å of an atom, and ``TIMING_SPEC`` uses it as a size variable:
+      how crowded a structure is decides how many integrals survive prescreening as
+      well as its size does. Needs seamm-exec 2026.10.8.1.
+    * Bugfix: a functional whose ORCA keyword contains "/" (REVDSD-PBEP86-D4/2021) put
+      part of its name in the record's basis ("2021/def2-TZVPPD").
+
 2026.10.8.1 -- Bugfix: parallel ORCA on InfiniBand clusters uses shared memory
     * A parallel ORCA run uses OpenMPI's shared-memory transport only
       (``OMPI_MCA_pml=ob1``, ``OMPI_MCA_btl=self,vader``, ``OMPI_MCA_osc=^ucx``). ORCA

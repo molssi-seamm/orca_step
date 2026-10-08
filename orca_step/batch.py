@@ -242,7 +242,12 @@ def _record_timing(task, result, out, model_chemistry, configuration, options):
     try:
         from seamm_exec.evaluator import mdi_method_and_basis
 
-        from .orca_base import _heavy_atoms, _record_kwargs, timing_descriptors
+        from .orca_base import (
+            _heavy_atoms,
+            _neighbours,
+            _record_kwargs,
+            timing_descriptors,
+        )
         from .orca_step import mc_method_unalias
 
         method, basis = mdi_method_and_basis(model_chemistry)
@@ -260,6 +265,7 @@ def _record_timing(task, result, out, model_chemistry, configuration, options):
             charge=options.get("charge", configuration.charge),
             multiplicity=options.get("multiplicity", configuration.spin_multiplicity),
         )
+        descriptors.update(_neighbours(configuration, atom_indices))
         seamm_exec.record_task_timing(task, result, descriptors, **_record_kwargs())
     except Exception as e:  # pragma: no cover
         logger.warning(f"Could not record the timing of ORCA task {task.key}: {e}")

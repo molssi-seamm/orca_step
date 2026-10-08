@@ -35,3 +35,25 @@ def test_spec_builds():
     assert text.count("REVDSD-PBEP86-D4_2021") >= 26
     assert text.count("def2-QZVPPD") >= 12
     assert "Optimization" in text
+
+
+def test_records_carry_neighbours_and_the_whole_basis():
+    """The timing record gets the structure's neighbour count, and a functional
+    whose ORCA keyword has a "/" (REVDSD-PBEP86-D4/2021) no longer spills into
+    the basis."""
+    import seamm_exec
+
+    from orca_step.orca_base import _neighbours, timing_descriptors
+
+    if not hasattr(seamm_exec, "neighbour_count"):
+        pytest.skip("seamm_exec without neighbour_count")
+    g = seamm_exec.Geometry([6] * 40, [(1.5 * i, 0.0, 0.0) for i in range(40)])
+    assert 9.0 < _neighbours(g)["neighbours"] < 10.0
+    assert _neighbours(g, atom_indices=[0, 1])["neighbours"] == 1.0
+    d = timing_descriptors(
+        "! REVDSD-PBEP86-D4/2021 def2-TZVPPD EnGrad",
+        None,
+        model="DFT@REVDSD-PBEP86-D4/2021/def2-TZVPPD",
+    )
+    assert d["basis"] == "def2-TZVPPD" and d["method"] == "REVDSD-PBEP86-D4/2021"
+    assert "neighbours" in orca_step.TIMING_SPEC["size"]
