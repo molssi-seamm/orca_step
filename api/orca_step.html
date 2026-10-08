@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.8.3 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.8.4 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=3fd09caf"></script>
+    <script src="../_static/documentation_options.js?v=f4590c62"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.8.3" />
+  <meta name="docsearch:version" content="2026.10.8.4" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1567,6 +1567,21 @@ batch half of the Model Chemistry contract. See <a class="reference internal" hr
 <span class="sig-name descname"><span class="pre">my_description</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'description':</span> <span class="pre">'An</span> <span class="pre">interface</span> <span class="pre">for</span> <span class="pre">ORCA',</span> <span class="pre">'group':</span> <span class="pre">'Simulations',</span> <span class="pre">'name':</span> <span class="pre">'ORCA'}</span></span><a class="headerlink" href="#orca_step.orca_step.ORCAStep.my_description" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.thermochemistry_reference">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">thermochemistry_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_chemistry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.thermochemistry_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.thermochemistry_reference" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(code,</span> <span class="pre">method,</span> <span class="pre">settings)</span></code> under which SEAMM’s thermochemistry
+database holds the atomic references for a model chemistry – the same
+lookup the Energy sub-step’s own DfE0 uses, for steps such as the MBE
+step that put ORCA energies on the DfE0 scale.</p>
+<p>A DLPNO double hybrid uses its canonical parent’s atoms: DLPNO cannot
+run H at all (“no pairs to be correlated”), the DLPNO effect on an
+isolated atom is under 0.07 kJ/mol, and a molecule’s DLPNO error is not
+a sum of atomic ones. The method is in its model-chemistry spelling
+(<code class="docutils literal notranslate"><span class="pre">/</span></code> as <code class="docutils literal notranslate"><span class="pre">_</span></code>), as the reference runs were tagged, and the basis
+without a <code class="docutils literal notranslate"><span class="pre">bse:</span></code> prefix.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py function">
@@ -2049,6 +2064,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_model_chemistry_options"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_model_chemistry_options()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_task"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_task()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.my_description"><code class="docutils literal notranslate"><span class="pre">ORCAStep.my_description</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.thermochemistry_reference"><code class="docutils literal notranslate"><span class="pre">ORCAStep.thermochemistry_reference()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.dlpno_parent"><code class="docutils literal notranslate"><span class="pre">dlpno_parent()</span></code></a></li>

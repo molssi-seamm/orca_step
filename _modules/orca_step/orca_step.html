@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.10.8.3 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.10.8.4 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3fd09caf"></script>
+    <script src="../../_static/documentation_options.js?v=f4590c62"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.8.3" />
+  <meta name="docsearch:version" content="2026.10.8.4" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -804,6 +804,30 @@
         <span class="kn">from</span><span class="w"> </span><span class="nn">.batch</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze_task</span>
 
         <span class="k">return</span> <span class="n">analyze_task</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ORCAStep.thermochemistry_reference">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.ORCAStep.thermochemistry_reference">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">thermochemistry_reference</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""``(code, method, settings)`` under which SEAMM's thermochemistry</span>
+<span class="sd">        database holds the atomic references for a model chemistry -- the same</span>
+<span class="sd">        lookup the Energy sub-step's own DfE0 uses, for steps such as the MBE</span>
+<span class="sd">        step that put ORCA energies on the DfE0 scale.</span>
+
+<span class="sd">        A DLPNO double hybrid uses its canonical parent's atoms: DLPNO cannot</span>
+<span class="sd">        run H at all ("no pairs to be correlated"), the DLPNO effect on an</span>
+<span class="sd">        isolated atom is under 0.07 kJ/mol, and a molecule's DLPNO error is not</span>
+<span class="sd">        a sum of atomic ones. The method is in its model-chemistry spelling</span>
+<span class="sd">        (``/`` as ``_``), as the reference runs were tagged, and the basis</span>
+<span class="sd">        without a ``bse:`` prefix.</span>
+<span class="sd">        """</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">mc_method_unalias</span><span class="p">(</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">lookup</span> <span class="o">=</span> <span class="n">mc_method_alias</span><span class="p">(</span><span class="n">dlpno_parent</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">or</span> <span class="n">method</span><span class="p">)</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"basis"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">basis</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"bse:"</span><span class="p">):</span>
+            <span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="s2">"orca"</span><span class="p">,</span> <span class="n">lookup</span><span class="p">,</span> <span class="n">basis</span></div>
 
 
 <div class="viewcode-block" id="ORCAStep.get_executor_config">
