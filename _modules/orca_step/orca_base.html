@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.8.2 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.8.3 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=9ba818b6"></script>
+    <script src="../../_static/documentation_options.js?v=3fd09caf"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.8.2" />
+  <meta name="docsearch:version" content="2026.10.8.3" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1285,6 +1285,16 @@
 <span class="sd">         shared memory anyway. The shared-memory transport is ``vader`` in</span>
 <span class="sd">         OpenMPI 4 (which ORCA 6 requires) and ``sm`` in 5.</span>
 
+<span class="sd">         Its single-copy mechanism, CMA, reads another process's memory and</span>
+<span class="sd">         so needs ptrace permission. Where the kernel's Yama setting forbids</span>
+<span class="sd">         that between sibling processes (``ptrace_scope`` above 0, e.g.</span>
+<span class="sd">         ChemAI), OpenMPI falls back to copying through the shared segment</span>
+<span class="sd">         anyway, but writes a long "cma-permission-denied" warning to</span>
+<span class="sd">         ``orca.err`` for every rank. There we ask for no single-copy</span>
+<span class="sd">         mechanism, which is what OpenMPI would use, without the warning.</span>
+<span class="sd">         Where CMA is allowed (TinkerCliffs) it is left on: it is faster for</span>
+<span class="sd">         large messages. The check runs where ORCA runs, on the compute node.</span>
+
 <span class="sd">    The OpenMPI library directory is part of *how to run ORCA*, so it comes</span>
 <span class="sd">    from the executor config (~/SEAMM/orca.ini), not the user-facing</span>
 <span class="sd">    [orca-step] options. configparser lower-cases keys.</span>
@@ -1330,7 +1340,25 @@
         <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_pml"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"ob1"</span>
         <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_btl"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"self,</span><span class="si">{</span><span class="n">_shared_memory_btl</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
         <span class="n">env</span><span class="p">[</span><span class="s2">"OMPI_MCA_osc"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"^ucx"</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_cma_allowed</span><span class="p">():</span>
+            <span class="n">btl</span> <span class="o">=</span> <span class="n">_shared_memory_btl</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span>
+            <span class="n">env</span><span class="p">[</span><span class="sa">f</span><span class="s2">"OMPI_MCA_btl_</span><span class="si">{</span><span class="n">btl</span><span class="si">}</span><span class="s2">_single_copy_mechanism"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"none"</span>
     <span class="k">return</span> <span class="n">env</span><span class="p">,</span> <span class="n">lib_prefix</span>
+
+
+<span class="n">YAMA_PTRACE_SCOPE</span> <span class="o">=</span> <span class="s2">"/proc/sys/kernel/yama/ptrace_scope"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cma_allowed</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whether OpenMPI's single-copy shared memory (CMA) may work here: CMA</span>
+<span class="sd">    needs ptrace permission between the ranks, which Yama forbids for</span>
+<span class="sd">    non-descendant processes when ``ptrace_scope`` is above 0. Hosts without</span>
+<span class="sd">    Yama (macOS, kernels without it) are taken to allow it."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="ow">or</span> <span class="n">YAMA_PTRACE_SCOPE</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_shared_memory_btl</span><span class="p">(</span><span class="n">library_path</span><span class="p">):</span>
