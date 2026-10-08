@@ -733,6 +733,20 @@ def mpi_env(n_cores, config):
          same ``SLURM_JOB_ID`` check seamm_exec's ``in_situ`` auto-
          detection and ``computational_environment()`` use.
 
+      4. Transport: shared memory only. SEAMM always runs ORCA on one node
+         (ORCA starts its own ``mpirun`` from ``%pal``, with no hostfile), yet
+         OpenMPI on a cluster with InfiniBand opens queue pairs on the adapter
+         even for a single-node run, through UCX. When many ORCA jobs share a
+         node -- a batch of labels, a task worker's pool -- the adapter runs
+         out of them and runs die at random, at start-up or in mid-run:
+         "UCX ERROR mlx5dv_devx_obj_create(QP) failed ... Remote I/O error",
+         "PML ucx cannot be selected" (Owl, 2026-10-08). So a parallel run uses
+         the ob1 messaging layer over shared memory and self, and no UCX for
+         one-sided communication. Set under SLURM too, since that is where it
+         happens; a no-op on hosts without InfiniBand, where OpenMPI chooses
+         shared memory anyway. The shared-memory transport is ``vader`` in
+         OpenMPI 4 (which ORCA 6 requires) and ``sm`` in 5.
+
     The OpenMPI library directory is part of *how to run ORCA*, so it comes
     from the executor config (~/SEAMM/orca.ini), not the user-facing
     [orca-step] options. configparser lower-cases keys.
@@ -774,7 +788,24 @@ def mpi_env(n_cores, config):
             lib_prefix.insert(0, f"export PATH={shlex.quote(str(bindir))}:$PATH;")
     if n_cores > 1 and "SLURM_JOB_ID" not in os.environ:
         env["OMPI_MCA_hwloc_base_binding_policy"] = "none"
+    if n_cores > 1:
+        env["OMPI_MCA_pml"] = "ob1"
+        env["OMPI_MCA_btl"] = f"self,{_shared_memory_btl(library_path)}"
+        env["OMPI_MCA_osc"] = "^ucx"
     return env, lib_prefix
+
+
+def _shared_memory_btl(library_path):
+    """OpenMPI's shared-memory transport: ``vader`` in OpenMPI 4 (which ORCA 6
+    requires, and the default when the ``mpirun`` cannot be seen beforehand, as
+    with ``installation = modules``), ``sm`` in OpenMPI 5."""
+    if library_path:
+        mpirun = Path(library_path).expanduser().parent / "bin" / "mpirun"
+        if mpirun.is_file():
+            implementation, major = _mpirun_version(mpirun)
+            if implementation == "Open MPI" and major is not None and major >= 5:
+                return "sm"
+    return "vader"
 
 
 def _mpirun_version(mpirun):

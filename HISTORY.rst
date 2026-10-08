@@ -1,6 +1,16 @@
 =======
 History
 =======
+2026.10.8.1 -- Bugfix: parallel ORCA on InfiniBand clusters uses shared memory
+    * A parallel ORCA run uses OpenMPI's shared-memory transport only
+      (``OMPI_MCA_pml=ob1``, ``OMPI_MCA_btl=self,vader``, ``OMPI_MCA_osc=^ucx``). ORCA
+      always runs on one node, but on a cluster with InfiniBand OpenMPI opened queue
+      pairs on the adapter even so, and when many ORCA jobs shared a node the
+      adapter ran out of them: runs died at random, at start-up or in mid-run, with
+      "UCX ERROR ... Remote I/O error" and "PML ucx cannot be selected" (Owl). The
+      setting changes nothing on machines without InfiniBand. With OpenMPI 5 the
+      transport is named ``sm``.
+
 2026.10.8 -- A basis-set ladder in the timing benchmark
     * ``TIMING_BENCHMARK`` adds a basis-set ladder: water, ethanol and toluene from
       def2-SVP through def2-TZVP and def2-TZVPPD to def2-QZVPPD, with B3LYP and the
