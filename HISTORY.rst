@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.10.8.4 -- DfE0 references for DLPNO double hybrids in other steps
+    * ``ORCAStep.thermochemistry_reference(model_chemistry)`` says under which code,
+      method and basis the thermochemistry database holds the atomic references for a
+      model chemistry: the lookup the Energy sub-step's own DfE0 uses, with a DLPNO
+      double hybrid using its canonical parent's atoms. The MBE step uses it for its
+      DfE0 energy offsets, so a DLPNO high level is no longer refused there; for
+      ethylene carbonate at DLPNO-REVDSD-PBEP86-D4/2021/def2-QZVPPD the offset is the
+      canonical functional's, 9300.36249 eV.
+
 2026.10.8.3 -- Bugfix: no single-copy warnings where ptrace is restricted
     * Where the kernel restricts ptrace between processes (Yama ``ptrace_scope`` above
       0, as on ChemAI), OpenMPI's single-copy shared memory (CMA) cannot work: it fell

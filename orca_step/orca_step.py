@@ -276,6 +276,27 @@ class ORCAStep(object):
         return analyze_task(result, model_chemistry, configuration, **kwargs)
 
     @classmethod
+    def thermochemistry_reference(cls, model_chemistry):
+        """``(code, method, settings)`` under which SEAMM's thermochemistry
+        database holds the atomic references for a model chemistry -- the same
+        lookup the Energy sub-step's own DfE0 uses, for steps such as the MBE
+        step that put ORCA energies on the DfE0 scale.
+
+        A DLPNO double hybrid uses its canonical parent's atoms: DLPNO cannot
+        run H at all ("no pairs to be correlated"), the DLPNO effect on an
+        isolated atom is under 0.07 kJ/mol, and a molecule's DLPNO error is not
+        a sum of atomic ones. The method is in its model-chemistry spelling
+        (``/`` as ``_``), as the reference runs were tagged, and the basis
+        without a ``bse:`` prefix.
+        """
+        method = mc_method_unalias(model_chemistry.get("method") or "")
+        lookup = mc_method_alias(dlpno_parent(method) or method)
+        basis = model_chemistry.get("basis") or ""
+        if basis.lower().startswith("bse:"):
+            basis = basis[4:]
+        return "orca", lookup, basis
+
+    @classmethod
     def get_executor_config(cls, executor, seamm_options):
         """How to launch ORCA (and its MDI engine) on this machine.
 

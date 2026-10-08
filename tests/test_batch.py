@@ -223,3 +223,29 @@ def test_lone_ion_batch_equals_mdi(tmp_path):
             results[path] = list(evaluator.results())[0]
     assert results["batch"].ok and results["mdi"].ok
     assert results["batch"].energy == pytest.approx(results["mdi"].energy, abs=EXACT)
+
+
+def test_thermochemistry_reference_uses_the_dlpno_parent():
+    """The MBE step's DfE0 offsets look up the atomic references through this
+    hook: a DLPNO double hybrid uses its canonical parent's atoms, as the
+    Energy sub-step's DfE0 does; other methods are unchanged."""
+    from orca_step import ORCAStep
+
+    def mc(method, basis="def2-QZVPPD"):
+        return {**_mc(basis), "method": method}
+
+    assert ORCAStep.thermochemistry_reference(mc("DLPNO-REVDSD-PBEP86-D4_2021")) == (
+        "orca",
+        "REVDSD-PBEP86-D4_2021",
+        "def2-QZVPPD",
+    )
+    assert ORCAStep.thermochemistry_reference(mc("REVDSD-PBEP86-D4_2021")) == (
+        "orca",
+        "REVDSD-PBEP86-D4_2021",
+        "def2-QZVPPD",
+    )
+    assert ORCAStep.thermochemistry_reference(mc("B3LYP", "bse:def2-TZVP")) == (
+        "orca",
+        "B3LYP",
+        "def2-TZVP",
+    )
