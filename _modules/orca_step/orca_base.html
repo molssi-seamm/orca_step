@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.8.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.8.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=ac5092dc"></script>
+    <script src="../../_static/documentation_options.js?v=9ba818b6"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.8.1" />
+  <meta name="docsearch:version" content="2026.10.8.2" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -880,7 +880,9 @@
 <span class="c1">#: data): the size variables, the method class, the task and the unit count.</span>
 <span class="c1">#: Written beside the records when a run is recorded.</span>
 <span class="n">TIMING_SPEC</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"size"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"nbf"</span><span class="p">,</span> <span class="s2">"n_electrons"</span><span class="p">,</span> <span class="s2">"n_atoms"</span><span class="p">],</span>
+    <span class="c1"># neighbours: how crowded the structure is (seamm_exec.neighbour_count), which</span>
+    <span class="c1"># decides how many integrals survive prescreening as well as the size does</span>
+    <span class="s2">"size"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"nbf"</span><span class="p">,</span> <span class="s2">"neighbours"</span><span class="p">,</span> <span class="s2">"n_electrons"</span><span class="p">,</span> <span class="s2">"n_atoms"</span><span class="p">],</span>
     <span class="s2">"klass"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"method_class"</span><span class="p">],</span>
     <span class="s2">"task"</span><span class="p">:</span> <span class="s2">"task"</span><span class="p">,</span>
     <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"scf_runs"</span><span class="p">,</span>
@@ -1090,7 +1092,9 @@
     <span class="n">method</span> <span class="o">=</span> <span class="n">basis</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="k">if</span> <span class="n">model</span><span class="p">:</span>
         <span class="n">level</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"@"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">method</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+        <span class="c1"># The basis follows the last "/": a method's ORCA keyword may contain</span>
+        <span class="c1"># one (REVDSD-PBEP86-D4/2021)</span>
+        <span class="n">method</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
     <span class="n">d</span><span class="p">[</span><span class="s2">"task"</span><span class="p">]</span> <span class="o">=</span> <span class="n">task_kind</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">)</span>
     <span class="n">d</span><span class="p">[</span><span class="s2">"method_class"</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_class</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">)</span>
     <span class="n">d</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
@@ -1160,6 +1164,26 @@
         <span class="n">d</span><span class="p">[</span><span class="s2">"terminated_normally"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"ORCA TERMINATED NORMALLY"</span> <span class="ow">in</span> <span class="n">text</span>
     <span class="k">return</span> <span class="n">d</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_neighbours</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``{"neighbours": mean atoms within 8 Å}`` of the centres ORCA was given,</span>
+<span class="sd">    ghosts included (they carry basis functions), for the timing record; empty</span>
+<span class="sd">    with a seamm-exec that cannot count them, or on any problem."""</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">seamm_exec</span><span class="p">,</span> <span class="s2">"neighbour_count"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_exec.evaluator</span><span class="w"> </span><span class="kn">import</span> <span class="n">structure_data</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">structure_data</span><span class="p">(</span><span class="n">configuration</span><span class="p">)</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"coordinates"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">atom_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="p">[</span><span class="n">xyz</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">atom_indices</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">count</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cell"</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">"neighbours"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)}</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_heavy_atoms</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ghost_atoms</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1691,6 +1715,7 @@
                 <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">,</span>
                 <span class="n">multiplicity</span><span class="o">=</span><span class="n">multiplicity</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="n">descriptors</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_neighbours</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">atom_indices</span><span class="p">))</span>
             <span class="n">seamm_exec</span><span class="o">.</span><span class="n">record_task_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">descriptors</span><span class="p">,</span> <span class="o">**</span><span class="n">_record_kwargs</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - must never stop the step</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not record the timing of the ORCA run: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
