@@ -1,7 +1,7 @@
 =======
 History
 =======
-2026.10.9 -- Bugfix: gradients whose forces do not sum to zero are caught
+2026.10.9 -- Bugfix: double-hybrid gradients use VeryTightSCF, and faulty gradients are caught
     * ORCA 6.1.1 occasionally gives a double-hybrid gradient whose forces do not sum
       to zero: with revDSD-PBEP86-D4/2021, exact exchange (NoCOSX) and TightSCF about
       0.8 % of gradients were wrong, the worst by 1.55 eV/Å, against 4 of 221,102
@@ -10,6 +10,11 @@ History
       (sound gradients stay within 2.6) and 50 meV/Å with it (whose grid leaves up to
       18 meV/Å in sound gradients). A model-chemistry task over the limit fails, so its
       forces never reach a label; the Energy step warns not to use them.
+    * Every double-hybrid gradient -- forces, optimizations, numerical frequencies, on
+      the model-chemistry and MDI paths too -- now runs with at least VERYTIGHTSCF,
+      which fixes those gradients at 2-17 % more time. It applies with RIJCOSX as well,
+      so the fragments of a many-body expansion share one SCF setting. Labels made
+      with earlier versions used TIGHTSCF: do not mix the two in one campaign.
 
 2026.10.8.4 -- DfE0 references for DLPNO double hybrids in other steps
     * ``ORCAStep.thermochemistry_reference(model_chemistry)`` says under which code,

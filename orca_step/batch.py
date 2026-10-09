@@ -29,6 +29,7 @@ from seamm_util import Q_
 
 from .orca_base import (
     _fingerprint,
+    double_hybrid_scf,
     engrad_gradient,
     gradient_batching_problem,
     net_force_problem,
@@ -167,6 +168,10 @@ def get_task(
     )
     if not gradients:
         text = text.replace(" EnGrad\n", "\n", 1)
+    # A double-hybrid gradient runs with VeryTightSCF (see double_hybrid_scf)
+    first, rest = text.split("\n", 1)
+    line, _ = double_hybrid_scf(first[1:].strip())
+    text = f"! {line}\n{rest}"
     files["orca.inp"] = text
 
     if resources is None:

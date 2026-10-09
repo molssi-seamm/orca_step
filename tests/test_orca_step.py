@@ -2617,7 +2617,8 @@ def test_dlpno_double_hybrid_mdi_engine(tmp_path):
         )
 
     dlpno = argv("DLPNO-REVDSD-PBEP86-D4/2021")
-    assert dlpno[dlpno.index("--method") + 1] == "REVDSD-PBEP86-D4/2021"
+    # The parent keyword, with VERYTIGHTSCF for the double hybrid's gradient
+    assert dlpno[dlpno.index("--method") + 1] == "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF"
     assert "--dlpno" in dlpno
     assert dlpno[dlpno.index("--hessian") + 1] == "no"
     assert "--dlpno" not in argv("REVDSD-PBEP86-D4/2021")

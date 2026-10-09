@@ -143,6 +143,17 @@ def orca_method_blocks(method):
     return ""
 
 
+def _engine_method_words(method):
+    """The MDI engine's ``--method``: the ORCA keyword, plus VERYTIGHTSCF for a
+    double hybrid, since the engine always computes the gradient (see
+    ``orca_base.double_hybrid_scf``)."""
+    from .orca_base import double_hybrid_scf
+
+    keyword = orca_method_keyword(method)
+    line, note = double_hybrid_scf(f"{keyword} EnGrad")
+    return keyword if note is None else f"{keyword} {line.split()[-1]}"
+
+
 def mc_method_unalias(method):
     """Inverse of :func:`mc_method_alias`: the real ORCA functional keyword for a
     (possibly aliased) model-chemistry method, or the method unchanged if it is
@@ -373,7 +384,7 @@ class ORCAStep(object):
             "--orca",
             config["code"],
             "--method",
-            orca_method_keyword(method),
+            _engine_method_words(method),
             "--basis",
             basis,
             "--charge",

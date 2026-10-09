@@ -336,3 +336,66 @@ def test_energy_warns_about_a_gradient_that_is_not_translation_invariant(tmp_pat
     assert ORCABase._check_net_force(node, tmp_path) is None
     (tmp_path / "orca.engrad").unlink()
     assert ORCABase._check_net_force(node, tmp_path) is None
+
+
+def test_double_hybrid_gradients_run_with_verytightscf():
+    """With TightSCF ORCA 6.1.1 gets some double-hybrid gradients wrong, so every
+    double-hybrid gradient runs with VeryTightSCF -- on the batch path, the MDI
+    engine and the steps' own runs -- and other methods keep TightSCF."""
+    from orca_step.batch import engine_helpers, get_task
+    from orca_step.orca_base import double_hybrid_scf
+    from orca_step.orca_step import _engine_method_words
+
+    water = Geometry(
+        [8, 1, 1], [[0, 0, 0.117], [0, 0.757, -0.467], [0, -0.757, -0.467]]
+    )
+    mc = {
+        **_mc(),
+        "method": "REVDSD-PBEP86-D4_2021",
+        "options": {
+            **_mc()["options"],
+            "mdi_method_arg": "REVDSD-PBEP86-D4/2021",
+        },
+    }
+    line = get_task(water, mc, key="w").files["orca.inp"].splitlines()[0]
+    assert "VERYTIGHTSCF" in line.split() and "TIGHTSCF" not in line.split()
+    # An energy alone keeps TightSCF; so does a hybrid's gradient
+    line = get_task(water, mc, key="e", properties=("energy",)).files["orca.inp"]
+    assert "TIGHTSCF" in line.splitlines()[0].split()
+    line = get_task(water, _mc(), key="b").files["orca.inp"].splitlines()[0]
+    assert "TIGHTSCF" in line.split() and "VERYTIGHTSCF" not in line.split()
+
+    # The MDI engine always computes the gradient
+    assert _engine_method_words("REVDSD-PBEP86-D4/2021") == (
+        "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF"
+    )
+    assert _engine_method_words("DLPNO-REVDSD-PBEP86-D4/2021") == (
+        "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF"
+    )
+    assert _engine_method_words("B3LYP") == "B3LYP"
+    text = engine_helpers().orca_input(
+        "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF AutoAux",
+        "def2-SVP",
+        0,
+        1,
+        ["O", "H", "H"],
+        [[0, 0, 0.117], [0, 0.757, -0.467], [0, -0.757, -0.467]],
+    )
+    words = text.splitlines()[0].split()
+    assert "VERYTIGHTSCF" in words and "TIGHTSCF" not in words
+
+    # The steps' own runs: gradients, optimizations and numerical frequencies
+    for line in (
+        "REVDSD-PBEP86-D4/2021 def2-SVP TIGHTSCF EnGrad",
+        "REVDSD-PBEP86-D4/2021 def2-SVP Opt",
+        "B2PLYP def2-SVP NumFreq",
+    ):
+        new, note = double_hybrid_scf(line)
+        assert "VERYTIGHTSCF" in new.split() and "TIGHTSCF" not in new.split()
+        assert "double-hybrid gradient runs with VERYTIGHTSCF" in note
+    for line in (
+        "REVDSD-PBEP86-D4/2021 def2-SVP TIGHTSCF",  # an energy
+        "B3LYP def2-SVP TIGHTSCF EnGrad",  # not a double hybrid
+        "REVDSD-PBEP86-D4/2021 def2-SVP EXTREMESCF EnGrad",  # already tighter
+    ):
+        assert double_hybrid_scf(line) == (line, None)
