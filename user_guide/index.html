@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.8.4 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.9 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=f4590c62"></script>
+    <script src="../_static/documentation_options.js?v=465c9eed"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.8.4" />
+  <meta name="docsearch:version" content="2026.10.9" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -714,6 +714,26 @@ the figures (memory needed for one batch against memory given) and the remedy:
 fewer ranks with a larger <code class="docutils literal notranslate"><span class="pre">memory</span></code> per core, e.g. 4 ranks at 8 GB instead of
 16 at 2 GB. A model-chemistry task fails the same way, so a label never carries
 a wrong force. The Energy step also notes the hazard before such a run.</p>
+<p>A second ORCA 6.1.1 fault gives some double-hybrid gradients whose forces do
+not sum to zero, as every sound gradient’s must (summed over every centre,
+ghosts included). It hits exact exchange (<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>) at <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code>: of
+21,281 revDSD-PBEP86-D4/2021 NoCOSX gradients of Na<sup>+</sup>, Cl<sup>-</sup> and
+water fragments, about 0.8 % were wrong, from 2 meV/Å to 1.55 eV/Å, while only
+4 of 221,102 RIJCOSX gradients were. <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code> fixes it, at 2–17 % more
+time. So the step checks the net force of every gradient. Without RIJCOSX a
+sound gradient’s net force stays within 2.6 meV/Å, and the limit is 5 meV/Å.
+RIJCOSX’s grid leaves up to 18 meV/Å in sound gradients, and there the limit is
+50 meV/Å. A model-chemistry task over the limit fails, so its forces never
+reach a label. The Energy step keeps the forces but prints a warning not to use
+them.</p>
+<p>Since VeryTightSCF costs only 2–17 % more, every double-hybrid gradient –
+forces, an optimization, numerical frequencies, on the model-chemistry and MDI
+paths too – runs with at least <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code>, whatever the SCF convergence
+setting says; a tighter preset (<code class="docutils literal notranslate"><span class="pre">EXTREMESCF</span></code>) is kept, and the output notes
+the change. This applies with RIJCOSX too, so that all the fragments of a
+many-body expansion share one SCF setting: TightSCF energies stop slightly
+short of convergence, and that cancels in the increments only if every fragment
+is converged the same way. Energies alone keep the setting.</p>
 <p>Other elements keep COSX, which is about three times cheaper for a fragment the
 size of ethylene carbonate. COSX’s force errors are small for Li<sup>+</sup>,
 F<sup>-</sup> and Cl<sup>-</sup>, and moderate (3–6.5 meV/Å) for K, Ca, Rb, Cs, Sr

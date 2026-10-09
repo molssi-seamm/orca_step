@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.8.4 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.9 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=f4590c62"></script>
+    <script src="../../_static/documentation_options.js?v=465c9eed"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.8.4" />
+  <meta name="docsearch:version" content="2026.10.9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -873,6 +873,72 @@
 
 
 
+<span class="c1">#: Net force (meV/Å) above which a gradient is not trusted, by whether ORCA</span>
+<span class="c1">#: computed the exchange with RIJCOSX. A gradient is translation-invariant: its</span>
+<span class="c1">#: forces, summed over every centre (ghosts included), vanish up to the</span>
+<span class="c1">#: integration grid's noise. RIJCOSX leaves up to 18 meV/Å in sound double-hybrid</span>
+<span class="c1">#: gradients (FEC pilot, 58 revDSD runs, 10-30 atoms; Cl-/water pairs up to 8.8),</span>
+<span class="c1">#: and of 221,102 RIJCOSX revDSD gradients only 4 were faulty, none above 20.</span>
+<span class="c1">#: Without it (NoCOSX, chosen for Na, Mg, Zn, B and P) sound revDSD gradients</span>
+<span class="c1">#: stay within 2.6 meV/Å, and r2SCAN's are exactly 0; but ORCA 6.1.1 with</span>
+<span class="c1">#: TightSCF gets about 0.8 % of NoCOSX double-hybrid gradients wrong, from 2.0 to</span>
+<span class="c1">#: 1,554 meV/Å, and VeryTightSCF fixes them (21,281 NoCOSX revDSD gradients of</span>
+<span class="c1">#: Na+/Cl-/water fragments, science, 2026-10-09).</span>
+<span class="n">NET_FORCE_LIMIT</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"cosx"</span><span class="p">:</span> <span class="mf">50.0</span><span class="p">,</span> <span class="s2">"exact"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">}</span>
+<span class="n">_COSX_GRID</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"COSX GRID GENERATION"</span><span class="p">)</span>
+<span class="n">_MEV_PER_ANGSTROM</span> <span class="o">=</span> <span class="mf">27211.386245988</span> <span class="o">/</span> <span class="mf">0.529177210903</span>  <span class="c1"># per E_h/bohr</span>
+
+
+<div class="viewcode-block" id="engrad_gradient">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.engrad_gradient">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">engrad_gradient</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The gradient (E_h/bohr) of every centre in an ``orca.engrad`` file,</span>
+<span class="sd">    ghosts included, as ``[[gx, gy, gz], ...]``, or None if it cannot be read."""</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"#"</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[</span><span class="mi">2</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">n</span><span class="p">]]</span>  <span class="c1"># noqa: E203</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="mi">3</span> <span class="o">*</span> <span class="n">i</span> <span class="p">:</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>  <span class="c1"># noqa: E203</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">net_force</span><span class="p">(</span><span class="n">gradient</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The magnitude of the summed gradient, in meV/Å (E_h/bohr in)."""</span>
+    <span class="n">net</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">gradient</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">net</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">net</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">net</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">_MEV_PER_ANGSTROM</span>
+
+
+<div class="viewcode-block" id="net_force_problem">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.net_force_problem">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">net_force_problem</span><span class="p">(</span><span class="n">gradient</span><span class="p">,</span> <span class="n">output_text</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Why a gradient that is not translation-invariant cannot be trusted, or</span>
+<span class="sd">    None. ``gradient`` is every centre's (ghosts included) in E_h/bohr;</span>
+<span class="sd">    ``output_text`` the run's orca.out, which says whether RIJCOSX was used."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">gradient</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">force</span> <span class="o">=</span> <span class="n">net_force</span><span class="p">(</span><span class="n">gradient</span><span class="p">)</span>
+    <span class="n">cosx</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_COSX_GRID</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">output_text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="n">NET_FORCE_LIMIT</span><span class="p">[</span><span class="s2">"cosx"</span> <span class="k">if</span> <span class="n">cosx</span> <span class="k">else</span> <span class="s2">"exact"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">force</span> <span class="o">&lt;=</span> <span class="n">limit</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"the forces do not sum to zero: their net force is </span><span class="si">{</span><span class="n">force</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> meV/Å, "</span>
+        <span class="sa">f</span><span class="s2">"against at most </span><span class="si">{</span><span class="n">limit</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> meV/Å for a sound gradient "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'with RIJCOSX'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">cosx</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'without RIJCOSX'</span><span class="si">}</span><span class="s2">. ORCA 6.1.1 gives such "</span>
+        <span class="s2">"gradients occasionally for double hybrids with TightSCF; VERYTIGHTSCF "</span>
+        <span class="s2">"(the 'SCF convergence' option, or in the extra keywords) fixes them."</span>
+    <span class="p">)</span></div>
+
+
+
 <span class="c1"># ----------------------------------------------------------------------</span>
 <span class="c1"># Timing records (seamm_exec.timing; campaign seamm_exec 2026-10-05)</span>
 <span class="c1"># ----------------------------------------------------------------------</span>
@@ -972,6 +1038,58 @@
     <span class="s2">"mndo"</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_HF</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"hf"</span><span class="p">,</span> <span class="s2">"rhf"</span><span class="p">,</span> <span class="s2">"uhf"</span><span class="p">,</span> <span class="s2">"rohf"</span><span class="p">,</span> <span class="s2">"hf-3c"</span><span class="p">,</span> <span class="s2">"ri-hf"</span><span class="p">,</span> <span class="s2">"rijk-hf"</span><span class="p">}</span>
+
+
+<span class="c1">#: The SCF convergence presets, loosest first</span>
+<span class="n">_SCF_PRESETS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"SLOPPYSCF"</span><span class="p">,</span>
+    <span class="s2">"LOOSESCF"</span><span class="p">,</span>
+    <span class="s2">"NORMALSCF"</span><span class="p">,</span>
+    <span class="s2">"STRONGSCF"</span><span class="p">,</span>
+    <span class="s2">"TIGHTSCF"</span><span class="p">,</span>
+    <span class="s2">"VERYTIGHTSCF"</span><span class="p">,</span>
+    <span class="s2">"EXTREMESCF"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1">#: The SCF preset every double-hybrid gradient runs with at least</span>
+<span class="n">DOUBLE_HYBRID_GRADIENT_SCF</span> <span class="o">=</span> <span class="s2">"VERYTIGHTSCF"</span>
+<span class="n">_DOUBLE_HYBRIDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"global double-hybrid"</span><span class="p">,</span> <span class="s2">"range-separated double-hybrid"</span><span class="p">)</span>
+<span class="n">_GRADIENT_KINDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"gradient"</span><span class="p">,</span> <span class="s2">"opt"</span><span class="p">,</span> <span class="s2">"freq"</span><span class="p">,</span> <span class="s2">"numgrad"</span><span class="p">,</span> <span class="s2">"numfreq"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="double_hybrid_scf">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.double_hybrid_scf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">double_hybrid_scf</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``(keyword_line, note)``: a double-hybrid gradient's '!' line with its SCF</span>
+<span class="sd">    convergence raised to :data:`DOUBLE_HYBRID_GRADIENT_SCF`, and a note saying</span>
+<span class="sd">    so (None if nothing changed).</span>
+
+<span class="sd">    With TightSCF, ORCA 6.1.1 gets about 0.8 % of double-hybrid gradients with</span>
+<span class="sd">    exact exchange wrong -- their forces do not sum to zero, by up to 1.55 eV/Å</span>
+<span class="sd">    -- and VeryTightSCF fixes them at 2-17 % more time (science, 2026-10-09).</span>
+<span class="sd">    Every double-hybrid gradient gets it, not just those with exact exchange, so</span>
+<span class="sd">    that the fragments of one many-body expansion share one SCF setting. A</span>
+<span class="sd">    tighter preset (EXTREMESCF) is kept. Without a leading '!'.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">task_kind</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_GRADIENT_KINDS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">method_class</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_DOUBLE_HYBRIDS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">keyword_line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">presets</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">_SCF_PRESETS</span><span class="p">]</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">presets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">presets</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">DOUBLE_HYBRID_GRADIENT_SCF</span>
+    <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_SCF_PRESETS</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">current</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">_SCF_PRESETS</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+        <span class="n">target</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SCF_PRESETS</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">target</span><span class="p">]</span>
+    <span class="n">note</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"A double-hybrid gradient runs with </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">, not "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">current</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'ORCA'</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">chr</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'s default'</span><span class="si">}</span><span class="s2">: with TIGHTSCF ORCA 6.1.1 "</span>
+        <span class="s2">"computes some of them wrongly (forces that do not sum to zero)."</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">),</span> <span class="n">note</span></div>
+
 
 
 <div class="viewcode-block" id="task_kind">
@@ -1705,8 +1823,32 @@
             <span class="s2">"numfreq"</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ORCA in </span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">task_kind</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"gradient"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_net_force</span><span class="p">(</span><span class="n">run_directory</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_net_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Warn when the run's gradient is not translation-invariant; return the</span>
+<span class="sd">        reason, or None. See :func:`net_force_problem`."""</span>
+        <span class="n">run_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">run_directory</span><span class="p">)</span>
+        <span class="n">engrad</span> <span class="o">=</span> <span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.engrad"</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">engrad</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">run_directory</span> <span class="o">/</span> <span class="s2">"orca.out"</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="n">net_force_problem</span><span class="p">(</span>
+            <span class="n">engrad_gradient</span><span class="p">(</span><span class="n">engrad</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)),</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span> <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span>
+                <span class="n">__</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"WARNING: the gradient is suspect: </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2"> Do not use "</span>
+                    <span class="s2">"these forces."</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">problem</span>
 
 <div class="viewcode-block" id="ORCABase.record_timing">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.record_timing">[docs]</a>
@@ -1779,6 +1921,9 @@
         <span class="n">n_cores</span><span class="p">,</span> <span class="n">memory_mb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resources</span><span class="p">()</span>
 
         <span class="n">keyword_line</span><span class="p">,</span> <span class="n">notes</span> <span class="o">=</span> <span class="n">tidy_keyword_line</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">)</span>
+        <span class="n">keyword_line</span><span class="p">,</span> <span class="n">note</span> <span class="o">=</span> <span class="n">double_hybrid_scf</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">note</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">note</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">note</span> <span class="ow">in</span> <span class="n">notes</span><span class="p">:</span>
             <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">__</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Note: </span><span class="si">{</span><span class="n">note</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">))</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"! </span><span class="si">{</span><span class="n">keyword_line</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
@@ -2195,6 +2340,9 @@
     <span class="s2">"predicted_seconds"</span><span class="p">,</span>
     <span class="s2">"estimated_basis_functions"</span><span class="p">,</span>
     <span class="s2">"gradient_batching_problem"</span><span class="p">,</span>
+    <span class="s2">"double_hybrid_scf"</span><span class="p">,</span>
+    <span class="s2">"net_force_problem"</span><span class="p">,</span>
+    <span class="s2">"engrad_gradient"</span><span class="p">,</span>
     <span class="s2">"printer"</span><span class="p">,</span>
     <span class="s2">"job"</span><span class="p">,</span>
     <span class="s2">"os"</span><span class="p">,</span>

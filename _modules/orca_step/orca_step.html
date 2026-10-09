@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.10.8.4 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.10.9 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=f4590c62"></script>
+    <script src="../../_static/documentation_options.js?v=465c9eed"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.8.4" />
+  <meta name="docsearch:version" content="2026.10.9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -657,6 +657,17 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_engine_method_words</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The MDI engine's ``--method``: the ORCA keyword, plus VERYTIGHTSCF for a</span>
+<span class="sd">    double hybrid, since the engine always computes the gradient (see</span>
+<span class="sd">    ``orca_base.double_hybrid_scf``)."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">double_hybrid_scf</span>
+
+    <span class="n">keyword</span> <span class="o">=</span> <span class="n">orca_method_keyword</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+    <span class="n">line</span><span class="p">,</span> <span class="n">note</span> <span class="o">=</span> <span class="n">double_hybrid_scf</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2"> EnGrad"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">keyword</span> <span class="k">if</span> <span class="n">note</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+
+
 <div class="viewcode-block" id="mc_method_unalias">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.mc_method_unalias">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">mc_method_unalias</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
@@ -912,7 +923,7 @@
             <span class="s2">"--orca"</span><span class="p">,</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">"code"</span><span class="p">],</span>
             <span class="s2">"--method"</span><span class="p">,</span>
-            <span class="n">orca_method_keyword</span><span class="p">(</span><span class="n">method</span><span class="p">),</span>
+            <span class="n">_engine_method_words</span><span class="p">(</span><span class="n">method</span><span class="p">),</span>
             <span class="s2">"--basis"</span><span class="p">,</span>
             <span class="n">basis</span><span class="p">,</span>
             <span class="s2">"--charge"</span><span class="p">,</span>
