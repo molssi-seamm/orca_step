@@ -368,6 +368,66 @@ def gradient_batching_problem(output_text, keyword_line=""):
     )
 
 
+#: Net force (meV/Å) above which a gradient is not trusted, by whether ORCA
+#: computed the exchange with RIJCOSX. A gradient is translation-invariant: its
+#: forces, summed over every centre (ghosts included), vanish up to the
+#: integration grid's noise. RIJCOSX leaves up to 18 meV/Å in sound double-hybrid
+#: gradients (FEC pilot, 58 revDSD runs, 10-30 atoms; Cl-/water pairs up to 8.8),
+#: and of 221,102 RIJCOSX revDSD gradients only 4 were faulty, none above 20.
+#: Without it (NoCOSX, chosen for Na, Mg, Zn, B and P) sound revDSD gradients
+#: stay within 2.6 meV/Å, and r2SCAN's are exactly 0; but ORCA 6.1.1 with
+#: TightSCF gets about 0.8 % of NoCOSX double-hybrid gradients wrong, from 2.0 to
+#: 1,554 meV/Å, and VeryTightSCF fixes them (21,281 NoCOSX revDSD gradients of
+#: Na+/Cl-/water fragments, science, 2026-10-09).
+NET_FORCE_LIMIT = {"cosx": 50.0, "exact": 5.0}
+_COSX_GRID = re.compile(r"COSX GRID GENERATION")
+_MEV_PER_ANGSTROM = 27211.386245988 / 0.529177210903  # per E_h/bohr
+
+
+def engrad_gradient(text):
+    """The gradient (E_h/bohr) of every centre in an ``orca.engrad`` file,
+    ghosts included, as ``[[gx, gy, gz], ...]``, or None if it cannot be read."""
+    rows = [
+        line.strip()
+        for line in (text or "").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    try:
+        n = int(rows[0])
+        values = [float(x) for x in rows[2 : 2 + 3 * n]]  # noqa: E203
+    except (ValueError, IndexError):
+        return None
+    if len(values) != 3 * n:
+        return None
+    return [values[3 * i : 3 * i + 3] for i in range(n)]  # noqa: E203
+
+
+def net_force(gradient):
+    """The magnitude of the summed gradient, in meV/Å (E_h/bohr in)."""
+    net = [sum(row[k] for row in gradient) for k in range(3)]
+    return (net[0] ** 2 + net[1] ** 2 + net[2] ** 2) ** 0.5 * _MEV_PER_ANGSTROM
+
+
+def net_force_problem(gradient, output_text=""):
+    """Why a gradient that is not translation-invariant cannot be trusted, or
+    None. ``gradient`` is every centre's (ghosts included) in E_h/bohr;
+    ``output_text`` the run's orca.out, which says whether RIJCOSX was used."""
+    if not gradient:
+        return None
+    force = net_force(gradient)
+    cosx = bool(_COSX_GRID.search(output_text or ""))
+    limit = NET_FORCE_LIMIT["cosx" if cosx else "exact"]
+    if force <= limit:
+        return None
+    return (
+        f"the forces do not sum to zero: their net force is {force:.1f} meV/Å, "
+        f"against at most {limit:g} meV/Å for a sound gradient "
+        f"{'with RIJCOSX' if cosx else 'without RIJCOSX'}. ORCA 6.1.1 gives such "
+        "gradients occasionally for double hybrids with TightSCF; VERYTIGHTSCF "
+        "(the 'SCF convergence' option, or in the extra keywords) fixes them."
+    )
+
+
 # ----------------------------------------------------------------------
 # Timing records (seamm_exec.timing; campaign seamm_exec 2026-10-05)
 # ----------------------------------------------------------------------
@@ -467,6 +527,55 @@ _SEMIEMPIRICAL = {
     "mndo",
 }
 _HF = {"hf", "rhf", "uhf", "rohf", "hf-3c", "ri-hf", "rijk-hf"}
+
+
+#: The SCF convergence presets, loosest first
+_SCF_PRESETS = (
+    "SLOPPYSCF",
+    "LOOSESCF",
+    "NORMALSCF",
+    "STRONGSCF",
+    "TIGHTSCF",
+    "VERYTIGHTSCF",
+    "EXTREMESCF",
+)
+#: The SCF preset every double-hybrid gradient runs with at least
+DOUBLE_HYBRID_GRADIENT_SCF = "VERYTIGHTSCF"
+_DOUBLE_HYBRIDS = ("global double-hybrid", "range-separated double-hybrid")
+_GRADIENT_KINDS = ("gradient", "opt", "freq", "numgrad", "numfreq")
+
+
+def double_hybrid_scf(keyword_line):
+    """``(keyword_line, note)``: a double-hybrid gradient's '!' line with its SCF
+    convergence raised to :data:`DOUBLE_HYBRID_GRADIENT_SCF`, and a note saying
+    so (None if nothing changed).
+
+    With TightSCF, ORCA 6.1.1 gets about 0.8 % of double-hybrid gradients with
+    exact exchange wrong -- their forces do not sum to zero, by up to 1.55 eV/Å
+    -- and VeryTightSCF fixes them at 2-17 % more time (science, 2026-10-09).
+    Every double-hybrid gradient gets it, not just those with exact exchange, so
+    that the fragments of one many-body expansion share one SCF setting. A
+    tighter preset (EXTREMESCF) is kept. Without a leading '!'.
+    """
+    if task_kind(keyword_line) not in _GRADIENT_KINDS:
+        return keyword_line, None
+    if method_class(None, keyword_line) not in _DOUBLE_HYBRIDS:
+        return keyword_line, None
+    words = keyword_line.split()
+    presets = [w.upper() for w in words if w.upper() in _SCF_PRESETS]
+    current = presets[-1] if presets else None
+    target = DOUBLE_HYBRID_GRADIENT_SCF
+    if current is not None and _SCF_PRESETS.index(current) >= _SCF_PRESETS.index(
+        target
+    ):
+        return keyword_line, None
+    words = [w for w in words if w.upper() not in _SCF_PRESETS] + [target]
+    note = (
+        f"A double-hybrid gradient runs with {target}, not "
+        f"{current or 'ORCA' + chr(39) + 's default'}: with TIGHTSCF ORCA 6.1.1 "
+        "computes some of them wrongly (forces that do not sum to zero)."
+    )
+    return " ".join(words), note
 
 
 def task_kind(keyword_line):
@@ -1178,7 +1287,31 @@ class ORCABase(seamm.Node):
             "numfreq",
         ):
             raise RuntimeError(f"ORCA in {run_directory}: {problem}")
+        if task_kind(keyword_line) == "gradient":
+            self._check_net_force(run_directory)
         return data
+
+    def _check_net_force(self, run_directory):
+        """Warn when the run's gradient is not translation-invariant; return the
+        reason, or None. See :func:`net_force_problem`."""
+        run_directory = Path(run_directory)
+        engrad = run_directory / "orca.engrad"
+        if not engrad.exists():
+            return None
+        out = run_directory / "orca.out"
+        problem = net_force_problem(
+            engrad_gradient(engrad.read_text(errors="replace")),
+            out.read_text(errors="replace") if out.exists() else "",
+        )
+        if problem is not None:
+            printer.important(
+                __(
+                    f"WARNING: the gradient is suspect: {problem} Do not use "
+                    "these forces.",
+                    indent=self.indent + 4 * " ",
+                )
+            )
+        return problem
 
     def record_timing(
         self,
@@ -1246,6 +1379,9 @@ class ORCABase(seamm.Node):
         n_cores, memory_mb = self._resources()
 
         keyword_line, notes = tidy_keyword_line(keyword_line)
+        keyword_line, note = double_hybrid_scf(keyword_line)
+        if note is not None:
+            notes.append(note)
         for note in notes:
             printer.normal(__(f"Note: {note}", indent=self.indent + 4 * " "))
         lines = [f"! {keyword_line}"]
@@ -1657,6 +1793,9 @@ __all__ = [
     "predicted_seconds",
     "estimated_basis_functions",
     "gradient_batching_problem",
+    "double_hybrid_scf",
+    "net_force_problem",
+    "engrad_gradient",
     "printer",
     "job",
     "os",

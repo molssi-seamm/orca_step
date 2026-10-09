@@ -249,3 +249,153 @@ def test_thermochemistry_reference_uses_the_dlpno_parent():
         "B3LYP",
         "def2-TZVP",
     )
+
+
+def _engrad(gradient, energy=-76.3):
+    """An orca.engrad file for a gradient given in E_h/bohr."""
+    lines = ["#", "# Number of atoms", "#", f" {len(gradient)}", "#"]
+    lines += ["# The current total energy in Eh", "#", f" {energy}", "#"]
+    lines += ["# The current gradient in Eh/bohr", "#"]
+    lines += [f" {g:.9f}" for row in gradient for g in row]
+    return "\n".join(lines) + "\n"
+
+
+# A sound water gradient (E_h/bohr); _shifted adds dx E_h/bohr (51.4 meV/Å per
+# 1e-3) to one atom's x.
+_SOUND = [[0.0, 0.0, 0.02], [0.0, 0.011, -0.01], [0.0, -0.011, -0.01]]
+
+
+def _shifted(dx):
+    return [[_SOUND[0][0] + dx, *_SOUND[0][1:]], _SOUND[1], _SOUND[2]]
+
+
+def test_net_force_limits_depend_on_cosx():
+    """Without RIJCOSX sound double-hybrid gradients stay within 2.6 meV/Å, so
+    the limit is 5; RIJCOSX's grid leaves up to 18 meV/Å, so there it is 50
+    (FEC pilot and NaCl cells, 2026-10-09)."""
+    from orca_step.orca_base import engrad_gradient, net_force, net_force_problem
+
+    cosx = "...\nCOSX GRID GENERATION\n..."
+    assert engrad_gradient(_engrad(_SOUND)) == _SOUND
+    assert net_force(_SOUND) < 1e-6
+    assert net_force_problem(_SOUND, "") is None
+    assert abs(net_force(_shifted(2e-4)) - 10.28) < 0.01
+    # 2.6 meV/Å: sound either way
+    assert net_force_problem(_shifted(5e-5), "") is None
+    # 10.3 meV/Å: broken without RIJCOSX, grid noise with it
+    assert "10.3 meV/Å" in net_force_problem(_shifted(2e-4), "")
+    assert "without RIJCOSX" in net_force_problem(_shifted(2e-4), "")
+    assert net_force_problem(_shifted(2e-4), cosx) is None
+    assert "with RIJCOSX" in net_force_problem(_shifted(1.2e-3), cosx)
+    assert net_force_problem(None, "") is None
+    assert engrad_gradient("garbage") is None
+
+
+def test_analyze_task_refuses_a_gradient_that_is_not_translation_invariant():
+    """The batch path fails such a task rather than return its forces; the
+    check sums every centre in orca.engrad, ghosts included."""
+    from orca_step.batch import analyze_task
+    from seamm_exec import AnalysisError, TaskResult
+
+    out = "FINAL SINGLE POINT ENERGY       -76.300000000000\n"
+    geometry = Geometry(
+        [8, 1, 1], [[0, 0, 0.117], [0, 0.757, -0.467], [0, -0.757, -0.467]]
+    )
+
+    def result(gradient):
+        return TaskResult(
+            key="w",
+            state="finished",
+            files={"orca.out": out, "orca.engrad": _engrad(gradient)},
+        )
+
+    data = analyze_task(result(_SOUND), _mc(), geometry)
+    assert data["gradients"].shape == (3, 3)
+    assert analyze_task(result(_shifted(5e-5)), _mc(), geometry)  # 2.6 meV/Å
+    with pytest.raises(AnalysisError, match="forces do not sum to zero"):
+        analyze_task(result(_shifted(2e-4)), _mc(), geometry)
+    # A ghost centre beyond the atoms counts towards the sum
+    ghosted = _SOUND + [[0.0, 0.0, 1e-3]]
+    with pytest.raises(AnalysisError, match="net force is 51.4"):
+        analyze_task(result(ghosted), _mc(), geometry)
+
+
+def test_energy_warns_about_a_gradient_that_is_not_translation_invariant(tmp_path):
+    """The Energy sub-step's run path keeps the forces but warns loudly."""
+    from types import SimpleNamespace
+
+    from orca_step.orca_base import ORCABase
+
+    node = SimpleNamespace(indent="")
+    (tmp_path / "orca.out").write_text("FINAL SINGLE POINT ENERGY -76.3\n")
+    (tmp_path / "orca.engrad").write_text(_engrad(_SOUND))
+    assert ORCABase._check_net_force(node, tmp_path) is None
+    (tmp_path / "orca.engrad").write_text(_engrad(_shifted(2e-4)))
+    assert "10.3 meV/Å" in ORCABase._check_net_force(node, tmp_path)
+    (tmp_path / "orca.out").write_text("COSX GRID GENERATION\n")
+    assert ORCABase._check_net_force(node, tmp_path) is None
+    (tmp_path / "orca.engrad").unlink()
+    assert ORCABase._check_net_force(node, tmp_path) is None
+
+
+def test_double_hybrid_gradients_run_with_verytightscf():
+    """With TightSCF ORCA 6.1.1 gets some double-hybrid gradients wrong, so every
+    double-hybrid gradient runs with VeryTightSCF -- on the batch path, the MDI
+    engine and the steps' own runs -- and other methods keep TightSCF."""
+    from orca_step.batch import engine_helpers, get_task
+    from orca_step.orca_base import double_hybrid_scf
+    from orca_step.orca_step import _engine_method_words
+
+    water = Geometry(
+        [8, 1, 1], [[0, 0, 0.117], [0, 0.757, -0.467], [0, -0.757, -0.467]]
+    )
+    mc = {
+        **_mc(),
+        "method": "REVDSD-PBEP86-D4_2021",
+        "options": {
+            **_mc()["options"],
+            "mdi_method_arg": "REVDSD-PBEP86-D4/2021",
+        },
+    }
+    line = get_task(water, mc, key="w").files["orca.inp"].splitlines()[0]
+    assert "VERYTIGHTSCF" in line.split() and "TIGHTSCF" not in line.split()
+    # An energy alone keeps TightSCF; so does a hybrid's gradient
+    line = get_task(water, mc, key="e", properties=("energy",)).files["orca.inp"]
+    assert "TIGHTSCF" in line.splitlines()[0].split()
+    line = get_task(water, _mc(), key="b").files["orca.inp"].splitlines()[0]
+    assert "TIGHTSCF" in line.split() and "VERYTIGHTSCF" not in line.split()
+
+    # The MDI engine always computes the gradient
+    assert _engine_method_words("REVDSD-PBEP86-D4/2021") == (
+        "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF"
+    )
+    assert _engine_method_words("DLPNO-REVDSD-PBEP86-D4/2021") == (
+        "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF"
+    )
+    assert _engine_method_words("B3LYP") == "B3LYP"
+    text = engine_helpers().orca_input(
+        "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF AutoAux",
+        "def2-SVP",
+        0,
+        1,
+        ["O", "H", "H"],
+        [[0, 0, 0.117], [0, 0.757, -0.467], [0, -0.757, -0.467]],
+    )
+    words = text.splitlines()[0].split()
+    assert "VERYTIGHTSCF" in words and "TIGHTSCF" not in words
+
+    # The steps' own runs: gradients, optimizations and numerical frequencies
+    for line in (
+        "REVDSD-PBEP86-D4/2021 def2-SVP TIGHTSCF EnGrad",
+        "REVDSD-PBEP86-D4/2021 def2-SVP Opt",
+        "B2PLYP def2-SVP NumFreq",
+    ):
+        new, note = double_hybrid_scf(line)
+        assert "VERYTIGHTSCF" in new.split() and "TIGHTSCF" not in new.split()
+        assert "double-hybrid gradient runs with VERYTIGHTSCF" in note
+    for line in (
+        "REVDSD-PBEP86-D4/2021 def2-SVP TIGHTSCF",  # an energy
+        "B3LYP def2-SVP TIGHTSCF EnGrad",  # not a double hybrid
+        "REVDSD-PBEP86-D4/2021 def2-SVP EXTREMESCF EnGrad",  # already tighter
+    ):
+        assert double_hybrid_scf(line) == (line, None)

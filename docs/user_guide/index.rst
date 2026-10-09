@@ -225,6 +225,28 @@ fewer ranks with a larger ``memory`` per core, e.g. 4 ranks at 8 GB instead of
 16 at 2 GB. A model-chemistry task fails the same way, so a label never carries
 a wrong force. The Energy step also notes the hazard before such a run.
 
+A second ORCA 6.1.1 fault gives some double-hybrid gradients whose forces do
+not sum to zero, as every sound gradient's must (summed over every centre,
+ghosts included). It hits exact exchange (``NoCOSX``) at ``TIGHTSCF``: of
+21,281 revDSD-PBEP86-D4/2021 NoCOSX gradients of Na\ :sup:`+`, Cl\ :sup:`-` and
+water fragments, about 0.8 % were wrong, from 2 meV/Å to 1.55 eV/Å, while only
+4 of 221,102 RIJCOSX gradients were. ``VERYTIGHTSCF`` fixes it, at 2--17 % more
+time. So the step checks the net force of every gradient. Without RIJCOSX a
+sound gradient's net force stays within 2.6 meV/Å, and the limit is 5 meV/Å.
+RIJCOSX's grid leaves up to 18 meV/Å in sound gradients, and there the limit is
+50 meV/Å. A model-chemistry task over the limit fails, so its forces never
+reach a label. The Energy step keeps the forces but prints a warning not to use
+them.
+
+Since VeryTightSCF costs only 2--17 % more, every double-hybrid gradient --
+forces, an optimization, numerical frequencies, on the model-chemistry and MDI
+paths too -- runs with at least ``VERYTIGHTSCF``, whatever the SCF convergence
+setting says; a tighter preset (``EXTREMESCF``) is kept, and the output notes
+the change. This applies with RIJCOSX too, so that all the fragments of a
+many-body expansion share one SCF setting: TightSCF energies stop slightly
+short of convergence, and that cancels in the increments only if every fragment
+is converged the same way. Energies alone keep the setting.
+
 Other elements keep COSX, which is about three times cheaper for a fragment the
 size of ethylene carbonate. COSX's force errors are small for Li\ :sup:`+`,
 F\ :sup:`-` and Cl\ :sup:`-`, and moderate (3--6.5 meV/Å) for K, Ca, Rb, Cs, Sr

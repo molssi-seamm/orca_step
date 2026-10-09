@@ -27,7 +27,14 @@ import seamm_exec
 from seamm_exec.evaluator import AnalysisError, check_properties, structure_data
 from seamm_util import Q_
 
-from .orca_base import _fingerprint, gradient_batching_problem, predicted_seconds
+from .orca_base import (
+    _fingerprint,
+    double_hybrid_scf,
+    engrad_gradient,
+    gradient_batching_problem,
+    net_force_problem,
+    predicted_seconds,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +168,10 @@ def get_task(
     )
     if not gradients:
         text = text.replace(" EnGrad\n", "\n", 1)
+    # A double-hybrid gradient runs with VeryTightSCF (see double_hybrid_scf)
+    first, rest = text.split("\n", 1)
+    line, _ = double_hybrid_scf(first[1:].strip())
+    text = f"! {line}\n{rest}"
     files["orca.inp"] = text
 
     if resources is None:
@@ -223,6 +234,10 @@ def analyze_task(
     if "gradients" in properties:
         engrad = _text(result, "orca.engrad")
         if engrad:
+            # Every centre, ghosts included: only their sum must vanish.
+            problem = net_force_problem(engrad_gradient(engrad), out)
+            if problem is not None:
+                raise AnalysisError(f"The ORCA calculation '{result.key}': {problem}")
             atom_indices = options.get("atom_indices")
             n = (
                 len(atom_indices)

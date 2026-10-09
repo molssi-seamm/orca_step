@@ -87,8 +87,9 @@ def test_high_level_input_has_the_accuracy_keywords():
         "options": {},
     }
     line = get_task(WATER, mc, key="w").files["orca.inp"].splitlines()[0]
+    # A double-hybrid gradient runs with VERYTIGHTSCF (orca_base.double_hybrid_scf)
     assert line == (
-        "! REVDSD-PBEP86-D4/2021 AutoAux def2-TZVPPD TIGHTSCF DEFGRID3 EnGrad"
+        "! REVDSD-PBEP86-D4/2021 AutoAux def2-TZVPPD DEFGRID3 EnGrad VERYTIGHTSCF"
     )
 
 
