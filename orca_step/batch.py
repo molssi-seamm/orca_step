@@ -27,7 +27,13 @@ import seamm_exec
 from seamm_exec.evaluator import AnalysisError, check_properties, structure_data
 from seamm_util import Q_
 
-from .orca_base import _fingerprint, gradient_batching_problem, predicted_seconds
+from .orca_base import (
+    _fingerprint,
+    engrad_gradient,
+    gradient_batching_problem,
+    net_force_problem,
+    predicted_seconds,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -223,6 +229,10 @@ def analyze_task(
     if "gradients" in properties:
         engrad = _text(result, "orca.engrad")
         if engrad:
+            # Every centre, ghosts included: only their sum must vanish.
+            problem = net_force_problem(engrad_gradient(engrad), out)
+            if problem is not None:
+                raise AnalysisError(f"The ORCA calculation '{result.key}': {problem}")
             atom_indices = options.get("atom_indices")
             n = (
                 len(atom_indices)

@@ -249,3 +249,90 @@ def test_thermochemistry_reference_uses_the_dlpno_parent():
         "B3LYP",
         "def2-TZVP",
     )
+
+
+def _engrad(gradient, energy=-76.3):
+    """An orca.engrad file for a gradient given in E_h/bohr."""
+    lines = ["#", "# Number of atoms", "#", f" {len(gradient)}", "#"]
+    lines += ["# The current total energy in Eh", "#", f" {energy}", "#"]
+    lines += ["# The current gradient in Eh/bohr", "#"]
+    lines += [f" {g:.9f}" for row in gradient for g in row]
+    return "\n".join(lines) + "\n"
+
+
+# A sound water gradient (E_h/bohr); _shifted adds dx E_h/bohr (51.4 meV/Å per
+# 1e-3) to one atom's x.
+_SOUND = [[0.0, 0.0, 0.02], [0.0, 0.011, -0.01], [0.0, -0.011, -0.01]]
+
+
+def _shifted(dx):
+    return [[_SOUND[0][0] + dx, *_SOUND[0][1:]], _SOUND[1], _SOUND[2]]
+
+
+def test_net_force_limits_depend_on_cosx():
+    """Without RIJCOSX sound double-hybrid gradients stay within 2.6 meV/Å, so
+    the limit is 5; RIJCOSX's grid leaves up to 18 meV/Å, so there it is 50
+    (FEC pilot and NaCl cells, 2026-10-09)."""
+    from orca_step.orca_base import engrad_gradient, net_force, net_force_problem
+
+    cosx = "...\nCOSX GRID GENERATION\n..."
+    assert engrad_gradient(_engrad(_SOUND)) == _SOUND
+    assert net_force(_SOUND) < 1e-6
+    assert net_force_problem(_SOUND, "") is None
+    assert abs(net_force(_shifted(2e-4)) - 10.28) < 0.01
+    # 2.6 meV/Å: sound either way
+    assert net_force_problem(_shifted(5e-5), "") is None
+    # 10.3 meV/Å: broken without RIJCOSX, grid noise with it
+    assert "10.3 meV/Å" in net_force_problem(_shifted(2e-4), "")
+    assert "without RIJCOSX" in net_force_problem(_shifted(2e-4), "")
+    assert net_force_problem(_shifted(2e-4), cosx) is None
+    assert "with RIJCOSX" in net_force_problem(_shifted(1.2e-3), cosx)
+    assert net_force_problem(None, "") is None
+    assert engrad_gradient("garbage") is None
+
+
+def test_analyze_task_refuses_a_gradient_that_is_not_translation_invariant():
+    """The batch path fails such a task rather than return its forces; the
+    check sums every centre in orca.engrad, ghosts included."""
+    from orca_step.batch import analyze_task
+    from seamm_exec import AnalysisError, TaskResult
+
+    out = "FINAL SINGLE POINT ENERGY       -76.300000000000\n"
+    geometry = Geometry(
+        [8, 1, 1], [[0, 0, 0.117], [0, 0.757, -0.467], [0, -0.757, -0.467]]
+    )
+
+    def result(gradient):
+        return TaskResult(
+            key="w",
+            state="finished",
+            files={"orca.out": out, "orca.engrad": _engrad(gradient)},
+        )
+
+    data = analyze_task(result(_SOUND), _mc(), geometry)
+    assert data["gradients"].shape == (3, 3)
+    assert analyze_task(result(_shifted(5e-5)), _mc(), geometry)  # 2.6 meV/Å
+    with pytest.raises(AnalysisError, match="forces do not sum to zero"):
+        analyze_task(result(_shifted(2e-4)), _mc(), geometry)
+    # A ghost centre beyond the atoms counts towards the sum
+    ghosted = _SOUND + [[0.0, 0.0, 1e-3]]
+    with pytest.raises(AnalysisError, match="net force is 51.4"):
+        analyze_task(result(ghosted), _mc(), geometry)
+
+
+def test_energy_warns_about_a_gradient_that_is_not_translation_invariant(tmp_path):
+    """The Energy sub-step's run path keeps the forces but warns loudly."""
+    from types import SimpleNamespace
+
+    from orca_step.orca_base import ORCABase
+
+    node = SimpleNamespace(indent="")
+    (tmp_path / "orca.out").write_text("FINAL SINGLE POINT ENERGY -76.3\n")
+    (tmp_path / "orca.engrad").write_text(_engrad(_SOUND))
+    assert ORCABase._check_net_force(node, tmp_path) is None
+    (tmp_path / "orca.engrad").write_text(_engrad(_shifted(2e-4)))
+    assert "10.3 meV/Å" in ORCABase._check_net_force(node, tmp_path)
+    (tmp_path / "orca.out").write_text("COSX GRID GENERATION\n")
+    assert ORCABase._check_net_force(node, tmp_path) is None
+    (tmp_path / "orca.engrad").unlink()
+    assert ORCABase._check_net_force(node, tmp_path) is None
