@@ -1,6 +1,16 @@
 =======
 History
 =======
+2026.10.11 -- Option flags and toggle ladders for the cost model
+    * ``TIMING_SPEC`` names the '!' line as the runs' options (``flags``), less the
+      task, basis sets and method, so the cost model can learn what an option such as
+      NoCOSX or VERYTIGHTSCF costs; predictions pass the line too. Needs seamm-exec
+      2026.10.11.
+    * The timing benchmark adds toggle ladders at def2-TZVP, for B3LYP and the
+      double hybrid: the gradients with and without exact exchange (NoCOSX), the
+      energies with VERYTIGHTSCF, so that the fit can tell what an option costs from
+      what the molecule does.
+
 2026.10.9 -- Bugfix: double-hybrid gradients use VeryTightSCF, and faulty gradients are caught
     * ORCA 6.1.1 occasionally gives a double-hybrid gradient whose forces do not sum
       to zero: with revDSD-PBEP86-D4/2021, exact exchange (NoCOSX) and TightSCF about
