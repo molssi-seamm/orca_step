@@ -310,6 +310,7 @@ def predicted_seconds(
             "multiplicity": multiplicity,
             "n_electrons": sum(numbers) - int(charge or 0),
             "nbf": estimated_basis_functions(basis, [*numbers, *ghost_numbers]),
+            "keywords": keyword_line,
         }
         result = timing_model.predict(
             "orca", descriptors, ntasks=ntasks, quantile=quantile
@@ -443,6 +444,32 @@ TIMING_SPEC = {
     "units": "scf_runs",
     "multiplier": None,
     "default_alpha": 0.8,
+    # Every other word of the '!' line is an option whose cost the fit learns
+    # (NoCOSX, VERYTIGHTSCF, DEFGRID3, KEEPDENSITY, ...), shrunk to none unless
+    # the records support it: not the task, the basis sets or the method
+    "flags": {
+        "column": "keywords",
+        "drop": [
+            r"^ENGRAD$",
+            r"OPT$",
+            r"^(NUM|AN)?FREQ$",
+            r"^NUMGRAD$",
+            r"^SP$",
+            r"^PAL\d+$",
+            r"^AUTOAUX$",
+            r"/(J|JK|C)$",
+            r"^(MA-|DHF-)?DEF2-",
+            r"^(AUG-|JUN-|MAY-)?CC-P",
+            r"^6-31",
+            r"^STO-",
+            r"^PC(SEG|J|X)?-",
+            r"^ANO-",
+            r"^X2C-",
+            r"^SARC",
+            r"^EXTRAPOLATE",
+        ],
+        "drop_columns": ["method", "basis"],
+    },
 }
 
 
@@ -497,6 +524,26 @@ TIMING_BENCHMARK = {
             for basis in ("def2-SVP", "def2-TZVP", "def2-TZVPPD", "def2-QZVPPD")
             if (method, basis)
             not in (("B3LYP", "def2-SVP"), ("REVDSD-PBEP86-D4_2021", "def2-TZVPPD"))
+        },
+        # Toggle ladders at def2-TZVP: the same runs with one option changed --
+        # exact exchange (NoCOSX) for the gradients, VERYTIGHTSCF for the
+        # energies (double-hybrid gradients always run with it) -- so the fit
+        # can tell what an option costs from what the molecule does
+        **{
+            f"ORCA:DFT@{method}/def2-TZVP": {
+                "quick": 15,
+                "full": 24,
+                "tasks": ["Energy"],
+                "variants": {
+                    "Energy": [
+                        {},
+                        {"results": {"gradients": {}}},
+                        {"results": {"gradients": {}}, "extra keywords": "NoCOSX"},
+                        {"scf convergence": "VERYTIGHTSCF"},
+                    ]
+                },
+            }
+            for method in ("B3LYP", "REVDSD-PBEP86-D4_2021")
         },
     },
     "tasks": {

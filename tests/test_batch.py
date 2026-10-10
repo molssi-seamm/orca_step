@@ -399,3 +399,31 @@ def test_double_hybrid_gradients_run_with_verytightscf():
         "REVDSD-PBEP86-D4/2021 def2-SVP EXTREMESCF EnGrad",  # already tighter
     ):
         assert double_hybrid_scf(line) == (line, None)
+
+
+def test_timing_flags_are_the_options_of_the_line():
+    """The cost model learns a factor per option of the '!' line; the task,
+    basis sets and method are not options (they are in the model already)."""
+    timing_model = pytest.importorskip("seamm_exec.timing_model")
+    if not hasattr(timing_model, "flag_tokens"):
+        pytest.skip("seamm-exec without flags")
+    from orca_step.orca_base import TIMING_SPEC
+
+    flags = TIMING_SPEC["flags"]
+    record = {
+        "keywords": "REVDSD-PBEP86-D4/2021 AutoAux def2-TZVPPD DEFGRID3 NoCOSX "
+        "EnGrad VERYTIGHTSCF",
+        "method": "REVDSD-PBEP86-D4_2021",
+        "basis": "def2-TZVPPD",
+    }
+    assert timing_model.flag_tokens(record, flags) == {
+        "DEFGRID3",
+        "NOCOSX",
+        "VERYTIGHTSCF",
+    }
+    record = {
+        "keywords": "B3LYP def2-QZVPPD def2/J RIJCOSX TightOpt keepdensity",
+        "method": "B3LYP",
+        "basis": "def2-QZVPPD",
+    }
+    assert timing_model.flag_tokens(record, flags) == {"RIJCOSX", "KEEPDENSITY"}

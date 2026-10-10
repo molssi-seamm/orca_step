@@ -3,7 +3,7 @@ seamm>=2026.10.5
 molsystem
 seamm-util
 seamm-widgets>=2026.9.25
-seamm-exec>=2026.10.6.1
+seamm-exec>=2026.10.10.2
 seamm-bsse
 basis_set_exchange
 bibtexparser<2
