@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.9 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.10 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=465c9eed"></script>
+    <script src="_static/documentation_options.js?v=355f04a4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.9" />
+  <meta name="docsearch:version" content="2026.10.10" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,17 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.10 – Option flags and toggle ladders for the cost model</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TIMING_SPEC</span></code> names the ‘!’ line as the runs’ options (<code class="docutils literal notranslate"><span class="pre">flags</span></code>), less the
+task, basis sets and method, so the cost model can learn what an option such as
+NoCOSX or VERYTIGHTSCF costs; predictions pass the line too. Needs seamm-exec
+2026.10.10.2.</p></li>
+<li><p>The timing benchmark adds toggle ladders at def2-TZVP, for B3LYP and the
+double hybrid: the gradients with and without exact exchange (NoCOSX), the
+energies with VERYTIGHTSCF, so that the fit can tell what an option costs from
+what the molecule does.</p></li>
+</ul>
+</dd>
 <dt>2026.10.9 – Bugfix: double-hybrid gradients use VeryTightSCF, and faulty gradients are caught</dt><dd><ul class="simple">
 <li><p>ORCA 6.1.1 occasionally gives a double-hybrid gradient whose forces do not sum
 to zero: with revDSD-PBEP86-D4/2021, exact exchange (NoCOSX) and TightSCF about
