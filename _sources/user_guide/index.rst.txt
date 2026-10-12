@@ -863,7 +863,11 @@ Steps that set up a *model chemistry* and then evaluate it at many structures --
 the **Energy** step, the **Dimer Builder**'s energy-based contact search,
 **Normal Mode Sampling** and LAMMPS QM-MD -- use ORCA without any settings in the
 ORCA step itself: put a **Model Chemistry** step in the flowchart and choose an ORCA
-model chemistry there (e.g. ``ORCA:DFT@B3LYP/def2-SVP``).
+model chemistry there (e.g. ``ORCA:DFT@B3LYP/def2-SVP``). Density functionals have the
+type ``DFT``; the wavefunction methods -- Hartree-Fock, MP2 and coupled cluster -- have
+the type ``QC``: ``ORCA:QC@HF/def2-SVP``, ``ORCA:QC@MP2/def2-TZVP``,
+``ORCA:QC@DLPNO-CCSD(T)/cc-pVTZ``. (Hartree-Fock and MP2 were ``ORCA:HF@...`` and
+``ORCA:MP2@...`` before 2026.10.12; those names are still accepted, with a warning.)
 
 How ORCA then runs is chosen for you, and gives the same numbers either way:
 
