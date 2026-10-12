@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.10.12.1 -- Hartree-Fock and MP2 are QC model chemistries
+    * ORCA's wavefunction methods all have the model-chemistry type ``QC``:
+      ``ORCA:QC@HF/...`` and ``ORCA:QC@MP2/...`` as well as coupled cluster, as in SEAMM's
+      naming of model chemistries. Results are labelled ``QC@HF/...``. Flowcharts with
+      the old names (``ORCA:HF@...``, ``ORCA:MP2@...``) still run, with a warning;
+      this needs model-chemistry-step 2026.10.12.
+    * A Model Chemistry with a forcefield (``FF``, ``ReaxFF``) or interatomic potential
+      (``IP``) is refused with a clear message.
+
 2026.10.12 -- Retry a failed SCF with a larger SThresh
     * If the SCF does not converge and the basis set is nearly linearly dependent
       (the smallest eigenvalue of the overlap matrix below 1e-6), ORCA is run once
