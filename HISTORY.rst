@@ -1,6 +1,18 @@
 =======
 History
 =======
+2026.10.12 -- Retry a failed SCF with a larger SThresh
+    * If the SCF does not converge and the basis set is nearly linearly dependent
+      (the smallest eigenvalue of the overlap matrix below 1e-6), ORCA is run once
+      more with SThresh 1e-6. On by default, in the Energy, Optimization,
+      Frequencies and BSSE sub-steps ("Retry a failed SCF with a larger SThresh",
+      "SThresh for the retry"), and for calculations run through a model chemistry
+      (options ``sthresh_retry`` and ``sthresh``). A retry is noted in the output,
+      and the failed output is kept with the file ``orca.sthresh-retry``; a retried
+      run is not added to the timing records.
+    * The help for "SCF SThresh" now says what it is: the threshold for linear
+      dependence of the basis set, not an SCF convergence threshold.
+
 2026.10.10 -- Option flags and toggle ladders for the cost model
     * ``TIMING_SPEC`` names the '!' line as the runs' options (``flags``), less the
       task, basis sets and method, so the cost model can learn what an option such as

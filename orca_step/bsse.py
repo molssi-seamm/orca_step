@@ -343,6 +343,7 @@ class BSSE(Energy):
             )
 
         specs = seamm_bsse.generate_job_specs(fragments)
+        sthresh_retry = self.sthresh_retry(P)
         printer.important(
             __(
                 f"Running {len(specs)} ORCA job(s) for the "
@@ -399,6 +400,7 @@ class BSSE(Energy):
                 extra_blocks=method_blocks,
                 make_wfx=job_make_wfx,
                 key=spec.label,
+                sthresh_retry=sthresh_retry,
             )
             task_set.add(task)
             directories[spec.label] = job_directory
@@ -407,6 +409,7 @@ class BSSE(Energy):
 
         for result in task_set.run():
             job_directory = directories[result.key]
+            self._note_sthresh_retry(job_directory, sthresh_retry)
             self._check_task_result(result, job_directory)
             self._report_run_location(result, job_directory)
             spec = by_label[result.key]

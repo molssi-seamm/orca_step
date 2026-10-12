@@ -36,6 +36,8 @@ class TkBSSE(TkEnergy):
             "auxiliary basis",
             "grid",
             "scf convergence",
+            "scf retry",
+            "retry sthresh",
             "extra keywords",
             "fragments",
         ]

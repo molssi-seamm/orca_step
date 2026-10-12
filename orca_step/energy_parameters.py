@@ -208,13 +208,44 @@ class EnergyParameters(seamm.Parameters):
             "format_string": "",
             "description": "SCF SThresh:",
             "help_text": (
-                "ORCA's SCF convergence threshold ('SThresh' in the '%scf' "
-                "block), in E_h. 'default' emits nothing, so the "
-                "SCF-convergence preset above (or ORCA's own default) governs "
-                "SThresh. Any explicit value -- e.g. ORCA's nominal 1.0e-07 --"
-                " is written to '%scf SThresh', overriding whatever the preset "
-                "would otherwise set. Lower it for a tighter SCF (smoother "
-                "energies/forces), raise it to converge more loosely."
+                "ORCA's threshold for linear dependence of the basis set "
+                "('SThresh' in the '%scf' block): combinations of basis "
+                "functions whose overlap-matrix eigenvalue is below it are "
+                "removed. 'default' writes nothing, so ORCA's default (1e-7) "
+                "applies. Large diffuse basis sets (e.g. def2-QZVPPD) on "
+                "clusters can be nearly linearly dependent, which can stop the "
+                "SCF converging; a larger value such as 1e-6 removes more "
+                "functions and helps it converge."
+            ),
+        },
+        "scf retry": {
+            "default": "yes",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("yes", "no"),
+            "format_string": "",
+            "description": "Retry a failed SCF with a larger SThresh:",
+            "help_text": (
+                "If the SCF does not converge and the basis set is nearly "
+                "linearly dependent (the smallest eigenvalue of the overlap "
+                "matrix is below 'SThresh for the retry'), run ORCA once more "
+                "with that SThresh. The note in the output, the failed output "
+                "(orca.out.scf-failed) and the file orca.sthresh-retry record "
+                "that it happened."
+            ),
+        },
+        "retry sthresh": {
+            "applies_when": {"scf retry": "yes"},
+            "default": "1.0e-06",
+            "kind": "string",
+            "default_units": "",
+            "enumeration": ("1.0e-06", "1.0e-05"),
+            "format_string": "",
+            "description": "SThresh for the retry:",
+            "help_text": (
+                "The SThresh a failed SCF is retried with. It must be larger "
+                "than the run's own SThresh (ORCA's default is 1e-7), or there "
+                "is no retry."
             ),
         },
         "initial guess": {

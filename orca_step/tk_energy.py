@@ -66,6 +66,7 @@ class TkEnergy(seamm.TkNode):
             "method",
             "initial guess",
             "save orbital checkpoint",
+            "scf retry",
         ):
             w = self[item]
             w.combobox.bind("<<ComboboxSelected>>", self.reset_dialog)
@@ -180,8 +181,9 @@ class TkEnergy(seamm.TkNode):
         for key in self._run_detail_keys():
             if not applies(key):
                 continue
-            # 'checkpoint name' is shown indented under 'save orbital checkpoint'.
-            if key == "checkpoint name":
+            # 'checkpoint name' is shown indented under 'save orbital checkpoint',
+            # and the retry's SThresh under 'scf retry'.
+            if key in ("checkpoint name", "retry sthresh"):
                 add_indented(key)
                 continue
 
@@ -230,6 +232,8 @@ class TkEnergy(seamm.TkNode):
             "grid",
             "scf convergence",
             "sthresh",
+            "scf retry",
+            "retry sthresh",
             "initial guess",
             "save orbital checkpoint",
             "checkpoint name",
