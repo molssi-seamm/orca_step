@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.10.10 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.10.12 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=355f04a4"></script>
+    <script src="../../_static/documentation_options.js?v=a6df0ad7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.10" />
+  <meta name="docsearch:version" content="2026.10.12" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -978,6 +978,22 @@
                 <span class="s2">"only the energy."</span>
             <span class="p">)</span>
 
+<div class="viewcode-block" id="Energy.sthresh_retry">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy.Energy.sthresh_retry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sthresh_retry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The SThresh to rerun a failed SCF with, or None (see 'scf retry')."""</span>
+        <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scf retry"</span><span class="p">,</span> <span class="s2">"yes"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"yes"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">sthresh_retry_value</span><span class="p">(</span>
+            <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"retry sthresh"</span><span class="p">,</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">DEFAULT_RETRY_STHRESH</span><span class="p">),</span>
+            <span class="p">(</span>
+                <span class="kc">None</span>
+                <span class="k">if</span> <span class="s2">"sthresh"</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="s2">"unused"</span><span class="p">,</span> <span class="p">())</span>
+                <span class="k">else</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sthresh"</span><span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="Energy.extra_input">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy.Energy.extra_input">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">extra_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
@@ -1411,6 +1427,7 @@
             <span class="n">extra_blocks</span><span class="o">=</span><span class="n">extra_blocks</span><span class="p">,</span>
             <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span>
             <span class="n">make_wfx</span><span class="o">=</span><span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"save wavefunction"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span><span class="p">,</span>
+            <span class="n">sthresh_retry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sthresh_retry</span><span class="p">(</span><span class="n">P</span><span class="p">),</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"save orbital checkpoint"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"yes"</span><span class="p">:</span>

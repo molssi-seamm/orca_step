@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.10 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.12 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=355f04a4"></script>
+    <script src="../../_static/documentation_options.js?v=a6df0ad7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.10" />
+  <meta name="docsearch:version" content="2026.10.12" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1139,6 +1139,120 @@
 
 
 
+<span class="c1">#: ORCA's default SThresh: overlap eigenvalues below it are removed</span>
+<span class="n">ORCA_DEFAULT_STHRESH</span> <span class="o">=</span> <span class="mf">1.0e-07</span>
+<span class="c1">#: The SThresh a failed SCF is retried with, by default</span>
+<span class="n">DEFAULT_RETRY_STHRESH</span> <span class="o">=</span> <span class="mf">1.0e-06</span>
+<span class="c1">#: Written by the retry: the failed run's smallest overlap eigenvalue line</span>
+<span class="n">STHRESH_RETRY_MARKER</span> <span class="o">=</span> <span class="s2">"orca.sthresh-retry"</span>
+<span class="c1">#: The failed run's output, kept beside the retried one</span>
+<span class="n">STHRESH_FAILED_OUTPUT</span> <span class="o">=</span> <span class="s2">"orca.out.scf-failed"</span>
+<span class="c1">#: The retry's input, written with the task's other files</span>
+<span class="n">_RETRY_INPUT</span> <span class="o">=</span> <span class="s2">"orca.inp.sthresh"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_threshold</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A threshold from a parameter or option: a float, or None for 'default',</span>
+<span class="sd">    'no', 'none' or empty."""</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">,</span> <span class="s2">"off"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"An ORCA SThresh must be a number, not '</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sthresh_retry_value</span><span class="p">(</span><span class="n">retry</span><span class="p">,</span> <span class="n">sthresh</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The SThresh to retry a failed SCF with, or None for no retry.</span>
+
+<span class="sd">    ``retry`` is the retry's threshold (a number, or 'no'/'none'/None to turn</span>
+<span class="sd">    it off); ``sthresh`` the run's own SThresh, if one is set explicitly. A</span>
+<span class="sd">    retry that would not raise the threshold above the run's own (or ORCA's</span>
+<span class="sd">    default 1e-7) could not remove anything, so there is none.</span>
+<span class="sd">    """</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">_threshold</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">_threshold</span><span class="p">(</span><span class="n">sthresh</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ORCA_DEFAULT_STHRESH</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="n">current</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sthresh_retry_input</span><span class="p">(</span><span class="n">input_text</span><span class="p">,</span> <span class="n">sthresh</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``input_text`` with ``%scf SThresh &lt;sthresh&gt; end`` added just before the</span>
+<span class="sd">    geometry, after any other blocks, so it overrides an earlier SThresh."""</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">input_text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"%scf SThresh </span><span class="si">{</span><span class="n">sthresh</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2"> end"</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"*"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">+</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">:])</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The ORCA input has no geometry ('* xyz ...')."</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sthresh_retry_command</span><span class="p">(</span><span class="n">sthresh</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The shell commands, after a first ORCA run, that rerun ORCA with the</span>
+<span class="sd">    larger SThresh if the SCF failed with the overlap nearly singular.</span>
+
+<span class="sd">    The retry runs only if the output says "SCF NOT CONVERGED" and its</span>
+<span class="sd">    smallest overlap eigenvalue is below ``sthresh`` -- otherwise the larger</span>
+<span class="sd">    threshold would remove nothing. The failed run's input, output and errors</span>
+<span class="sd">    are kept (``*.scf-failed``), its orbitals removed (ORCA would start from</span>
+<span class="sd">    them), and the eigenvalue line written to :data:`STHRESH_RETRY_MARKER`.</span>
+<span class="sd">    seamm_exec fills ``{...}`` from the configuration, so the commands have no</span>
+<span class="sd">    braces; ORCA exits 0 even when the SCF fails, so they test its output.</span>
+<span class="sd">    """</span>
+    <span class="n">smallest</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"'/^Smallest eigenvalue  / &amp;&amp; $NF+0 &lt; </span><span class="si">{</span><span class="n">sthresh</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">'"</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="s2">";"</span><span class="p">,</span>
+        <span class="s2">"if"</span><span class="p">,</span>
+        <span class="s2">"grep -q 'SCF NOT CONVERGED' orca.out"</span><span class="p">,</span>
+        <span class="s2">"&amp;&amp;"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"awk </span><span class="si">{</span><span class="n">smallest</span><span class="si">}</span><span class="s2"> orca.out | grep -q ."</span><span class="p">,</span>
+        <span class="s2">";"</span><span class="p">,</span>
+        <span class="s2">"then"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"awk </span><span class="si">{</span><span class="n">smallest</span><span class="si">}</span><span class="s2"> orca.out &gt; </span><span class="si">{</span><span class="n">STHRESH_RETRY_MARKER</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">";"</span><span class="p">,</span>
+        <span class="s2">"mv orca.inp orca.inp.scf-failed"</span><span class="p">,</span>
+        <span class="s2">";"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"mv orca.out </span><span class="si">{</span><span class="n">STHRESH_FAILED_OUTPUT</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">";"</span><span class="p">,</span>
+        <span class="s2">"mv orca.err orca.err.scf-failed"</span><span class="p">,</span>
+        <span class="s2">";"</span><span class="p">,</span>
+        <span class="s2">"rm -f orca.gbw"</span><span class="p">,</span>
+        <span class="s2">";"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"cp </span><span class="si">{</span><span class="n">_RETRY_INPUT</span><span class="si">}</span><span class="s2"> orca.inp"</span><span class="p">,</span>
+        <span class="s2">";"</span><span class="p">,</span>
+        <span class="s2">"</span><span class="si">{code}</span><span class="s2"> orca.inp &gt; orca.out 2&gt; orca.err"</span><span class="p">,</span>
+        <span class="s2">";"</span><span class="p">,</span>
+        <span class="s2">"fi"</span><span class="p">,</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sthresh_retry_note</span><span class="p">(</span><span class="n">marker_text</span><span class="p">,</span> <span class="n">sthresh</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""What to tell the user about a retry, from the marker's text, or None."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">marker_text</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">marker_text</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">eigenvalue</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">marker_text</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">eigenvalue</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">smallest</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"its smallest overlap eigenvalue was </span><span class="si">{</span><span class="n">eigenvalue</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">if</span> <span class="n">eigenvalue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="s2">"its overlap matrix was nearly singular"</span>
+    <span class="p">)</span>
+    <span class="n">retried</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"SThresh </span><span class="si">{</span><span class="n">sthresh</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">sthresh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"a larger SThresh"</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"The SCF did not converge, and </span><span class="si">{</span><span class="n">smallest</span><span class="si">}</span><span class="s2">, so ORCA was rerun with "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">retried</span><span class="si">}</span><span class="s2">, which removes the nearly linearly dependent combinations of "</span>
+        <span class="sa">f</span><span class="s2">"basis functions. The failed output is kept as </span><span class="si">{</span><span class="n">STHRESH_FAILED_OUTPUT</span><span class="si">}</span><span class="s2">."</span>
+    <span class="p">)</span>
+
+
 <div class="viewcode-block" id="task_kind">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.task_kind">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">task_kind</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">):</span>
@@ -1726,7 +1840,14 @@
     <span class="c1"># ------------------------------------------------------------------</span>
 <div class="viewcode-block" id="ORCABase.run_orca">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.ORCABase.run_orca">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">run_orca</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_orca</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">keyword_line</span><span class="p">,</span>
+        <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span>
+        <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">sthresh_retry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Write the ORCA input for the node's own configuration, run ORCA,</span>
 <span class="sd">        and return the parsed results.</span>
 
@@ -1750,6 +1871,8 @@
 <span class="sd">            convert the density (retained by the ``keepdensity`` keyword) into an</span>
 <span class="sd">            AIMPAC ``orca.wfx`` wavefunction file for a following Atomic Charges</span>
 <span class="sd">            step. Requires the ORCA input to include ``keepdensity``.</span>
+<span class="sd">        sthresh_retry : float | None</span>
+<span class="sd">            The SThresh to rerun a failed SCF with; see :meth:`run_orca_job`.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1765,6 +1888,7 @@
             <span class="n">extra_blocks</span><span class="o">=</span><span class="n">extra_blocks</span><span class="p">,</span>
             <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span>
             <span class="n">make_wfx</span><span class="o">=</span><span class="n">make_wfx</span><span class="p">,</span>
+            <span class="n">sthresh_retry</span><span class="o">=</span><span class="n">sthresh_retry</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -1782,6 +1906,7 @@
         <span class="n">extra_blocks</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span>
         <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">sthresh_retry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Write an ORCA input for an explicit geometry/charge/multiplicity,</span>
 <span class="sd">        run ORCA, and return the parsed results.</span>
@@ -1820,6 +1945,10 @@
 <span class="sd">        make_wfx : bool</span>
 <span class="sd">            After ORCA finishes, run ``orca_2aim`` to convert the retained</span>
 <span class="sd">            density into an AIMPAC ``orca.wfx`` in *this job's* directory.</span>
+<span class="sd">        sthresh_retry : float | None</span>
+<span class="sd">            If the SCF fails with the overlap nearly singular, run ORCA again</span>
+<span class="sd">            with this SThresh (see :func:`sthresh_retry_command`). None: no</span>
+<span class="sd">            retry.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1837,9 +1966,11 @@
             <span class="n">extra_blocks</span><span class="o">=</span><span class="n">extra_blocks</span><span class="p">,</span>
             <span class="n">extra_files</span><span class="o">=</span><span class="n">extra_files</span><span class="p">,</span>
             <span class="n">make_wfx</span><span class="o">=</span><span class="n">make_wfx</span><span class="p">,</span>
+            <span class="n">sthresh_retry</span><span class="o">=</span><span class="n">sthresh_retry</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">run_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">run_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">run_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_note_sthresh_retry</span><span class="p">(</span><span class="n">run_directory</span><span class="p">,</span> <span class="n">sthresh_retry</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_task_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_report_run_location</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">record_timing</span><span class="p">(</span>
@@ -1874,6 +2005,17 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_net_force</span><span class="p">(</span><span class="n">run_directory</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_note_sthresh_retry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">,</span> <span class="n">sthresh</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Tell the user if the run's SCF was retried with a larger SThresh;</span>
+<span class="sd">        return the note, or None."""</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">run_directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">STHRESH_RETRY_MARKER</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">marker</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">note</span> <span class="o">=</span> <span class="n">sthresh_retry_note</span><span class="p">(</span><span class="n">marker</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">),</span> <span class="n">sthresh</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">note</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span><span class="n">__</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Note: </span><span class="si">{</span><span class="n">note</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">" "</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">note</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_net_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_directory</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Warn when the run's gradient is not translation-invariant; return the</span>
@@ -1913,10 +2055,13 @@
 <span class="w">        </span><span class="sd">"""Append this ORCA run's timing record (``~/.seamm.d/timing/orca.csv``)</span>
 <span class="sd">        -- the common columns from the task layer, the descriptors from</span>
 <span class="sd">        :func:`timing_descriptors`. Never raises; a restored result is not</span>
-<span class="sd">        recorded. See seamm_exec's campaign of 2026-10-05.</span>
+<span class="sd">        recorded, nor a run retried with a larger SThresh (its time is that of</span>
+<span class="sd">        two runs). See seamm_exec's campaign of 2026-10-05.</span>
 <span class="sd">        """</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">restored</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">run_directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">STHRESH_RETRY_MARKER</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="k">return</span>
             <span class="n">n_atoms</span><span class="p">,</span> <span class="n">n_heavy</span><span class="p">,</span> <span class="n">n_ghosts</span> <span class="o">=</span> <span class="n">_heavy_atoms</span><span class="p">(</span>
                 <span class="n">configuration</span><span class="p">,</span> <span class="n">atom_indices</span><span class="p">,</span> <span class="n">ghost_atoms</span>
@@ -1953,6 +2098,7 @@
         <span class="n">extra_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">make_wfx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">key</span><span class="o">=</span><span class="s2">"orca"</span><span class="p">,</span>
+        <span class="n">sthresh_retry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""The :class:`seamm_exec.Task` that :meth:`run_orca_job` runs, built</span>
 <span class="sd">        without running it, so that a step can run several at once (a BSSE</span>
@@ -1995,6 +2141,9 @@
         <span class="k">if</span> <span class="n">extra_files</span><span class="p">:</span>
             <span class="n">files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_files</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"orca.inp (</span><span class="si">{</span><span class="n">run_directory</span><span class="si">}</span><span class="s2">):</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="n">input_text</span><span class="p">)</span>
+        <span class="c1"># The fingerprint is the calculation asked for: the retry's input, added</span>
+        <span class="c1"># below, is not part of it, so turning the retry on or off reruns nothing.</span>
+        <span class="n">fingerprint</span> <span class="o">=</span> <span class="n">_fingerprint</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">make_wfx</span><span class="p">)</span>
 
         <span class="c1"># The task names only the program; where it runs, the 'orca' resolver</span>
         <span class="c1"># (orca_step.resolver) supplies ORCA's full path -- ORCA must be invoked</span>
@@ -2014,6 +2163,12 @@
             <span class="s2">"*.txt"</span><span class="p">,</span>
             <span class="s2">"*.engrad"</span><span class="p">,</span>
         <span class="p">]</span>
+        <span class="k">if</span> <span class="n">sthresh_retry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># A failed SCF with a nearly singular overlap is run again with the</span>
+            <span class="c1"># larger SThresh (see sthresh_retry_command)</span>
+            <span class="n">files</span><span class="p">[</span><span class="n">_RETRY_INPUT</span><span class="p">]</span> <span class="o">=</span> <span class="n">sthresh_retry_input</span><span class="p">(</span><span class="n">input_text</span><span class="p">,</span> <span class="n">sthresh_retry</span><span class="p">)</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="n">sthresh_retry_command</span><span class="p">(</span><span class="n">sthresh_retry</span><span class="p">)</span>
+            <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="n">STHRESH_RETRY_MARKER</span><span class="p">,</span> <span class="n">STHRESH_FAILED_OUTPUT</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
             <span class="c1"># {orca_2aim} comes from the resolver: beside the orca binary.</span>
             <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"&amp;&amp;"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{orca_2aim}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">,</span> <span class="s2">"2&gt;&amp;1"</span><span class="p">]</span>
@@ -2051,7 +2206,7 @@
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">resources</span><span class="o">=</span><span class="n">seamm_exec</span><span class="o">.</span><span class="n">Resources</span><span class="p">(</span><span class="n">ntasks</span><span class="o">=</span><span class="n">n_cores</span><span class="p">),</span>
             <span class="n">estimated_seconds</span><span class="o">=</span><span class="n">estimate</span><span class="p">,</span>
-            <span class="n">fingerprint</span><span class="o">=</span><span class="n">_fingerprint</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">make_wfx</span><span class="p">),</span>
+            <span class="n">fingerprint</span><span class="o">=</span><span class="n">fingerprint</span><span class="p">,</span>
             <span class="c1"># ORCA exits 0 even after an error termination.</span>
             <span class="n">success_text</span><span class="o">=</span><span class="p">{</span><span class="s2">"orca.out"</span><span class="p">:</span> <span class="s2">"ORCA TERMINATED NORMALLY"</span><span class="p">},</span>
         <span class="p">)</span>

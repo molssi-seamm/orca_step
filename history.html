@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.10 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.12 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=355f04a4"></script>
+    <script src="_static/documentation_options.js?v=a6df0ad7"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.10" />
+  <meta name="docsearch:version" content="2026.10.12" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,19 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.12 – Retry a failed SCF with a larger SThresh</dt><dd><ul class="simple">
+<li><p>If the SCF does not converge and the basis set is nearly linearly dependent
+(the smallest eigenvalue of the overlap matrix below 1e-6), ORCA is run once
+more with SThresh 1e-6. On by default, in the Energy, Optimization,
+Frequencies and BSSE sub-steps (“Retry a failed SCF with a larger SThresh”,
+“SThresh for the retry”), and for calculations run through a model chemistry
+(options <code class="docutils literal notranslate"><span class="pre">sthresh_retry</span></code> and <code class="docutils literal notranslate"><span class="pre">sthresh</span></code>). A retry is noted in the output,
+and the failed output is kept with the file <code class="docutils literal notranslate"><span class="pre">orca.sthresh-retry</span></code>; a retried
+run is not added to the timing records.</p></li>
+<li><p>The help for “SCF SThresh” now says what it is: the threshold for linear
+dependence of the basis set, not an SCF convergence threshold.</p></li>
+</ul>
+</dd>
 <dt>2026.10.10 – Option flags and toggle ladders for the cost model</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">TIMING_SPEC</span></code> names the ‘!’ line as the runs’ options (<code class="docutils literal notranslate"><span class="pre">flags</span></code>), less the
 task, basis sets and method, so the cost model can learn what an option such as

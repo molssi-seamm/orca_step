@@ -173,12 +173,12 @@ cause numerical instabilities in the SCF, and diffuse-heavy sets (the augmented
 Raising ``SThresh`` above the default removes more of these functions and can
 cure the resulting SCF trouble.
 
-* ``default`` — emit nothing, so the SCF-convergence preset above (or ORCA's own
-  default of ``1.0e-07``) governs ``SThresh``.
-* an explicit value — written to ``%scf SThresh``, overriding whatever the preset
-  would otherwise set. ORCA recommends keeping it between ``1e-8`` and ``1e-5``;
-  raise it toward ``1e-6`` to shed near-dependent functions when a diffuse basis
-  will not converge.
+* ``default`` — emit nothing, so ORCA's default of ``1.0e-07`` applies. The SCF
+  convergence presets do not change it (ORCA 6.1.1 with ``TIGHTSCF`` still uses
+  ``1.0e-07``).
+* an explicit value — written to ``%scf SThresh``. ORCA recommends keeping it
+  between ``1e-8`` and ``1e-5``; raise it toward ``1e-6`` to shed near-dependent
+  functions when a diffuse basis will not converge.
 
 .. caution::
 
@@ -190,6 +190,38 @@ cure the resulting SCF trouble.
 See the ORCA manual's `basis-set section
 <https://orca-manual.mpi-muelheim.mpg.de/contents/essentialelements/basisset.html>`_
 for the full discussion of linear dependence and its automatic removal.
+
+Retrying a failed SCF with a larger SThresh
+-------------------------------------------
+
+Large diffuse basis sets on clusters are often nearly linearly dependent. In
+one MBE campaign every def2-QZVPPD calculation on clusters of fluoroethylene
+carbonate had a smallest overlap eigenvalue below ``1e-6``, and one pair's SCF
+never converged with the default ``SThresh`` of ``1e-7`` (1305 cycles, three
+times) but converged in 14 cycles with ``1e-6``. Raising ``SThresh`` for every
+calculation would change the basis of all of them, so instead a failed SCF is
+retried:
+
+* **Retry a failed SCF with a larger SThresh** (``yes`` by default): if the SCF
+  does not converge, and the smallest eigenvalue of the overlap matrix is below
+  the retry's ``SThresh``, ORCA is run once more with that ``SThresh``, from
+  scratch. If the smallest eigenvalue is above it, the larger threshold would
+  remove nothing, so there is no retry.
+* **SThresh for the retry** (``1.0e-06`` by default): it must be larger than the
+  run's own ``SThresh``, or there is no retry.
+
+A retry is noted in the step's output, and the run's directory keeps the failed
+output (``orca.out.scf-failed``, with its input and errors) and
+``orca.sthresh-retry``, which holds the smallest eigenvalue, so a campaign can
+count and check the calculations that needed it. A retried run is not added to
+the timing records, since its time is that of two runs.
+
+The calculations that other steps run through a model chemistry (see below) are
+retried the same way. The program driving them can change the retry's
+``SThresh`` with the ``sthresh_retry`` option, or turn the retry off with
+``"no"``, and can set the ``SThresh`` of every calculation with the ``sthresh``
+option. The retry does not change a calculation's fingerprint, so turning it on
+or off does not rerun finished calculations.
 
 Exact exchange for lone atoms and some elements
 ===============================================

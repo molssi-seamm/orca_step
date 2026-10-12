@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.10 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.10.12 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=355f04a4"></script>
+    <script src="../_static/documentation_options.js?v=a6df0ad7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.10" />
+  <meta name="docsearch:version" content="2026.10.12" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -666,12 +666,12 @@ cause numerical instabilities in the SCF, and diffuse-heavy sets (the augmented
 Raising <code class="docutils literal notranslate"><span class="pre">SThresh</span></code> above the default removes more of these functions and can
 cure the resulting SCF trouble.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> — emit nothing, so the SCF-convergence preset above (or ORCA’s own
-default of <code class="docutils literal notranslate"><span class="pre">1.0e-07</span></code>) governs <code class="docutils literal notranslate"><span class="pre">SThresh</span></code>.</p></li>
-<li><p>an explicit value — written to <code class="docutils literal notranslate"><span class="pre">%scf</span> <span class="pre">SThresh</span></code>, overriding whatever the preset
-would otherwise set. ORCA recommends keeping it between <code class="docutils literal notranslate"><span class="pre">1e-8</span></code> and <code class="docutils literal notranslate"><span class="pre">1e-5</span></code>;
-raise it toward <code class="docutils literal notranslate"><span class="pre">1e-6</span></code> to shed near-dependent functions when a diffuse basis
-will not converge.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> — emit nothing, so ORCA’s default of <code class="docutils literal notranslate"><span class="pre">1.0e-07</span></code> applies. The SCF
+convergence presets do not change it (ORCA 6.1.1 with <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code> still uses
+<code class="docutils literal notranslate"><span class="pre">1.0e-07</span></code>).</p></li>
+<li><p>an explicit value — written to <code class="docutils literal notranslate"><span class="pre">%scf</span> <span class="pre">SThresh</span></code>. ORCA recommends keeping it
+between <code class="docutils literal notranslate"><span class="pre">1e-8</span></code> and <code class="docutils literal notranslate"><span class="pre">1e-5</span></code>; raise it toward <code class="docutils literal notranslate"><span class="pre">1e-6</span></code> to shed near-dependent
+functions when a diffuse basis will not converge.</p></li>
 </ul>
 <div class="admonition caution">
 <p class="admonition-title">Caution</p>
@@ -682,6 +682,36 @@ can vary discontinuously from one structure to the next.</p>
 </div>
 <p>See the ORCA manual’s <a class="reference external" href="https://orca-manual.mpi-muelheim.mpg.de/contents/essentialelements/basisset.html">basis-set section</a>
 for the full discussion of linear dependence and its automatic removal.</p>
+<section id="retrying-a-failed-scf-with-a-larger-sthresh">
+<h3>Retrying a failed SCF with a larger SThresh<a class="headerlink" href="#retrying-a-failed-scf-with-a-larger-sthresh" title="Link to this heading">#</a></h3>
+<p>Large diffuse basis sets on clusters are often nearly linearly dependent. In
+one MBE campaign every def2-QZVPPD calculation on clusters of fluoroethylene
+carbonate had a smallest overlap eigenvalue below <code class="docutils literal notranslate"><span class="pre">1e-6</span></code>, and one pair’s SCF
+never converged with the default <code class="docutils literal notranslate"><span class="pre">SThresh</span></code> of <code class="docutils literal notranslate"><span class="pre">1e-7</span></code> (1305 cycles, three
+times) but converged in 14 cycles with <code class="docutils literal notranslate"><span class="pre">1e-6</span></code>. Raising <code class="docutils literal notranslate"><span class="pre">SThresh</span></code> for every
+calculation would change the basis of all of them, so instead a failed SCF is
+retried:</p>
+<ul class="simple">
+<li><p><strong>Retry a failed SCF with a larger SThresh</strong> (<code class="docutils literal notranslate"><span class="pre">yes</span></code> by default): if the SCF
+does not converge, and the smallest eigenvalue of the overlap matrix is below
+the retry’s <code class="docutils literal notranslate"><span class="pre">SThresh</span></code>, ORCA is run once more with that <code class="docutils literal notranslate"><span class="pre">SThresh</span></code>, from
+scratch. If the smallest eigenvalue is above it, the larger threshold would
+remove nothing, so there is no retry.</p></li>
+<li><p><strong>SThresh for the retry</strong> (<code class="docutils literal notranslate"><span class="pre">1.0e-06</span></code> by default): it must be larger than the
+run’s own <code class="docutils literal notranslate"><span class="pre">SThresh</span></code>, or there is no retry.</p></li>
+</ul>
+<p>A retry is noted in the step’s output, and the run’s directory keeps the failed
+output (<code class="docutils literal notranslate"><span class="pre">orca.out.scf-failed</span></code>, with its input and errors) and
+<code class="docutils literal notranslate"><span class="pre">orca.sthresh-retry</span></code>, which holds the smallest eigenvalue, so a campaign can
+count and check the calculations that needed it. A retried run is not added to
+the timing records, since its time is that of two runs.</p>
+<p>The calculations that other steps run through a model chemistry (see below) are
+retried the same way. The program driving them can change the retry’s
+<code class="docutils literal notranslate"><span class="pre">SThresh</span></code> with the <code class="docutils literal notranslate"><span class="pre">sthresh_retry</span></code> option, or turn the retry off with
+<code class="docutils literal notranslate"><span class="pre">&quot;no&quot;</span></code>, and can set the <code class="docutils literal notranslate"><span class="pre">SThresh</span></code> of every calculation with the <code class="docutils literal notranslate"><span class="pre">sthresh</span></code>
+option. The retry does not change a calculation’s fingerprint, so turning it on
+or off does not rerun finished calculations.</p>
+</section>
 </section>
 <section id="exact-exchange-for-lone-atoms-and-some-elements">
 <h2>Exact exchange for lone atoms and some elements<a class="headerlink" href="#exact-exchange-for-lone-atoms-and-some-elements" title="Link to this heading">#</a></h2>
@@ -1415,7 +1445,10 @@ is refused too. See “Flowcharts without the editor” in SEAMM’s user guide.
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-grid">Integration grid</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-convergence">SCF convergence</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-sthresh-linear-dependence">SCF SThresh (linear dependence)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scf-sthresh-linear-dependence">SCF SThresh (linear dependence)</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#retrying-a-failed-scf-with-a-larger-sthresh">Retrying a failed SCF with a larger SThresh</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exact-exchange-for-lone-atoms-and-some-elements">Exact exchange for lone atoms and some elements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initial-guess-and-wavefunction-restart">Initial guess and wavefunction restart</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extra-keywords-and-extra-orca-blocks">Extra keywords and extra ORCA blocks</a></li>
