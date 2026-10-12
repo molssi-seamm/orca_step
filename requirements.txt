@@ -8,3 +8,4 @@ seamm-bsse
 basis_set_exchange
 bibtexparser<2
 tabulate
+model-chemistry-step>=2026.10.12
