@@ -506,8 +506,8 @@ TIMING_BENCHMARK = {
     ],
     "chemistries": {
         "ORCA:DFT@B3LYP/def2-SVP": {"quick": 24, "full": 62},
-        "ORCA:HF@HF/def2-SVP": {"quick": 24, "full": 62},
-        "ORCA:MP2@MP2/def2-SVP": {"quick": 15, "full": 24},
+        "ORCA:QC@HF/def2-SVP": {"quick": 24, "full": 62},
+        "ORCA:QC@MP2/def2-SVP": {"quick": 15, "full": 24},
         "ORCA:DFT@REVDSD-PBEP86-D4_2021/def2-TZVPPD": {"quick": 15, "full": 24},
         # A basis-set ladder: the same molecules (water, ethanol, toluene) from
         # def2-SVP to def2-QZVPPD at one electron count each, with a hybrid and
@@ -782,12 +782,7 @@ def method_class(method=None, keyword_line=""):
         if name in functionals:
             return functionals[name]["category"]
         if name in methods:
-            kind = methods[name]["type"]
-            if kind == "QC":
-                return "DLPNO-CC" if "dlpno" in name.lower() else "CC"
-            if kind == "DFT":
-                return "DFT"
-            return kind
+            return methods[name].get("class") or methods[name]["type"]
     words = keyword_line.lower().split()
     for word in words:
         if word.startswith("dlpno-cc"):

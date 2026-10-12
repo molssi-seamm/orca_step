@@ -13,31 +13,43 @@ metadata = {}
 # Methods offered in the explicit GUI. Each is an ORCA "!" keyword. "type"
 # groups them for the model-chemistry protocol (QC = wavefunction, DFT, etc.).
 # The top-level method. For DFT the specific functional is chosen separately
-# (see metadata["functionals"]); "DFT" here is just the Kohn-Sham method. The
+# (see metadata["functionals"]); "DFT" here is just the Kohn-Sham method. "type" is
+# the model-chemistry type: DFT, or QC for the wavefunction methods (HF, MP2,
+# coupled cluster; ORCA:QC@HF/def2-SVP). "class" is the kind of method, for the
+# timing records and the checks that depend on it (HF, MP2, CC, DLPNO-CC). The
 # "gradients" key records whether ORCA has an ANALYTIC nuclear gradient for the
 # method ("analytic") or whether a numerical gradient is required ("numeric").
 # For "DFT" the gradient availability depends on the functional, so it is looked
 # up per functional instead.
 metadata["methods"] = {
-    "HF": {"type": "HF", "description": "Hartree-Fock", "gradients": "analytic"},
+    "HF": {
+        "type": "QC",
+        "class": "HF",
+        "description": "Hartree-Fock",
+        "gradients": "analytic",
+    },
     "MP2": {
-        "type": "MP2",
+        "type": "QC",
+        "class": "MP2",
         "description": "second-order Moller-Plesset (MP2)",
         "gradients": "analytic",
     },
     "RI-MP2": {
-        "type": "MP2",
+        "type": "QC",
+        "class": "MP2",
         "description": "RI-MP2 (resolution of identity)",
         "gradients": "analytic",
     },
     "CCSD(T)": {
         "type": "QC",
+        "class": "CC",
         "description": "coupled cluster CCSD(T)",
         # No analytic gradient for the (T) triples -> ORCA needs NUMGRAD.
         "gradients": "numeric",
     },
     "DLPNO-CCSD(T)": {
         "type": "QC",
+        "class": "DLPNO-CC",
         "description": "near-linear-scaling DLPNO-CCSD(T)",
         "needs_aux": True,
         # No analytic gradient for the (T) triples -> ORCA needs NUMGRAD.
@@ -45,6 +57,7 @@ metadata["methods"] = {
     },
     "CCSD(T)-F12D/RI": {
         "type": "QC",
+        "class": "CC",
         "description": "explicitly-correlated CCSD(T)-F12D (needs an F12 basis)",
         "needs_aux": True,
         # F12 + (T) has no analytic gradient in ORCA. The '/RI' is required --
@@ -55,6 +68,7 @@ metadata["methods"] = {
     },
     "DLPNO-CCSD(T)-F12D": {
         "type": "QC",
+        "class": "DLPNO-CC",
         "description": "DLPNO-CCSD(T)-F12D (explicitly correlated; F12 basis)",
         "needs_aux": True,
         "gradients": "numeric",

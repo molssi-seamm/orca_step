@@ -774,11 +774,11 @@ class Energy(orca_step.ORCABase):
                 "ORCA cannot provide. Choose an ORCA (or program-agnostic) model "
                 "chemistry, or set the method explicitly in the ORCA step."
             )
-        if mtype.upper() in ("SQM", "FF", "MLFF"):
+        if mtype.upper() in ("SQM", "FF", "REAXFF", "IP", "MLFF"):
             raise RuntimeError(
                 f"The model chemistry '{level}' is of type '{mtype}', which ORCA "
-                "does not provide. ORCA handles HF, DFT, MP2, and coupled-cluster "
-                "(QC) methods."
+                "does not provide. ORCA handles DFT and wavefunction methods (QC: "
+                "HF, MP2 and coupled cluster)."
             )
         if method == "":
             raise RuntimeError(

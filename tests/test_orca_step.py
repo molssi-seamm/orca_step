@@ -807,7 +807,7 @@ def test_model_string_explicit_non_dft():
         "basis": "6-31G*",
         "basis set extrapolation": "none",
     }
-    assert node._model_string(P) == "HF@HF/6-31G*"
+    assert node._model_string(P) == "QC@HF/6-31G*"
 
 
 def test_model_string_aliases_slash_in_functional():
