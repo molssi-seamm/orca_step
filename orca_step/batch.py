@@ -14,6 +14,12 @@ included), uses exact exchange (``NoCOSX``), as on every ORCA path
 (orca_step#44). ``options["exact_exchange_elements"]``, or the same key in the
 model chemistry's options, changes the element set ("none" for one-center jobs
 only).
+
+An SCF that fails with the basis set nearly linearly dependent is run once more
+with SThresh 1e-6 (see ``orca_base.sthresh_retry_command``); the task keeps its
+fingerprint, and ``orca.sthresh-retry`` in its directory records the retry.
+``options["sthresh_retry"]`` (or the model chemistry's) sets that SThresh, or
+"no" turns the retry off; ``options["sthresh"]`` sets the SThresh of every run.
 """
 
 import importlib.util
@@ -28,12 +34,21 @@ from seamm_exec.evaluator import AnalysisError, check_properties, structure_data
 from seamm_util import Q_
 
 from .orca_base import (
+    DEFAULT_RETRY_STHRESH,
+    STHRESH_FAILED_OUTPUT,
+    STHRESH_RETRY_MARKER,
+    _RETRY_INPUT,
     _fingerprint,
+    _threshold,
     double_hybrid_scf,
     engrad_gradient,
     gradient_batching_problem,
     net_force_problem,
     predicted_seconds,
+    sthresh_retry_command,
+    sthresh_retry_input,
+    sthresh_retry_note,
+    sthresh_retry_value,
 )
 
 logger = logging.getLogger(__name__)
@@ -132,6 +147,12 @@ def get_task(
         (model_chemistry.get("options") or {}).get("exact_exchange_elements"),
     )
 
+    def option(name, default=None):
+        """A task option, else the model chemistry's, else ``default``."""
+        if name in options:
+            return options[name]
+        return (model_chemistry.get("options") or {}).get(name, default)
+
     method, basis, blocks = method_and_blocks(model_chemistry)
     if multiplicity != 1 and blocks:
         raise ValueError(
@@ -154,6 +175,10 @@ def get_task(
         if resources.mem_per_cpu:
             maxcore = max(256, int(resources.mem_per_cpu / 1_000_000))
     blocks.append(f"%maxcore {maxcore}")
+    sthresh = _threshold(option("sthresh"))
+    if sthresh is not None:
+        blocks.append(f"%scf SThresh {sthresh:.3e} end")
+    retry = sthresh_retry_value(option("sthresh_retry", DEFAULT_RETRY_STHRESH), sthresh)
 
     gradients = "gradients" in properties
     text = helpers.orca_input(
@@ -173,6 +198,15 @@ def get_task(
     line, _ = double_hybrid_scf(first[1:].strip())
     text = f"! {line}\n{rest}"
     files["orca.inp"] = text
+    # The fingerprint is the calculation asked for, without the retry's input,
+    # so that adding the retry reruns nothing already finished.
+    fingerprint = _fingerprint(files, False)
+    cmd = ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
+    return_files = ["orca.out", "orca.err", "orca.engrad"]
+    if retry is not None:
+        files[_RETRY_INPUT] = sthresh_retry_input(text, retry)
+        cmd += sthresh_retry_command(retry)
+        return_files += [STHRESH_RETRY_MARKER, STHRESH_FAILED_OUTPUT]
 
     if resources is None:
         resources = seamm_exec.Resources(
@@ -181,10 +215,10 @@ def get_task(
     return seamm_exec.Task(
         key=key,
         program="orca",
-        cmd=["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"],
+        cmd=cmd,
         shell=True,
         files=files,
-        return_files=["orca.out", "orca.err", "orca.engrad"],
+        return_files=return_files,
         resources=resources,
         estimated_seconds=predicted_seconds(
             text.splitlines()[0].lstrip("! "),
@@ -195,7 +229,7 @@ def get_task(
             multiplicity=multiplicity,
             ntasks=ntasks,
         ),
-        fingerprint=_fingerprint(files, False),
+        fingerprint=fingerprint,
         success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
     )
 
@@ -217,7 +251,11 @@ def analyze_task(
     helpers = engine_helpers()
     options = dict(options or {})
     out = _text(result, "orca.out")
-    if task is not None:
+    note = sthresh_retry_note(_text(result, STHRESH_RETRY_MARKER))
+    if note is not None:
+        logger.warning(f"The ORCA calculation '{result.key}': {note}")
+    if task is not None and note is None:
+        # Not a retried run: its time is that of two runs
         _record_timing(task, result, out, model_chemistry, configuration, options)
     if "gradients" in properties:
         keyword_line = ""

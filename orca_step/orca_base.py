@@ -625,6 +625,120 @@ def double_hybrid_scf(keyword_line):
     return " ".join(words), note
 
 
+#: ORCA's default SThresh: overlap eigenvalues below it are removed
+ORCA_DEFAULT_STHRESH = 1.0e-07
+#: The SThresh a failed SCF is retried with, by default
+DEFAULT_RETRY_STHRESH = 1.0e-06
+#: Written by the retry: the failed run's smallest overlap eigenvalue line
+STHRESH_RETRY_MARKER = "orca.sthresh-retry"
+#: The failed run's output, kept beside the retried one
+STHRESH_FAILED_OUTPUT = "orca.out.scf-failed"
+#: The retry's input, written with the task's other files
+_RETRY_INPUT = "orca.inp.sthresh"
+
+
+def _threshold(value):
+    """A threshold from a parameter or option: a float, or None for 'default',
+    'no', 'none' or empty."""
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, str):
+        value = value.strip()
+        if value.lower() in ("", "default", "no", "none", "off"):
+            return None
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"An ORCA SThresh must be a number, not '{value}'.")
+    return value if value > 0 else None
+
+
+def sthresh_retry_value(retry, sthresh=None):
+    """The SThresh to retry a failed SCF with, or None for no retry.
+
+    ``retry`` is the retry's threshold (a number, or 'no'/'none'/None to turn
+    it off); ``sthresh`` the run's own SThresh, if one is set explicitly. A
+    retry that would not raise the threshold above the run's own (or ORCA's
+    default 1e-7) could not remove anything, so there is none.
+    """
+    value = _threshold(retry)
+    if value is None:
+        return None
+    current = _threshold(sthresh) or ORCA_DEFAULT_STHRESH
+    return value if value > current else None
+
+
+def sthresh_retry_input(input_text, sthresh):
+    """``input_text`` with ``%scf SThresh <sthresh> end`` added just before the
+    geometry, after any other blocks, so it overrides an earlier SThresh."""
+    lines = input_text.split("\n")
+    block = f"%scf SThresh {sthresh:.3e} end"
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("*"):
+            return "\n".join(lines[:i] + [block] + lines[i:])
+    raise ValueError("The ORCA input has no geometry ('* xyz ...').")
+
+
+def sthresh_retry_command(sthresh):
+    """The shell commands, after a first ORCA run, that rerun ORCA with the
+    larger SThresh if the SCF failed with the overlap nearly singular.
+
+    The retry runs only if the output says "SCF NOT CONVERGED" and its
+    smallest overlap eigenvalue is below ``sthresh`` -- otherwise the larger
+    threshold would remove nothing. The failed run's input, output and errors
+    are kept (``*.scf-failed``), its orbitals removed (ORCA would start from
+    them), and the eigenvalue line written to :data:`STHRESH_RETRY_MARKER`.
+    seamm_exec fills ``{...}`` from the configuration, so the commands have no
+    braces; ORCA exits 0 even when the SCF fails, so they test its output.
+    """
+    smallest = f"'/^Smallest eigenvalue  / && $NF+0 < {sthresh:.3e}'"
+    return [
+        ";",
+        "if",
+        "grep -q 'SCF NOT CONVERGED' orca.out",
+        "&&",
+        f"awk {smallest} orca.out | grep -q .",
+        ";",
+        "then",
+        f"awk {smallest} orca.out > {STHRESH_RETRY_MARKER}",
+        ";",
+        "mv orca.inp orca.inp.scf-failed",
+        ";",
+        f"mv orca.out {STHRESH_FAILED_OUTPUT}",
+        ";",
+        "mv orca.err orca.err.scf-failed",
+        ";",
+        "rm -f orca.gbw",
+        ";",
+        f"cp {_RETRY_INPUT} orca.inp",
+        ";",
+        "{code} orca.inp > orca.out 2> orca.err",
+        ";",
+        "fi",
+    ]
+
+
+def sthresh_retry_note(marker_text, sthresh=None):
+    """What to tell the user about a retry, from the marker's text, or None."""
+    if not marker_text or not marker_text.strip():
+        return None
+    try:
+        eigenvalue = float(marker_text.split()[-1])
+    except (IndexError, ValueError):
+        eigenvalue = None
+    smallest = (
+        f"its smallest overlap eigenvalue was {eigenvalue:.2e}"
+        if eigenvalue is not None
+        else "its overlap matrix was nearly singular"
+    )
+    retried = f"SThresh {sthresh:.1e}" if sthresh is not None else "a larger SThresh"
+    return (
+        f"The SCF did not converge, and {smallest}, so ORCA was rerun with "
+        f"{retried}, which removes the nearly linearly dependent combinations of "
+        f"basis functions. The failed output is kept as {STHRESH_FAILED_OUTPUT}."
+    )
+
+
 def task_kind(keyword_line):
     """What kind of calculation an ORCA '!' line asks for, for the timing
     records: ``numfreq``, ``freq``, ``opt``, ``numgrad``, ``gradient`` or
@@ -1193,7 +1307,14 @@ class ORCABase(seamm.Node):
     # ------------------------------------------------------------------
     # Execution
     # ------------------------------------------------------------------
-    def run_orca(self, keyword_line, extra_blocks="", extra_files=None, make_wfx=False):
+    def run_orca(
+        self,
+        keyword_line,
+        extra_blocks="",
+        extra_files=None,
+        make_wfx=False,
+        sthresh_retry=None,
+    ):
         """Write the ORCA input for the node's own configuration, run ORCA,
         and return the parsed results.
 
@@ -1217,6 +1338,8 @@ class ORCABase(seamm.Node):
             convert the density (retained by the ``keepdensity`` keyword) into an
             AIMPAC ``orca.wfx`` wavefunction file for a following Atomic Charges
             step. Requires the ORCA input to include ``keepdensity``.
+        sthresh_retry : float | None
+            The SThresh to rerun a failed SCF with; see :meth:`run_orca_job`.
 
         Returns
         -------
@@ -1232,6 +1355,7 @@ class ORCABase(seamm.Node):
             extra_blocks=extra_blocks,
             extra_files=extra_files,
             make_wfx=make_wfx,
+            sthresh_retry=sthresh_retry,
         )
 
     def run_orca_job(
@@ -1246,6 +1370,7 @@ class ORCABase(seamm.Node):
         extra_blocks="",
         extra_files=None,
         make_wfx=False,
+        sthresh_retry=None,
     ):
         """Write an ORCA input for an explicit geometry/charge/multiplicity,
         run ORCA, and return the parsed results.
@@ -1284,6 +1409,10 @@ class ORCABase(seamm.Node):
         make_wfx : bool
             After ORCA finishes, run ``orca_2aim`` to convert the retained
             density into an AIMPAC ``orca.wfx`` in *this job's* directory.
+        sthresh_retry : float | None
+            If the SCF fails with the overlap nearly singular, run ORCA again
+            with this SThresh (see :func:`sthresh_retry_command`). None: no
+            retry.
 
         Returns
         -------
@@ -1301,9 +1430,11 @@ class ORCABase(seamm.Node):
             extra_blocks=extra_blocks,
             extra_files=extra_files,
             make_wfx=make_wfx,
+            sthresh_retry=sthresh_retry,
         )
         run_directory = Path(task.directory)
         result = seamm_exec.run_task(task, node=self, directory=run_directory)
+        self._note_sthresh_retry(run_directory, sthresh_retry)
         self._check_task_result(result, run_directory)
         self._report_run_location(result, run_directory)
         self.record_timing(
@@ -1337,6 +1468,17 @@ class ORCABase(seamm.Node):
         if task_kind(keyword_line) == "gradient":
             self._check_net_force(run_directory)
         return data
+
+    def _note_sthresh_retry(self, run_directory, sthresh=None):
+        """Tell the user if the run's SCF was retried with a larger SThresh;
+        return the note, or None."""
+        marker = Path(run_directory) / STHRESH_RETRY_MARKER
+        if not marker.exists():
+            return None
+        note = sthresh_retry_note(marker.read_text(errors="replace"), sthresh)
+        if note is not None:
+            printer.important(__(f"Note: {note}", indent=self.indent + 4 * " "))
+        return note
 
     def _check_net_force(self, run_directory):
         """Warn when the run's gradient is not translation-invariant; return the
@@ -1374,10 +1516,13 @@ class ORCABase(seamm.Node):
         """Append this ORCA run's timing record (``~/.seamm.d/timing/orca.csv``)
         -- the common columns from the task layer, the descriptors from
         :func:`timing_descriptors`. Never raises; a restored result is not
-        recorded. See seamm_exec's campaign of 2026-10-05.
+        recorded, nor a run retried with a larger SThresh (its time is that of
+        two runs). See seamm_exec's campaign of 2026-10-05.
         """
         try:
             if result.restored:
+                return
+            if (Path(run_directory) / STHRESH_RETRY_MARKER).exists():
                 return
             n_atoms, n_heavy, n_ghosts = _heavy_atoms(
                 configuration, atom_indices, ghost_atoms
@@ -1411,6 +1556,7 @@ class ORCABase(seamm.Node):
         extra_files=None,
         make_wfx=False,
         key="orca",
+        sthresh_retry=None,
     ):
         """The :class:`seamm_exec.Task` that :meth:`run_orca_job` runs, built
         without running it, so that a step can run several at once (a BSSE
@@ -1453,6 +1599,9 @@ class ORCABase(seamm.Node):
         if extra_files:
             files.update(extra_files)
         logger.debug(f"orca.inp ({run_directory}):\n" + input_text)
+        # The fingerprint is the calculation asked for: the retry's input, added
+        # below, is not part of it, so turning the retry on or off reruns nothing.
+        fingerprint = _fingerprint(files, make_wfx)
 
         # The task names only the program; where it runs, the 'orca' resolver
         # (orca_step.resolver) supplies ORCA's full path -- ORCA must be invoked
@@ -1472,6 +1621,12 @@ class ORCABase(seamm.Node):
             "*.txt",
             "*.engrad",
         ]
+        if sthresh_retry is not None:
+            # A failed SCF with a nearly singular overlap is run again with the
+            # larger SThresh (see sthresh_retry_command)
+            files[_RETRY_INPUT] = sthresh_retry_input(input_text, sthresh_retry)
+            cmd += sthresh_retry_command(sthresh_retry)
+            return_files += [STHRESH_RETRY_MARKER, STHRESH_FAILED_OUTPUT]
         if make_wfx:
             # {orca_2aim} comes from the resolver: beside the orca binary.
             cmd += ["&&", "{orca_2aim}", "orca", ">", "orca_2aim.out", "2>&1"]
@@ -1509,7 +1664,7 @@ class ORCABase(seamm.Node):
             shell=True,
             resources=seamm_exec.Resources(ntasks=n_cores),
             estimated_seconds=estimate,
-            fingerprint=_fingerprint(files, make_wfx),
+            fingerprint=fingerprint,
             # ORCA exits 0 even after an error termination.
             success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
         )

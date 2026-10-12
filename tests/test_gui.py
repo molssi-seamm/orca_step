@@ -119,3 +119,9 @@ def test_layouts_follow_the_rules(orca, substep):
         for fragments in P["fragments"].enumeration:
             tk_node["fragments"].set(fragments)
             check(tk_node)
+    # Every sub-step can retry a failed SCF; the retry's SThresh only with it on
+    for retry in ("no", "yes"):
+        tk_node["scf retry"].set(retry)
+        check(tk_node)
+        assert tk_node["scf retry"].grid_info() != {}
+        assert (tk_node["retry sthresh"].grid_info() != {}) == (retry == "yes")

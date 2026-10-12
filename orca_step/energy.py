@@ -471,6 +471,19 @@ class Energy(orca_step.ORCABase):
                 "only the energy."
             )
 
+    def sthresh_retry(self, P):
+        """The SThresh to rerun a failed SCF with, or None (see 'scf retry')."""
+        if P.get("scf retry", "yes") != "yes":
+            return None
+        return orca_step.sthresh_retry_value(
+            P.get("retry sthresh", orca_step.DEFAULT_RETRY_STHRESH),
+            (
+                None
+                if "sthresh" in getattr(self.parameters, "unused", ())
+                else P.get("sthresh")
+            ),
+        )
+
     def extra_input(self, P):
         """Return ``(extra_blocks, extra_files)`` for the ORCA input: the BSE
         basis block (if used), the SCF guess/convergence block, an optional
@@ -899,6 +912,7 @@ class Energy(orca_step.ORCABase):
             extra_blocks=extra_blocks,
             extra_files=extra_files,
             make_wfx=P.get("save wavefunction", "no") == "yes",
+            sthresh_retry=self.sthresh_retry(P),
         )
 
         if P.get("save orbital checkpoint", "no") == "yes":

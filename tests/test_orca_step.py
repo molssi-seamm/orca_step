@@ -2376,9 +2376,12 @@ def test_bsse_run_wires_charges_ghosts_and_combines_energy(tmp_path, monkeypatch
         extra_blocks="",
         make_wfx=False,
         key="orca",
+        sthresh_retry=None,
     ):
         label = Path(directory).name
         assert key == label
+        # A failed SCF is retried with SThresh 1e-6 by default
+        assert sthresh_retry == 1.0e-06
         calls.append(
             {
                 "label": label,

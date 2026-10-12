@@ -25,6 +25,8 @@ class TkFrequencies(TkEnergy):
             "auxiliary basis",
             "grid",
             "scf convergence",
+            "scf retry",
+            "retry sthresh",
             "initial guess",
             "save orbital checkpoint",
             "checkpoint name",

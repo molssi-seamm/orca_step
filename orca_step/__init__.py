@@ -58,3 +58,8 @@ del get_versions, versions
 
 # The step's cost-model spec and timing benchmark, for seamm_exec
 from .orca_base import TIMING_SPEC, TIMING_BENCHMARK  # noqa: E402, F401
+from .orca_base import (  # noqa: E402, F401
+    DEFAULT_RETRY_STHRESH,
+    STHRESH_RETRY_MARKER,
+    sthresh_retry_value,
+)
