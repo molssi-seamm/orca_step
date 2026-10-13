@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.13 -- Bugfix: calculations through a model chemistry ran out of memory
+    * A calculation run through a model chemistry with given resources (e.g. by the MBE
+      step) set ORCA's ``%maxcore`` to all of the memory per core, leaving nothing for
+      ORCA's overshoot and the leader process, so at 2 ranks x 2 GB the calculations were
+      killed for exceeding their memory. ``%maxcore`` is now 80 % of the memory per
+      core, as with the default resources and in the ORCA step. Finished calculations
+      are not rerun: ``%maxcore`` is not part of a calculation's fingerprint.
+
 2026.10.12.1 -- Hartree-Fock and MP2 are QC model chemistries
     * ORCA's wavefunction methods all have the model-chemistry type ``QC``:
       ``ORCA:QC@HF/...`` and ``ORCA:QC@MP2/...`` as well as coupled cluster, as in SEAMM's
