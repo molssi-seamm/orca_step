@@ -173,7 +173,11 @@ def get_task(
         if resources.ntasks:
             ntasks = int(resources.ntasks)
         if resources.mem_per_cpu:
-            maxcore = max(256, int(resources.mem_per_cpu / 1_000_000))
+            # ORCA's %maxcore is a target that it overshoots, and the leader rank
+            # needs more besides, so keep 20 % of the memory per core in reserve,
+            # as for the default resources below and the ORCA step's own runs:
+            # at 2 ranks x 2 GB, %maxcore 2000 was killed for exceeding its 4 GB.
+            maxcore = max(256, int(0.8 * resources.mem_per_cpu / 1_000_000))
     blocks.append(f"%maxcore {maxcore}")
     sthresh = _threshold(option("sthresh"))
     if sthresh is not None:

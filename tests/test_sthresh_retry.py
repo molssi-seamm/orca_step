@@ -219,3 +219,33 @@ def test_the_note_needs_the_marker():
     assert sthresh_retry_note("") is None
     assert sthresh_retry_note(None) is None
     assert "nearly singular" in sthresh_retry_note("Smallest eigenvalue ... x")
+
+
+def test_maxcore_keeps_headroom():
+    """%maxcore is 80 % of the memory per core given, as for the default
+    resources (mbe 2026-10-12: 2 ranks x 2 GB with %maxcore 2000 were OOM-killed)."""
+    import seamm_exec
+    from orca_step.batch import get_task
+
+    water = Geometry(
+        [8, 1, 1], [[0.0, 0.0, 0.117], [0.0, 0.757, -0.469], [0.0, -0.757, -0.469]]
+    )
+    mc = {
+        "level": "ORCA:DFT@B3LYP/def2-SVP",
+        "method": "B3LYP",
+        "basis": "def2-SVP",
+        "options": {"mdi_method_arg": "B3LYP", "mdi_basis_arg": "def2-SVP"},
+    }
+    task = get_task(
+        water,
+        mc,
+        key="w",
+        resources=seamm_exec.Resources(ntasks=2, mem_per_cpu=2_000_000_000),
+    )
+    assert "%maxcore 1600\n" in task.files["orca.inp"]
+    assert "%pal nprocs 2 end" in task.files["orca.inp"]
+    default = get_task(water, mc, key="w")
+    assert "%maxcore 2000\n" in default.files["orca.inp"]
+    assert default.resources.mem_per_cpu == 2_500_000_000
+    # %maxcore is not part of what the task is: finished tasks are not rerun
+    assert task.fingerprint == default.fingerprint

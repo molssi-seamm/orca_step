@@ -891,6 +891,10 @@ element set with the ``exact_exchange_elements`` option, for example
 ``"Na Mg Zn B P K Ca"`` to add K and Ca, or ``"none"`` to keep COSX for
 everything but single atoms.
 
+Each calculation run this way gets ``%maxcore`` of 80 % of the memory per core it is
+given, keeping the rest for ORCA's overshoot and the leader process -- as the ORCA step's
+own runs do.
+
 Every calculation run this way uses tight SCF convergence and the fine integration
 grid (``TIGHTSCF DEFGRID3``). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA's looser defaults.
