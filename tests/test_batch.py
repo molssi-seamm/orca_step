@@ -137,6 +137,32 @@ def test_ghost_atoms_and_fragment_charge(tmp_path):
     assert task.cmd[0] == "{code}"
 
 
+def test_the_estimate_has_every_size_the_record_has(monkeypatch):
+    """The model predicts only from every size variable it was fitted with, so
+    the estimate must carry each one the timing record carries (without the
+    neighbour count every estimate fell back to the hand formula, 2026-10-16)."""
+    from seamm_exec import timing_model
+
+    from orca_step.batch import get_task
+    from orca_step.orca_base import TIMING_SPEC, _neighbours
+
+    seen = {}
+
+    def fake_predict(program, descriptors, **kwargs):
+        seen.update(descriptors)
+        return {"seconds": 42.0}
+
+    monkeypatch.setattr(timing_model, "predict", fake_predict)
+    dimer = Geometry(
+        [8, 1, 1, 8, 1, 1], WATERS[0] + [[2.9, 0, 0], [3.5, 0.8, 0], [3.5, -0.8, 0]]
+    )
+    options = {"atom_indices": [0, 1, 2, 3, 4, 5], "ghost_atoms": [3, 4, 5]}
+    task = get_task(dimer, _mc(), key="cp", options=options)
+    assert task.estimated_seconds == 42.0
+    assert [name for name in TIMING_SPEC["size"] if name not in seen] == []
+    assert seen["neighbours"] == _neighbours(dimer, [0, 1, 2, 3, 4, 5])["neighbours"]
+
+
 def test_analyze_task_refuses_partial_results(tmp_path):
     from orca_step.batch import analyze_task
     from seamm_exec import AnalysisError, TaskResult

@@ -266,6 +266,7 @@ def predicted_seconds(
     multiplicity=1,
     ntasks=1,
     quantile=0.5,
+    neighbours=None,
 ):
     """The expected time of an ORCA run, from the fitted cost model when there
     is one (``seamm_exec.timing_model.predict``), else :func:`estimated_seconds`.
@@ -287,6 +288,11 @@ def predicted_seconds(
     model : str, optional
         The ``type@method/basis`` string; the method and basis come from it
         unless ``basis`` is given.
+    neighbours : float, optional
+        The mean number of atoms within 8 Å of each centre, as the timing record
+        carries it (:func:`_neighbours`). The model needs every size variable it
+        was fitted with, so without this a model that uses it gives no
+        prediction and the hand estimate is used.
     """
     numbers = [int(z) for z in atomic_numbers]
     n_atoms = len(numbers)
@@ -312,6 +318,8 @@ def predicted_seconds(
             "nbf": estimated_basis_functions(basis, [*numbers, *ghost_numbers]),
             "keywords": keyword_line,
         }
+        if neighbours is not None:
+            descriptors["neighbours"] = neighbours
         result = timing_model.predict(
             "orca", descriptors, ntasks=ntasks, quantile=quantile
         )
@@ -1640,6 +1648,7 @@ class ORCABase(seamm.Node):
             charge=charge,
             multiplicity=multiplicity,
             ntasks=n_cores,
+            neighbours=_neighbours(configuration, atom_indices).get("neighbours"),
         )
         task = seamm_exec.Task(
             key=key,
