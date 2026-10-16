@@ -162,6 +162,25 @@ def test_the_estimate_has_every_size_the_record_has(monkeypatch):
     assert [name for name in TIMING_SPEC["size"] if name not in seen] == []
     assert seen["neighbours"] == _neighbours(dimer, [0, 1, 2, 3, 4, 5])["neighbours"]
 
+    # A keyword with a '/' (REVDSD-PBEP86-D4/2021) keeps the basis apart: read as
+    # "2021/def2-SVP" it was unknown and the estimate an eighth of the time
+    revdsd = {
+        **_mc(),
+        "method": "REVDSD-PBEP86-D4_2021",
+        "options": {**_mc()["options"], "mdi_method_arg": "REVDSD-PBEP86-D4/2021"},
+    }
+    seen.clear()
+    get_task(dimer, revdsd, key="dh", options=options)
+    assert seen["basis"] == "def2-SVP" and seen["method"] == "REVDSD-PBEP86-D4_2021"
+    assert seen["method_class"] == "global double-hybrid"
+    seen.clear()
+    get_task(dimer, _mc(), key="b3", options=options)
+    assert seen["nbf"] > 0
+    b3lyp_nbf = seen["nbf"]
+    seen.clear()
+    get_task(dimer, revdsd, key="dh", options=options)
+    assert seen["nbf"] == b3lyp_nbf  # the same atoms and basis
+
 
 def test_analyze_task_refuses_partial_results(tmp_path):
     from orca_step.batch import analyze_task
