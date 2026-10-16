@@ -1,6 +1,12 @@
 =======
 History
 =======
+2026.10.16.2 -- Saying where the time estimates come from
+    * Each ORCA calculation's timing record says whether its estimated time came from
+      the model fitted to the timing records or from ORCA's rough formula, and when it
+      is the formula the log says why, once per reason (with seamm-exec 2026.10.16.2).
+      ``seamm-timing check`` flags the estimates from the formula.
+
 2026.10.16.1 -- Bugfix: estimated times were far too short for revDSD-PBEP86-D4/2021
     * The estimate of how long a calculation will take read the basis set wrongly when
       the method's name contains a '/', as revDSD-PBEP86-D4/2021 does: it took

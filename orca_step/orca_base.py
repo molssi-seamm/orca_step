@@ -267,6 +267,7 @@ def predicted_seconds(
     ntasks=1,
     quantile=0.5,
     neighbours=None,
+    with_source=False,
 ):
     """The expected time of an ORCA run, from the fitted cost model when there
     is one (``seamm_exec.timing_model.predict``), else :func:`estimated_seconds`.
@@ -293,9 +294,15 @@ def predicted_seconds(
         carries it (:func:`_neighbours`). The model needs every size variable it
         was fitted with, so without this a model that uses it gives no
         prediction and the hand estimate is used.
+    with_source : bool
+        Return ``(seconds, source)``, the source being ``"model"`` or
+        ``"formula"`` for :attr:`seamm_exec.Task.estimate_source`; when it is the
+        formula, seamm_exec logs why the model was not used (once per reason).
     """
     numbers = [int(z) for z in atomic_numbers]
     n_atoms = len(numbers)
+    fallback = estimated_seconds(keyword_line, n_atoms)
+    seconds, source = fallback, "formula"
     try:
         from seamm_exec import timing_model
 
@@ -320,14 +327,13 @@ def predicted_seconds(
         }
         if neighbours is not None:
             descriptors["neighbours"] = neighbours
-        result = timing_model.predict(
-            "orca", descriptors, ntasks=ntasks, quantile=quantile
+        result = timing_model.estimate(
+            "orca", descriptors, fallback=fallback, ntasks=ntasks, quantile=quantile
         )
-        if result is not None:
-            return float(result["seconds"])
+        seconds, source = result["seconds"], result["source"]
     except Exception as e:  # the hand estimate is the fallback
-        logger.debug(f"No model prediction for the ORCA run: {e}")
-    return estimated_seconds(keyword_line, n_atoms)
+        logger.warning(f"No model prediction for the ORCA run: {e}")
+    return (seconds, source) if with_source else seconds
 
 
 # ----------------------------------------------------------------------
@@ -1640,7 +1646,7 @@ class ORCABase(seamm.Node):
         ghosts = set(ghost_atoms or ())
         real_numbers = [all_numbers[i] for i in indices if i not in ghosts]
         ghost_numbers = [all_numbers[i] for i in indices if i in ghosts]
-        estimate = predicted_seconds(
+        estimate, estimate_source = predicted_seconds(
             keyword_line,
             real_numbers,
             ghost_numbers=ghost_numbers,
@@ -1649,6 +1655,7 @@ class ORCABase(seamm.Node):
             multiplicity=multiplicity,
             ntasks=n_cores,
             neighbours=_neighbours(configuration, atom_indices).get("neighbours"),
+            with_source=True,
         )
         task = seamm_exec.Task(
             key=key,
@@ -1668,6 +1675,7 @@ class ORCABase(seamm.Node):
             shell=True,
             resources=seamm_exec.Resources(ntasks=n_cores),
             estimated_seconds=estimate,
+            estimate_source=estimate_source,
             fingerprint=fingerprint,
             # ORCA exits 0 even after an error termination.
             success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
