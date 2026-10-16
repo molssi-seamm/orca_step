@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.10.16.1 -- Bugfix: estimated times were far too short for revDSD-PBEP86-D4/2021
+    * The estimate of how long a calculation will take read the basis set wrongly when
+      the method's name contains a '/', as revDSD-PBEP86-D4/2021 does: it took
+      "2021/def2-TZVPPD" as the basis, counted far too few basis functions, and
+      estimated about an eighth of the real time, so the jobs packed with such
+      calculations asked for too little time. The method is now passed with the '/'
+      spelled '_', as in the model chemistry (REVDSD-PBEP86-D4_2021), and the basis
+      separately.
+
 2026.10.16 -- Bugfix: the time of a calculation was estimated far too long
     * The estimate of how long an ORCA calculation will take, which the task layer uses
       to pack calculations into jobs and set their walltimes, came from a rough formula

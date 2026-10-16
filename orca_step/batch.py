@@ -117,6 +117,8 @@ def get_task(
     """A :class:`seamm_exec.Task` computing ORCA's energy (and gradient) for one
     structure. See the module docstring."""
     options = dict(options or {})
+    from .orca_step import mc_method_alias
+
     helpers = engine_helpers()
     data = structure_data(configuration)
     if data["periodicity"] != 0:
@@ -229,7 +231,10 @@ def get_task(
             text.splitlines()[0].lstrip("! "),
             [z for z, sym in zip(numbers, symbols) if not sym.endswith(":")],
             ghost_numbers=[z for z, sym in zip(numbers, symbols) if sym.endswith(":")],
-            model=f"{method.split()[0]}/{basis}",
+            # A model-chemistry string, so the '/' in a keyword such as
+            # REVDSD-PBEP86-D4/2021 is spelled '_' as in the model chemistry
+            model=f"{mc_method_alias(method.split()[0])}/{basis}",
+            basis=basis,
             charge=charge,
             multiplicity=multiplicity,
             ntasks=ntasks,
