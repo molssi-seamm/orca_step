@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.13 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.16 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=02a78ece"></script>
+    <script src="_static/documentation_options.js?v=5aae1070"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.13" />
+  <meta name="docsearch:version" content="2026.10.16" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,18 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.16 – Bugfix: the time of a calculation was estimated far too long</dt><dd><ul class="simple">
+<li><p>The estimate of how long an ORCA calculation will take, which the task layer uses
+to pack calculations into jobs and set their walltimes, came from a rough formula
+rather than the model fitted to the timing records whenever the model used how
+crowded the structure is (the mean number of atoms within 8 Å). The timing
+records carried it but the estimate did not, so every model fitted since
+2026-10-11 was ignored, and the formula was several times too long (4-11x on Owl,
+2-6x on TinkerCliffs for the MBE fragments). The estimates now come from the
+model: within 0.9-1.7x of the measured times for the MBE fragments, on both
+clusters.</p></li>
+</ul>
+</dd>
 <dt>2026.10.13 – Bugfix: calculations through a model chemistry ran out of memory</dt><dd><ul class="simple">
 <li><p>A calculation run through a model chemistry with given resources (e.g. by the MBE
 step) set ORCA’s <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code> to all of the memory per core, leaving nothing for
