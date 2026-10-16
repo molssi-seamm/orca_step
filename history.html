@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.16 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.16.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=5aae1070"></script>
+    <script src="_static/documentation_options.js?v=136a9e07"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.16" />
+  <meta name="docsearch:version" content="2026.10.16.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,16 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.16.1 – Bugfix: estimated times were far too short for revDSD-PBEP86-D4/2021</dt><dd><ul class="simple">
+<li><p>The estimate of how long a calculation will take read the basis set wrongly when
+the method’s name contains a ‘/’, as revDSD-PBEP86-D4/2021 does: it took
+“2021/def2-TZVPPD” as the basis, counted far too few basis functions, and
+estimated about an eighth of the real time, so the jobs packed with such
+calculations asked for too little time. The method is now passed with the ‘/’
+spelled ‘_’, as in the model chemistry (REVDSD-PBEP86-D4_2021), and the basis
+separately.</p></li>
+</ul>
+</dd>
 <dt>2026.10.16 – Bugfix: the time of a calculation was estimated far too long</dt><dd><ul class="simple">
 <li><p>The estimate of how long an ORCA calculation will take, which the task layer uses
 to pack calculations into jobs and set their walltimes, came from a rough formula
