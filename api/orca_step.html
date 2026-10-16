@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.16.1 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.16.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=136a9e07"></script>
+    <script src="../_static/documentation_options.js?v=2492146d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.16.1" />
+  <meta name="docsearch:version" content="2026.10.16.2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1452,7 +1452,7 @@ None. <code class="docutils literal notranslate"><span class="pre">gradient</spa
 
 <dl class="py function">
 <dt class="sig sig-object py" id="orca_step.orca_base.predicted_seconds">
-<span class="sig-prename descclassname"><span class="pre">orca_step.orca_base.</span></span><span class="sig-name descname"><span class="pre">predicted_seconds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_numbers</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ghost_numbers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#predicted_seconds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.predicted_seconds" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_base.</span></span><span class="sig-name descname"><span class="pre">predicted_seconds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyword_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_numbers</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ghost_numbers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntasks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_base.html#predicted_seconds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_base.predicted_seconds" title="Link to this definition">#</a></dt>
 <dd><p>The expected time of an ORCA run, from the fitted cost model when there
 is one (<code class="docutils literal notranslate"><span class="pre">seamm_exec.timing_model.predict</span></code>), else <code class="xref py py-func docutils literal notranslate"><span class="pre">estimated_seconds()</span></code>.</p>
 <p>The task layer adds its own margin to a task’s <code class="docutils literal notranslate"><span class="pre">estimated_seconds</span></code> (the
@@ -1472,6 +1472,9 @@ unless <code class="docutils literal notranslate"><span class="pre">basis</span>
 carries it (<code class="xref py py-func docutils literal notranslate"><span class="pre">_neighbours()</span></code>). The model needs every size variable it
 was fitted with, so without this a model that uses it gives no
 prediction and the hand estimate is used.</p></li>
+<li><p><strong>with_source</strong> (<em>bool</em>) – Return <code class="docutils literal notranslate"><span class="pre">(seconds,</span> <span class="pre">source)</span></code>, the source being <code class="docutils literal notranslate"><span class="pre">&quot;model&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;formula&quot;</span></code> for <code class="xref py py-attr docutils literal notranslate"><span class="pre">seamm_exec.Task.estimate_source</span></code>; when it is the
+formula, seamm_exec logs why the model was not used (once per reason).</p></li>
 </ul>
 </dd>
 </dl>
