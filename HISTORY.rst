@@ -1,6 +1,17 @@
 =======
 History
 =======
+2026.10.16 -- Bugfix: the time of a calculation was estimated far too long
+    * The estimate of how long an ORCA calculation will take, which the task layer uses
+      to pack calculations into jobs and set their walltimes, came from a rough formula
+      rather than the model fitted to the timing records whenever the model used how
+      crowded the structure is (the mean number of atoms within 8 Å). The timing
+      records carried it but the estimate did not, so every model fitted since
+      2026-10-11 was ignored, and the formula was several times too long (4-11x on Owl,
+      2-6x on TinkerCliffs for the MBE fragments). The estimates now come from the
+      model: within 0.9-1.7x of the measured times for the MBE fragments, on both
+      clusters.
+
 2026.10.13 -- Bugfix: calculations through a model chemistry ran out of memory
     * A calculation run through a model chemistry with given resources (e.g. by the MBE
       step) set ORCA's ``%maxcore`` to all of the memory per core, leaving nothing for

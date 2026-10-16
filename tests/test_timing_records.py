@@ -148,6 +148,9 @@ def test_predicted_seconds_uses_the_model_or_falls_back(monkeypatch):
     assert d["task"] == "gradient" and d["method_class"] == "global hybrid"
     assert d["method"] == "B3LYP" and d["basis"] == "def2-SVP"
     assert d["nbf"] == 24 and d["n_electrons"] == 10 and d["n_atoms"] == 3
+    assert "neighbours" not in d
+    predicted_seconds(line, [8, 1, 1], model="DFT@B3LYP/def2-SVP", neighbours=2.0)
+    assert seen["descriptors"]["neighbours"] == 2.0
 
     # No model: the hand estimate
     monkeypatch.setattr(timing_model, "predict", lambda *a, **k: None)
