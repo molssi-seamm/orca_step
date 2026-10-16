@@ -219,6 +219,20 @@ def get_task(
         resources = seamm_exec.Resources(
             ntasks=ntasks, mem_per_cpu=int(maxcore * 1_000_000 / 0.8)
         )
+    estimate, estimate_source = predicted_seconds(
+        text.splitlines()[0].lstrip("! "),
+        [z for z, sym in zip(numbers, symbols) if not sym.endswith(":")],
+        ghost_numbers=[z for z, sym in zip(numbers, symbols) if sym.endswith(":")],
+        # A model-chemistry string, so the '/' in a keyword such as
+        # REVDSD-PBEP86-D4/2021 is spelled '_' as in the model chemistry
+        model=f"{mc_method_alias(method.split()[0])}/{basis}",
+        basis=basis,
+        charge=charge,
+        multiplicity=multiplicity,
+        ntasks=ntasks,
+        neighbours=_neighbours(configuration, atom_indices).get("neighbours"),
+        with_source=True,
+    )
     return seamm_exec.Task(
         key=key,
         program="orca",
@@ -227,19 +241,8 @@ def get_task(
         files=files,
         return_files=return_files,
         resources=resources,
-        estimated_seconds=predicted_seconds(
-            text.splitlines()[0].lstrip("! "),
-            [z for z, sym in zip(numbers, symbols) if not sym.endswith(":")],
-            ghost_numbers=[z for z, sym in zip(numbers, symbols) if sym.endswith(":")],
-            # A model-chemistry string, so the '/' in a keyword such as
-            # REVDSD-PBEP86-D4/2021 is spelled '_' as in the model chemistry
-            model=f"{mc_method_alias(method.split()[0])}/{basis}",
-            basis=basis,
-            charge=charge,
-            multiplicity=multiplicity,
-            ntasks=ntasks,
-            neighbours=_neighbours(configuration, atom_indices).get("neighbours"),
-        ),
+        estimated_seconds=estimate,
+        estimate_source=estimate_source,
         fingerprint=fingerprint,
         success_text={"orca.out": "ORCA TERMINATED NORMALLY"},
     )

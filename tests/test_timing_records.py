@@ -152,10 +152,16 @@ def test_predicted_seconds_uses_the_model_or_falls_back(monkeypatch):
     predicted_seconds(line, [8, 1, 1], model="DFT@B3LYP/def2-SVP", neighbours=2.0)
     assert seen["descriptors"]["neighbours"] == 2.0
 
+    assert predicted_seconds(line, [8, 1, 1], with_source=True) == (42.0, "model")
+
     # No model: the hand estimate
     monkeypatch.setattr(timing_model, "predict", lambda *a, **k: None)
     assert predicted_seconds(line, [8, 1, 1], model="DFT@B3LYP/def2-SVP") == (
         estimated_seconds(line, 3)
+    )
+    assert predicted_seconds(line, [8, 1, 1], with_source=True) == (
+        estimated_seconds(line, 3),
+        "formula",
     )
 
     # A failure inside the model never stops the step

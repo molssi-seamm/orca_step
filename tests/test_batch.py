@@ -158,8 +158,8 @@ def test_the_estimate_has_every_size_the_record_has(monkeypatch):
     )
     options = {"atom_indices": [0, 1, 2, 3, 4, 5], "ghost_atoms": [3, 4, 5]}
     task = get_task(dimer, _mc(), key="cp", options=options)
-    assert task.estimated_seconds == 42.0
-    assert [name for name in TIMING_SPEC["size"] if name not in seen] == []
+    assert task.estimated_seconds == 42.0 and task.estimate_source == "model"
+    assert timing_model.missing_sizes(TIMING_SPEC, seen) == []
     assert seen["neighbours"] == _neighbours(dimer, [0, 1, 2, 3, 4, 5])["neighbours"]
 
     # A keyword with a '/' (REVDSD-PBEP86-D4/2021) keeps the basis apart: read as
