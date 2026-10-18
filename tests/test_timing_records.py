@@ -234,7 +234,9 @@ def test_batch_task_with_a_batched_gradient_fails(tmp_path):
     directory = tmp_path / "t"
     directory.mkdir()
     (directory / "orca.out").write_text(BATCHED + "FINAL SINGLE POINT ENERGY  -1.0\n")
-    result = SimpleNamespace(key="k", files={}, directory=directory)
+    result = seamm_exec.TaskResult(
+        key="k", state="finished", directory=directory, files={"orca.out": "orca.out"}
+    )
     conf = SimpleNamespace(
         atoms=SimpleNamespace(atomic_numbers=[11, 8, 1, 1]),
         charge=1,

@@ -339,13 +339,13 @@ def _record_timing(task, result, out, model_chemistry, configuration, options):
 
 
 def _text(result, name):
-    data = result.files.get(name)
+    """A returned file's text, read now: the result holds where it is, not its
+    contents (from disk, or from the task archive)."""
+    data = result.read(name)
     if data is None and result.directory is not None:
         path = Path(result.directory) / name
         if path.exists():
             data = path.read_text(errors="replace")
-    if isinstance(data, bytes):
-        data = data.decode(errors="replace")
     return data
 
 
