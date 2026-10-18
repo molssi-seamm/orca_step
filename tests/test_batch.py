@@ -186,7 +186,10 @@ def test_analyze_task_refuses_partial_results(tmp_path):
     from orca_step.batch import analyze_task
     from seamm_exec import AnalysisError, TaskResult
 
-    result = TaskResult(key="x", state="finished", files={"orca.out": "no energy"})
+    (tmp_path / "orca.out").write_text("no energy")
+    result = TaskResult(
+        key="x", state="finished", directory=tmp_path, files={"orca.out": "orca.out"}
+    )
     with pytest.raises(AnalysisError, match="has no energy, gradients"):
         analyze_task(result, _mc(), Geometry([1], [[0, 0, 0]]))
 
@@ -336,7 +339,7 @@ def test_net_force_limits_depend_on_cosx():
     assert engrad_gradient("garbage") is None
 
 
-def test_analyze_task_refuses_a_gradient_that_is_not_translation_invariant():
+def test_analyze_task_refuses_a_gradient_that_is_not_translation_invariant(tmp_path):
     """The batch path fails such a task rather than return its forces; the
     check sums every centre in orca.engrad, ghosts included."""
     from orca_step.batch import analyze_task
@@ -348,10 +351,13 @@ def test_analyze_task_refuses_a_gradient_that_is_not_translation_invariant():
     )
 
     def result(gradient):
+        (tmp_path / "orca.out").write_text(out)
+        (tmp_path / "orca.engrad").write_text(_engrad(gradient))
         return TaskResult(
             key="w",
             state="finished",
-            files={"orca.out": out, "orca.engrad": _engrad(gradient)},
+            directory=tmp_path,
+            files={"orca.out": "orca.out", "orca.engrad": "orca.engrad"},
         )
 
     data = analyze_task(result(_SOUND), _mc(), geometry)

@@ -1,6 +1,12 @@
 =======
 History
 =======
+2026.10.18 -- Internal: read the output files of tasks from disk
+    * seamm-exec 2026.10.18 records where each file a task returns is, not its contents,
+      since they can be gigabytes. The ORCA step reads the files it needs with
+      ``result.read()``, from disk or the task archive, and requires that version of
+      seamm-exec.
+
 2026.10.16.2 -- Saying where the time estimates come from
     * Each ORCA calculation's timing record says whether its estimated time came from
       the model fitted to the timing records or from ORCA's rough formula, and when it
