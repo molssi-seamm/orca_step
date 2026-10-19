@@ -255,6 +255,9 @@ class ORCAStep(object):
                         # The MDI engine runs ORCA once per structure, so many
                         # structures are better run as concurrent tasks.
                         "prefers_batch": True,
+                        # A task can use several cores (%pal), so fewer
+                        # structures than the job has cores share them out.
+                        "parallel_tasks": True,
                         # Whether ORCA has an analytic Hessian for the method,
                         # so a step need not start an engine to ask.
                         "analytic_hessian": bool(

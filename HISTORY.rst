@@ -1,6 +1,11 @@
 =======
 History
 =======
+2026.10.19 -- ORCA tasks use the job's cores when there are few
+    * ORCA's model chemistries say that a task can use several cores, so a structure
+      evaluated alone in a job, e.g. by the Energy step in a scan, runs with %pal over
+      the job's cores rather than on one. Needs seamm-exec 2026.10.19.
+
 2026.10.18 -- Internal: read the output files of tasks from disk
     * seamm-exec 2026.10.18 records where each file a task returns is, not its contents,
       since they can be gigabytes. The ORCA step reads the files it needs with
