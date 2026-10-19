@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.19.1 -- Bugfix: parallel ORCA used InfiniBand where a module set it
+    * A parallel ORCA run is on one node and uses shared memory, not InfiniBand, since
+      on a busy node InfiniBand (UCX) fails. With 'installation = modules', loading
+      the site's modules replaced those settings: ARC's OpenMPI module sets UCX, and
+      ORCA died at start-up on a node where UCX failed ("PML ucx cannot be
+      selected"). They are now also set in the command, after the modules are
+      loaded.
+
 2026.10.19 -- ORCA tasks use the job's cores when there are few
     * ORCA's model chemistries say that a task can use several cores, so a structure
       evaluated alone in a job, e.g. by the Energy step in a scan, runs with %pal over

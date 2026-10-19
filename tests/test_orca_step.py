@@ -2925,3 +2925,30 @@ def test_mpi_env_uses_shared_memory_for_parallel_runs(monkeypatch, tmp_path):
     monkeypatch.setattr(orca_base, "_mpirun_version", lambda m: ("Open MPI", 4))
     env, _ = orca_base.mpi_env(4, {"library-path": str(tmp_path / "lib")})
     assert env["OMPI_MCA_btl"] == "self,vader"
+
+
+def test_mpi_env_transport_survives_a_module_load(monkeypatch, tmp_path):
+    """The shared-memory settings are also exported in the command, which runs
+    after 'module load': ARC's OpenMPI module sets OMPI_MCA_pml=ucx, which replaced
+    the environment's settings, so ORCA died on a node whose UCX failed (tc128,
+    2026-10-19)."""
+    import subprocess
+
+    from orca_step import orca_base
+
+    monkeypatch.setattr(orca_base, "_cma_allowed", lambda: True)
+    env, lib_prefix = orca_base.mpi_env(4, {"installation": "modules"})
+    joined = " ".join(lib_prefix)
+    for name in ("OMPI_MCA_pml", "OMPI_MCA_btl", "OMPI_MCA_osc"):
+        assert f"export {name}=" in joined
+    # A stand-in for the module, then the prefix, as the executor runs them
+    script = (
+        "export OMPI_MCA_pml=ucx OMPI_MCA_btl='^uct,ofi'\n"
+        + joined
+        + " echo $OMPI_MCA_pml $OMPI_MCA_btl $OMPI_MCA_osc"
+    )
+    out = subprocess.run(["bash", "-c", script], capture_output=True, text=True)
+    assert out.stdout.split() == ["ob1", env["OMPI_MCA_btl"], "^ucx"]
+
+    _, lib_prefix = orca_base.mpi_env(1, {"installation": "modules"})
+    assert "OMPI_MCA" not in " ".join(lib_prefix)
