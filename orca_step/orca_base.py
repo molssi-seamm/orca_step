@@ -1102,12 +1102,21 @@ def mpi_env(n_cores, config):
     if n_cores > 1 and "SLURM_JOB_ID" not in os.environ:
         env["OMPI_MCA_hwloc_base_binding_policy"] = "none"
     if n_cores > 1:
-        env["OMPI_MCA_pml"] = "ob1"
-        env["OMPI_MCA_btl"] = f"self,{_shared_memory_btl(library_path)}"
-        env["OMPI_MCA_osc"] = "^ucx"
+        transport = {
+            "OMPI_MCA_pml": "ob1",
+            "OMPI_MCA_btl": f"self,{_shared_memory_btl(library_path)}",
+            "OMPI_MCA_osc": "^ucx",
+        }
         if not _cma_allowed():
             btl = _shared_memory_btl(library_path)
-            env[f"OMPI_MCA_btl_{btl}_single_copy_mechanism"] = "none"
+            transport[f"OMPI_MCA_btl_{btl}_single_copy_mechanism"] = "none"
+        env.update(transport)
+        # Also in the command, which runs after an 'installation = modules' module
+        # load: a site's OpenMPI module may set its own, e.g. ARC's sets
+        # OMPI_MCA_pml=ucx, which replaced these, so runs died on a node whose UCX
+        # failed ("PML ucx cannot be selected", tc128, 2026-10-19).
+        for name, value in transport.items():
+            lib_prefix.append(f"export {name}={shlex.quote(value)};")
     return env, lib_prefix
 
 
