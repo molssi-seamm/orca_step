@@ -64,9 +64,11 @@ class TkEnergy(seamm.TkNode):
         for item in (
             "use model chemistry",
             "method",
+            "functional",
             "initial guess",
             "save orbital checkpoint",
             "scf retry",
+            "save wavefunction",
         ):
             w = self[item]
             w.combobox.bind("<<ComboboxSelected>>", self.reset_dialog)
@@ -243,6 +245,7 @@ class TkEnergy(seamm.TkNode):
             "Hirshfeld charges",
             "polarizability",
             "save wavefunction",
+            "wfx density",
         )
 
     def _on_basis_source(self, widget=None):

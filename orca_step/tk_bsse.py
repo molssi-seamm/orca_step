@@ -51,4 +51,5 @@ class TkBSSE(TkEnergy):
         keys.append("optimize monomers")
         # For a following Atomic Charges (DDEC6) step: write the cluster's .wfx.
         keys.append("save wavefunction")
+        keys.append("wfx density")
         return tuple(keys)

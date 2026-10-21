@@ -1,7 +1,16 @@
 =======
 History
 =======
-2026.10.21 -- Internal: what storing results adds, in the help
+2026.10.21 -- The wfx file from the relaxed MP2 density
+    * For MP2 and double-hybrid methods, the wavefunction (wfx) file for a following
+      Atomic Charges step can now hold the relaxed MP2 density, from its natural
+      orbitals, instead of the SCF density (for a double hybrid, that of its
+      hybrid-DFT part). "Density in the wfx file" chooses; the default is the SCF
+      density, as before. The step says which density the file holds, checks that
+      orca_2aim used it (writing all the natural orbitals, which Chargemol needs),
+      and records it beside the file for the Atomic Charges step.
+      It is offered only for these methods, and refused for an open-shell DLPNO
+      double hybrid, which has no DLPNO-MP2 density in ORCA 6.1.1.
     * The help for the results and the user guide now say that nothing is stored by
       default, and that storing the energy and gradients adds them to the
       configuration -- three values per atom for the gradients -- and that Write

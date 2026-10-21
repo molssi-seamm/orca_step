@@ -28,6 +28,31 @@ logger = logging.getLogger(__name__)
 job = printing.getPrinter()
 printer = printing.getPrinter("ORCA")
 
+#: The classes of method with an MP2 part, whose relaxed density ORCA can give
+MP2_DENSITY_CLASSES = ("MP2", "global double-hybrid", "range-separated double-hybrid")
+#: The record of the density in the wfx file, beside it, for Atomic Charges
+WFX_DENSITY_FILE = "wfx_density.json"
+
+
+def used_mp2_natural_orbitals(directory):
+    """Whether orca_2aim made the wfx in ``directory`` from the natural orbitals of
+    the MP2 density (orca.mp2nat) rather than the SCF orbitals.
+
+    Its log says which: "(mp2nat file orca.mp2nat) ... done", or "(mp2nat file
+    orca.mp2nat not available - using orca.gbw". The step removes orca.mp2nat
+    afterwards with ORCA's other intermediate files, so the log is the evidence.
+    """
+    log = Path(directory) / "orca_2aim.out"
+    try:
+        text = log.read_text(errors="replace")
+    except OSError:
+        return (Path(directory) / "orca.mp2nat").exists()
+    for line in text.splitlines():
+        if "mp2nat file" in line:
+            return "not available" not in line
+    return False
+
+
 # Basis sets whose highest angular momentum is at least this (h functions and
 # above, e.g. cc-pV5Z) integrate poorly on ORCA's default grid (DEFGRID2), so
 # when the grid is left on 'default' the step bumps it to DEFGRID3.
@@ -421,7 +446,84 @@ class Energy(orca_step.ORCABase):
         ``%mp2 DLPNO true end`` for a DLPNO double hybrid, whose '!' keyword is
         the parent functional (see ``orca_step.orca_method_keyword``)."""
         method, _ = self._resolve_method_basis(P)
-        return orca_step.orca_method_blocks(method)
+        block = orca_step.orca_method_blocks(method)
+        if self._relaxed_mp2_density(P):
+            # The natural orbitals of the relaxed MP2 density (orca.mp2nat),
+            # which orca_2aim then uses for the wfx instead of the SCF orbitals
+            options = "Density relaxed NatOrbs true"
+            if block.endswith(" end"):  # '%mp2 DLPNO true end'
+                block = f"{block[: -len(' end')]} {options} end"
+            else:
+                block = f"%mp2 {options} end"
+        return block
+
+    @classmethod
+    def wfx_mode(cls, P):
+        """How to make the wfx file: False for none, True from the SCF orbitals,
+        "all" from all the natural orbitals of the relaxed MP2 density."""
+        if P.get("save wavefunction", "no") != "yes":
+            return False
+        return "all" if cls._relaxed_mp2_density(P) else True
+
+    @staticmethod
+    def _relaxed_mp2_density(P):
+        """Whether the wfx is to hold the relaxed MP2 density."""
+        return (
+            P.get("save wavefunction", "no") == "yes"
+            and P.get("wfx density", "SCF") == "MP2 relaxed"
+        )
+
+    def _record_wfx_density(self, P, method, directory=None):
+        """Check that the wfx holds the density asked for, say which it is, and
+        record it beside the wfx (``wfx_density.json``) for Atomic Charges.
+
+        orca_2aim uses ``orca.mp2nat`` when it exists and the SCF orbitals
+        otherwise, so a missing ``orca.mp2nat`` would silently give the SCF
+        density.
+        """
+        directory = Path(self.directory if directory is None else directory)
+        relaxed = self._relaxed_mp2_density(P)
+        if relaxed and not used_mp2_natural_orbitals(directory):
+            raise RuntimeError(
+                "orca_2aim did not find the natural orbitals of the relaxed MP2 "
+                f"density (orca.mp2nat) in {directory}, so the wfx file holds the "
+                "SCF density instead. See orca.out and orca_2aim.out there."
+            )
+        density = "MP2 relaxed" if relaxed else "SCF"
+        record = {
+            "density": density,
+            "orbitals": "MP2 natural orbitals" if relaxed else "SCF orbitals",
+            "method": method,
+            "model": self.model,
+        }
+        (directory / WFX_DENSITY_FILE).write_text(json.dumps(record, indent=4))
+        text = (
+            "The wavefunction file (orca.wfx) holds the relaxed MP2 density, from "
+            "its natural orbitals."
+            if relaxed
+            else "The wavefunction file (orca.wfx) holds the SCF density."
+        )
+        printer.important(__(text, indent=self.indent + 4 * " "))
+
+    def _check_wfx_density(self, P, method, multiplicity):
+        """Stop early when the relaxed MP2 density is asked for but is not
+        available: for a method without an MP2 part, or for an open-shell DLPNO
+        double hybrid (ORCA 6.1.1: "Density calculations presently only
+        implemented for RHF")."""
+        if not self._relaxed_mp2_density(P):
+            return
+        if method_class(method) not in MP2_DENSITY_CLASSES:
+            raise RuntimeError(
+                f"The relaxed MP2 density for the wfx file needs an MP2 or "
+                f"double-hybrid method, not {method}. Use the SCF density."
+            )
+        if multiplicity != 1 and orca_step.dlpno_parent(method) is not None:
+            raise RuntimeError(
+                f"{method} is open shell here (multiplicity {multiplicity}), and "
+                "ORCA computes DLPNO-MP2 densities only for closed-shell (RHF) "
+                "systems. Use the canonical (RI-MP2) double hybrid "
+                f"{orca_step.dlpno_parent(method)}, or the SCF density."
+            )
 
     @staticmethod
     def exact_exchange_keywords(keyword_line, symbols, elements=None):
@@ -854,6 +956,7 @@ class Energy(orca_step.ORCABase):
         self._check_dlpno_open_shell(
             method, keyword_line, configuration.spin_multiplicity
         )
+        self._check_wfx_density(P, method, configuration.spin_multiplicity)
         exact = self.exact_exchange_keywords(keyword_line, configuration.atoms.symbols)
         if exact:
             keyword_line += " " + exact
@@ -911,9 +1014,11 @@ class Energy(orca_step.ORCABase):
             keyword_line,
             extra_blocks=extra_blocks,
             extra_files=extra_files,
-            make_wfx=P.get("save wavefunction", "no") == "yes",
+            make_wfx=self.wfx_mode(P),
             sthresh_retry=self.sthresh_retry(P),
         )
+        if P.get("save wavefunction", "no") == "yes":
+            self._record_wfx_density(P, method)
 
         if P.get("save orbital checkpoint", "no") == "yes":
             self._save_orbital_checkpoint(P)

@@ -610,7 +610,9 @@ Other controls
 * **Write the wavefunction (wfx) file** — default ``no``. When ``yes``, the
   full cluster's density is kept and converted (via ``orca_2aim``) to an
   ``orca.wfx``, so a following **Atomic Charges** step can partition it into
-  DDEC6 charges on the CP complex — exactly as after an Energy step.
+  DDEC6 charges on the CP complex — exactly as after an Energy step, including
+  the choice of the density (below). Only the cluster's job computes the
+  relaxed MP2 density.
 
 The step reports, and offers on the Results tab, the **BSSE-corrected
 energy** (the ``energy`` result), the **uncorrected** (raw) complex energy,
@@ -707,6 +709,24 @@ analytic wavefunction (``.wfx``, via ``orca_2aim``) for a following **Atomic
 Charges** step to partition into DDEC6 charges. Every run cites ORCA, the DFT
 functional, the basis set, and the supporting integral / exchange-correlation
 libraries.
+
+**The density in the wfx file.** By default the ``.wfx`` holds the SCF density:
+for a double hybrid, that of its hybrid-DFT part, not the method's own density.
+For MP2 and double-hybrid methods, "Density in the wfx file" can be set to ``MP2
+relaxed``: ORCA then computes the relaxed MP2 density and its natural orbitals
+(``%mp2 Density relaxed NatOrbs true end``, merged with ``DLPNO true`` for a DLPNO
+double hybrid), and ``orca_2aim -useall`` writes the ``.wfx`` from all of them --
+by default it keeps only as many as there are occupied SCF orbitals, which hold
+slightly fewer electrons than the molecule, and Chargemol refuses such a file. The
+relaxed density
+needs a Z-vector solution, about the cost of a gradient, which a gradient computes
+anyway. The choice is offered only for these methods, and the step stops before
+running for an open-shell DLPNO double hybrid, for which ORCA 6.1.1 has no DLPNO-MP2
+density. The step says which density the file holds, checks from ``orca_2aim``'s log
+that it used the natural orbitals, and records the density beside the file
+(``wfx_density.json``), so the Atomic Charges step reports it and labels the charges
+accordingly (``charges_DDEC6_MP2relaxed`` by default), and the two kinds of charges
+are not mixed silently.
 
 Running ORCA in parallel
 ========================
