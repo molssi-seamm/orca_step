@@ -467,7 +467,14 @@ class EnergyParameters(seamm.Parameters):
             "enumeration": tuple(),
             "format_string": "",
             "description": "results",
-            "help_text": "The results to save to variables or in tables.",
+            "help_text": (
+                "The results to save to variables, in tables, or as properties of "
+                "the configuration. Nothing is stored by default. Storing the energy "
+                "and gradients adds them to the configuration in the job's database "
+                "-- three values per atom for the gradients -- and Write Structure "
+                "then includes them in the files it writes: REF_energy and "
+                "REF_forces in an extxyz file, and the properties in an SDF file."
+            ),
         },
     }
 

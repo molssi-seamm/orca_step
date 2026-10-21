@@ -691,7 +691,12 @@ the dipole-moment vector, the Mulliken/Löwdin/Hirshfeld charges, the Mayer
 valences, and the rotational constants) can be stored as properties on the
 configuration. In the Results tab, tick the database column for the result; it
 is stored under a name like ``gradients#ORCA#<model>``, where ``<model>`` is the
-level of theory.
+level of theory. Nothing is stored unless you ask: the gradient is three values per
+atom, and stored properties go with the structure into the job's database and into
+the files Write Structure writes -- in an extxyz file the energy and gradients become
+``REF_energy`` and ``REF_forces``, the usual form of training data for
+machine-learned forcefields, and an SDF file carries the properties -- so store them
+where they are needed.
 
 Other properties and outputs
 ============================

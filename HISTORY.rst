@@ -1,6 +1,12 @@
 =======
 History
 =======
+2026.10.21 -- Internal: what storing results adds, in the help
+    * The help for the results and the user guide now say that nothing is stored by
+      default, and that storing the energy and gradients adds them to the
+      configuration -- three values per atom for the gradients -- and that Write
+      Structure then writes them, e.g. as REF_energy and REF_forces in an extxyz file.
+
 2026.10.19.1 -- Bugfix: parallel ORCA used InfiniBand where a module set it
     * A parallel ORCA run is on one node and uses shared memory, not InfiniBand, since
       on a busy node InfiniBand (UCX) fails. With 'installation = modules', loading
