@@ -2952,3 +2952,94 @@ def test_mpi_env_transport_survives_a_module_load(monkeypatch, tmp_path):
 
     _, lib_prefix = orca_base.mpi_env(1, {"installation": "modules"})
     assert "OMPI_MCA" not in " ".join(lib_prefix)
+
+
+def test_wfx_from_the_relaxed_mp2_density():
+    """'MP2 relaxed' adds the natural orbitals of the relaxed MP2 density to the
+    %mp2 block (merged with DLPNO's), which orca_2aim then uses for the wfx;
+    'SCF', or no wfx, leaves the blocks as they were (science, 2026-10-21)."""
+    node = orca_step.Energy()
+    relaxed = {"save wavefunction": "yes", "wfx density": "MP2 relaxed"}
+    P = _dlpno_P(**relaxed)
+    assert node.method_blocks(P) == ("%mp2 DLPNO true Density relaxed NatOrbs true end")
+    P = _dlpno_P("REVDSD-PBEP86-D4/2021", **relaxed)
+    assert node.method_blocks(P) == "%mp2 Density relaxed NatOrbs true end"
+    for other in (
+        {"save wavefunction": "yes", "wfx density": "SCF"},
+        {"save wavefunction": "no", "wfx density": "MP2 relaxed"},
+    ):
+        assert node.method_blocks(_dlpno_P(**other)) == "%mp2 DLPNO true end"
+        assert node.method_blocks(_dlpno_P("REVDSD-PBEP86-D4/2021", **other)) == ""
+
+
+def test_relaxed_mp2_density_is_refused_where_unavailable():
+    """No MP2 part, or an open-shell DLPNO double hybrid (ORCA: densities only
+    for RHF): the step stops before running."""
+    node = orca_step.Energy()
+    relaxed = {"save wavefunction": "yes", "wfx density": "MP2 relaxed"}
+    with pytest.raises(RuntimeError, match="needs an MP2 or double-hybrid"):
+        node._check_wfx_density(relaxed, "B3LYP", 1)
+    with pytest.raises(RuntimeError, match="only for closed-shell"):
+        node._check_wfx_density(relaxed, "DLPNO-REVDSD-PBEP86-D4/2021", 2)
+    node._check_wfx_density(relaxed, "REVDSD-PBEP86-D4/2021", 2)  # canonical: fine
+    node._check_wfx_density(relaxed, "RI-MP2", 1)
+    node._check_wfx_density(
+        {"save wavefunction": "yes", "wfx density": "SCF"}, "B3LYP", 1
+    )
+
+
+def test_wfx_density_applies_only_with_an_mp2_part():
+    """The choice is offered only when the wfx is written and the method has an
+    MP2 part (unknown with the model chemistry, so offered then)."""
+    P = orca_step.EnergyParameters()
+    base = {"use model chemistry": "no", "save wavefunction": "yes"}
+    assert P.applies("wfx density", {**base, "method": "RI-MP2"})
+    assert P.applies(
+        "wfx density",
+        {**base, "method": "DFT", "functional": "REVDSD-PBEP86-D4/2021"},
+    )
+    assert not P.applies(
+        "wfx density", {**base, "method": "DFT", "functional": "B3LYP"}
+    )
+    assert not P.applies("wfx density", {**base, "method": "HF"})
+    assert not P.applies(
+        "wfx density", {**base, "method": "RI-MP2", "save wavefunction": "no"}
+    )
+    assert P.applies("wfx density", {**base, "use model chemistry": "yes"})
+    assert not orca_step.FrequenciesParameters().applies(
+        "wfx density", {**base, "method": "RI-MP2"}
+    )
+
+
+def test_orca_2aim_log_tells_the_density(tmp_path):
+    """orca_2aim's log says whether it used the MP2 natural orbitals; orca.mp2nat
+    itself is cleaned up with ORCA's other intermediate files."""
+    from orca_step.energy import used_mp2_natural_orbitals
+
+    log = tmp_path / "orca_2aim.out"
+    log.write_text("Check for input file     ... (mp2nat file orca.mp2nat) ... done\n")
+    assert used_mp2_natural_orbitals(tmp_path)
+    log.write_text(
+        "Check for input file     ... (mp2nat file orca.mp2nat not available - "
+        "using orca.gbw ... done\n"
+    )
+    assert not used_mp2_natural_orbitals(tmp_path)
+    log.unlink()
+    assert not used_mp2_natural_orbitals(tmp_path)
+    (tmp_path / "orca.mp2nat").write_text("")
+    assert used_mp2_natural_orbitals(tmp_path)
+
+
+def test_wfx_mode_writes_all_natural_orbitals():
+    """The relaxed density's wfx is written with every natural orbital (orca_2aim
+    -useall); by default orca_2aim keeps only as many as there are occupied SCF
+    orbitals, which hold slightly fewer electrons than the molecule, and Chargemol
+    refuses the file (Na+ water: 19.95 of 20)."""
+    from orca_step.orca_base import _orca_2aim_options
+
+    assert orca_step.Energy.wfx_mode({"save wavefunction": "no"}) is False
+    assert orca_step.Energy.wfx_mode({"save wavefunction": "yes"}) is True
+    relaxed = {"save wavefunction": "yes", "wfx density": "MP2 relaxed"}
+    assert orca_step.Energy.wfx_mode(relaxed) == "all"
+    assert _orca_2aim_options("all") == ["-useall"]
+    assert _orca_2aim_options(True) == []

@@ -972,6 +972,18 @@ def _orca_2aim(config):
     return "orca_2aim"
 
 
+def _orca_2aim_options(make_wfx):
+    """orca_2aim's options: ``-useall`` for ``make_wfx == "all"``, to write every
+    orbital rather than only the occupied ones.
+
+    That is needed for natural orbitals (the relaxed MP2 density's, from
+    orca.mp2nat): by default orca_2aim keeps only as many as there are occupied
+    SCF orbitals, so their occupations sum to slightly fewer electrons than the
+    molecule has (19.95 of 20 for Na+ in water), and Chargemol refuses the file.
+    """
+    return ["-useall"] if make_wfx == "all" else []
+
+
 def _fingerprint(files, make_wfx):
     """Identify an ORCA run's inputs for restart, ignoring ``%pal``/``%maxcore``.
 
@@ -979,7 +991,7 @@ def _fingerprint(files, make_wfx):
     to run on, which must not force a finished calculation to be redone.
     """
     h = hashlib.sha256()
-    h.update(f"orca wfx={bool(make_wfx)}".encode())
+    h.update(f"orca wfx={make_wfx if make_wfx == 'all' else bool(make_wfx)}".encode())
     for name in sorted(files):
         data = files[name]
         if name == "orca.inp" and isinstance(data, str):
@@ -1351,11 +1363,12 @@ class ORCABase(seamm.Node):
         extra_files : dict | None
             Extra input files to write into the run directory (e.g. an external
             basis file referenced by ``%basis GTOName ... end``).
-        make_wfx : bool
+        make_wfx : bool or "all"
             After ORCA finishes, run ``orca_2aim`` (shipped alongside ORCA) to
             convert the density (retained by the ``keepdensity`` keyword) into an
             AIMPAC ``orca.wfx`` wavefunction file for a following Atomic Charges
-            step. Requires the ORCA input to include ``keepdensity``.
+            step. Requires the ORCA input to include ``keepdensity``. "all" writes
+            every orbital (``-useall``), as natural orbitals need.
         sthresh_retry : float | None
             The SThresh to rerun a failed SCF with; see :meth:`run_orca_job`.
 
@@ -1647,7 +1660,8 @@ class ORCABase(seamm.Node):
             return_files += [STHRESH_RETRY_MARKER, STHRESH_FAILED_OUTPUT]
         if make_wfx:
             # {orca_2aim} comes from the resolver: beside the orca binary.
-            cmd += ["&&", "{orca_2aim}", "orca", ">", "orca_2aim.out", "2>&1"]
+            cmd += ["&&", "{orca_2aim}", "orca", *_orca_2aim_options(make_wfx)]
+            cmd += [">", "orca_2aim.out", "2>&1"]
             return_files += ["orca.wfx", "orca_2aim.out"]
 
         all_numbers = _atomic_numbers(configuration)

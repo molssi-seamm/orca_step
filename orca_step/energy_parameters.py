@@ -460,6 +460,24 @@ class EnergyParameters(seamm.Parameters):
                 "(DDEC6 via Chargemol), mirroring the Gaussian wfx path."
             ),
         },
+        "wfx density": {
+            "applies_when": {"save wavefunction": "yes"},
+            "default": "SCF",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("SCF", "MP2 relaxed"),
+            "format_string": "",
+            "description": "Density in the wfx file:",
+            "help_text": (
+                "For MP2 and double-hybrid methods, the density the wavefunction "
+                "file holds: the SCF density, or the relaxed MP2 density -- the "
+                "method's own density -- from its natural orbitals. The relaxed "
+                "density needs a Z-vector solution, about the cost of a gradient, "
+                "which a gradient computes anyway. A following Atomic Charges step "
+                "partitions this density, and says which it is. Not available for "
+                "other methods, nor for an open-shell DLPNO double hybrid."
+            ),
+        },
         "results": {
             "default": {},
             "kind": "dictionary",
@@ -467,7 +485,14 @@ class EnergyParameters(seamm.Parameters):
             "enumeration": tuple(),
             "format_string": "",
             "description": "results",
-            "help_text": "The results to save to variables or in tables.",
+            "help_text": (
+                "The results to save to variables, in tables, or as properties of "
+                "the configuration. Nothing is stored by default. Storing the energy "
+                "and gradients adds them to the configuration in the job's database "
+                "-- three values per atom for the gradients -- and Write Structure "
+                "then includes them in the files it writes: REF_energy and "
+                "REF_forces in an extxyz file, and the properties in an SDF file."
+            ),
         },
     }
 
@@ -507,7 +532,31 @@ class EnergyParameters(seamm.Parameters):
             return not self._extrapolating(values)
         if key == "basis source":
             return not self._extrapolating(values) and not self._is_f12(values)
+        if key == "wfx density":
+            return self._has_mp2_part(values)
         return True
+
+    def _has_mp2_part(self, values):
+        """Whether the method has an MP2 part (MP2, or a double hybrid), so a
+        relaxed MP2 density. With the model chemistry, or a variable, it cannot be
+        told here; the step checks when it runs."""
+        if values.get("use model chemistry", "no") != "no":
+            return True
+        method = values.get("method", "")
+        if self._is_expr(method):
+            return True
+        record = orca_step.metadata["methods"].get(method, {})
+        if record.get("class") == "MP2":
+            return True
+        if method != "DFT":
+            return False
+        functional = values.get("functional", "")
+        if self._is_expr(functional):
+            return True
+        category = (
+            orca_step.metadata["functionals"].get(functional, {}).get("category", "")
+        )
+        return "double-hybrid" in category
 
     def not_applicable_reason(self, key, values=None):
         """Why a parameter does not apply, for the builder's messages."""
@@ -530,6 +579,8 @@ class EnergyParameters(seamm.Parameters):
             return "the basis-set extrapolation replaces it"
         if key == "basis source" and self._is_f12(values):
             return "F12 methods use ORCA's own basis sets (they need a CABS)"
+        if key == "wfx density" and not self._has_mp2_part(values):
+            return "only MP2 and double-hybrid methods have a relaxed MP2 density"
         return ""
 
     def choices(self, key, values=None):

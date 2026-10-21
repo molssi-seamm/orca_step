@@ -30,7 +30,7 @@ import textwrap
 from tabulate import tabulate
 
 import orca_step
-from .energy import Energy
+from .energy import WFX_DENSITY_FILE, Energy
 import seamm
 import seamm_bsse
 import seamm_exec
@@ -360,8 +360,12 @@ class BSSE(Energy):
         # every fragment sub-job -- build the shared keyword line without it.
         base_keyword_line = self.keyword_line({**P, "save wavefunction": "no"})
         # Blocks the method itself needs (e.g. '%mp2 DLPNO true end' for a
-        # DLPNO double hybrid); every sub-job must run the same method.
-        method_blocks = self.method_blocks(P)
+        # DLPNO double hybrid); every sub-job must run the same method. Only the
+        # cluster, whose wavefunction is written, needs the relaxed MP2 density.
+        method_blocks = self.method_blocks({**P, "save wavefunction": "no"})
+        cluster_blocks = self.method_blocks(P)
+        method, _ = self._resolve_method_basis(P)
+        self._check_wfx_density(P, method, configuration.spin_multiplicity)
 
         # Every sub-job is built first, then they run together as one TaskSet:
         # concurrently in the local pool, or bundled on the job's queue, and a
@@ -397,8 +401,8 @@ class BSSE(Energy):
                 atom_indices=spec.atom_indices,
                 ghost_atoms=spec.ghost_indices,
                 directory=job_directory,
-                extra_blocks=method_blocks,
-                make_wfx=job_make_wfx,
+                extra_blocks=cluster_blocks if job_make_wfx else method_blocks,
+                make_wfx=self.wfx_mode(P) if job_make_wfx else False,
                 key=spec.label,
                 sthresh_retry=sthresh_retry,
             )
@@ -463,9 +467,15 @@ class BSSE(Energy):
         # wavefunction, copied up to this node's own directory (where a
         # downstream step expects it), mirroring the Energy step.
         if make_wfx:
-            cluster_wfx = Path(self.directory) / seamm_bsse.CLUSTER / "orca.wfx"
+            cluster = Path(self.directory) / seamm_bsse.CLUSTER
+            cluster_wfx = cluster / "orca.wfx"
             if cluster_wfx.exists():
+                self.model = self._model_string(P)
+                self._record_wfx_density(P, method, directory=cluster)
                 shutil.copy(cluster_wfx, Path(self.directory) / "orca.wfx")
+                shutil.copy(
+                    cluster / WFX_DENSITY_FILE, Path(self.directory) / WFX_DENSITY_FILE
+                )
 
         # Tag stored properties with the level of theory so BSSE-corrected data
         # is distinguishable in the database.

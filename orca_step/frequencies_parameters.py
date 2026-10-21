@@ -64,6 +64,7 @@ class FrequenciesParameters(EnergyParameters):
         "Hirshfeld charges",
         "polarizability",
         "save wavefunction",
+        "wfx density",
     )
 
     def __init__(self, defaults={}, data=None):
