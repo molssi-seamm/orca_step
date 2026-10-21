@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.19.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.21 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=a5793183"></script>
+    <script src="_static/documentation_options.js?v=3c77f071"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.19.1" />
+  <meta name="docsearch:version" content="2026.10.21" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,22 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.21 – The wfx file from the relaxed MP2 density</dt><dd><ul class="simple">
+<li><p>For MP2 and double-hybrid methods, the wavefunction (wfx) file for a following
+Atomic Charges step can now hold the relaxed MP2 density, from its natural
+orbitals, instead of the SCF density (for a double hybrid, that of its
+hybrid-DFT part). “Density in the wfx file” chooses; the default is the SCF
+density, as before. The step says which density the file holds, checks that
+orca_2aim used it (writing all the natural orbitals, which Chargemol needs),
+and records it beside the file for the Atomic Charges step.
+It is offered only for these methods, and refused for an open-shell DLPNO
+double hybrid, which has no DLPNO-MP2 density in ORCA 6.1.1.</p></li>
+<li><p>The help for the results and the user guide now say that nothing is stored by
+default, and that storing the energy and gradients adds them to the
+configuration – three values per atom for the gradients – and that Write
+Structure then writes them, e.g. as REF_energy and REF_forces in an extxyz file.</p></li>
+</ul>
+</dd>
 <dt>2026.10.19.1 – Bugfix: parallel ORCA used InfiniBand where a module set it</dt><dd><ul class="simple">
 <li><p>A parallel ORCA run is on one node and uses shared memory, not InfiniBand, since
 on a busy node InfiniBand (UCX) fails. With ‘installation = modules’, loading

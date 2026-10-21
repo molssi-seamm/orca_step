@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.10.19.1 documentation</title>
+    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.10.21 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=a5793183"></script>
+    <script src="../../_static/documentation_options.js?v=3c77f071"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.19.1" />
+  <meta name="docsearch:version" content="2026.10.21" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -955,6 +955,24 @@
                 <span class="s2">"(DDEC6 via Chargemol), mirroring the Gaussian wfx path."</span>
             <span class="p">),</span>
         <span class="p">},</span>
+        <span class="s2">"wfx density"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"applies_when"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"save wavefunction"</span><span class="p">:</span> <span class="s2">"yes"</span><span class="p">},</span>
+            <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"SCF"</span><span class="p">,</span>
+            <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
+            <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"enumeration"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"SCF"</span><span class="p">,</span> <span class="s2">"MP2 relaxed"</span><span class="p">),</span>
+            <span class="s2">"format_string"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Density in the wfx file:"</span><span class="p">,</span>
+            <span class="s2">"help_text"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">"For MP2 and double-hybrid methods, the density the wavefunction "</span>
+                <span class="s2">"file holds: the SCF density, or the relaxed MP2 density -- the "</span>
+                <span class="s2">"method's own density -- from its natural orbitals. The relaxed "</span>
+                <span class="s2">"density needs a Z-vector solution, about the cost of a gradient, "</span>
+                <span class="s2">"which a gradient computes anyway. A following Atomic Charges step "</span>
+                <span class="s2">"partitions this density, and says which it is. Not available for "</span>
+                <span class="s2">"other methods, nor for an open-shell DLPNO double hybrid."</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
         <span class="s2">"results"</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="p">{},</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"dictionary"</span><span class="p">,</span>
@@ -962,7 +980,14 @@
             <span class="s2">"enumeration"</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
             <span class="s2">"format_string"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
             <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"results"</span><span class="p">,</span>
-            <span class="s2">"help_text"</span><span class="p">:</span> <span class="s2">"The results to save to variables or in tables."</span><span class="p">,</span>
+            <span class="s2">"help_text"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">"The results to save to variables, in tables, or as properties of "</span>
+                <span class="s2">"the configuration. Nothing is stored by default. Storing the energy "</span>
+                <span class="s2">"and gradients adds them to the configuration in the job's database "</span>
+                <span class="s2">"-- three values per atom for the gradients -- and Write Structure "</span>
+                <span class="s2">"then includes them in the files it writes: REF_energy and "</span>
+                <span class="s2">"REF_forces in an extxyz file, and the properties in an SDF file."</span>
+            <span class="p">),</span>
         <span class="p">},</span>
     <span class="p">}</span>
 
@@ -1004,8 +1029,32 @@
             <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"basis source"</span><span class="p">:</span>
             <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_f12</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"wfx density"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_mp2_part</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_has_mp2_part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Whether the method has an MP2 part (MP2, or a double hybrid), so a</span>
+<span class="sd">        relaxed MP2 density. With the model chemistry, or a variable, it cannot be</span>
+<span class="sd">        told here; the step checks when it runs."""</span>
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"use model chemistry"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"no"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_expr</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"methods"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"class"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"MP2"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s2">"DFT"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">functional</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"functional"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_expr</span><span class="p">(</span><span class="n">functional</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">functional</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"category"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"double-hybrid"</span> <span class="ow">in</span> <span class="n">category</span>
 
 <div class="viewcode-block" id="EnergyParameters.not_applicable_reason">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy_parameters.EnergyParameters.not_applicable_reason">[docs]</a>
@@ -1030,6 +1079,8 @@
             <span class="k">return</span> <span class="s2">"the basis-set extrapolation replaces it"</span>
         <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"basis source"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_f12</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
             <span class="k">return</span> <span class="s2">"F12 methods use ORCA's own basis sets (they need a CABS)"</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"wfx density"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_mp2_part</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">"only MP2 and double-hybrid methods have a relaxed MP2 density"</span>
         <span class="k">return</span> <span class="s2">""</span></div>
 
 

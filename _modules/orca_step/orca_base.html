@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.19.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.21 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=a5793183"></script>
+    <script src="../../_static/documentation_options.js?v=3c77f071"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.19.1" />
+  <meta name="docsearch:version" content="2026.10.21" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1495,6 +1495,18 @@
     <span class="k">return</span> <span class="s2">"orca_2aim"</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_orca_2aim_options</span><span class="p">(</span><span class="n">make_wfx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""orca_2aim's options: ``-useall`` for ``make_wfx == "all"``, to write every</span>
+<span class="sd">    orbital rather than only the occupied ones.</span>
+
+<span class="sd">    That is needed for natural orbitals (the relaxed MP2 density's, from</span>
+<span class="sd">    orca.mp2nat): by default orca_2aim keeps only as many as there are occupied</span>
+<span class="sd">    SCF orbitals, so their occupations sum to slightly fewer electrons than the</span>
+<span class="sd">    molecule has (19.95 of 20 for Na+ in water), and Chargemol refuses the file.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span><span class="s2">"-useall"</span><span class="p">]</span> <span class="k">if</span> <span class="n">make_wfx</span> <span class="o">==</span> <span class="s2">"all"</span> <span class="k">else</span> <span class="p">[]</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_fingerprint</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">make_wfx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Identify an ORCA run's inputs for restart, ignoring ``%pal``/``%maxcore``.</span>
 
@@ -1502,7 +1514,7 @@
 <span class="sd">    to run on, which must not force a finished calculation to be redone.</span>
 <span class="sd">    """</span>
     <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
-    <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">"orca wfx=</span><span class="si">{</span><span class="nb">bool</span><span class="p">(</span><span class="n">make_wfx</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">"orca wfx=</span><span class="si">{</span><span class="n">make_wfx</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">make_wfx</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">'all'</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="nb">bool</span><span class="p">(</span><span class="n">make_wfx</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">files</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"orca.inp"</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -1884,11 +1896,12 @@
 <span class="sd">        extra_files : dict | None</span>
 <span class="sd">            Extra input files to write into the run directory (e.g. an external</span>
 <span class="sd">            basis file referenced by ``%basis GTOName ... end``).</span>
-<span class="sd">        make_wfx : bool</span>
+<span class="sd">        make_wfx : bool or "all"</span>
 <span class="sd">            After ORCA finishes, run ``orca_2aim`` (shipped alongside ORCA) to</span>
 <span class="sd">            convert the density (retained by the ``keepdensity`` keyword) into an</span>
 <span class="sd">            AIMPAC ``orca.wfx`` wavefunction file for a following Atomic Charges</span>
-<span class="sd">            step. Requires the ORCA input to include ``keepdensity``.</span>
+<span class="sd">            step. Requires the ORCA input to include ``keepdensity``. "all" writes</span>
+<span class="sd">            every orbital (``-useall``), as natural orbitals need.</span>
 <span class="sd">        sthresh_retry : float | None</span>
 <span class="sd">            The SThresh to rerun a failed SCF with; see :meth:`run_orca_job`.</span>
 
@@ -2189,7 +2202,8 @@
             <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="n">STHRESH_RETRY_MARKER</span><span class="p">,</span> <span class="n">STHRESH_FAILED_OUTPUT</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">make_wfx</span><span class="p">:</span>
             <span class="c1"># {orca_2aim} comes from the resolver: beside the orca binary.</span>
-            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"&amp;&amp;"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{orca_2aim}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca"</span><span class="p">,</span> <span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">,</span> <span class="s2">"2&gt;&amp;1"</span><span class="p">]</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"&amp;&amp;"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{orca_2aim}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"orca"</span><span class="p">,</span> <span class="o">*</span><span class="n">_orca_2aim_options</span><span class="p">(</span><span class="n">make_wfx</span><span class="p">)]</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">,</span> <span class="s2">"2&gt;&amp;1"</span><span class="p">]</span>
             <span class="n">return_files</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"orca.wfx"</span><span class="p">,</span> <span class="s2">"orca_2aim.out"</span><span class="p">]</span>
 
         <span class="n">all_numbers</span> <span class="o">=</span> <span class="n">_atomic_numbers</span><span class="p">(</span><span class="n">configuration</span><span class="p">)</span>
