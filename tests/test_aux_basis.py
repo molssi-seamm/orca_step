@@ -50,3 +50,26 @@ def test_energy_parameters_check_the_aux_basis():
     assert any("auxiliary basis" in p for p in P.problems())
     P["auxiliary basis"].value = "$aux"
     assert not [p for p in P.problems() if "auxiliary" in p]
+
+
+@pytest.mark.parametrize(
+    "method, basis, sets",
+    [
+        ("REVDSD-PBEP86-D4/2021", "def2-TZVPPD", "def2/J def2-TZVPP/C"),
+        ("REVDSD-PBEP86-D4/2021 AutoAux", "def2-QZVPPD", "def2/J def2-QZVPP/C"),
+        ("REVDSD-PBEP86-D4/2021", "bse:def2-TZVPPD", "def2/J def2-TZVPP/C"),
+        ("B2PLYP", "aug-cc-pVTZ", "def2/J aug-cc-pVTZ/C"),
+        ("RI-MP2", "def2-SVP", "def2/J def2-SVP/C"),
+        ("R2SCAN", "def2-TZVPPD", "def2/J"),
+        ("B3LYP", "def2-QZVPPD", "def2/J"),
+    ],
+)
+def test_explicit_sets_suit_the_method(method, basis, sets):
+    assert auxiliary_basis_words("explicit", method, basis) == sets
+
+
+def test_explicit_without_a_known_c_set_is_refused():
+    with pytest.raises(ValueError, match="no known /C auxiliary basis"):
+        auxiliary_basis_words("explicit", "REVDSD-PBEP86-D4/2021", "6-31G*")
+    # checking a setting without a method accepts it
+    assert auxiliary_basis_words("explicit") == "explicit"

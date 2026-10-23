@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.23.1 -- The auxiliary basis 'explicit'
+    * The auxiliary basis 'explicit' -- in the steps and as the 'aux_basis' task
+      option -- uses def2/J and, for MP2 and double hybrids, the /C set matching the
+      orbital basis: def2-TZVPP/C for def2-TZVPP and def2-TZVPPD, likewise for the
+      other def2 and the (aug-)cc-pVnZ bases. A basis without a known /C set is
+      refused, asking for the sets to be given.
+    * With the default AutoAux, every input and its fingerprint is as before.
+
 2026.10.23 -- Explicit auxiliary basis sets instead of AutoAux
     * For some large or highly charged clusters AutoAux makes the auxiliary basis
       linearly dependent, and ORCA stops at the start ("SHARK not equipped"): a

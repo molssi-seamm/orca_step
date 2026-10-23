@@ -255,7 +255,11 @@ class BSSE(Energy):
         # (a %scf block) and the property blocks are NOT plumbed through Compound
         # in Phase 1.
         rest = []
-        aux = auxiliary_basis_words(P["auxiliary basis"])
+        aux = auxiliary_basis_words(
+            P["auxiliary basis"],
+            orca_step.orca_method_keyword(method),
+            basis.get("name") if isinstance(basis, dict) else basis,
+        )
         if aux:
             rest.append(aux)
         grid = P.get("grid", "default")

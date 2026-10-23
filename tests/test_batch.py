@@ -299,6 +299,13 @@ def test_explicit_aux_basis_replaces_autoaux():
     assert "AutoAux" not in line and "def2-TZVPP/C" in line
     with pytest.raises(ValueError, match="auxiliary basis"):
         get_task(lipf6, mc, key="bad", options={"aux_basis": "def2-TZVPP"})
+    # "explicit": the sets that suit the method and basis
+    mc["options"].pop("aux_basis")
+    mc["basis"] = mc["options"]["mdi_basis_arg"] = "def2-TZVPPD"
+    task = get_task(lipf6, mc, key="e", options={"aux_basis": "explicit"})
+    line = task.files["orca.inp"].splitlines()[0].split()
+    assert "AutoAux" not in line
+    assert line[line.index("def2/J") + 1] == "def2-TZVPP/C"
 
 
 def test_lone_ion_batch_equals_mdi(tmp_path):

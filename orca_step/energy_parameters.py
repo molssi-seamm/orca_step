@@ -154,7 +154,9 @@ class EnergyParameters(seamm.Parameters):
             "help_text": (
                 "The auxiliary/fitting basis. 'AutoAux' generates a fitting basis "
                 "automatically and is the robust choice for correlated methods "
-                "(DLPNO, MP2). 'none' omits it. Or one or more of ORCA's auxiliary "
+                "(DLPNO, MP2). 'none' omits it. 'explicit' uses def2/J and, for MP2 "
+                "and double hybrids, the /C set matching the orbital basis. Or one "
+                "or more of ORCA's auxiliary "
                 "basis sets, separated by spaces or commas: a /J (or /JK) set for "
                 "the Coulomb (and exchange) fitting and, for MP2 and double "
                 "hybrids, a /C set matching the orbital basis, e.g. "

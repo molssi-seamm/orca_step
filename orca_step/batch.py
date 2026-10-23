@@ -11,8 +11,9 @@ numbers. ``options`` adds what fragments need: ``atom_indices``,
 
 ``options["aux_basis"]`` (or the model chemistry's) replaces AutoAux with explicit
 auxiliary basis sets, e.g. "def2/J,def2-TZVPP/C" for a double hybrid -- commas,
-since MBE's task options separate settings with spaces -- for structures where
-AutoAux makes the auxiliary basis linearly dependent.
+since MBE's task options separate settings with spaces -- or "explicit" for the
+sets that suit the method and basis, for structures where AutoAux makes the
+auxiliary basis linearly dependent.
 
 A job with one center, or with any atom of Na, Mg, Zn, B or P (ghosts
 included), uses exact exchange (``NoCOSX``), as on every ORCA path
@@ -97,8 +98,9 @@ def method_and_blocks(model_chemistry, aux_basis=None):
     keyword = orca_method_keyword(method)
     if parent is not None:
         blocks.append("%mp2 DLPNO true end")
-    aux = auxiliary_basis_words(aux_basis)
-    return f"{keyword} {aux}".strip(), basis or "def2-SVP", blocks
+    basis = basis or "def2-SVP"
+    aux = auxiliary_basis_words(aux_basis, keyword, basis)
+    return f"{keyword} {aux}".strip(), basis, blocks
 
 
 def can_run_task(configuration, model_chemistry, *, options=None):
