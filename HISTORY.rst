@@ -1,6 +1,18 @@
 =======
 History
 =======
+2026.10.23 -- Explicit auxiliary basis sets instead of AutoAux
+    * For some large or highly charged clusters AutoAux makes the auxiliary basis
+      linearly dependent, and ORCA stops at the start ("SHARK not equipped"): a
+      104-atom cluster with two Li+ at revDSD/def2-TZVPP did. The auxiliary basis can
+      now be given explicitly, e.g. 'def2/J def2-TZVPP/C', in the steps -- the menu
+      offers the /C sets for MP2 and double hybrids, and others can be typed -- and,
+      for tasks run as a batch (MBE), as the 'aux_basis' option, e.g.
+      'aux_basis=def2/J,def2-TZVPP/C'. AutoAux remains the default, and the rest of
+      the keywords, such as NoCOSX, are as before.
+    * A name that is not an auxiliary basis set, or AutoAux combined with explicit
+      sets, is reported when the flowchart is checked, before the job runs.
+
 2026.10.21 -- The wfx file from the relaxed MP2 density
     * For MP2 and double-hybrid methods, the wavefunction (wfx) file for a following
       Atomic Charges step can now hold the relaxed MP2 density, from its natural

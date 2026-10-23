@@ -9,6 +9,11 @@ back with the engine's parsers, so the batch path and the MDI path give the same
 numbers. ``options`` adds what fragments need: ``atom_indices``,
 ``ghost_atoms``, ``charge`` and ``multiplicity``.
 
+``options["aux_basis"]`` (or the model chemistry's) replaces AutoAux with explicit
+auxiliary basis sets, e.g. "def2/J,def2-TZVPP/C" for a double hybrid -- commas,
+since MBE's task options separate settings with spaces -- for structures where
+AutoAux makes the auxiliary basis linearly dependent.
+
 A job with one center, or with any atom of Na, Mg, Zn, B or P (ghosts
 included), uses exact exchange (``NoCOSX``), as on every ORCA path
 (orca_step#44). ``options["exact_exchange_elements"]``, or the same key in the
@@ -41,6 +46,7 @@ from .orca_base import (
     _fingerprint,
     _neighbours,
     _threshold,
+    auxiliary_basis_words,
     double_hybrid_scf,
     engrad_gradient,
     gradient_batching_problem,
@@ -73,9 +79,10 @@ def engine_helpers():
     return _engine
 
 
-def method_and_blocks(model_chemistry):
-    """The method words (keyword plus AutoAux), the basis, and any '%' block for
-    a model chemistry -- exactly as ORCA's MDI engine is launched for it."""
+def method_and_blocks(model_chemistry, aux_basis=None):
+    """The method words (keyword plus the auxiliary basis, by default AutoAux), the
+    basis, and any '%' block for a model chemistry -- exactly as ORCA's MDI engine
+    is launched for it. ``aux_basis`` is as :func:`auxiliary_basis_words` takes."""
     from .orca_step import dlpno_parent, mc_method_unalias, orca_method_keyword
 
     from seamm_exec.evaluator import mdi_method_and_basis
@@ -90,7 +97,8 @@ def method_and_blocks(model_chemistry):
     keyword = orca_method_keyword(method)
     if parent is not None:
         blocks.append("%mp2 DLPNO true end")
-    return f"{keyword} AutoAux", basis or "def2-SVP", blocks
+    aux = auxiliary_basis_words(aux_basis)
+    return f"{keyword} {aux}".strip(), basis or "def2-SVP", blocks
 
 
 def can_run_task(configuration, model_chemistry, *, options=None):
@@ -156,7 +164,7 @@ def get_task(
             return options[name]
         return (model_chemistry.get("options") or {}).get(name, default)
 
-    method, basis, blocks = method_and_blocks(model_chemistry)
+    method, basis, blocks = method_and_blocks(model_chemistry, option("aux_basis"))
     if multiplicity != 1 and blocks:
         raise ValueError(
             f"DLPNO {model_chemistry.get('method')} needs a closed-shell system "

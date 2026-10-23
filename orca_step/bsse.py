@@ -31,6 +31,7 @@ from tabulate import tabulate
 
 import orca_step
 from .energy import WFX_DENSITY_FILE, Energy
+from .orca_base import auxiliary_basis_words
 import seamm
 import seamm_bsse
 import seamm_exec
@@ -254,8 +255,8 @@ class BSSE(Energy):
         # (a %scf block) and the property blocks are NOT plumbed through Compound
         # in Phase 1.
         rest = []
-        aux = P["auxiliary basis"]
-        if aux and aux.lower() != "none":
+        aux = auxiliary_basis_words(P["auxiliary basis"])
+        if aux:
             rest.append(aux)
         grid = P.get("grid", "default")
         if grid == "default":

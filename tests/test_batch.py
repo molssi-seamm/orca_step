@@ -259,6 +259,48 @@ def test_exact_exchange_on_both_paths():
     assert helpers.exact_exchange_elements("") == frozenset()
 
 
+def test_explicit_aux_basis_replaces_autoaux():
+    """options["aux_basis"] (or the model chemistry's) puts explicit auxiliary sets
+    on the line instead of AutoAux, keeping the exchange scheme and the rest; the
+    task's fingerprint changes with it."""
+    from orca_step.batch import get_task
+
+    mc = {
+        **_mc(),
+        "method": "REVDSD-PBEP86-D4_2021",
+        "options": {**_mc()["options"], "mdi_method_arg": "REVDSD-PBEP86-D4/2021"},
+    }
+    # Li+ and PF6- (P makes it NoCOSX): the case that needed it
+    lipf6 = Geometry(
+        [3, 15, 9, 9, 9, 9, 9, 9],
+        [
+            [3.5, 0, 0],
+            [0, 0, 0],
+            [1.6, 0, 0],
+            [-1.6, 0, 0],
+            [0, 1.6, 0],
+            [0, -1.6, 0],
+            [0, 0, 1.6],
+            [0, 0, -1.6],
+        ],
+    )
+    auto = get_task(lipf6, mc, key="a")
+    line = auto.files["orca.inp"].splitlines()[0].split()
+    assert "AutoAux" in line and "NoCOSX" in line
+    task = get_task(lipf6, mc, key="x", options={"aux_basis": "def2/J,def2-TZVPP/C"})
+    line = task.files["orca.inp"].splitlines()[0].split()
+    assert "AutoAux" not in line
+    assert line[line.index("def2/J") + 1] == "def2-TZVPP/C"
+    assert "NoCOSX" in line and "VERYTIGHTSCF" in line and "EnGrad" in line
+    assert task.fingerprint != auto.fingerprint
+    # From the model chemistry's options too
+    mc["options"]["aux_basis"] = "def2/J def2-TZVPP/C"
+    line = get_task(lipf6, mc, key="m").files["orca.inp"].splitlines()[0].split()
+    assert "AutoAux" not in line and "def2-TZVPP/C" in line
+    with pytest.raises(ValueError, match="auxiliary basis"):
+        get_task(lipf6, mc, key="bad", options={"aux_basis": "def2-TZVPP"})
+
+
 def test_lone_ion_batch_equals_mdi(tmp_path):
     root = _root()
     if root is None:
