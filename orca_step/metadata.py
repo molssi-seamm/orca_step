@@ -155,10 +155,11 @@ metadata["basis sets"] = [
 # Auxiliary / fitting basis choices. AutoAux generates a fitting basis for any
 # method/basis and is the robust default for correlated (DLPNO/MP2) methods. The
 # explicit sets are for when AutoAux's basis is linearly dependent: /J for RI-J
-# (e.g. r2SCAN), /J with the matching /C for MP2 and double hybrids. Others may be
-# typed, separated by spaces or commas.
+# (e.g. r2SCAN), /J with the matching /C for MP2 and double hybrids, which
+# 'explicit' chooses. Others may be typed, separated by spaces or commas.
 metadata["auxiliary basis sets"] = [
     "AutoAux",
+    "explicit",
     "none",
     "def2/J",
     "def2/JK",

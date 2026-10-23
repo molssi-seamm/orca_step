@@ -258,7 +258,11 @@ class Energy(orca_step.ORCABase):
             keywords.append(self._extrapolation_keyword(P))
         elif not self._using_bse(P):
             keywords.append(basis)
-        aux = auxiliary_basis_words(P["auxiliary basis"])
+        aux = auxiliary_basis_words(
+            P["auxiliary basis"],
+            orca_step.orca_method_keyword(method),
+            basis.get("name") if isinstance(basis, dict) else basis,
+        )
         if aux:
             keywords.append(aux)
         # Numerical-integration grid preset (DEFGRID1/2/3); 'default' leaves

@@ -671,14 +671,57 @@ def _threshold(value):
 _AUX_NAME = re.compile(r"^[A-Za-z0-9()+_.-]+/(J|JK|C|JKC)$", re.IGNORECASE)
 
 
-def auxiliary_basis_words(value):
+#: The orbital bases with a matching /C (correlation fitting) set of ORCA's: the
+#: def2 sets (the diffuse 'D' versions use the set without it) and the
+#: correlation-consistent ones
+_C_SETS = (
+    (re.compile(r"^(?:ma-)?def2-(SVP|TZVP|TZVPP|QZVPP)D?$", re.I), "def2-{0}/C"),
+    (re.compile(r"^(?:ma-)?def2-QZVPD?$", re.I), "def2-QZVPP/C"),
+    (re.compile(r"^((?:aug-)?cc-pV[DTQ5]Z)$", re.I), "{0}/C"),
+)
+
+
+def explicit_auxiliary_basis(method, basis):
+    """The explicit auxiliary sets for a method and orbital basis: def2/J, and for
+    MP2 and double hybrids also the /C set matching the basis (def2-TZVPP/C for
+    def2-TZVPPD). For ``aux_basis`` "explicit".
+
+    Raises
+    ------
+    ValueError
+        If no /C set is known for the basis.
+    """
+    words = (method or "").split()
+    keyword = words[0] if words else ""
+    kind = method_class(keyword_line=keyword).lower()
+    sets = ["def2/J"]
+    if "double-hybrid" in kind or "mp2" in kind:
+        name = (basis or "").strip()
+        if name.lower().startswith("bse:"):
+            name = name[4:]
+        for pattern, template in _C_SETS:
+            match = pattern.match(name)
+            if match is not None:
+                sets.append(template.format(*match.groups()))
+                break
+        else:
+            raise ValueError(
+                f"There is no known /C auxiliary basis for the basis '{basis}' of "
+                f"{keyword}: give the auxiliary sets explicitly, e.g. "
+                "'def2/J def2-TZVPP/C'."
+            )
+    return " ".join(sets)
+
+
+def auxiliary_basis_words(value, method=None, basis=None):
     """The words for the '!' line of an auxiliary (fitting) basis setting.
 
     'AutoAux' (the default, also for None or blank) lets ORCA generate the fitting
-    basis; 'none' gives none; otherwise one or more names of ORCA's auxiliary
-    basis sets, separated by spaces, commas or '+', e.g. 'def2/J def2-TZVPP/C'
-    for a double hybrid where AutoAux makes the auxiliary basis linearly
-    dependent. AutoAux cannot be combined with explicit names.
+    basis; 'none' gives none; 'explicit' the sets that suit the method and basis
+    (:func:`explicit_auxiliary_basis`); otherwise one or more names of ORCA's
+    auxiliary basis sets, separated by spaces, commas or '+', e.g.
+    'def2/J def2-TZVPP/C' for a double hybrid where AutoAux makes the auxiliary
+    basis linearly dependent. AutoAux cannot be combined with explicit names.
 
     Raises
     ------
@@ -690,6 +733,11 @@ def auxiliary_basis_words(value):
         return "AutoAux"
     if text.lower() == "none":
         return ""
+    if text.lower() == "explicit":
+        if method is None:
+            # Checking a setting, without a method to choose the sets for
+            return "explicit"
+        return explicit_auxiliary_basis(method, basis)
     words = [w for w in re.split(r"[\s,+]+", text) if w]
     if any(w.lower() == "autoaux" for w in words):
         raise ValueError(

@@ -53,8 +53,8 @@ auxiliary basis ... SHARK not equipped"). Then give the auxiliary sets explicitl
 separated by spaces or commas: a ``/J`` set for the Coulomb fitting and, for MP2
 and double hybrids, the ``/C`` set matching the orbital basis — e.g.
 ``def2/J def2-TZVPP/C`` with def2-TZVPP, ``def2/J def2-QZVPP/C`` with def2-QZVPP,
-or ``def2/J`` alone for a functional such as r2SCAN. The menu offers the common
-ones; others can be typed. The explicit sets change the energy slightly (0.3
+or ``def2/J`` alone for a functional such as r2SCAN -- which ``explicit`` chooses
+for the method and basis. The menu offers the common ones; others can be typed. The explicit sets change the energy slightly (0.3
 kJ/mol for water at revDSD/def2-TZVPP), so use the same auxiliary basis for every
 calculation of an energy difference. Tasks run as a batch -- e.g. by MBE -- take
 the same setting as the ``aux_basis`` option, with commas between the sets
