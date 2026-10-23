@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.21 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.23 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3c77f071"></script>
+    <script src="../../_static/documentation_options.js?v=aff7fe02"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.21" />
+  <meta name="docsearch:version" content="2026.10.23" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1179,6 +1179,46 @@
     <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"An ORCA SThresh must be a number, not '</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="c1">#: An explicit auxiliary basis name, e.g. def2/J, def2/JK or def2-TZVPP/C</span>
+<span class="n">_AUX_NAME</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[A-Za-z0-9()+_.-]+/(J|JK|C|JKC)$"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">auxiliary_basis_words</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The words for the '!' line of an auxiliary (fitting) basis setting.</span>
+
+<span class="sd">    'AutoAux' (the default, also for None or blank) lets ORCA generate the fitting</span>
+<span class="sd">    basis; 'none' gives none; otherwise one or more names of ORCA's auxiliary</span>
+<span class="sd">    basis sets, separated by spaces, commas or '+', e.g. 'def2/J def2-TZVPP/C'</span>
+<span class="sd">    for a double hybrid where AutoAux makes the auxiliary basis linearly</span>
+<span class="sd">    dependent. AutoAux cannot be combined with explicit names.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If a word is not an auxiliary basis name.</span>
+<span class="sd">    """</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s2">""</span> <span class="ow">or</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"autoaux"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"AutoAux"</span>
+    <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"none"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[\s,+]+"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="k">if</span> <span class="n">w</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"autoaux"</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The auxiliary basis '</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">' combines AutoAux with explicit basis "</span>
+            <span class="s2">"sets: give either AutoAux or the explicit sets, e.g. "</span>
+            <span class="s2">"'def2/J def2-TZVPP/C'."</span>
+        <span class="p">)</span>
+    <span class="n">bad</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">_AUX_NAME</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">w</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">bad</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bad</span><span class="p">)</span><span class="si">}</span><span class="s2">' in the auxiliary basis '</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">' is not the name "</span>
+            <span class="s2">"of an auxiliary basis set, which ends in /J, /JK or /C, e.g. def2/J "</span>
+            <span class="s2">"or def2-TZVPP/C."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">sthresh_retry_value</span><span class="p">(</span><span class="n">retry</span><span class="p">,</span> <span class="n">sthresh</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

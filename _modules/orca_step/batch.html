@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.10.21 documentation</title>
+    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.10.23 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3c77f071"></script>
+    <script src="../../_static/documentation_options.js?v=aff7fe02"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.21" />
+  <meta name="docsearch:version" content="2026.10.23" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -502,6 +502,11 @@
 <span class="sd">numbers. ``options`` adds what fragments need: ``atom_indices``,</span>
 <span class="sd">``ghost_atoms``, ``charge`` and ``multiplicity``.</span>
 
+<span class="sd">``options["aux_basis"]`` (or the model chemistry's) replaces AutoAux with explicit</span>
+<span class="sd">auxiliary basis sets, e.g. "def2/J,def2-TZVPP/C" for a double hybrid -- commas,</span>
+<span class="sd">since MBE's task options separate settings with spaces -- for structures where</span>
+<span class="sd">AutoAux makes the auxiliary basis linearly dependent.</span>
+
 <span class="sd">A job with one center, or with any atom of Na, Mg, Zn, B or P (ghosts</span>
 <span class="sd">included), uses exact exchange (``NoCOSX``), as on every ORCA path</span>
 <span class="sd">(orca_step#44). ``options["exact_exchange_elements"]``, or the same key in the</span>
@@ -534,6 +539,7 @@
     <span class="n">_fingerprint</span><span class="p">,</span>
     <span class="n">_neighbours</span><span class="p">,</span>
     <span class="n">_threshold</span><span class="p">,</span>
+    <span class="n">auxiliary_basis_words</span><span class="p">,</span>
     <span class="n">double_hybrid_scf</span><span class="p">,</span>
     <span class="n">engrad_gradient</span><span class="p">,</span>
     <span class="n">gradient_batching_problem</span><span class="p">,</span>
@@ -566,9 +572,10 @@
     <span class="k">return</span> <span class="n">_engine</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">method_and_blocks</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""The method words (keyword plus AutoAux), the basis, and any '%' block for</span>
-<span class="sd">    a model chemistry -- exactly as ORCA's MDI engine is launched for it."""</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">method_and_blocks</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">,</span> <span class="n">aux_basis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The method words (keyword plus the auxiliary basis, by default AutoAux), the</span>
+<span class="sd">    basis, and any '%' block for a model chemistry -- exactly as ORCA's MDI engine</span>
+<span class="sd">    is launched for it. ``aux_basis`` is as :func:`auxiliary_basis_words` takes."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_step</span><span class="w"> </span><span class="kn">import</span> <span class="n">dlpno_parent</span><span class="p">,</span> <span class="n">mc_method_unalias</span><span class="p">,</span> <span class="n">orca_method_keyword</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_exec.evaluator</span><span class="w"> </span><span class="kn">import</span> <span class="n">mdi_method_and_basis</span>
@@ -583,7 +590,8 @@
     <span class="n">keyword</span> <span class="o">=</span> <span class="n">orca_method_keyword</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"%mp2 DLPNO true end"</span><span class="p">)</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2"> AutoAux"</span><span class="p">,</span> <span class="n">basis</span> <span class="ow">or</span> <span class="s2">"def2-SVP"</span><span class="p">,</span> <span class="n">blocks</span>
+    <span class="n">aux</span> <span class="o">=</span> <span class="n">auxiliary_basis_words</span><span class="p">(</span><span class="n">aux_basis</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">aux</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">basis</span> <span class="ow">or</span> <span class="s2">"def2-SVP"</span><span class="p">,</span> <span class="n">blocks</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">can_run_task</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -651,7 +659,7 @@
             <span class="k">return</span> <span class="n">options</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
 
-    <span class="n">method</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="n">blocks</span> <span class="o">=</span> <span class="n">method_and_blocks</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
+    <span class="n">method</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="n">blocks</span> <span class="o">=</span> <span class="n">method_and_blocks</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">,</span> <span class="n">option</span><span class="p">(</span><span class="s2">"aux_basis"</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">multiplicity</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">blocks</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"DLPNO </span><span class="si">{</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'method'</span><span class="p">)</span><span class="si">}</span><span class="s2"> needs a closed-shell system "</span>
