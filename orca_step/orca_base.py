@@ -667,6 +667,46 @@ def _threshold(value):
     return value if value > 0 else None
 
 
+#: An explicit auxiliary basis name, e.g. def2/J, def2/JK or def2-TZVPP/C
+_AUX_NAME = re.compile(r"^[A-Za-z0-9()+_.-]+/(J|JK|C|JKC)$", re.IGNORECASE)
+
+
+def auxiliary_basis_words(value):
+    """The words for the '!' line of an auxiliary (fitting) basis setting.
+
+    'AutoAux' (the default, also for None or blank) lets ORCA generate the fitting
+    basis; 'none' gives none; otherwise one or more names of ORCA's auxiliary
+    basis sets, separated by spaces, commas or '+', e.g. 'def2/J def2-TZVPP/C'
+    for a double hybrid where AutoAux makes the auxiliary basis linearly
+    dependent. AutoAux cannot be combined with explicit names.
+
+    Raises
+    ------
+    ValueError
+        If a word is not an auxiliary basis name.
+    """
+    text = "" if value is None else str(value).strip()
+    if text == "" or text.lower() == "autoaux":
+        return "AutoAux"
+    if text.lower() == "none":
+        return ""
+    words = [w for w in re.split(r"[\s,+]+", text) if w]
+    if any(w.lower() == "autoaux" for w in words):
+        raise ValueError(
+            f"The auxiliary basis '{value}' combines AutoAux with explicit basis "
+            "sets: give either AutoAux or the explicit sets, e.g. "
+            "'def2/J def2-TZVPP/C'."
+        )
+    bad = [w for w in words if not _AUX_NAME.match(w)]
+    if bad:
+        raise ValueError(
+            f"'{', '.join(bad)}' in the auxiliary basis '{value}' is not the name "
+            "of an auxiliary basis set, which ends in /J, /JK or /C, e.g. def2/J "
+            "or def2-TZVPP/C."
+        )
+    return " ".join(words)
+
+
 def sthresh_retry_value(retry, sthresh=None):
     """The SThresh to retry a failed SCF with, or None for no retry.
 

@@ -47,6 +47,19 @@ narrows the functional list so it stays readable. Double-hybrid functionals
 fitting basis for their MP2 part — leave the *Auxiliary (fitting) basis* on
 ``AutoAux`` and it is supplied automatically.
 
+For some large or highly charged clusters AutoAux makes the auxiliary basis
+linearly dependent, and ORCA stops at the start ("linear dependencies in the
+auxiliary basis ... SHARK not equipped"). Then give the auxiliary sets explicitly,
+separated by spaces or commas: a ``/J`` set for the Coulomb fitting and, for MP2
+and double hybrids, the ``/C`` set matching the orbital basis — e.g.
+``def2/J def2-TZVPP/C`` with def2-TZVPP, ``def2/J def2-QZVPP/C`` with def2-QZVPP,
+or ``def2/J`` alone for a functional such as r2SCAN. The menu offers the common
+ones; others can be typed. The explicit sets change the energy slightly (0.3
+kJ/mol for water at revDSD/def2-TZVPP), so use the same auxiliary basis for every
+calculation of an energy difference. Tasks run as a batch -- e.g. by MBE -- take
+the same setting as the ``aux_basis`` option, with commas between the sets
+(``aux_basis=def2/J,def2-TZVPP/C``), since task options are separated by spaces.
+
 Most double hybrids also come in a **DLPNO** variant, listed after the canonical
 ones (e.g. ``DLPNO-REVDSD-PBEP86-D4/2021``). It evaluates the MP2 part with
 near-linear-scaling DLPNO-MP2 instead of canonical RI-MP2, so it pays off for

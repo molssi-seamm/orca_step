@@ -18,7 +18,7 @@ from tabulate import tabulate
 
 from molsystem import elements
 import orca_step
-from .orca_base import method_class
+from .orca_base import auxiliary_basis_words, method_class
 import seamm
 from seamm_util import ureg, Q_  # noqa: F401
 import seamm_util.printing as printing
@@ -258,8 +258,8 @@ class Energy(orca_step.ORCABase):
             keywords.append(self._extrapolation_keyword(P))
         elif not self._using_bse(P):
             keywords.append(basis)
-        aux = P["auxiliary basis"]
-        if aux and aux.lower() != "none":
+        aux = auxiliary_basis_words(P["auxiliary basis"])
+        if aux:
             keywords.append(aux)
         # Numerical-integration grid preset (DEFGRID1/2/3); 'default' leaves
         # ORCA's own default (DEFGRID2) by emitting nothing -- except that a

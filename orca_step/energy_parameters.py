@@ -146,7 +146,7 @@ class EnergyParameters(seamm.Parameters):
         },
         "auxiliary basis": {
             "default": "AutoAux",
-            "kind": "enum",
+            "kind": "string",
             "default_units": "",
             "enumeration": tuple(orca_step.metadata["auxiliary basis sets"]),
             "format_string": "",
@@ -154,7 +154,12 @@ class EnergyParameters(seamm.Parameters):
             "help_text": (
                 "The auxiliary/fitting basis. 'AutoAux' generates a fitting basis "
                 "automatically and is the robust choice for correlated methods "
-                "(DLPNO, MP2). 'none' omits it."
+                "(DLPNO, MP2). 'none' omits it. Or one or more of ORCA's auxiliary "
+                "basis sets, separated by spaces or commas: a /J (or /JK) set for "
+                "the Coulomb (and exchange) fitting and, for MP2 and double "
+                "hybrids, a /C set matching the orbital basis, e.g. "
+                "'def2/J def2-TZVPP/C'. Use explicit sets when AutoAux fails with "
+                "linear dependencies in the auxiliary basis."
             ),
         },
         "grid": {
@@ -622,6 +627,22 @@ class EnergyParameters(seamm.Parameters):
             record = orca_step.metadata["functionals"].get(functional)
             if record is not None:
                 result["functional type"] = record["category"]
+        return result
+
+    def problems(self, values=None):
+        """The base checks, and an auxiliary basis that ORCA would not know."""
+        from .orca_base import auxiliary_basis_words
+
+        if values is None:
+            values = self.current_values()
+        result = super().problems(values)
+        if "auxiliary basis" in self and self.applies("auxiliary basis", values):
+            aux = values.get("auxiliary basis")
+            if not self._is_expr(aux):
+                try:
+                    auxiliary_basis_words(aux)
+                except ValueError as e:
+                    result.append(str(e))
         return result
 
     # Methods renamed since flowcharts were saved: old name -> current name

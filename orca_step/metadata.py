@@ -153,12 +153,19 @@ metadata["basis sets"] = [
 ]
 
 # Auxiliary / fitting basis choices. AutoAux generates a fitting basis for any
-# method/basis and is the robust default for correlated (DLPNO/MP2) methods.
+# method/basis and is the robust default for correlated (DLPNO/MP2) methods. The
+# explicit sets are for when AutoAux's basis is linearly dependent: /J for RI-J
+# (e.g. r2SCAN), /J with the matching /C for MP2 and double hybrids. Others may be
+# typed, separated by spaces or commas.
 metadata["auxiliary basis sets"] = [
     "AutoAux",
     "none",
     "def2/J",
     "def2/JK",
+    "def2/J def2-SVP/C",
+    "def2/J def2-TZVP/C",
+    "def2/J def2-TZVPP/C",
+    "def2/J def2-QZVPP/C",
 ]
 
 """Results ORCA can produce. Same recognized fields as the other QM steps.
