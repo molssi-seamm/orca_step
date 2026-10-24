@@ -122,7 +122,9 @@ class Optimization(Energy):
             P, same_as=initial_configuration
         )
         configuration.atoms.set_coordinates(coords, fractionals=False)
-        text = seamm.standard_parameters.set_names(system, configuration, P)
+        text = seamm.standard_parameters.set_names(
+            system, configuration, P, model=getattr(self, "model", "") or "ORCA"
+        )
         printer.normal(__(text, indent=self.indent + 4 * " "))
 
     @staticmethod

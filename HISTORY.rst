@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.24 -- The optimized structure keeps its name
+    * The structures that optimizations write are now named '{current name} optimized
+      with {model}' by default, keeping the name the structure had, such as a title
+      read from an SDF file: 'DMC_cc optimized with DFT@B3LYP/def2-SVP'. Before, every
+      structure was named 'optimized', so the titles of several molecules were lost.
+      Flowcharts already saved keep their setting, and the previous choice remains in
+      the list. Needs seamm 2026.10.24.
+
 2026.10.23.1 -- The auxiliary basis 'explicit'
     * The auxiliary basis 'explicit' -- in the steps and as the 'aux_basis' task
       option -- uses def2/J and, for MP2 and double hybrids, the /C set matching the
