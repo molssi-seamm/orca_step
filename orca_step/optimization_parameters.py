@@ -51,5 +51,9 @@ class OptimizationParameters(EnergyParameters):
         tmp.default = "keep current name"
 
         tmp = self["configuration name"]
-        tmp._data["enumeration"] = ("optimized", *tmp.enumeration)
-        tmp.default = "optimized"
+        tmp._data["enumeration"] = (
+            "{current name} optimized with {model}",
+            "optimized",
+            *tmp.enumeration,
+        )
+        tmp.default = "{current name} optimized with {model}"
