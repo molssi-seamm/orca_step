@@ -1,4 +1,4 @@
-"""The D4-corrected functionals offered as model chemistries ("R2SCAN-D4",
+"""The dispersion-corrected functionals offered as model chemistries ("R2SCAN-D4",
 written "! R2SCAN D4"), and the accuracy keywords on every batch/MDI input."""
 
 from seamm_exec import Geometry
@@ -135,3 +135,81 @@ def test_accuracy_keywords_not_doubled():
         "B3LYP VeryTightSCF", "def2-SVP", 0, 1, ["H"], [[0, 0, 0]]
     )
     assert text.splitlines()[0] == "! B3LYP VeryTightSCF def2-SVP DEFGRID3 EnGrad"
+
+
+def test_d3_functionals_are_orca_double_hybrids():
+    functionals = orca_step.metadata["functionals"]
+    assert orca_step.D3_FUNCTIONALS <= set(functionals)
+    for name in orca_step.D3_FUNCTIONALS:
+        assert "double-hybrid" in functionals[name]["category"]
+
+
+def test_d3_variants_of_double_hybrids():
+    """B2PLYP-D3ZERO is Grimme's original zero-damping D3 (Gaussian's GD3), as in
+    CBH-ANL; B2PLYP-D3BJ the Becke-Johnson damping. A double hybrid has no
+    analytic Hessian, so a driver finite-differences the gradients, which include
+    the D3 correction."""
+    for suffix, keyword in (("D3ZERO", "D3ZERO"), ("D3BJ", "D3BJ")):
+        level = f"ORCA:DFT@B2PLYP-{suffix}/cc-pVTZ"
+        offering = _offering(level)
+        assert offering["method"] == f"B2PLYP-{suffix}"
+        assert offering["mdi_capable"]
+        assert offering["mdi_method_arg"] == f"B2PLYP {keyword}"
+        assert not offering["analytic_hessian"]
+    assert orca_step.split_dispersion("b2plyp-d3zero") == ("B2PLYP", "D3ZERO")
+    assert orca_step.split_dispersion("mPW2PLYP-D3BJ") == ("mPW2PLYP", "D3BJ")
+    assert orca_step.orca_method_keyword("B2PLYP-D3ZERO") == "B2PLYP D3ZERO"
+    # Not offered for the other functionals, nor as the ambiguous "-D3"
+    assert orca_step.split_dispersion("B3LYP-D3ZERO") == ("B3LYP-D3ZERO", "")
+    options = ORCAStep.get_model_chemistry_options()
+    assert "ORCA:DFT@B2PLYP-D3/cc-pVTZ" not in options
+    assert "ORCA:DFT@B3LYP-D3ZERO/cc-pVTZ" not in options
+
+
+def test_d3_variant_inputs_and_fingerprints(tmp_path):
+    """The step, a batch task and the MDI engine write D3ZERO, and the dispersion
+    correction changes the fingerprint of the settings."""
+    from orca_step.fingerprint import orca_calculation_record
+
+    node = orca_step.Energy()
+    line = node.keyword_line(
+        {
+            "use model chemistry": "no",
+            "method": "B2PLYP-D3ZERO",
+            "basis": "cc-pVTZ",
+            "basis source": "ORCA internal",
+            "auxiliary basis": "AutoAux",
+            "extra keywords": "",
+        }
+    )
+    assert line == "B2PLYP D3ZERO cc-pVTZ AutoAux"
+
+    mc = {
+        "level": "ORCA:DFT@B2PLYP-D3ZERO/cc-pVTZ",
+        "type": "DFT",
+        "method": "B2PLYP-D3ZERO",
+        "basis": "cc-pVTZ",
+        "step": "ORCA",
+        "options": _offering("ORCA:DFT@B2PLYP-D3ZERO/cc-pVTZ"),
+    }
+    text = get_task(WATER, mc, key="w").files["orca.inp"]
+    assert text.splitlines()[0].startswith("! B2PLYP D3ZERO ")
+
+    (tmp_path / "orca.ini").write_text("[local]\ncode = /opt/orca/orca\n")
+    argv = ORCAStep.get_mdi_engine_command(
+        _FakeExecutor("local"),
+        {"root": str(tmp_path)},
+        method="B2PLYP-D3ZERO",
+        basis="cc-pVTZ",
+        port=8021,
+    )
+    assert argv[argv.index("--method") + 1].startswith("B2PLYP D3ZERO")
+    assert argv[argv.index("--hessian") + 1] == "no"
+
+    fingerprints = {
+        orca_calculation_record(
+            {"orca.inp": text.replace("D3ZERO", dispersion)}, "6.1.1"
+        )["fingerprint"]
+        for dispersion in ("D3ZERO", "D3BJ", "")
+    }
+    assert len(fingerprints) == 3
