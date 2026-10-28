@@ -388,6 +388,40 @@ metadata["results"] = {
         "type": "float",
         "units": "kJ/mol",
     },
+    "ZPE": {
+        "description": "The zero-point energy",
+        "dimensionality": "scalar",
+        "calculation": ["frequencies"],
+        "property": "ZPE#ORCA#{model}",
+        "type": "float",
+        "units": "kJ/mol",
+    },
+    "H": {
+        "description": "The absolute enthalpy at the temperature T: E + ZPE + the "
+        "thermal correction",
+        "dimensionality": "scalar",
+        "calculation": ["frequencies"],
+        "property": "H#ORCA#{model}",
+        "type": "float",
+        "units": "kJ/mol",
+    },
+    "T": {
+        "description": "The temperature of the thermochemistry",
+        "dimensionality": "scalar",
+        "calculation": ["frequencies"],
+        "property": "T#ORCA#{model}",
+        "type": "float",
+        "units": "K",
+    },
+    "H(298.15 K)": {
+        "description": "The absolute enthalpy at 298.15 K: E + ZPE + the thermal "
+        "correction",
+        "dimensionality": "scalar",
+        "calculation": ["frequencies"],
+        "property": "H(298.15 K)#ORCA#{model}",
+        "type": "float",
+        "units": "kJ/mol",
+    },
     "gibbs energy": {
         "description": "The Gibbs free energy (G) from the thermochemistry",
         "dimensionality": "scalar",

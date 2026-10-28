@@ -64,6 +64,15 @@ class Optimization(Energy):
             opt_keywords += list(keywords)
         return super().run(keywords=opt_keywords)
 
+    def final_coordinates(self, configuration):
+        """The optimized geometry (orca.xyz), which the energy belongs to."""
+        xyz = Path(self.directory) / "orca.xyz"
+        if xyz.exists():
+            coords = self._read_xyz_coordinates(xyz)
+            if len(coords) == configuration.n_atoms:
+                return coords
+        return super().final_coordinates(configuration)
+
     def analyze(self, indent="", P=None, data=None, **kwargs):
         """Report the energy, store the optimized geometry according to the
         structure-handling options, and check that the optimization converged.

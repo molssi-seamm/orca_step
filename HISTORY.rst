@@ -1,6 +1,28 @@
 =======
 History
 =======
+2026.10.28 -- Fingerprints of the settings of calculations; standard thermochemistry names
+    * The Energy, Optimization and Frequencies sub-steps store, with their results, a
+      fingerprint of the settings of the calculation -- ``settings fingerprint``,
+      ``element fingerprints`` and ``calculation`` (#ORCA#<model>), and the
+      ``frequency`` ones for Frequencies -- so that one can tell whether results on
+      different structures, such as the energies of the species of a reaction, come
+      from the same kind of calculation. The fingerprint is a hash of the ORCA input
+      as it ran, less the cores, memory, files, printing, starting guess, task and
+      the structure's geometry, charge and multiplicity; basis sets written per
+      element are hashed per element. Only ORCA's major and minor version count.
+    * The MDI engine gives the same fingerprints for the same calculation, through
+      the new commands ``<FINGERPRINT_LENGTH`` and ``<FINGERPRINT``, and has a new
+      option ``--cosx by-element|on|off`` to use one exchange scheme for every
+      structure, e.g. all the species of a reaction.
+    * Frequencies also stores the zero-point energy and the absolute enthalpy under
+      the names the quantum-chemistry steps and the Thermochemistry step share:
+      ``ZPE``, ``H`` with its temperature ``T``, and ``H(298.15 K)`` at 298.15 K.
+      The older names remain. These, and the total energy, are now always stored
+      as properties, whether or not they are selected as results, since other
+      steps such as Thermochemistry look for them.
+    * Requires seamm 2026.10.28 and seamm-util 2026.10.28.1.
+
 2026.10.24 -- The optimized structure keeps its name
     * The structures that optimizations write are now named '{current name} optimized
       with {model}' by default, keeping the name the structure had, such as a title

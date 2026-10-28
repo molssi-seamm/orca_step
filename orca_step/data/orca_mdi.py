@@ -24,12 +24,18 @@ Usage (TCP; the driver picks the port/host):
         --orca /path/to/orca --method B3LYP --basis def2-SVP \\
         --charge 0 --multiplicity 1
 
+Besides the standard commands the engine answers <FINGERPRINT_LENGTH and
+<FINGERPRINT, the fingerprints of the settings of its last energy and Hessian
+runs as JSON (see orca_step.fingerprint), the same as the ORCA step stores for
+the same calculation.
+
 Dependencies (all present in the SEAMM environment): pymdi, numpy, seamm_util,
 and the ORCA executable (its full path passed with --orca so it can find its
 sub-programs).
 """
 
 import argparse
+import json
 import logging
 import re
 import subprocess
@@ -41,6 +47,11 @@ from pathlib import Path
 import numpy as np
 
 from seamm_util import Q_, element_data
+
+try:
+    from orca_step.fingerprint import orca_calculation_record, orca_version
+except ImportError:  # pragma: no cover - run outside a SEAMM environment
+    orca_calculation_record = None
 
 logger = logging.getLogger("orca-mdi")
 
@@ -170,6 +181,44 @@ def exact_exchange_method(method, symbols, elements=None):
     if len(symbols) == 1 or present & exact_exchange_elements(elements):
         return f"{method} NoCOSX"
     return method
+
+
+def exchange_method(method, symbols, cosx="by-element", elements=None):
+    """``method`` with the exchange scheme the ``--cosx`` option asks for.
+
+    "by-element" (the default) is :func:`exact_exchange_method`: NoCOSX for lone
+    atoms and the elements where COSX is unreliable. "on" leaves ORCA's default
+    (RIJCOSX for hybrids) and "off" uses exact exchange (NoCOSX) for every
+    structure, so that a caller can give all the species of a reaction the same
+    scheme. An exchange scheme already in ``method`` is kept.
+    """
+    if cosx == "by-element":
+        return exact_exchange_method(method, symbols, elements)
+    if {w.upper() for w in method.split()} & _EXCHANGE_SCHEME_KEYWORDS:
+        return method
+    if cosx == "off":
+        return f"{method} NoCOSX"
+    if cosx == "on":
+        return method
+    raise ValueError(f"--cosx must be 'by-element', 'on' or 'off', not '{cosx}'")
+
+
+def calculation_record(workdir, input_text, atomic_numbers, coords_ang):
+    """The fingerprints of the settings of the run just done in ``workdir``
+    (see orca_step.fingerprint), or None outside a SEAMM environment."""
+    if orca_calculation_record is None:
+        return None
+    files = {"orca.inp": input_text}
+    if "basis.bas" in input_text:
+        files["basis.bas"] = (Path(workdir) / "basis.bas").read_text()
+    out = Path(workdir) / "orca.out"
+    version = orca_version(out.read_text(errors="replace")) if out.exists() else None
+    return orca_calculation_record(
+        files,
+        version,
+        atomic_numbers=[int(z) for z in atomic_numbers],
+        coordinates=np.asarray(coords_ang).tolist(),
+    )
 
 
 def basis_keyword_and_block(basis, atomic_numbers, workdir):
@@ -319,6 +368,15 @@ def parse_args():
         "(NoCOSX), e.g. 'Li Na'; 'none' for one-center jobs only. Default: the "
         "elements Na, Mg, Zn, B and P.",
     )
+    p.add_argument(
+        "--cosx",
+        choices=["by-element", "on", "off"],
+        default="by-element",
+        help="The exchange scheme: 'by-element' (default) uses exact exchange "
+        "(NoCOSX) for lone atoms and the --exact-exchange-elements; 'on' keeps "
+        "ORCA's RIJCOSX and 'off' uses exact exchange for every structure, to "
+        "give all the species of a reaction the same scheme.",
+    )
     p.add_argument("--charge", type=int, default=0, help="Total charge (default 0).")
     p.add_argument(
         "--multiplicity",
@@ -400,6 +458,8 @@ def main():
         "SCF",
         "<ENERGY",
         "<FORCES",
+        "<FINGERPRINT_LENGTH",
+        "<FINGERPRINT",
         "EXIT",
     ]
     if hessian_capable:
@@ -418,6 +478,8 @@ def main():
     energy = None
     gradient = None
     hessian = None
+    # The fingerprints of the last energy/gradient and Hessian runs
+    records = {"energy": None, "hessian": None}
 
     def run_calculation():
         """Write the ORCA input for the current geometry, run the orca binary
@@ -438,7 +500,7 @@ def main():
             b for b in (basis_block, "%mp2 DLPNO true end" if args.dlpno else "") if b
         )
         text = orca_input(
-            exact_exchange_method(method, symbols, args.exact_exchange_elements),
+            exchange_method(method, symbols, args.cosx, args.exact_exchange_elements),
             basis,
             charge,
             multiplicity,
@@ -466,6 +528,9 @@ def main():
         if energy is None:
             raise RuntimeError(f"Could not parse an energy from {workdir}/orca.out")
         gradient = parse_engrad((workdir / "orca.engrad").read_text(), natoms)
+        records["energy"] = calculation_record(
+            workdir, text, atomic_numbers, coords_ang
+        )
         logger.debug(f"orca run: E = {energy:.8f} Ha in {elapsed:.2f} s")
 
     def run_hessian():
@@ -479,7 +544,7 @@ def main():
             args.basis, atomic_numbers, workdir
         )
         text = orca_hessian_input(
-            exact_exchange_method(method, symbols, args.exact_exchange_elements),
+            exchange_method(method, symbols, args.cosx, args.exact_exchange_elements),
             basis,
             charge,
             multiplicity,
@@ -504,6 +569,9 @@ def main():
                 f"{workdir}/orca.out"
             )
         hessian = parse_hessian((workdir / "orca.hess").read_text(), natoms)
+        records["hessian"] = calculation_record(
+            workdir, text, atomic_numbers, coords_ang
+        )
         logger.debug(f"orca Hessian: {3 * natoms}x{3 * natoms} in {elapsed:.2f} s")
 
     logger.debug("Entering MDI event loop ...")
@@ -579,6 +647,16 @@ def main():
                 mdi.MDI_DOUBLE,
                 comm,
             )
+        elif command in ("<FINGERPRINT_LENGTH", "<FINGERPRINT"):
+            # The fingerprints of the settings of the last calculations, as JSON:
+            # {"energy": record, "hessian": record}, each None until computed
+            # (see orca_step.fingerprint). Ask for the length first, then the
+            # text, which is that many characters.
+            text = json.dumps(records, sort_keys=True)
+            if command == "<FINGERPRINT_LENGTH":
+                mdi.MDI_Send(len(text), 1, mdi.MDI_INT, comm)
+            else:
+                mdi.MDI_Send(text, len(text), mdi.MDI_CHAR, comm)
         elif command == "EXIT":
             logger.debug("EXIT -- shutting down.")
             break

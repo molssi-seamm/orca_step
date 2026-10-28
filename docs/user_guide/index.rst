@@ -467,7 +467,11 @@ are the same as the Energy step, plus two extra controls:
 Tick the results you want on the Results tab: the **frequencies**, the **IR
 intensities**, the **zero-point energy**, the **enthalpy**, the **Gibbs free
 energy**, the **number of imaginary frequencies**, and the **largest zero-mode
-frequency**. Imaginary (negative) frequencies are reported and flagged — a
+frequency**. The zero-point energy and the absolute enthalpy at the temperature
+are also stored under the names that SEAMM's quantum-chemistry steps and the
+Thermochemistry step share -- ``ZPE``, ``H`` with its temperature ``T``, and
+``H(298.15 K)`` at 298.15 K -- beside the older ``zero point energy`` and
+``enthalpy``. Imaginary (negative) frequencies are reported and flagged — a
 minimum has none, a transition state has one.
 
 The output lists the vibrational frequencies and their IR intensities in a
@@ -963,6 +967,36 @@ series of nearby structures. Two consequences:
   that cheap engines see. Use an inexpensive functional for jobs that only need
   the energy surface to guide them (such as contact finding); reserve expensive,
   high-accuracy calculations for ordinary single-point steps.
+
+The fingerprint of a calculation's settings
+-------------------------------------------
+
+The Energy, Optimization and Frequencies sub-steps store, with their results, a
+fingerprint of the settings of the calculation, so that one can tell whether results
+stored on different structures -- the energies of the species of a reaction, say --
+come from the same kind of calculation:
+
+* ``settings fingerprint#ORCA#<model>`` -- a hash of the ORCA input as it ran, less
+  what does not change the energy at a geometry (``%pal``, ``%maxcore``, file names,
+  printing, the starting guess, the task such as ``EnGrad`` or ``Opt``, the optimizer)
+  and what belongs to the structure (its geometry, charge and multiplicity). Only the
+  major and minor version of ORCA are included, so a patch release changes nothing;
+* ``element fingerprints#ORCA#<model>`` -- a hash for each element of the basis sets
+  and ECPs written out per element, e.g. a Basis Set Exchange basis, so that
+  structures with different elements can be compared;
+* ``calculation#ORCA#<model>`` -- the whole record: the full ORCA version, the
+  fingerprints, a fingerprint of the geometry and the text that was hashed, for
+  finding the cause of a mismatch.
+
+The Frequencies sub-step also stores them as ``frequency fingerprint``, ``frequency
+element fingerprints`` and ``frequency calculation``. The exchange scheme counts:
+exact exchange (NoCOSX), which the step chooses for structures with Na, Mg, Zn, B or
+P, is a different setting from COSX.
+
+The MDI engine gives the same fingerprints for the same calculation through the
+commands ``<FINGERPRINT_LENGTH`` and ``<FINGERPRINT`` (the records of its last energy
+and Hessian runs as JSON), and its option ``--cosx by-element|on|off`` lets a driver
+use one exchange scheme for every structure, e.g. all the species of a reaction.
 
 Settings that depend on each other
 ==================================

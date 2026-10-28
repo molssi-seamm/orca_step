@@ -1605,6 +1605,23 @@ def test_frequencies_parsers():
     )
 
 
+def test_frequencies_standard_thermochemistry_names():
+    """The thermochemistry is also stored under the names the QC plug-ins and the
+    Thermochemistry step share: ZPE, H, T and, at 298.15 K, H(298.15 K)."""
+    node = orca_step.Frequencies()
+    thermo = node._parse_thermochemistry(_FREQ_OUT)
+    props = dict(thermo)
+    node._standard_thermochemistry_names({"temperature": 298.15}, props)
+    assert props["ZPE"] == thermo["zero point energy"]
+    assert props["H"] == props["H(298.15 K)"] == thermo["enthalpy"]
+    assert props["T"] == 298.15
+    props = dict(thermo)
+    node._standard_thermochemistry_names({"temperature": 350.0}, props)
+    assert props["T"] == 350.0 and "H(298.15 K)" not in props
+    for key in ("ZPE", "H", "T", "H(298.15 K)"):
+        assert key in orca_step.metadata["results"]
+
+
 def test_frequencies_classify():
     """The 6 nominally-zero modes (non-linear) are split off; the imaginary mode
     stays, and the largest zero-mode magnitude is reported."""
@@ -2158,6 +2175,9 @@ def test_run_orca_job_uses_explicit_geometry_charge_and_directory(
         directory=job_dir,
     )
 
+    record = result.pop("calculation record")
+    assert record["program"] == "ORCA"
+    assert record["files"] == {"orca.inp": "! DEF2-SVP HF"}
     assert result == {"energy": -1.0, "success": True}
     assert captured["directory"] == job_dir
     assert "* xyz 1 1" in captured["orca.inp"]

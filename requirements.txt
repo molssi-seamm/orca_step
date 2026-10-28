@@ -1,7 +1,7 @@
 numpy
-seamm>=2026.10.24
+seamm>=2026.10.28
 molsystem
-seamm-util
+seamm-util>=2026.10.28.1
 seamm-widgets>=2026.9.25
 seamm-exec>=2026.10.19
 seamm-bsse
