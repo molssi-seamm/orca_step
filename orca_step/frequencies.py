@@ -123,6 +123,21 @@ class Frequencies(Energy):
     # ------------------------------------------------------------------
     # Analysis
     # ------------------------------------------------------------------
+    @staticmethod
+    def _standard_thermochemistry_names(P, props):
+        """Add the thermochemistry under the names shared by the QC plug-ins and
+        the Thermochemistry step: ZPE, H (the absolute enthalpy at T), T, and
+        H(298.15 K) when T is 298.15 K. The older names stay."""
+        temp = P.get("temperature", 298.15)
+        temperature = temp.m_as("K") if hasattr(temp, "m_as") else float(temp)
+        if props.get("zero point energy") is not None:
+            props["ZPE"] = props["zero point energy"]
+        if props.get("enthalpy") is not None:
+            props["H"] = props["enthalpy"]
+            props["T"] = temperature
+            if abs(temperature - 298.15) < 1.0e-6:
+                props["H(298.15 K)"] = props["enthalpy"]
+
     def analyze(self, indent="", P=None, data=None, **kwargs):
         """Store and report the energy plus the frequencies, IR intensities, and
         thermochemistry, honoring the standard structure-handling options."""
@@ -170,6 +185,7 @@ class Frequencies(Energy):
                     logger.warning(f"Could not create the IR-spectrum graph: {e}")
 
         props.update(self._parse_thermochemistry(text))
+        self._standard_thermochemistry_names(P, props)
 
         # Calculate the formation-referenced energies, if possible: DfE0
         # (0 K, electronic-only, always) plus DfHT/DfGT (at the requested
@@ -202,6 +218,12 @@ class Frequencies(Energy):
             self.store_results(configuration=configuration, data=props)
         except Exception as e:  # pragma: no cover
             logger.warning(f"Could not store results: {e}")
+        # Always stored: other steps, e.g. Thermochemistry, look for them
+        self.store_properties(
+            configuration, props, ["energy", "ZPE", "H", "T", "H(298.15 K)"]
+        )
+        # The energy and the frequencies come from the same calculation
+        self.store_fingerprints(configuration, data, kinds=("settings", "frequency"))
 
         self._print_scalar_summary(props)
         self._report_frequencies(props)

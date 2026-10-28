@@ -25,6 +25,7 @@ import seamm_exec
 import seamm_util.printing as printing
 from seamm_util.printing import FormattedText as __
 
+from .fingerprint import orca_calculation_record, orca_version
 from .orca_step import full_orca_path
 
 logger = logging.getLogger(__name__)
@@ -1586,7 +1587,27 @@ class ORCABase(seamm.Node):
             raise RuntimeError(f"ORCA in {run_directory}: {problem}")
         if task_kind(keyword_line) == "gradient":
             self._check_net_force(run_directory)
+        record = self._calculation_record(task, run_directory)
+        if record is not None:
+            data["calculation record"] = record
         return data
+
+    @staticmethod
+    def _calculation_record(task, run_directory):
+        """The fingerprints of the settings of the ORCA run, from the input as it
+        ran (the SThresh retry's, if the SCF was retried); None if not possible.
+        See :mod:`orca_step.fingerprint`."""
+        try:
+            files = dict(task.files)
+            retry = files.pop(_RETRY_INPUT, None)
+            if retry is not None and (run_directory / STHRESH_RETRY_MARKER).exists():
+                files["orca.inp"] = retry
+            out = Path(run_directory) / "orca.out"
+            text = out.read_text(errors="replace") if out.exists() else ""
+            return orca_calculation_record(files, orca_version(text))
+        except Exception as e:  # pragma: no cover - never stop the step
+            logger.warning(f"Could not fingerprint the ORCA input: {e}")
+            return None
 
     def _note_sthresh_retry(self, run_directory, sthresh=None):
         """Tell the user if the run's SCF was retried with a larger SThresh;

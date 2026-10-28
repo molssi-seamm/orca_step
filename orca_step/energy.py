@@ -21,6 +21,7 @@ import orca_step
 from .orca_base import auxiliary_basis_words, method_class
 import seamm
 from seamm_util import ureg, Q_  # noqa: F401
+from seamm_util.fingerprint import geometry_fingerprint
 import seamm_util.printing as printing
 from seamm_util.printing import FormattedText as __
 
@@ -1392,6 +1393,29 @@ class Energy(orca_step.ORCABase):
 
         return report
 
+    def final_coordinates(self, configuration):
+        """The Cartesian coordinates (Å) of the geometry the energy belongs to:
+        the configuration's, for a single point."""
+        return configuration.atoms.get_coordinates(fractionals=False)
+
+    def store_fingerprints(self, configuration, data, kinds=("settings",)):
+        """Store the fingerprints of the calculation's settings with its results
+        (see :mod:`orca_step.fingerprint`): ``settings fingerprint#ORCA#<model>``
+        etc., or the frequency ones for ``kinds`` "frequency"."""
+        record = (data or {}).get("calculation record")
+        if record is None or configuration is None:
+            return
+        try:
+            record = dict(record)
+            record["geometry fingerprint"] = geometry_fingerprint(
+                configuration.atoms.atomic_numbers,
+                self.final_coordinates(configuration),
+            )
+            for kind in kinds:
+                self.store_calculation_record(configuration, "ORCA", record, kind=kind)
+        except Exception as e:  # pragma: no cover - never stop the step
+            logger.warning(f"Could not store the fingerprints of the calculation: {e}")
+
     def analyze(self, indent="", P=None, data=None, **kwargs):
         """Parse the properties, store them, print a summary, write CSV files,
         and optionally apply bond orders / Hirshfeld charges to the structure."""
@@ -1425,6 +1449,9 @@ class Energy(orca_step.ORCABase):
             self.store_results(configuration=configuration, data=props)
         except Exception as e:  # pragma: no cover
             logger.warning(f"Could not store results: {e}")
+        # Always stored: other steps, e.g. Thermochemistry, look for them
+        self.store_properties(configuration, props, ["energy"])
+        self.store_fingerprints(configuration, data)
 
         self._print_scalar_summary(props)
         self._report_gradients(props)
