@@ -43,6 +43,7 @@ from .orca_step import (  # noqa: F401
     orca_method_blocks,
     orca_method_keyword,
     split_dispersion,
+    D3_FUNCTIONALS,
     D4_FUNCTIONALS,
 )
 

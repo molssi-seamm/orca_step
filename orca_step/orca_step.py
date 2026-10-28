@@ -55,23 +55,41 @@ D4_FUNCTIONALS = frozenset(
 )  # fmt: skip
 
 
+# Double hybrids offered with Grimme's D3 correction, as "<functional>-D3ZERO" (the
+# original zero damping, Gaussian's GD3, written "! <functional> D3ZERO") and
+# "<functional>-D3BJ" (Becke-Johnson damping, "! <functional> D3BJ"): those with D3
+# parameters of both kinds. ORCA's plain "D3" means D3BJ, so it is not used.
+D3_FUNCTIONALS = frozenset(("B2PLYP", "B2GP-PLYP", "mPW2PLYP", "PWPB95"))
+
+# The dispersion corrections that can be added to a functional, as the suffix of the
+# model-chemistry method, the ORCA keyword, and the functionals they are offered for
+_DISPERSION_SUFFIXES = (
+    ("-D3ZERO", "D3ZERO", D3_FUNCTIONALS),
+    ("-D3BJ", "D3BJ", D3_FUNCTIONALS),
+    ("-D4", "D4", D4_FUNCTIONALS),
+)
+
+
 def _is_orca_functional(name):
     upper = name.upper()
     return any(k.upper() == upper for k in orca_step.metadata["functionals"])
 
 
 def split_dispersion(method):
-    """``(functional, "D4")`` for a "<functional>-D4" model-chemistry method
-    whose functional is in :data:`D4_FUNCTIONALS`, otherwise ``(method, "")``.
-    Case-insensitive; the functional comes back as ORCA spells it. ORCA's own
-    functionals win: WB97X-D4 is ORCA's keyword, not WB97X plus D4."""
+    """``(functional, keyword)`` for a model-chemistry method with a dispersion
+    correction -- "<functional>-D4", "<functional>-D3ZERO" or "<functional>-D3BJ" for
+    a functional in :data:`D4_FUNCTIONALS` or :data:`D3_FUNCTIONALS` -- otherwise
+    ``(method, "")``. Case-insensitive; the functional comes back as ORCA spells it.
+    ORCA's own functionals win: WB97X-D4 is ORCA's keyword, not WB97X plus D4."""
     if _is_orca_functional(method):
         return method, ""
-    if method.upper().endswith("-D4"):
-        base = method[:-3]
-        for name in D4_FUNCTIONALS:
-            if name.upper() == base.upper():
-                return name, "D4"
+    upper = method.upper()
+    for suffix, keyword, functionals in _DISPERSION_SUFFIXES:
+        if upper.endswith(suffix):
+            base = method[: -len(suffix)]
+            for name in functionals:
+                if name.upper() == base.upper():
+                    return name, keyword
     return method, ""
 
 
@@ -100,11 +118,12 @@ def method_has_analytic_hessian(method):
     engine should advertise ``<HESSIAN``.
     """
     functionals = orca_step.metadata["functionals"]
-    # The D4 correction has analytic second derivatives in ORCA; the
+    # The D3 and D4 corrections have analytic second derivatives in ORCA; the
     # functional decides.
     method, _ = split_dispersion(method)
-    if method.upper().endswith(" D4"):
-        method = method[:-3]
+    for keyword in (" D4", " D3ZERO", " D3BJ"):
+        if method.upper().endswith(keyword):
+            method = method[: -len(keyword)]
     rec = functionals.get(method) or next(
         (r for k, r in functionals.items() if k.upper() == method.upper()), None
     )
@@ -214,19 +233,21 @@ class ORCAStep(object):
                     )
                     for name, rec in orca_step.metadata["functionals"].items()
                 ]
-                # The D4-corrected variants, e.g. R2SCAN-D4 -> "! R2SCAN D4"
-                entries.extend(
-                    (
-                        f"{name}-D4",
-                        f"{name} D4",
-                        orca_step.metadata["functionals"][name].get(
-                            "gradients", "analytic"
-                        ),
+                # The dispersion-corrected variants, e.g. R2SCAN-D4 -> "! R2SCAN D4"
+                # and B2PLYP-D3ZERO -> "! B2PLYP D3ZERO"
+                for suffix, keyword, functionals in _DISPERSION_SUFFIXES:
+                    entries.extend(
+                        (
+                            f"{name}{suffix}",
+                            f"{name} {keyword}",
+                            orca_step.metadata["functionals"][name].get(
+                                "gradients", "analytic"
+                            ),
+                        )
+                        for name in sorted(functionals)
+                        if name in orca_step.metadata["functionals"]
+                        and not _is_orca_functional(f"{name}{suffix}")
                     )
-                    for name in sorted(D4_FUNCTIONALS)
-                    if name in orca_step.metadata["functionals"]
-                    and not _is_orca_functional(f"{name}-D4")
-                )
             else:
                 entries = [(method, method, info.get("gradients", "analytic"))]
             for adv_method, real, gradients in entries:

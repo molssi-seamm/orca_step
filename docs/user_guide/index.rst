@@ -949,6 +949,14 @@ dispersion (``WB97X-D4``, ``B97M-V``, ``R2SCAN-3C``, ...) are offered only as
 themselves. Method names are matched as written, so use the capitals shown in the
 Model Chemistry step's list.
 
+The double hybrids B2PLYP, B2GP-PLYP, mPW2PLYP and PWPB95 are also offered with
+Grimme's D3 correction: ``<functional>-D3ZERO`` for the original zero damping (as
+Gaussian's ``EmpiricalDispersion=GD3``), e.g. ``ORCA:DFT@B2PLYP-D3ZERO/cc-pVTZ``,
+which runs ``! B2PLYP D3ZERO``, and ``<functional>-D3BJ`` for Becke-Johnson damping.
+There is no plain ``-D3``, since ORCA's own ``D3`` keyword means D3BJ. As for every
+double hybrid, ORCA has no analytic Hessian for them, so frequencies come from
+finite differences of the gradients, which include the D3 correction.
+
 Driving ORCA as an MDI engine
 -----------------------------
 

@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.10.28.1 -- Double hybrids with Grimme's D3 correction
+    * The double hybrids B2PLYP, B2GP-PLYP, mPW2PLYP and PWPB95 are offered as model
+      chemistries with Grimme's D3 dispersion correction: ``<functional>-D3ZERO``
+      with the original zero damping, as Gaussian's ``EmpiricalDispersion=GD3`` --
+      e.g. ``ORCA:DFT@B2PLYP-D3ZERO/cc-pVTZ``, which runs ``! B2PLYP D3ZERO`` -- and
+      ``<functional>-D3BJ`` with Becke-Johnson damping. The Energy step, batch tasks
+      and the MDI engine all use them, and the dispersion correction is part of the
+      fingerprint of the settings.
+
 2026.10.28 -- Fingerprints of the settings of calculations; standard thermochemistry names
     * The Energy, Optimization and Frequencies sub-steps store, with their results, a
       fingerprint of the settings of the calculation -- ``settings fingerprint``,
