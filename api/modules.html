@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step &#8212; SEAMM ORCA Plug-in 2026.10.24 documentation</title>
+    <title>orca_step &#8212; SEAMM ORCA Plug-in 2026.10.28 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=647e6ecf"></script>
+    <script src="../_static/documentation_options.js?v=bb9c4767"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.24" />
+  <meta name="docsearch:version" content="2026.10.28" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -566,10 +566,12 @@
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.description_text"><code class="docutils literal notranslate"><span class="pre">Energy.description_text()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.exact_exchange_keywords"><code class="docutils literal notranslate"><span class="pre">Energy.exact_exchange_keywords()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.extra_input"><code class="docutils literal notranslate"><span class="pre">Energy.extra_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.final_coordinates"><code class="docutils literal notranslate"><span class="pre">Energy.final_coordinates()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.keyword_line"><code class="docutils literal notranslate"><span class="pre">Energy.keyword_line()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.method_blocks"><code class="docutils literal notranslate"><span class="pre">Energy.method_blocks()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.run"><code class="docutils literal notranslate"><span class="pre">Energy.run()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.sthresh_retry"><code class="docutils literal notranslate"><span class="pre">Energy.sthresh_retry()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.store_fingerprints"><code class="docutils literal notranslate"><span class="pre">Energy.store_fingerprints()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy.Energy.wfx_mode"><code class="docutils literal notranslate"><span class="pre">Energy.wfx_mode()</span></code></a></li>
 </ul>
 </li>
@@ -601,6 +603,13 @@
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.energy_step.EnergyStep.my_description"><code class="docutils literal notranslate"><span class="pre">EnergyStep.my_description</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="orca_step.html#module-orca_step.fingerprint">orca_step.fingerprint module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.fingerprint.basis_file_blocks"><code class="docutils literal notranslate"><span class="pre">basis_file_blocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.fingerprint.orca_calculation_record"><code class="docutils literal notranslate"><span class="pre">orca_calculation_record()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.fingerprint.orca_version"><code class="docutils literal notranslate"><span class="pre">orca_version()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.fingerprint.settings_text"><code class="docutils literal notranslate"><span class="pre">settings_text()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="orca_step.html#module-orca_step.frequencies">orca_step.frequencies module</a><ul>
@@ -644,6 +653,7 @@
 <li class="toctree-l3"><a class="reference internal" href="orca_step.html#orca_step.optimization.Optimization"><code class="docutils literal notranslate"><span class="pre">Optimization</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.optimization.Optimization.analyze"><code class="docutils literal notranslate"><span class="pre">Optimization.analyze()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.optimization.Optimization.description_text"><code class="docutils literal notranslate"><span class="pre">Optimization.description_text()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.optimization.Optimization.final_coordinates"><code class="docutils literal notranslate"><span class="pre">Optimization.final_coordinates()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="orca_step.html#orca_step.optimization.Optimization.run"><code class="docutils literal notranslate"><span class="pre">Optimization.run()</span></code></a></li>
 </ul>
 </li>

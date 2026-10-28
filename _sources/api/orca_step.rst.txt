@@ -60,6 +60,14 @@ orca\_step.energy\_step module
    :show-inheritance:
    :undoc-members:
 
+orca\_step.fingerprint module
+-----------------------------
+
+.. automodule:: orca_step.fingerprint
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 orca\_step.frequencies module
 -----------------------------
 

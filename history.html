@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.24 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.10.28 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=647e6ecf"></script>
+    <script src="_static/documentation_options.js?v=bb9c4767"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.24" />
+  <meta name="docsearch:version" content="2026.10.28" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,29 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.10.28 – Fingerprints of the settings of calculations; standard thermochemistry names</dt><dd><ul class="simple">
+<li><p>The Energy, Optimization and Frequencies sub-steps store, with their results, a
+fingerprint of the settings of the calculation – <code class="docutils literal notranslate"><span class="pre">settings</span> <span class="pre">fingerprint</span></code>,
+<code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">fingerprints</span></code> and <code class="docutils literal notranslate"><span class="pre">calculation</span></code> (#ORCA#&lt;model&gt;), and the
+<code class="docutils literal notranslate"><span class="pre">frequency</span></code> ones for Frequencies – so that one can tell whether results on
+different structures, such as the energies of the species of a reaction, come
+from the same kind of calculation. The fingerprint is a hash of the ORCA input
+as it ran, less the cores, memory, files, printing, starting guess, task and
+the structure’s geometry, charge and multiplicity; basis sets written per
+element are hashed per element. Only ORCA’s major and minor version count.</p></li>
+<li><p>The MDI engine gives the same fingerprints for the same calculation, through
+the new commands <code class="docutils literal notranslate"><span class="pre">&lt;FINGERPRINT_LENGTH</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;FINGERPRINT</span></code>, and has a new
+option <code class="docutils literal notranslate"><span class="pre">--cosx</span> <span class="pre">by-element|on|off</span></code> to use one exchange scheme for every
+structure, e.g. all the species of a reaction.</p></li>
+<li><p>Frequencies also stores the zero-point energy and the absolute enthalpy under
+the names the quantum-chemistry steps and the Thermochemistry step share:
+<code class="docutils literal notranslate"><span class="pre">ZPE</span></code>, <code class="docutils literal notranslate"><span class="pre">H</span></code> with its temperature <code class="docutils literal notranslate"><span class="pre">T</span></code>, and <code class="docutils literal notranslate"><span class="pre">H(298.15</span> <span class="pre">K)</span></code> at 298.15 K.
+The older names remain. These, and the total energy, are now always stored
+as properties, whether or not they are selected as results, since other
+steps such as Thermochemistry look for them.</p></li>
+<li><p>Requires seamm 2026.10.28 and seamm-util 2026.10.28.1.</p></li>
+</ul>
+</dd>
 <dt>2026.10.24 – The optimized structure keeps its name</dt><dd><ul class="simple">
 <li><p>The structures that optimizations write are now named ‘{current name} optimized
 with {model}’ by default, keeping the name the structure had, such as a title

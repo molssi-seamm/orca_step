@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.24 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.10.28 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=647e6ecf"></script>
+    <script src="../_static/documentation_options.js?v=bb9c4767"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.24" />
+  <meta name="docsearch:version" content="2026.10.28" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -806,6 +806,13 @@ blocks.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy.Energy.final_coordinates">
+<span class="sig-name descname"><span class="pre">final_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.final_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.final_coordinates" title="Link to this definition">#</a></dt>
+<dd><p>The Cartesian coordinates (Å) of the geometry the energy belongs to:
+the configuration’s, for a single point.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="orca_step.energy.Energy.keyword_line">
 <span class="sig-name descname"><span class="pre">keyword_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.keyword_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.keyword_line" title="Link to this definition">#</a></dt>
 <dd><p>Build the ORCA ‘!’ keyword line.</p>
@@ -837,6 +844,14 @@ time. The working directory is created by <code class="docutils literal notransl
 <dt class="sig sig-object py" id="orca_step.energy.Energy.sthresh_retry">
 <span class="sig-name descname"><span class="pre">sthresh_retry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.sthresh_retry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.sthresh_retry" title="Link to this definition">#</a></dt>
 <dd><p>The SThresh to rerun a failed SCF with, or None (see ‘scf retry’).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.energy.Energy.store_fingerprints">
+<span class="sig-name descname"><span class="pre">store_fingerprints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kinds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('settings',)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy.html#Energy.store_fingerprints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy.Energy.store_fingerprints" title="Link to this definition">#</a></dt>
+<dd><p>Store the fingerprints of the calculation’s settings with its results
+(see <a class="reference internal" href="#module-orca_step.fingerprint" title="orca_step.fingerprint"><code class="xref py py-mod docutils literal notranslate"><span class="pre">orca_step.fingerprint</span></code></a>): <code class="docutils literal notranslate"><span class="pre">settings</span> <span class="pre">fingerprint#ORCA#&lt;model&gt;</span></code>
+etc., or the frequency ones for <code class="docutils literal notranslate"><span class="pre">kinds</span></code> “frequency”.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -970,6 +985,91 @@ its functional type.</p>
 <span class="sig-name descname"><span class="pre">my_description</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'description':</span> <span class="pre">'Single-point</span> <span class="pre">energy</span> <span class="pre">with</span> <span class="pre">ORCA',</span> <span class="pre">'group':</span> <span class="pre">'Calculation',</span> <span class="pre">'name':</span> <span class="pre">'Energy'}</span></span><a class="headerlink" href="#orca_step.energy_step.EnergyStep.my_description" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+</section>
+<section id="module-orca_step.fingerprint">
+<span id="orca-step-fingerprint-module"></span><h2>orca_step.fingerprint module<a class="headerlink" href="#module-orca_step.fingerprint" title="Link to this heading">#</a></h2>
+<p>Fingerprints of the settings of ORCA calculations.</p>
+<p>What ORCA’s input holds that does not belong to the settings is removed here,
+and <code class="xref py py-func docutils literal notranslate"><span class="pre">seamm_util.fingerprint.calculation_record()</span></code> hashes the rest. The
+Energy, Optimization and Frequencies sub-steps and the MDI engine
+(<code class="docutils literal notranslate"><span class="pre">data/orca_mdi.py</span></code>) all use <a class="reference internal" href="#orca_step.fingerprint.orca_calculation_record" title="orca_step.fingerprint.orca_calculation_record"><code class="xref py py-func docutils literal notranslate"><span class="pre">orca_calculation_record()</span></code></a>, so a step and an
+engine running the same calculation give the same fingerprint.</p>
+<p>Removed:</p>
+<ul class="simple">
+<li><p>the cores and memory (<code class="docutils literal notranslate"><span class="pre">%pal</span></code>, <code class="docutils literal notranslate"><span class="pre">PALn</span></code>, <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code>), file names (<code class="docutils literal notranslate"><span class="pre">%base</span></code>,
+<code class="docutils literal notranslate"><span class="pre">%moinp</span></code>) and output (<code class="docutils literal notranslate"><span class="pre">%output</span></code>, <code class="docutils literal notranslate"><span class="pre">%elprop</span></code>, <code class="docutils literal notranslate"><span class="pre">%plots</span></code>, print keywords);</p></li>
+<li><p>the starting guess (<code class="docutils literal notranslate"><span class="pre">MORead</span></code>, <code class="docutils literal notranslate"><span class="pre">AutoStart</span></code>, <code class="docutils literal notranslate"><span class="pre">Guess</span></code> in <code class="docutils literal notranslate"><span class="pre">%scf</span></code>), which is
+not a setting;</p></li>
+<li><p>the task (<code class="docutils literal notranslate"><span class="pre">SP</span></code>, <code class="docutils literal notranslate"><span class="pre">EnGrad</span></code>, <code class="docutils literal notranslate"><span class="pre">Opt</span></code>, <code class="docutils literal notranslate"><span class="pre">Freq</span></code>, …) and the optimizer
+(<code class="docutils literal notranslate"><span class="pre">%geom</span></code>), which do not change the energy at a geometry;</p></li>
+<li><p>the geometry, charge and multiplicity, which belong to the species;</p></li>
+<li><p>the thermochemistry temperature (<code class="docutils literal notranslate"><span class="pre">%freq</span> <span class="pre">Temp</span></code>), which the names of the
+thermochemical properties carry.</p></li>
+</ul>
+<p>Kept: everything else on the ‘!’ line, in any order (ORCA’s keywords are
+case-insensitive and unordered), and the other blocks. NoCOSX, which the step and
+engine add for some elements, is kept: a calculation with exact exchange is not
+the same level as one with COSX. RHF, UHF and similar words are kept too; ORCA
+chooses from the multiplicity itself, so they are on the ‘!’ line only when the
+user asked for them.</p>
+<p>Basis sets written per element – a Basis Set Exchange basis in <code class="docutils literal notranslate"><span class="pre">basis.bas</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">NewGTO</span></code>, <code class="docutils literal notranslate"><span class="pre">NewAuxJGTO</span></code>, <code class="docutils literal notranslate"><span class="pre">NewECP</span></code>, … in <code class="docutils literal notranslate"><span class="pre">%basis</span></code> – are hashed per
+element, so that species with different elements can be compared.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.fingerprint.basis_file_blocks">
+<span class="sig-prename descclassname"><span class="pre">orca_step.fingerprint.</span></span><span class="sig-name descname"><span class="pre">basis_file_blocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/fingerprint.html#basis_file_blocks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.fingerprint.basis_file_blocks" title="Link to this definition">#</a></dt>
+<dd><p>The per-element sections of an ORCA-format basis file from the Basis Set
+Exchange (<code class="docutils literal notranslate"><span class="pre">$DATA</span></code>, then a line with each element’s name and its shells,
+<code class="docutils literal notranslate"><span class="pre">$END</span></code>), as {symbol: [normalized lines]}.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.fingerprint.orca_calculation_record">
+<span class="sig-prename descclassname"><span class="pre">orca_step.fingerprint.</span></span><span class="sig-name descname"><span class="pre">orca_calculation_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_numbers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/fingerprint.html#orca_calculation_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.fingerprint.orca_calculation_record" title="Link to this definition">#</a></dt>
+<dd><p>The record of an ORCA calculation’s settings, with its fingerprints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>files</strong> (<em>{str: str</em><em> or </em><em>bytes}</em>) – The input files as run: orca.inp and any others, such as basis.bas.
+Binary files, e.g. an orca.gbw for the guess, are not settings.</p></li>
+<li><p><strong>version</strong> (<em>str</em>) – The ORCA version, e.g. “6.1.1” (see <a class="reference internal" href="#orca_step.fingerprint.orca_version" title="orca_step.fingerprint.orca_version"><code class="xref py py-func docutils literal notranslate"><span class="pre">orca_version()</span></code></a>).</p></li>
+<li><p><strong>atomic_numbers</strong> (<em>optional</em>) – The geometry, for its fingerprint.</p></li>
+<li><p><strong>coordinates</strong> (<em>optional</em>) – The geometry, for its fingerprint.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>See <code class="xref py py-func docutils literal notranslate"><span class="pre">seamm_util.fingerprint.calculation_record()</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.fingerprint.orca_version">
+<span class="sig-prename descclassname"><span class="pre">orca_step.fingerprint.</span></span><span class="sig-name descname"><span class="pre">orca_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/fingerprint.html#orca_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.fingerprint.orca_version" title="Link to this definition">#</a></dt>
+<dd><p>The ORCA version from its output, e.g. “6.1.1”, or None.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.fingerprint.settings_text">
+<span class="sig-prename descclassname"><span class="pre">orca_step.fingerprint.</span></span><span class="sig-name descname"><span class="pre">settings_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/fingerprint.html#settings_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.fingerprint.settings_text" title="Link to this definition">#</a></dt>
+<dd><p>The lines of an ORCA input that make up its settings, and the per-element
+basis sets in it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_text</strong> (<em>str</em>) – The contents of orca.inp.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>([str], {str</strong> – The normalized lines, and the element blocks by symbol.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[str]})</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -1136,6 +1236,12 @@ structure-handling options, and check that the optimization converged.</p>
 <dt class="sig sig-object py" id="orca_step.optimization.Optimization.description_text">
 <span class="sig-name descname"><span class="pre">description_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization.html#Optimization.description_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization.Optimization.description_text" title="Link to this definition">#</a></dt>
 <dd><p>Describe what this sub-step will do.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="orca_step.optimization.Optimization.final_coordinates">
+<span class="sig-name descname"><span class="pre">final_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/optimization.html#Optimization.final_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.optimization.Optimization.final_coordinates" title="Link to this definition">#</a></dt>
+<dd><p>The optimized geometry (orca.xyz), which the energy belongs to.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2018,10 +2124,12 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.description_text"><code class="docutils literal notranslate"><span class="pre">Energy.description_text()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.exact_exchange_keywords"><code class="docutils literal notranslate"><span class="pre">Energy.exact_exchange_keywords()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.extra_input"><code class="docutils literal notranslate"><span class="pre">Energy.extra_input()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.final_coordinates"><code class="docutils literal notranslate"><span class="pre">Energy.final_coordinates()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.keyword_line"><code class="docutils literal notranslate"><span class="pre">Energy.keyword_line()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.method_blocks"><code class="docutils literal notranslate"><span class="pre">Energy.method_blocks()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.run"><code class="docutils literal notranslate"><span class="pre">Energy.run()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.sthresh_retry"><code class="docutils literal notranslate"><span class="pre">Energy.sthresh_retry()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.store_fingerprints"><code class="docutils literal notranslate"><span class="pre">Energy.store_fingerprints()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy.Energy.wfx_mode"><code class="docutils literal notranslate"><span class="pre">Energy.wfx_mode()</span></code></a></li>
 </ul>
 </li>
@@ -2053,6 +2161,13 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_step.EnergyStep.my_description"><code class="docutils literal notranslate"><span class="pre">EnergyStep.my_description</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.fingerprint">orca_step.fingerprint module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.fingerprint.basis_file_blocks"><code class="docutils literal notranslate"><span class="pre">basis_file_blocks()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.fingerprint.orca_calculation_record"><code class="docutils literal notranslate"><span class="pre">orca_calculation_record()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.fingerprint.orca_version"><code class="docutils literal notranslate"><span class="pre">orca_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.fingerprint.settings_text"><code class="docutils literal notranslate"><span class="pre">settings_text()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.frequencies">orca_step.frequencies module</a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -2096,6 +2211,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization.Optimization"><code class="docutils literal notranslate"><span class="pre">Optimization</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization.Optimization.analyze"><code class="docutils literal notranslate"><span class="pre">Optimization.analyze()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization.Optimization.description_text"><code class="docutils literal notranslate"><span class="pre">Optimization.description_text()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization.Optimization.final_coordinates"><code class="docutils literal notranslate"><span class="pre">Optimization.final_coordinates()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.optimization.Optimization.run"><code class="docutils literal notranslate"><span class="pre">Optimization.run()</span></code></a></li>
 </ul>
 </li>
