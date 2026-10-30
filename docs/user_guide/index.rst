@@ -960,7 +960,9 @@ def2-mTZVP, def2-mSVP, def2-mSVP and vDZP), its gCP and dispersion corrections a
 its fitting basis, and is run by the keyword alone. ORCA would use another basis
 named on the '!' line instead, and the result would not be the composite, so a
 basis other than its own is refused. In the Energy dialog they are among the
-methods, and have no basis or auxiliary basis to set.
+methods, and have no basis or auxiliary basis to set. Through 'use model chemistry'
+a composite likewise takes no basis from the step, and its level is written without
+one, e.g. ``ORCA:CMP@R2SCAN-3C``.
 
 The double hybrids B2PLYP, B2GP-PLYP, mPW2PLYP and PWPB95 are also offered with
 Grimme's D3 correction: ``<functional>-D3ZERO`` for the original zero damping (as

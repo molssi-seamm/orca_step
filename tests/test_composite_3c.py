@@ -109,3 +109,58 @@ def test_parameters_rules():
         assert not P.applies(key, values), key
     assert "R2SCAN-3C" in P["method"].enumeration
     assert "R2SCAN-3C" not in P["functional"].enumeration
+
+
+def _model_chemistry_node(monkeypatch, basis=None):
+    """An Energy node seeing the model chemistry ORCA:CMP@R2SCAN-3C[/basis]."""
+    level = "ORCA:CMP@R2SCAN-3C" + (f"/{basis}" if basis else "")
+    mc = {
+        "level": level,
+        "owner": "ORCA",
+        "type": "CMP",
+        "method": "R2SCAN-3C",
+        "basis": basis,
+    }
+    node = orca_step.Energy()
+    monkeypatch.setattr(
+        node, "variable_exists", lambda name: name == "_model_chemistry"
+    )
+    monkeypatch.setattr(node, "get_variable", lambda name: mc)
+    return node
+
+
+_MC_P = {
+    "use model chemistry": "yes",
+    "method": "B3LYP",
+    "basis": "def2-TZVP",  # the step's default: must not be used for a composite
+    "basis source": "ORCA internal",
+    "auxiliary basis": "AutoAux",
+    "basis set extrapolation": "none",
+    "extra keywords": "",
+}
+
+
+def test_model_chemistry_without_basis_ignores_the_step_basis(monkeypatch):
+    """ORCA:CMP@R2SCAN-3C through 'use model chemistry' once took the step's default
+    basis and then refused it (ChemAI 5502, Frequencies, 2026-10-30)."""
+    node = _model_chemistry_node(monkeypatch)
+    assert node._resolve_method_basis(_MC_P) == ("R2SCAN-3C", "")
+    line = node.keyword_line(_MC_P)
+    assert line.split()[0] == "R2SCAN-3C"
+    assert "def2-TZVP" not in line and "AutoAux" not in line
+    assert node._model_string(_MC_P) == "CMP@R2SCAN-3C"
+
+
+def test_model_chemistry_with_its_own_basis(monkeypatch):
+    node = _model_chemistry_node(monkeypatch, "def2-mTZVPP")
+    assert node.keyword_line(_MC_P).split()[0] == "R2SCAN-3C"
+    node = _model_chemistry_node(monkeypatch, "def2-TZVP")
+    with pytest.raises(ValueError, match="its own basis"):
+        node.keyword_line(_MC_P)
+
+
+def test_explicit_composite_level_strings():
+    node = orca_step.Energy()
+    P = dict(_MC_P, **{"use model chemistry": "no", "method": "R2SCAN-3C"})
+    assert node._resolve_method_basis(P) == ("R2SCAN-3C", "")
+    assert node._model_string(P) == "CMP@R2SCAN-3C"

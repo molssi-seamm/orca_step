@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.30.1 -- Bugfix: 3c composites from the model chemistry ran with the step's basis
+    * An Energy, Optimization or Frequencies step using the model chemistry
+      ``ORCA:CMP@R2SCAN-3C`` (or another 3c composite) filled in the step's own default
+      basis, def2-TZVP, and then stopped with "R2SCAN-3C is a composite method with its
+      own basis". A composite now takes no basis from the step, and its level is shown
+      and stored without one, ``CMP@R2SCAN-3C``, also when the method is chosen in the
+      step itself.
+
 2026.10.30 -- Bugfix: queued ORCA runs ask for their memory; 3c composites as ORCA:CMP@
     * The "3c" composites (r2SCAN-3c, B97-3c, PBEh-3c, B3LYP-3c, wB97X-3c) are now
       composite methods of their own, ``ORCA:CMP@R2SCAN-3C`` etc., with no basis, run by
