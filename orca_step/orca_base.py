@@ -337,6 +337,24 @@ def predicted_seconds(
     return (seconds, source) if with_source else seconds
 
 
+_MAXCORE = re.compile(r"^\s*%maxcore\s+(\d+)", re.IGNORECASE | re.MULTILINE)
+
+
+def task_resources(n_cores, input_text):
+    """The resources an ORCA run asks for: its ranks, and the memory per rank
+    that the ``%maxcore`` ORCA will use needs -- the last one in the input, as
+    ORCA takes it, e.g. an override in the extra blocks -- with the same 25 %
+    headroom as the batch path (``%maxcore`` = 0.8 x memory per core).
+
+    Without the memory, a run sent to a queue got the queue's default: in a
+    parallel Loop with separate tasks, 32 GB on Owl for a 4-rank CCSD(T)-F12 at
+    %maxcore 24000 (96 GB), OOM-killed (ChemAI 5469, Slurm 1327605, 2026-10-30).
+    """
+    values = _MAXCORE.findall(input_text or "")
+    mem_per_cpu = int(int(values[-1]) * 1_000_000 / 0.8) if values else None
+    return seamm_exec.Resources(ntasks=n_cores, mem_per_cpu=mem_per_cpu)
+
+
 # ----------------------------------------------------------------------
 # ORCA 6.1.1: a correlated gradient with exact exchange is wrong when batched
 # ----------------------------------------------------------------------
@@ -1805,7 +1823,7 @@ class ORCABase(seamm.Node):
             # otherwise. See molssi-seamm/orca_step#20.
             in_situ=None,
             shell=True,
-            resources=seamm_exec.Resources(ntasks=n_cores),
+            resources=task_resources(n_cores, input_text),
             estimated_seconds=estimate,
             estimate_source=estimate_source,
             fingerprint=fingerprint,
@@ -2012,7 +2030,7 @@ class ORCABase(seamm.Node):
             # See the comment in run_orca -- molssi-seamm/orca_step#20.
             in_situ=None,
             shell=True,
-            resources=seamm_exec.Resources(ntasks=n_cores),
+            resources=task_resources(n_cores, input_text),
             fingerprint=_fingerprint(files, make_wfx),
             # ORCA exits 0 even after an error termination.
             success_text={"orca.out": "ORCA TERMINATED NORMALLY"},

@@ -776,7 +776,10 @@ come from two files with different jobs:
   it, or ``1`` to force serial.
 * **memory** — the per-process memory for ORCA's ``%maxcore``. ``available``
   (the default) scales to the memory per core; ``all`` divides the whole node
-  among the processes; or give an explicit amount such as ``3 GB``.
+  among the processes; or give an explicit amount such as ``3 GB``. A
+  calculation sent to a queue as its own task asks for the memory that the
+  last ``%maxcore`` in its input needs (``%maxcore`` is 80 % of the memory per
+  core), so an override in the extra blocks is sized for too.
 * **library-path** (in ``orca.ini``) — the ``lib`` directory of the OpenMPI that
   **matches the version ORCA was built against**. ORCA 6.1 requires OpenMPI
   4.1.x and does *not* support 5.x; mixing versions makes parallel runs abort

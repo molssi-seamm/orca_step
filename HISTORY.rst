@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.10.30 -- Bugfix: an ORCA run sent to a queue asks for the memory it needs
+    * A calculation sent to a queue as its own task, as in a parallel Loop whose
+      calculations run as separate tasks, asked only for its cores, so it got the
+      queue's default memory: 32 GB on ARC's Owl for a 4-rank CCSD(T)-F12 using 96 GB,
+      which was killed. It now asks for the memory that the last ``%maxcore`` in its
+      input needs, the same 25 % headroom as the batch calculations, so a ``%maxcore``
+      given in the extra blocks is sized for too.
+
 2026.10.28.1 -- Double hybrids with Grimme's D3 correction
     * The double hybrids B2PLYP, B2GP-PLYP, mPW2PLYP and PWPB95 are offered as model
       chemistries with Grimme's D3 dispersion correction: ``<functional>-D3ZERO``
