@@ -225,6 +225,7 @@ class ORCAStep(object):
             # (aliasing any '/' in the keyword) with its gradient availability.
             # Other methods are literal.
             if method == "DFT":
+                # Not the 3c composites: they are methods of their own (CMP)
                 entries = [
                     (
                         mc_method_alias(name),
@@ -232,6 +233,7 @@ class ORCAStep(object):
                         rec.get("gradients", "analytic"),
                     )
                     for name, rec in orca_step.metadata["functionals"].items()
+                    if name not in orca_step.metadata["composite methods"]
                 ]
                 # The dispersion-corrected variants, e.g. R2SCAN-D4 -> "! R2SCAN D4"
                 # and B2PLYP-D3ZERO -> "! B2PLYP D3ZERO"
@@ -259,14 +261,20 @@ class ORCAStep(object):
                 mdi_capable = gradients == "analytic"
                 if mdi_only and not mdi_capable:
                     continue
-                for basis in _ADVERTISED_BASES:
-                    key = f"ORCA:{mtype}@{adv_method}/{basis}"
+                # A composite has its own basis, so none is offered with it
+                composite = info.get("composite", False)
+                for basis in (None,) if composite else _ADVERTISED_BASES:
+                    key = (
+                        f"ORCA:{mtype}@{adv_method}"
+                        if composite
+                        else f"ORCA:{mtype}@{adv_method}/{basis}"
+                    )
                     options[key] = {
                         "model_chemistry": key,
                         "type": mtype,
                         "method": adv_method,
                         "basis": basis,
-                        "description": f"{real} / {basis}",
+                        "description": real if composite else f"{real} / {basis}",
                         "periodic": False,
                         "mdi_capable": mdi_capable,
                         # The real (un-aliased) ORCA keyword + basis the engine
@@ -374,7 +382,7 @@ class ORCAStep(object):
         seamm_options,
         *,
         method,
-        basis="def2-SVP",
+        basis=None,
         port,
         hostname="localhost",
         charge=0,
@@ -396,6 +404,12 @@ class ORCAStep(object):
         engine's ``--dlpno`` flag.
         """
         config = cls.get_executor_config(executor, seamm_options)
+        # A 3c composite is its keyword alone (no basis, no fitting basis; see
+        # composite_basis); otherwise def2-SVP by default
+        from .orca_base import composite_basis, composite_method
+
+        composite = composite_method(method) is not None
+        basis = composite_basis(method, basis) if composite else basis or "def2-SVP"
         mdi_init = (
             f"-role ENGINE -name {engine_name} -method TCP "
             f"-port {port} -hostname {hostname}"
@@ -409,8 +423,7 @@ class ORCAStep(object):
             config["code"],
             "--method",
             _engine_method_words(method),
-            "--basis",
-            basis,
+            *(("--auxiliary-basis", "none") if composite else ("--basis", basis)),
             "--charge",
             str(charge),
             "--multiplicity",

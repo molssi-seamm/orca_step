@@ -66,7 +66,11 @@ class EnergyParameters(seamm.Parameters):
             "default": "B3LYP",
             "kind": "enum",
             "default_units": "",
-            "enumeration": tuple(orca_step.metadata["functionals"].keys()),
+            "enumeration": tuple(
+                name
+                for name in orca_step.metadata["functionals"]
+                if name not in orca_step.metadata["composite methods"]
+            ),
             "format_string": "",
             "description": "Functional:",
             "help_text": (
@@ -517,6 +521,11 @@ class EnergyParameters(seamm.Parameters):
     def _is_f12(values):
         return "F12" in str(values.get("method", "")).upper()
 
+    @staticmethod
+    def _composite(values):
+        """Whether the method is a 3c composite, which has its own basis."""
+        return values.get("method") in orca_step.metadata["composite methods"]
+
     def _extrapolating(self, values):
         return self.applies("basis set extrapolation", values) and values.get(
             "basis set extrapolation"
@@ -534,11 +543,21 @@ class EnergyParameters(seamm.Parameters):
         if not super().applies(key, values, _seen):
             return False
         if key == "basis set extrapolation":
-            return self.extrapolation and not self._is_f12(values)
+            return (
+                self.extrapolation
+                and not self._is_f12(values)
+                and not self._composite(values)
+            )
+        if key in ("basis", "auxiliary basis") and self._composite(values):
+            return False
         if key == "basis":
             return not self._extrapolating(values)
         if key == "basis source":
-            return not self._extrapolating(values) and not self._is_f12(values)
+            return (
+                not self._extrapolating(values)
+                and not self._is_f12(values)
+                and not self._composite(values)
+            )
         if key == "wfx density":
             return self._has_mp2_part(values)
         return True
@@ -582,17 +601,23 @@ class EnergyParameters(seamm.Parameters):
                 )
             if self._is_f12(values):
                 return "F12 methods use their own F12 basis, not an extrapolation"
+            if self._composite(values):
+                return "a composite method has its own basis"
         if key in ("basis", "basis source") and self._extrapolating(values):
             return "the basis-set extrapolation replaces it"
         if key == "basis source" and self._is_f12(values):
             return "F12 methods use ORCA's own basis sets (they need a CABS)"
+        if key in ("basis", "basis source", "auxiliary basis") and self._composite(
+            values
+        ):
+            return "a composite method has its own basis and fitting basis"
         if key == "wfx density" and not self._has_mp2_part(values):
             return "only MP2 and double-hybrid methods have a relaxed MP2 density"
         return ""
 
     def choices(self, key, values=None):
         """F12 methods take only the F12 bases; the functionals are those of the
-        functional type."""
+        functional type (not the 3c composites, which are methods)."""
         if values is None:
             values = self.current_values()
         if key == "basis" and self._is_f12(values):
@@ -608,6 +633,7 @@ class EnergyParameters(seamm.Parameters):
                     name
                     for name, record in orca_step.metadata["functionals"].items()
                     if record["category"] == ftype
+                    and name not in orca_step.metadata["composite methods"]
                 )
         return super().choices(key, values)
 

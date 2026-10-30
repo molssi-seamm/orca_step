@@ -479,6 +479,9 @@ metadata["computational models"] = {}
 #   citations  -- reference keys mined from the ORCA manual; the bibtex itself
 #                 lives in data/references.bib (loaded into self._bibliography)
 #   note       -- optional short annotation (composite "3c" method, %HFX, ...)
+#   basis      -- a composite's own orbital basis (the "3c" methods): ORCA uses a
+#                 basis on the '!' line instead of it, which is then not the
+#                 composite (gCP and dispersion are fitted to its own basis)
 # Categorization and gradient availability follow the ORCA 6.1 manual's DFT
 # model-chemistries page.
 metadata["functional categories"] = [
@@ -520,6 +523,7 @@ metadata["functionals"] = {
         "gradients": "analytic",
         "citations": ["orca_dft_id348"],
         "note": "composite 3c method",
+        "basis": "def2-mTZVP",  # its own basis: any other is not the composite
     },
     "BLYP": {
         "category": "GGA",
@@ -617,6 +621,7 @@ metadata["functionals"] = {
         "gradients": "analytic",
         "citations": ["orca_dft_id354"],
         "note": "composite 3c method",
+        "basis": "def2-mTZVPP",  # its own basis: any other is not the composite
     },
     "REVTPSS": {
         "category": "meta-GGA",
@@ -660,6 +665,7 @@ metadata["functionals"] = {
         "gradients": "analytic",
         "citations": ["orca_dft_id355"],
         "note": "composite 3c method",
+        "basis": "def2-mSVP",  # its own basis: any other is not the composite
     },
     "B3LYP/G": {
         "category": "global hybrid",
@@ -720,6 +726,7 @@ metadata["functionals"] = {
         "gradients": "analytic",
         "citations": ["orca_dft_id362"],
         "note": "composite 3c method, 42% HFX",
+        "basis": "def2-mSVP",  # its own basis: any other is not the composite
     },
     "PW1PW": {
         "category": "global hybrid",
@@ -833,6 +840,7 @@ metadata["functionals"] = {
         "gradients": "analytic",
         "citations": ["orca_dft_id358"],
         "note": "composite 3c method",
+        "basis": "vDZP",  # its own basis: any other is not the composite
     },
     "WB97X-D3": {
         "category": "range-separated hybrid",
@@ -1178,3 +1186,26 @@ metadata["functionals"].update(
 metadata["dft functionals"] = {
     name: rec["citations"] for name, rec in metadata["functionals"].items()
 }
+
+# The "3c" composites as methods of their own (model-chemistry type CMP, e.g.
+# ORCA:CMP@R2SCAN-3C): each is one ORCA keyword whose definition fixes its basis,
+# its gCP and dispersion corrections and its RI-J fitting basis, like Gaussian's
+# G4. They are run by the keyword alone. They stay in metadata["functionals"] for
+# their citations, gradients and Hessian, but are not offered as functionals.
+metadata["composite methods"] = {
+    name: rec["basis"]
+    for name, rec in metadata["functionals"].items()
+    if rec.get("basis")
+}
+metadata["methods"].update(
+    {
+        name: {
+            "type": "CMP",
+            "class": metadata["functionals"][name]["category"],
+            "description": f"composite method {name} (its own basis, {basis})",
+            "gradients": metadata["functionals"][name]["gradients"],
+            "composite": True,
+        }
+        for name, basis in metadata["composite methods"].items()
+    }
+)

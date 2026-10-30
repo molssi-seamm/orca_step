@@ -125,3 +125,17 @@ def test_layouts_follow_the_rules(orca, substep):
         check(tk_node)
         assert tk_node["scf retry"].grid_info() != {}
         assert (tk_node["retry sthresh"].grid_info() != {}) == (retry == "yes")
+
+
+@pytest.mark.parametrize("substep", ("Energy", "Optimization"))
+def test_3c_composite_has_no_basis_controls(orca, substep):
+    """A 3c composite is a method of its own: its basis, basis source, fitting
+    basis and extrapolation are not offered."""
+    tk_node = make(orca, substep)
+    tk_node["use model chemistry"].set("no")
+    tk_node["method"].set("R2SCAN-3C")
+    tk_node.reset_dialog()
+    check(tk_node)
+    for key in ("basis", "basis source", "auxiliary basis", "basis set extrapolation"):
+        assert tk_node[key].grid_info() == {}, key
+    assert tk_node["functional"].grid_info() == {}

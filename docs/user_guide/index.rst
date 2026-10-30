@@ -776,7 +776,10 @@ come from two files with different jobs:
   it, or ``1`` to force serial.
 * **memory** — the per-process memory for ORCA's ``%maxcore``. ``available``
   (the default) scales to the memory per core; ``all`` divides the whole node
-  among the processes; or give an explicit amount such as ``3 GB``.
+  among the processes; or give an explicit amount such as ``3 GB``. A
+  calculation sent to a queue as its own task asks for the memory that the
+  last ``%maxcore`` in its input needs (``%maxcore`` is 80 % of the memory per
+  core), so an override in the extra blocks is sized for too.
 * **library-path** (in ``orca.ini``) — the ``lib`` directory of the OpenMPI that
   **matches the version ORCA was built against**. ORCA 6.1 requires OpenMPI
   4.1.x and does *not* support 5.x; mixing versions makes parallel runs abort
@@ -948,6 +951,16 @@ parameters for; double hybrids are not, and functionals that already include
 dispersion (``WB97X-D4``, ``B97M-V``, ``R2SCAN-3C``, ...) are offered only as
 themselves. Method names are matched as written, so use the capitals shown in the
 Model Chemistry step's list.
+
+The "3c" composites -- r2SCAN-3c, B97-3c, PBEh-3c, B3LYP-3c and wB97X-3c -- are
+composite methods of their own, ``ORCA:CMP@R2SCAN-3C``, ``ORCA:CMP@B97-3C``,
+``ORCA:CMP@PBEH-3C``, ``ORCA:CMP@B3LYP-3C`` and ``ORCA:CMP@WB97X-3C``, with no
+basis: each is one ORCA keyword whose definition fixes its basis (def2-mTZVPP,
+def2-mTZVP, def2-mSVP, def2-mSVP and vDZP), its gCP and dispersion corrections and
+its fitting basis, and is run by the keyword alone. ORCA would use another basis
+named on the '!' line instead, and the result would not be the composite, so a
+basis other than its own is refused. In the Energy dialog they are among the
+methods, and have no basis or auxiliary basis to set.
 
 The double hybrids B2PLYP, B2GP-PLYP, mPW2PLYP and PWPB95 are also offered with
 Grimme's D3 correction: ``<functional>-D3ZERO`` for the original zero damping (as

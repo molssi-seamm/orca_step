@@ -18,7 +18,12 @@ from tabulate import tabulate
 
 from molsystem import elements
 import orca_step
-from .orca_base import auxiliary_basis_words, method_class
+from .orca_base import (
+    auxiliary_basis_words,
+    composite_basis,
+    composite_method,
+    method_class,
+)
 import seamm
 from seamm_util import ureg, Q_  # noqa: F401
 from seamm_util.fingerprint import geometry_fingerprint
@@ -246,6 +251,12 @@ class Energy(orca_step.ORCABase):
         auxiliary basis and extra keywords always come from this node.
         """
         method, basis = self._resolve_method_basis(P)
+        # A 3c composite is its keyword alone: its definition fixes the basis,
+        # gCP, dispersion and fitting basis (see composite_basis). A basis named
+        # by the model chemistry must be its own; the node's basis does not apply.
+        composite = composite_method(method)
+        if composite is not None and self._use_model_chemistry(P):
+            composite_basis(composite, basis)
 
         # A DLPNO double hybrid is the parent functional on the '!' line plus a
         # '%mp2' block (see method_blocks).
@@ -255,15 +266,18 @@ class Energy(orca_step.ORCABase):
         # it is off, the basis name goes on the '!' line -- unless it comes from
         # the Basis Set Exchange, where it is embedded as a file by extra_input
         # and left off the line.
-        if self._extrapolating(P):
-            keywords.append(self._extrapolation_keyword(P))
-        elif not self._using_bse(P):
-            keywords.append(basis)
-        aux = auxiliary_basis_words(
-            P["auxiliary basis"],
-            orca_step.orca_method_keyword(method),
-            basis.get("name") if isinstance(basis, dict) else basis,
-        )
+        if composite is not None:
+            aux = ""
+        else:
+            if self._extrapolating(P):
+                keywords.append(self._extrapolation_keyword(P))
+            elif not self._using_bse(P):
+                keywords.append(basis)
+            aux = auxiliary_basis_words(
+                P["auxiliary basis"],
+                orca_step.orca_method_keyword(method),
+                basis.get("name") if isinstance(basis, dict) else basis,
+            )
         if aux:
             keywords.append(aux)
         # Numerical-integration grid preset (DEFGRID1/2/3); 'default' leaves
@@ -391,13 +405,20 @@ class Energy(orca_step.ORCABase):
         results = P.get("results") or {}
         return "gradients" in results
 
-    def _extrapolating(self, P):
-        """Whether basis-set (CBS) extrapolation is requested. Only in the
-        explicit path -- with the model chemistry the basis comes from there."""
+    @staticmethod
+    def _use_model_chemistry(P):
         use_mc = P["use model chemistry"]
         if not isinstance(use_mc, bool):
             use_mc = use_mc == "yes"
-        if use_mc:
+        return use_mc
+
+    def _extrapolating(self, P):
+        """Whether basis-set (CBS) extrapolation is requested. Only in the
+        explicit path -- with the model chemistry the basis comes from there --
+        and not for a composite method, which has its own basis."""
+        if self._use_model_chemistry(P):
+            return False
+        if P.get("method") in orca_step.metadata["composite methods"]:
             return False
         return P.get("basis set extrapolation", "none") not in (None, "", "none")
 

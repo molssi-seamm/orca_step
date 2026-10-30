@@ -337,6 +337,62 @@ def predicted_seconds(
     return (seconds, source) if with_source else seconds
 
 
+def composite_method(method):
+    """The composite (3c) method named by ``method``'s first word, in the
+    metadata's spelling, or None if it is not one."""
+    import orca_step
+
+    word = str(method or "").split()[0].upper() if method else ""
+    for name in orca_step.metadata["composite methods"]:
+        if name.upper() == word:
+            return name
+    return None
+
+
+def composite_basis(method, basis=None):
+    """The basis words for ``method`` on the '!' line, given a requested ``basis``.
+
+    A "3c" composite (r2SCAN-3c, B97-3c, PBEh-3c, B3LYP-3c, wB97X-3c) is run by
+    its keyword alone, which fixes its own basis, gCP, dispersion and fitting
+    basis: '' is returned. ORCA uses a basis named on the '!' line instead of the
+    composite's, and the result is then not the composite ("! R2SCAN-3C
+    def2-TZVP" ran with def2-TZVP, 2.2 mEh off on CH4; thermo, TC 8315864), so
+    another basis is refused; its own is accepted (it reproduces the keyword
+    exactly, 8316022). Other methods keep ``basis``.
+    """
+    import orca_step
+
+    name = composite_method(method)
+    if name is None:
+        return basis
+    own = orca_step.metadata["composite methods"][name]
+    if basis and str(basis).strip().lower() not in ("", "default", own.lower()):
+        raise ValueError(
+            f"{name} is a composite method with its own basis, {own}; with "
+            f"{basis} it would not be {name}. Give it without a basis "
+            f"(ORCA:CMP@{name})."
+        )
+    return ""
+
+
+_MAXCORE = re.compile(r"^\s*%maxcore\s+(\d+)", re.IGNORECASE | re.MULTILINE)
+
+
+def task_resources(n_cores, input_text):
+    """The resources an ORCA run asks for: its ranks, and the memory per rank
+    that the ``%maxcore`` ORCA will use needs -- the last one in the input, as
+    ORCA takes it, e.g. an override in the extra blocks -- with the same 25 %
+    headroom as the batch path (``%maxcore`` = 0.8 x memory per core).
+
+    Without the memory, a run sent to a queue got the queue's default: in a
+    parallel Loop with separate tasks, 32 GB on Owl for a 4-rank CCSD(T)-F12 at
+    %maxcore 24000 (96 GB), OOM-killed (ChemAI 5469, Slurm 1327605, 2026-10-30).
+    """
+    values = _MAXCORE.findall(input_text or "")
+    mem_per_cpu = int(int(values[-1]) * 1_000_000 / 0.8) if values else None
+    return seamm_exec.Resources(ntasks=n_cores, mem_per_cpu=mem_per_cpu)
+
+
 # ----------------------------------------------------------------------
 # ORCA 6.1.1: a correlated gradient with exact exchange is wrong when batched
 # ----------------------------------------------------------------------
@@ -1805,7 +1861,7 @@ class ORCABase(seamm.Node):
             # otherwise. See molssi-seamm/orca_step#20.
             in_situ=None,
             shell=True,
-            resources=seamm_exec.Resources(ntasks=n_cores),
+            resources=task_resources(n_cores, input_text),
             estimated_seconds=estimate,
             estimate_source=estimate_source,
             fingerprint=fingerprint,
@@ -2012,7 +2068,7 @@ class ORCABase(seamm.Node):
             # See the comment in run_orca -- molssi-seamm/orca_step#20.
             in_situ=None,
             shell=True,
-            resources=seamm_exec.Resources(ntasks=n_cores),
+            resources=task_resources(n_cores, input_text),
             fingerprint=_fingerprint(files, make_wfx),
             # ORCA exits 0 even after an error termination.
             success_text={"orca.out": "ORCA TERMINATED NORMALLY"},

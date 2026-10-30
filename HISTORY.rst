@@ -1,6 +1,21 @@
 =======
 History
 =======
+2026.10.30 -- Bugfix: queued ORCA runs ask for their memory; 3c composites as ORCA:CMP@
+    * The "3c" composites (r2SCAN-3c, B97-3c, PBEh-3c, B3LYP-3c, wB97X-3c) are now
+      composite methods of their own, ``ORCA:CMP@R2SCAN-3C`` etc., with no basis, run by
+      their keyword alone. They were offered as functionals with ordinary basis sets,
+      e.g. ``ORCA:DFT@R2SCAN-3C/def2-TZVP``, run as ``! R2SCAN-3C def2-TZVP``; ORCA then
+      uses that basis instead of the composite's own, so the result was not r2SCAN-3c
+      (2.2 mEh off for CH4). A basis other than the composite's own is refused. In the
+      Energy dialog they are among the methods, with no basis or auxiliary basis to set.
+    * A calculation sent to a queue as its own task, as in a parallel Loop whose
+      calculations run as separate tasks, asked only for its cores, so it got the
+      queue's default memory: 32 GB on ARC's Owl for a 4-rank CCSD(T)-F12 using 96 GB,
+      which was killed. It now asks for the memory that the last ``%maxcore`` in its
+      input needs, the same 25 % headroom as the batch calculations, so a ``%maxcore``
+      given in the extra blocks is sized for too.
+
 2026.10.28.1 -- Double hybrids with Grimme's D3 correction
     * The double hybrids B2PLYP, B2GP-PLYP, mPW2PLYP and PWPB95 are offered as model
       chemistries with Grimme's D3 dispersion correction: ``<functional>-D3ZERO``
