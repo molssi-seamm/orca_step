@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.10.30 documentation</title>
+    <title>orca_step.energy &#8212; SEAMM ORCA Plug-in 2026.10.30.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=fcc0a42c"></script>
+    <script src="../../_static/documentation_options.js?v=c9685da4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.30" />
+  <meta name="docsearch:version" content="2026.10.30.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -666,7 +666,7 @@
         <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_method_basis</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolating</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
             <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extrapolation_keyword</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">basis</span> <span class="k">else</span> <span class="n">method</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_basis_name</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
@@ -720,6 +720,9 @@
         <span class="c1"># For DFT the '!' keyword is the chosen functional, not the word "DFT".</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"DFT"</span><span class="p">:</span>
             <span class="n">method</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">"functional"</span><span class="p">]</span>
+        <span class="c1"># A 3c composite has its own basis; the basis field does not apply.</span>
+        <span class="k">if</span> <span class="n">composite_method</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="s2">""</span>
         <span class="c1"># Expand a $variable typed into the basis field (see _expand_variables).</span>
         <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expand_variables</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">"basis"</span><span class="p">]))</span>
 
@@ -1435,8 +1438,9 @@
         <span class="c1"># Model Chemistry step with '/' aliased to '_'; translate it back to the</span>
         <span class="c1"># real keyword (a no-op for methods that are not aliased functionals).</span>
         <span class="n">method</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">mc_method_unalias</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
-        <span class="c1"># If the model chemistry omits a basis, fall back to this node's basis.</span>
-        <span class="k">if</span> <span class="n">basis</span> <span class="o">==</span> <span class="s2">""</span><span class="p">:</span>
+        <span class="c1"># If the model chemistry omits a basis, fall back to this node's basis --</span>
+        <span class="c1"># except for a 3c composite, which has its own (see composite_basis).</span>
+        <span class="k">if</span> <span class="n">basis</span> <span class="o">==</span> <span class="s2">""</span> <span class="ow">and</span> <span class="n">composite_method</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis_name</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="s2">"basis"</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">method</span><span class="p">,</span> <span class="n">basis</span>
 
@@ -1460,7 +1464,9 @@
             <span class="n">mtype</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">"_model_chemistry"</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">mtype</span><span class="p">:</span>
             <span class="n">raw_method</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">raw_method</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">composite_method</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mtype</span> <span class="o">=</span> <span class="s2">"CMP"</span>
+            <span class="k">elif</span> <span class="n">raw_method</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]:</span>
                 <span class="n">mtype</span> <span class="o">=</span> <span class="s2">"DFT"</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">mtype</span> <span class="o">=</span> <span class="p">(</span>
@@ -1473,7 +1479,7 @@
         <span class="c1"># rather than relying on Node.model's generic '/' collapsing.</span>
         <span class="n">method</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">mc_method_alias</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
         <span class="n">basis</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">mc_method_alias</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mtype</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mtype</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">basis</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mtype</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">"</span>
 
 <div class="viewcode-block" id="Energy.run">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.energy.Energy.run">[docs]</a>
