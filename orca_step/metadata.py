@@ -1186,3 +1186,26 @@ metadata["functionals"].update(
 metadata["dft functionals"] = {
     name: rec["citations"] for name, rec in metadata["functionals"].items()
 }
+
+# The "3c" composites as methods of their own (model-chemistry type CMP, e.g.
+# ORCA:CMP@R2SCAN-3C): each is one ORCA keyword whose definition fixes its basis,
+# its gCP and dispersion corrections and its RI-J fitting basis, like Gaussian's
+# G4. They are run by the keyword alone. They stay in metadata["functionals"] for
+# their citations, gradients and Hessian, but are not offered as functionals.
+metadata["composite methods"] = {
+    name: rec["basis"]
+    for name, rec in metadata["functionals"].items()
+    if rec.get("basis")
+}
+metadata["methods"].update(
+    {
+        name: {
+            "type": "CMP",
+            "class": metadata["functionals"][name]["category"],
+            "description": f"composite method {name} (its own basis, {basis})",
+            "gradients": metadata["functionals"][name]["gradients"],
+            "composite": True,
+        }
+        for name, basis in metadata["composite methods"].items()
+    }
+)

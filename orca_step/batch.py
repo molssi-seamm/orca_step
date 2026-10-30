@@ -49,6 +49,7 @@ from .orca_base import (
     _threshold,
     auxiliary_basis_words,
     composite_basis,
+    composite_method,
     double_hybrid_scf,
     engrad_gradient,
     gradient_batching_problem,
@@ -99,8 +100,11 @@ def method_and_blocks(model_chemistry, aux_basis=None):
     keyword = orca_method_keyword(method)
     if parent is not None:
         blocks.append("%mp2 DLPNO true end")
-    # A 3c composite runs only with its own basis (see composite_basis)
-    basis = composite_basis(keyword, basis) or "def2-SVP"
+    if composite_method(keyword) is not None:
+        # A 3c composite is its keyword alone: no basis, no fitting basis (see
+        # composite_basis, which refuses a basis that is not its own)
+        return keyword, composite_basis(keyword, basis), blocks
+    basis = basis or "def2-SVP"
     aux = auxiliary_basis_words(aux_basis, keyword, basis)
     return f"{keyword} {aux}".strip(), basis, blocks
 

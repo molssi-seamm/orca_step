@@ -128,19 +128,14 @@ def test_layouts_follow_the_rules(orca, substep):
 
 
 @pytest.mark.parametrize("substep", ("Energy", "Optimization"))
-def test_3c_composite_takes_its_own_basis(orca, substep):
-    """Choosing a 3c composite sets its own basis and hides the basis source and
-    the extrapolation: with any other basis it is not the composite."""
+def test_3c_composite_has_no_basis_controls(orca, substep):
+    """A 3c composite is a method of its own: its basis, basis source, fitting
+    basis and extrapolation are not offered."""
     tk_node = make(orca, substep)
     tk_node["use model chemistry"].set("no")
-    tk_node["method"].set("DFT")
-    tk_node["functional type"].set("meta-GGA")
-    tk_node.reset_functionals()
-    tk_node["functional"].set("R2SCAN-3C")
+    tk_node["method"].set("R2SCAN-3C")
     tk_node.reset_dialog()
-    values = check(tk_node)
-    basis = tk_node["basis"].get()
-    name = basis["name"] if isinstance(basis, dict) else basis
-    assert name == "def2-mTZVPP", values
-    assert tk_node["basis source"].grid_info() == {}
-    assert tk_node["basis set extrapolation"].grid_info() == {}
+    check(tk_node)
+    for key in ("basis", "basis source", "auxiliary basis", "basis set extrapolation"):
+        assert tk_node[key].grid_info() == {}, key
+    assert tk_node["functional"].grid_info() == {}
