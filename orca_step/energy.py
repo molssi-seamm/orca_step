@@ -165,7 +165,7 @@ class Energy(orca_step.ORCABase):
         method, basis = self._resolve_method_basis(P)
         if self._extrapolating(P):
             basis = self._extrapolation_keyword(P)
-        return f"{method}/{basis}"
+        return f"{method}/{basis}" if basis else method
 
     @staticmethod
     def _basis_name(value):
@@ -219,6 +219,9 @@ class Energy(orca_step.ORCABase):
         # For DFT the '!' keyword is the chosen functional, not the word "DFT".
         if method == "DFT":
             method = P["functional"]
+        # A 3c composite has its own basis; the basis field does not apply.
+        if composite_method(method) is not None:
+            return method, ""
         # Expand a $variable typed into the basis field (see _expand_variables).
         return method, self._expand_variables(self._basis_name(P["basis"]))
 
@@ -916,8 +919,9 @@ class Energy(orca_step.ORCABase):
         # Model Chemistry step with '/' aliased to '_'; translate it back to the
         # real keyword (a no-op for methods that are not aliased functionals).
         method = orca_step.mc_method_unalias(method)
-        # If the model chemistry omits a basis, fall back to this node's basis.
-        if basis == "":
+        # If the model chemistry omits a basis, fall back to this node's basis --
+        # except for a 3c composite, which has its own (see composite_basis).
+        if basis == "" and composite_method(method) is None:
             basis = self._basis_name(P["basis"])
         return method, basis
 
@@ -941,7 +945,9 @@ class Energy(orca_step.ORCABase):
             mtype = (self.get_variable("_model_chemistry").get("type") or "").strip()
         if not mtype:
             raw_method = P["method"]
-            if raw_method in orca_step.metadata["functionals"]:
+            if composite_method(method) is not None:
+                mtype = "CMP"
+            elif raw_method in orca_step.metadata["functionals"]:
                 mtype = "DFT"
             else:
                 mtype = (
@@ -954,7 +960,7 @@ class Energy(orca_step.ORCABase):
         # rather than relying on Node.model's generic '/' collapsing.
         method = orca_step.mc_method_alias(method)
         basis = orca_step.mc_method_alias(basis)
-        return f"{mtype}@{method}/{basis}"
+        return f"{mtype}@{method}/{basis}" if basis else f"{mtype}@{method}"
 
     def run(self, keywords=None):
         """Run the single-point energy.
