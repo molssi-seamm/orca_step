@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.28.1 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.10.30 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=e3e63ff4"></script>
+    <script src="../../_static/documentation_options.js?v=fcc0a42c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.10.28.1" />
+  <meta name="docsearch:version" content="2026.10.30" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -837,6 +837,62 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No model prediction for the ORCA run: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span> <span class="k">if</span> <span class="n">with_source</span> <span class="k">else</span> <span class="n">seconds</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">composite_method</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The composite (3c) method named by ``method``'s first word, in the</span>
+<span class="sd">    metadata's spelling, or None if it is not one."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">orca_step</span>
+
+    <span class="n">word</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">if</span> <span class="n">method</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"composite methods"</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">word</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">name</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">composite_basis</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The basis words for ``method`` on the '!' line, given a requested ``basis``.</span>
+
+<span class="sd">    A "3c" composite (r2SCAN-3c, B97-3c, PBEh-3c, B3LYP-3c, wB97X-3c) is run by</span>
+<span class="sd">    its keyword alone, which fixes its own basis, gCP, dispersion and fitting</span>
+<span class="sd">    basis: '' is returned. ORCA uses a basis named on the '!' line instead of the</span>
+<span class="sd">    composite's, and the result is then not the composite ("! R2SCAN-3C</span>
+<span class="sd">    def2-TZVP" ran with def2-TZVP, 2.2 mEh off on CH4; thermo, TC 8315864), so</span>
+<span class="sd">    another basis is refused; its own is accepted (it reproduces the keyword</span>
+<span class="sd">    exactly, 8316022). Other methods keep ``basis``.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">orca_step</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">composite_method</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">basis</span>
+    <span class="n">own</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"composite methods"</span><span class="p">][</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">basis</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">,</span> <span class="n">own</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is a composite method with its own basis, </span><span class="si">{</span><span class="n">own</span><span class="si">}</span><span class="s2">; with "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2"> it would not be </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">. Give it without a basis "</span>
+            <span class="sa">f</span><span class="s2">"(ORCA:CMP@</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">)."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="s2">""</span>
+
+
+<span class="n">_MAXCORE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\s*%maxcore\s+(\d+)"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">task_resources</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">input_text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The resources an ORCA run asks for: its ranks, and the memory per rank</span>
+<span class="sd">    that the ``%maxcore`` ORCA will use needs -- the last one in the input, as</span>
+<span class="sd">    ORCA takes it, e.g. an override in the extra blocks -- with the same 25 %</span>
+<span class="sd">    headroom as the batch path (``%maxcore`` = 0.8 x memory per core).</span>
+
+<span class="sd">    Without the memory, a run sent to a queue got the queue's default: in a</span>
+<span class="sd">    parallel Loop with separate tasks, 32 GB on Owl for a 4-rank CCSD(T)-F12 at</span>
+<span class="sd">    %maxcore 24000 (96 GB), OOM-killed (ChemAI 5469, Slurm 1327605, 2026-10-30).</span>
+<span class="sd">    """</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">_MAXCORE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">input_text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">mem_per_cpu</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="mi">1_000_000</span> <span class="o">/</span> <span class="mf">0.8</span><span class="p">)</span> <span class="k">if</span> <span class="n">values</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">seamm_exec</span><span class="o">.</span><span class="n">Resources</span><span class="p">(</span><span class="n">ntasks</span><span class="o">=</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">mem_per_cpu</span><span class="o">=</span><span class="n">mem_per_cpu</span><span class="p">)</span>
 
 
 <span class="c1"># ----------------------------------------------------------------------</span>
@@ -2347,7 +2403,7 @@
             <span class="c1"># otherwise. See molssi-seamm/orca_step#20.</span>
             <span class="n">in_situ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">resources</span><span class="o">=</span><span class="n">seamm_exec</span><span class="o">.</span><span class="n">Resources</span><span class="p">(</span><span class="n">ntasks</span><span class="o">=</span><span class="n">n_cores</span><span class="p">),</span>
+            <span class="n">resources</span><span class="o">=</span><span class="n">task_resources</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">input_text</span><span class="p">),</span>
             <span class="n">estimated_seconds</span><span class="o">=</span><span class="n">estimate</span><span class="p">,</span>
             <span class="n">estimate_source</span><span class="o">=</span><span class="n">estimate_source</span><span class="p">,</span>
             <span class="n">fingerprint</span><span class="o">=</span><span class="n">fingerprint</span><span class="p">,</span>
@@ -2557,7 +2613,7 @@
             <span class="c1"># See the comment in run_orca -- molssi-seamm/orca_step#20.</span>
             <span class="n">in_situ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">resources</span><span class="o">=</span><span class="n">seamm_exec</span><span class="o">.</span><span class="n">Resources</span><span class="p">(</span><span class="n">ntasks</span><span class="o">=</span><span class="n">n_cores</span><span class="p">),</span>
+            <span class="n">resources</span><span class="o">=</span><span class="n">task_resources</span><span class="p">(</span><span class="n">n_cores</span><span class="p">,</span> <span class="n">input_text</span><span class="p">),</span>
             <span class="n">fingerprint</span><span class="o">=</span><span class="n">_fingerprint</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">make_wfx</span><span class="p">),</span>
             <span class="c1"># ORCA exits 0 even after an error termination.</span>
             <span class="n">success_text</span><span class="o">=</span><span class="p">{</span><span class="s2">"orca.out"</span><span class="p">:</span> <span class="s2">"ORCA TERMINATED NORMALLY"</span><span class="p">},</span>
