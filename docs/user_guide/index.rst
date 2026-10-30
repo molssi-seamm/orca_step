@@ -952,6 +952,13 @@ dispersion (``WB97X-D4``, ``B97M-V``, ``R2SCAN-3C``, ...) are offered only as
 themselves. Method names are matched as written, so use the capitals shown in the
 Model Chemistry step's list.
 
+The "3c" composites -- r2SCAN-3c, B97-3c, PBEh-3c, B3LYP-3c and wB97X-3c -- come
+with their own basis, to which their gCP and dispersion corrections are fitted:
+``ORCA:DFT@R2SCAN-3C/def2-mTZVPP``, ``B97-3C/def2-mTZVP``, ``PBEH-3C/def2-mSVP``,
+``B3LYP-3C/def2-mSVP`` and ``WB97X-3C/vDZP``. They are offered and run only with
+it: ORCA would use another basis named on the '!' line instead, and the result
+would not be the composite. In the Energy dialog choosing one sets its basis.
+
 The double hybrids B2PLYP, B2GP-PLYP, mPW2PLYP and PWPB95 are also offered with
 Grimme's D3 correction: ``<functional>-D3ZERO`` for the original zero damping (as
 Gaussian's ``EmpiricalDispersion=GD3``), e.g. ``ORCA:DFT@B2PLYP-D3ZERO/cc-pVTZ``,

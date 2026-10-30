@@ -1,7 +1,14 @@
 =======
 History
 =======
-2026.10.30 -- Bugfix: an ORCA run sent to a queue asks for the memory it needs
+2026.10.30 -- Bugfix: queued ORCA runs ask for their memory; 3c composites use their own basis
+    * The "3c" composites (r2SCAN-3c, B97-3c, PBEh-3c, B3LYP-3c, wB97X-3c) were offered
+      with ordinary basis sets, e.g. ``ORCA:DFT@R2SCAN-3C/def2-TZVP``, and run as
+      ``! R2SCAN-3C def2-TZVP``. ORCA then uses that basis instead of the composite's
+      own, so the result was not r2SCAN-3c (2.2 mEh off for CH4). They are now offered
+      and run only with their own basis (def2-mTZVPP, def2-mTZVP, def2-mSVP, def2-mSVP,
+      vDZP), which reproduces the plain keyword exactly; another basis is refused, and
+      in the Energy dialog choosing one sets its basis.
     * A calculation sent to a queue as its own task, as in a parallel Loop whose
       calculations run as separate tasks, asked only for its cores, so it got the
       queue's default memory: 32 GB on ARC's Owl for a 4-rank CCSD(T)-F12 using 96 GB,

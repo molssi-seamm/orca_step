@@ -125,3 +125,22 @@ def test_layouts_follow_the_rules(orca, substep):
         check(tk_node)
         assert tk_node["scf retry"].grid_info() != {}
         assert (tk_node["retry sthresh"].grid_info() != {}) == (retry == "yes")
+
+
+@pytest.mark.parametrize("substep", ("Energy", "Optimization"))
+def test_3c_composite_takes_its_own_basis(orca, substep):
+    """Choosing a 3c composite sets its own basis and hides the basis source and
+    the extrapolation: with any other basis it is not the composite."""
+    tk_node = make(orca, substep)
+    tk_node["use model chemistry"].set("no")
+    tk_node["method"].set("DFT")
+    tk_node["functional type"].set("meta-GGA")
+    tk_node.reset_functionals()
+    tk_node["functional"].set("R2SCAN-3C")
+    tk_node.reset_dialog()
+    values = check(tk_node)
+    basis = tk_node["basis"].get()
+    name = basis["name"] if isinstance(basis, dict) else basis
+    assert name == "def2-mTZVPP", values
+    assert tk_node["basis source"].grid_info() == {}
+    assert tk_node["basis set extrapolation"].grid_info() == {}

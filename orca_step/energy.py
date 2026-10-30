@@ -18,7 +18,7 @@ from tabulate import tabulate
 
 from molsystem import elements
 import orca_step
-from .orca_base import auxiliary_basis_words, method_class
+from .orca_base import auxiliary_basis_words, composite_basis, method_class
 import seamm
 from seamm_util import ureg, Q_  # noqa: F401
 from seamm_util.fingerprint import geometry_fingerprint
@@ -246,6 +246,9 @@ class Energy(orca_step.ORCABase):
         auxiliary basis and extra keywords always come from this node.
         """
         method, basis = self._resolve_method_basis(P)
+        # A 3c composite runs only with its own basis (see composite_basis)
+        if not isinstance(basis, dict) and not self._extrapolating(P):
+            basis = composite_basis(orca_step.orca_method_keyword(method), basis)
 
         # A DLPNO double hybrid is the parent functional on the '!' line plus a
         # '%mp2' block (see method_blocks).

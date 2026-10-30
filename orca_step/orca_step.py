@@ -259,7 +259,11 @@ class ORCAStep(object):
                 mdi_capable = gradients == "analytic"
                 if mdi_only and not mdi_capable:
                     continue
-                for basis in _ADVERTISED_BASES:
+                # A 3c composite only with its own basis (see composite_basis)
+                own = None
+                if method == "DFT":
+                    own = orca_step.metadata["functionals"].get(real, {}).get("basis")
+                for basis in (own,) if own else _ADVERTISED_BASES:
                     key = f"ORCA:{mtype}@{adv_method}/{basis}"
                     options[key] = {
                         "model_chemistry": key,
@@ -374,7 +378,7 @@ class ORCAStep(object):
         seamm_options,
         *,
         method,
-        basis="def2-SVP",
+        basis=None,
         port,
         hostname="localhost",
         charge=0,
@@ -396,6 +400,10 @@ class ORCAStep(object):
         engine's ``--dlpno`` flag.
         """
         config = cls.get_executor_config(executor, seamm_options)
+        # A 3c composite only with its own basis; otherwise def2-SVP by default
+        from .orca_base import composite_basis
+
+        basis = composite_basis(method, basis) or "def2-SVP"
         mdi_init = (
             f"-role ENGINE -name {engine_name} -method TCP "
             f"-port {port} -hostname {hostname}"

@@ -353,7 +353,9 @@ def parse_args():
         "DLPNO-MP2 gradients only for RHF).",
     )
     p.add_argument(
-        "--basis", default="def2-SVP", help="The orbital basis set (default def2-SVP)."
+        "--basis",
+        default=None,
+        help="The orbital basis set (default def2-SVP; a 3c composite's own).",
     )
     p.add_argument(
         "--auxiliary-basis",
@@ -413,6 +415,33 @@ def parse_args():
     return p.parse_args()
 
 
+# The 3c composites' own bases, as in orca_step's metadata ("basis"): with any
+# other basis on the '!' line ORCA uses that basis instead, and the result is not
+# the composite (this script runs without orca_step, so the table is here too).
+COMPOSITE_BASES = {
+    "R2SCAN-3C": "def2-mTZVPP",
+    "B97-3C": "def2-mTZVP",
+    "PBEH-3C": "def2-mSVP",
+    "B3LYP-3C": "def2-mSVP",
+    "WB97X-3C": "vDZP",
+}
+
+
+def engine_basis(method, basis):
+    """The basis to run ``method`` with: a 3c composite's own (another is
+    refused), else ``basis``, by default def2-SVP."""
+    word = str(method or "").split()[0].upper() if method else ""
+    own = COMPOSITE_BASES.get(word)
+    if own is None:
+        return basis or "def2-SVP"
+    if basis and basis.strip().lower() != own.lower():
+        raise SystemExit(
+            f"{word} is a composite method with its own basis, {own}; with "
+            f"{basis} it would not be {word}."
+        )
+    return own
+
+
 def main():
     args = parse_args()
     logging.basicConfig(
@@ -428,6 +457,7 @@ def main():
         sys.exit(1)
 
     method = args.method
+    args.basis = engine_basis(method, args.basis)
     aux = args.auxiliary_basis
     if aux and aux.lower() != "none":
         method = f"{method} {aux}"

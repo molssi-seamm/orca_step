@@ -517,6 +517,15 @@ class EnergyParameters(seamm.Parameters):
     def _is_f12(values):
         return "F12" in str(values.get("method", "")).upper()
 
+    def _own_basis(self, values):
+        """A 3c composite's own basis, if the functional is one; else None."""
+        if values.get("method") != "DFT":
+            return None
+        functional = values.get("functional")
+        if self._is_expr(functional):
+            return None
+        return orca_step.metadata["functionals"].get(functional, {}).get("basis")
+
     def _extrapolating(self, values):
         return self.applies("basis set extrapolation", values) and values.get(
             "basis set extrapolation"
@@ -534,11 +543,19 @@ class EnergyParameters(seamm.Parameters):
         if not super().applies(key, values, _seen):
             return False
         if key == "basis set extrapolation":
-            return self.extrapolation and not self._is_f12(values)
+            return (
+                self.extrapolation
+                and not self._is_f12(values)
+                and self._own_basis(values) is None
+            )
         if key == "basis":
             return not self._extrapolating(values)
         if key == "basis source":
-            return not self._extrapolating(values) and not self._is_f12(values)
+            return (
+                not self._extrapolating(values)
+                and not self._is_f12(values)
+                and self._own_basis(values) is None
+            )
         if key == "wfx density":
             return self._has_mp2_part(values)
         return True
@@ -582,19 +599,26 @@ class EnergyParameters(seamm.Parameters):
                 )
             if self._is_f12(values):
                 return "F12 methods use their own F12 basis, not an extrapolation"
+            if self._own_basis(values):
+                return "a 3c composite method uses its own basis"
         if key in ("basis", "basis source") and self._extrapolating(values):
             return "the basis-set extrapolation replaces it"
         if key == "basis source" and self._is_f12(values):
             return "F12 methods use ORCA's own basis sets (they need a CABS)"
+        if key == "basis source" and self._own_basis(values):
+            return "a 3c composite method uses its own basis, from ORCA"
         if key == "wfx density" and not self._has_mp2_part(values):
             return "only MP2 and double-hybrid methods have a relaxed MP2 density"
         return ""
 
     def choices(self, key, values=None):
-        """F12 methods take only the F12 bases; the functionals are those of the
-        functional type."""
+        """F12 methods take only the F12 bases, and a 3c composite only its own;
+        the functionals are those of the functional type."""
         if values is None:
             values = self.current_values()
+        own = self._own_basis(values)
+        if key == "basis" and own:
+            return (own,)
         if key == "basis" and self._is_f12(values):
             return tuple(
                 b
@@ -612,8 +636,8 @@ class EnergyParameters(seamm.Parameters):
         return super().choices(key, values)
 
     def implied(self, values=None):
-        """An F12 method needs an F12 basis from ORCA itself; a functional implies
-        its functional type."""
+        """An F12 method needs an F12 basis from ORCA itself, and a 3c composite its
+        own basis; a functional implies its functional type."""
         if values is None:
             values = self.current_values()
         result = {}
@@ -623,6 +647,14 @@ class EnergyParameters(seamm.Parameters):
             name = basis.get("name") if isinstance(basis, dict) else basis
             if name not in f12 and not self._is_expr(name):
                 result["basis"] = "cc-pVTZ-F12" if "cc-pVTZ-F12" in f12 else f12[0]
+            result["basis source"] = "ORCA internal"
+        own = self._own_basis(values) if self.applies("method", values) else None
+        if own:
+            # A 3c composite runs only with its own basis (see composite_basis)
+            basis = values.get("basis")
+            name = basis.get("name") if isinstance(basis, dict) else basis
+            if name != own and not self._is_expr(name):
+                result["basis"] = own
             result["basis source"] = "ORCA internal"
         if self.applies("functional", values):
             functional = values.get("functional")

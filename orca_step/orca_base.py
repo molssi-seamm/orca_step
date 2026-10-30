@@ -337,6 +337,34 @@ def predicted_seconds(
     return (seconds, source) if with_source else seconds
 
 
+def composite_basis(method, basis=None):
+    """The orbital basis for ``method`` with the requested ``basis``.
+
+    A "3c" composite (r2SCAN-3c, B97-3c, PBEh-3c, wB97X-3c) has its own basis, to
+    which its gCP and dispersion are fitted. ORCA uses a basis named on the '!'
+    line instead, and the result is then not the composite: "! R2SCAN-3C
+    def2-TZVP" ran with def2-TZVP, 2.2 mEh off on CH4 (thermo, TC 8315864). The
+    own basis named explicitly reproduces the plain keyword exactly (8316022).
+    So a composite runs with its own basis: given, or filled in when none is;
+    another is refused. Other methods keep ``basis``.
+    """
+    import orca_step
+
+    own = None
+    word = str(method or "").split()[0].upper() if method else ""
+    for name, rec in orca_step.metadata["functionals"].items():
+        if name.upper() == word and rec.get("basis"):
+            own = rec["basis"]
+    if own is None:
+        return basis
+    if basis and str(basis).strip().lower() not in ("", "default", own.lower()):
+        raise ValueError(
+            f"{word} is a composite method with its own basis, {own}; with "
+            f"{basis} it would not be {word}. Use {own}."
+        )
+    return own
+
+
 _MAXCORE = re.compile(r"^\s*%maxcore\s+(\d+)", re.IGNORECASE | re.MULTILINE)
 
 
