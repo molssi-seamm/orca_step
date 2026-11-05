@@ -573,7 +573,7 @@ class EnergyParameters(seamm.Parameters):
             return True
         record = orca_step.metadata["methods"].get(method, {})
         if record.get("class") == "MP2":
-            return True
+            return "F12" not in method.upper()  # no relaxed MP2-F12 density
         if method != "DFT":
             return False
         functional = values.get("functional", "")

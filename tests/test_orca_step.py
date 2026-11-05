@@ -1304,6 +1304,11 @@ def test_f12_methods_and_bases_in_metadata():
     assert "CCSD(T)-F12D/RI" in m and "DLPNO-CCSD(T)-F12D" in m
     assert "CCSD(T)-F12D" not in m
     assert m["DLPNO-CCSD(T)-F12D"]["gradients"] == "numeric"
+    # MP2-F12 and RI-MP2-F12: MP2 class, numeric gradients, MP2 energy reported
+    for method in ("MP2-F12", "RI-MP2-F12"):
+        assert m[method]["class"] == "MP2"
+        assert m[method]["gradients"] == "numeric"
+        assert method in orca_step.metadata["results"]["mp2 energy"]["methods"]
     bases = orca_step.metadata["basis sets"]
     assert {"cc-pVDZ-F12", "cc-pVTZ-F12", "cc-pVQZ-F12"} <= set(bases)
 
@@ -1342,6 +1347,29 @@ def test_keyword_line_f12_adds_cabs():
     """keyword_line puts both the F12 basis and its CABS on the '!' line."""
     line = orca_step.Energy().keyword_line(_f12_P("DLPNO-CCSD(T)-F12D", "cc-pVTZ-F12"))
     assert "cc-pVTZ-F12" in line and "cc-pVTZ-F12-CABS" in line
+
+
+@pytest.mark.parametrize("method", ["MP2-F12", "RI-MP2-F12"])
+def test_keyword_line_mp2_f12(method):
+    """MP2-F12 and RI-MP2-F12 go on the '!' line with the F12 basis and its CABS
+    (ORCA 6.1.1 runs both, 2026-11-05)."""
+    words = orca_step.Energy().keyword_line(_f12_P(method, "cc-pVTZ-F12")).split()
+    assert words[0] == method
+    assert "cc-pVTZ-F12" in words and "cc-pVTZ-F12-CABS" in words
+
+
+@pytest.mark.parametrize("method", ["MP2-F12", "RI-MP2-F12"])
+def test_no_relaxed_density_for_mp2_f12(method):
+    """ORCA has no relaxed MP2-F12 density, so it is neither offered nor run."""
+    P = orca_step.EnergyParameters()
+    values = P.current_values()
+    values.update(method=method, basis="cc-pVTZ-F12")
+    values["use model chemistry"] = "no"
+    assert not P._has_mp2_part(values)
+    with pytest.raises(RuntimeError, match="no relaxed MP2 density"):
+        orca_step.Energy()._check_wfx_density(
+            {"save wavefunction": "yes", "wfx density": "MP2 relaxed"}, method, 1
+        )
 
 
 def test_check_f12_rejects_non_f12_basis():

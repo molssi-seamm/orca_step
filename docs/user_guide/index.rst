@@ -33,7 +33,8 @@ Method
 
 The **Method** pull-down offers Hartree–Fock, MP2/RI-MP2, coupled cluster
 (``CCSD(T)``, ``DLPNO-CCSD(T)``), the explicitly-correlated **F12** variants
-(``CCSD(T)-F12D/RI``, ``DLPNO-CCSD(T)-F12D``), and **DFT**. For everything except
+(``MP2-F12``, ``RI-MP2-F12``, ``CCSD(T)-F12D/RI``, ``DLPNO-CCSD(T)-F12D``), and
+**DFT**. For everything except
 DFT the method *is* the ORCA keyword. Choosing **DFT** reveals two further,
 indented controls:
 
@@ -95,8 +96,8 @@ sensible progression is a single ladder read top to bottom.
 Explicitly-correlated (F12) methods
 -----------------------------------
 
-The F12 methods (``CCSD(T)-F12D/RI``, ``DLPNO-CCSD(T)-F12D``) reach near
-complete-basis-set accuracy from a modest basis, but they **must** be paired
+The F12 methods (``MP2-F12``, ``RI-MP2-F12``, ``CCSD(T)-F12D/RI``,
+``DLPNO-CCSD(T)-F12D``) reach near complete-basis-set accuracy from a modest basis, but they **must** be paired
 with one of ORCA's F12-optimized orbital bases — ``cc-pVDZ-F12``,
 ``cc-pVTZ-F12``, or ``cc-pVQZ-F12`` — and each of those needs a matching
 *complementary auxiliary basis set* (CABS). The step **adds the CABS
@@ -737,7 +738,8 @@ by default it keeps only as many as there are occupied SCF orbitals, which hold
 slightly fewer electrons than the molecule, and Chargemol refuses such a file. The
 relaxed density
 needs a Z-vector solution, about the cost of a gradient, which a gradient computes
-anyway. The choice is offered only for these methods, and the step stops before
+anyway. The choice is offered only for these methods, not for MP2-F12 or
+RI-MP2-F12, which have no relaxed density in ORCA, and the step stops before
 running for an open-shell DLPNO double hybrid, for which ORCA 6.1.1 has no DLPNO-MP2
 density. The step says which density the file holds, checks from ``orca_2aim``'s log
 that it used the natural orbitals, and records the density beside the file
