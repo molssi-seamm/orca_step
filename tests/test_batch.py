@@ -539,3 +539,20 @@ def test_tight_precision_engine_words():
     assert _engine_method_words("REVDSD-PBEP86-D4/2021", "tight") == (
         "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF"
     )
+
+
+def test_tight_precision_task():
+    """precision="tight" as a task option gives VeryTightSCF instead of TightSCF."""
+    from orca_step.batch import get_task
+
+    water = Geometry(
+        [8, 1, 1], [[0, 0, 0.117], [0, 0.757, -0.467], [0, -0.757, -0.467]]
+    )
+    line = (
+        get_task(water, _mc(), key="t", options={"precision": "tight"})
+        .files["orca.inp"]
+        .splitlines()[0]
+    )
+    assert "VERYTIGHTSCF" in line.split() and "TIGHTSCF" not in line.split()
+    line = get_task(water, _mc(), key="d").files["orca.inp"].splitlines()[0]
+    assert "TIGHTSCF" in line.split() and "VERYTIGHTSCF" not in line.split()
