@@ -293,6 +293,14 @@ many-body expansion share one SCF setting: TightSCF energies stop slightly
 short of convergence, and that cancels in the increments only if every fragment
 is converged the same way. Energies alone keep the setting.
 
+Steps that take finite differences of ORCA's gradients or Hessians, such as
+**Vibrational Analysis**, ask for tight convergence: the MDI engine and the
+separate ORCA calculations then use ``VERYTIGHTSCF`` too. The engine starts
+each SCF from the previous structure's orbitals, and a loosely converged SCF
+leaves small errors that depend on which structure came before, which finite
+differences magnify (for water's anharmonic force constants, 6.4 cm\ :sup:`-1`
+of noise with ``TIGHTSCF`` tasks, 0.19 with ``VERYTIGHTSCF``).
+
 Other elements keep COSX, which is about three times cheaper for a fragment the
 size of ethylene carbonate. COSX's force errors are small for Li\ :sup:`+`,
 F\ :sup:`-` and Cl\ :sup:`-`, and moderate (3--6.5 meV/Å) for K, Ca, Rb, Cs, Sr
