@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.11.4 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.11.5 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=4c137905"></script>
+    <script src="../../_static/documentation_options.js?v=e86bfd1c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.4" />
+  <meta name="docsearch:version" content="2026.11.5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -676,15 +676,20 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_engine_method_words</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_engine_method_words</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The MDI engine's ``--method``: the ORCA keyword, plus VERYTIGHTSCF for a</span>
 <span class="sd">    double hybrid, since the engine always computes the gradient (see</span>
-<span class="sd">    ``orca_base.double_hybrid_scf``)."""</span>
+<span class="sd">    ``orca_base.double_hybrid_scf``), or for ``precision="tight"``."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">double_hybrid_scf</span>
 
     <span class="n">keyword</span> <span class="o">=</span> <span class="n">orca_method_keyword</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
     <span class="n">line</span><span class="p">,</span> <span class="n">note</span> <span class="o">=</span> <span class="n">double_hybrid_scf</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2"> EnGrad"</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">keyword</span> <span class="k">if</span> <span class="n">note</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">keyword</span> <span class="k">if</span> <span class="n">note</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">precision</span> <span class="o">==</span> <span class="s2">"tight"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"SCF"</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="p">):</span>
+        <span class="n">words</span> <span class="o">+=</span> <span class="s2">" VERYTIGHTSCF"</span>
+    <span class="k">return</span> <span class="n">words</span>
 
 
 <div class="viewcode-block" id="mc_method_unalias">
@@ -930,6 +935,7 @@
         <span class="n">ncores</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">engine_name</span><span class="o">=</span><span class="s2">"ORCA"</span><span class="p">,</span>
         <span class="n">extra_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Build the argv that launches the ORCA MDI *engine* over TCP.</span>
 
@@ -940,7 +946,11 @@
 <span class="sd">        should be the real ORCA keyword (the ``mdi_method_arg`` from</span>
 <span class="sd">        :meth:`get_model_chemistry_options`, not an aliased functional name). A</span>
 <span class="sd">        DLPNO double hybrid is launched as its parent functional plus the</span>
-<span class="sd">        engine's ``--dlpno`` flag.</span>
+<span class="sd">        engine's ``--dlpno`` flag. ``precision="tight"`` adds VeryTightSCF</span>
+<span class="sd">        (unless the method words already set the SCF convergence), for finite</span>
+<span class="sd">        differences of gradients or Hessians: each SCF starts from the previous</span>
+<span class="sd">        geometry's orbitals, and a loosely converged one leaves noise that</span>
+<span class="sd">        depends on that geometry (2026-11-05).</span>
 <span class="sd">        """</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_executor_config</span><span class="p">(</span><span class="n">executor</span><span class="p">,</span> <span class="n">seamm_options</span><span class="p">)</span>
         <span class="c1"># A 3c composite is its keyword alone (no basis, no fitting basis; see</span>
@@ -961,7 +971,7 @@
             <span class="s2">"--orca"</span><span class="p">,</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">"code"</span><span class="p">],</span>
             <span class="s2">"--method"</span><span class="p">,</span>
-            <span class="n">_engine_method_words</span><span class="p">(</span><span class="n">method</span><span class="p">),</span>
+            <span class="n">_engine_method_words</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">precision</span><span class="p">),</span>
             <span class="o">*</span><span class="p">((</span><span class="s2">"--auxiliary-basis"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">)</span> <span class="k">if</span> <span class="n">composite</span> <span class="k">else</span> <span class="p">(</span><span class="s2">"--basis"</span><span class="p">,</span> <span class="n">basis</span><span class="p">)),</span>
             <span class="s2">"--charge"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">charge</span><span class="p">),</span>

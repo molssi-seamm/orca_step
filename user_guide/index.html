@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.4 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.5 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=4c137905"></script>
+    <script src="../_static/documentation_options.js?v=e86bfd1c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.4" />
+  <meta name="docsearch:version" content="2026.11.5" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -777,6 +777,13 @@ the change. This applies with RIJCOSX too, so that all the fragments of a
 many-body expansion share one SCF setting: TightSCF energies stop slightly
 short of convergence, and that cancels in the increments only if every fragment
 is converged the same way. Energies alone keep the setting.</p>
+<p>Steps that take finite differences of ORCA’s gradients or Hessians, such as
+<strong>Vibrational Analysis</strong>, ask for tight convergence: the MDI engine and the
+separate ORCA calculations then use <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code> too. The engine starts
+each SCF from the previous structure’s orbitals, and a loosely converged SCF
+leaves small errors that depend on which structure came before, which finite
+differences magnify (for water’s anharmonic force constants, 6.4 cm<sup>-1</sup>
+of noise with <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code> tasks, 0.19 with <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code>).</p>
 <p>Other elements keep COSX, which is about three times cheaper for a fragment the
 size of ethylene carbonate. COSX’s force errors are small for Li<sup>+</sup>,
 F<sup>-</sup> and Cl<sup>-</sup>, and moderate (3–6.5 meV/Å) for K, Ca, Rb, Cs, Sr
