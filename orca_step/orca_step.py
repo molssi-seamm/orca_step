@@ -162,15 +162,20 @@ def orca_method_blocks(method):
     return ""
 
 
-def _engine_method_words(method):
+def _engine_method_words(method, precision=None):
     """The MDI engine's ``--method``: the ORCA keyword, plus VERYTIGHTSCF for a
     double hybrid, since the engine always computes the gradient (see
-    ``orca_base.double_hybrid_scf``)."""
+    ``orca_base.double_hybrid_scf``), or for ``precision="tight"``."""
     from .orca_base import double_hybrid_scf
 
     keyword = orca_method_keyword(method)
     line, note = double_hybrid_scf(f"{keyword} EnGrad")
-    return keyword if note is None else f"{keyword} {line.split()[-1]}"
+    words = keyword if note is None else f"{keyword} {line.split()[-1]}"
+    if precision == "tight" and not any(
+        w.upper().endswith("SCF") for w in words.split()
+    ):
+        words += " VERYTIGHTSCF"
+    return words
 
 
 def mc_method_unalias(method):
@@ -391,6 +396,7 @@ class ORCAStep(object):
         ncores=1,
         engine_name="ORCA",
         extra_args=None,
+        precision=None,
     ):
         """Build the argv that launches the ORCA MDI *engine* over TCP.
 
@@ -401,7 +407,11 @@ class ORCAStep(object):
         should be the real ORCA keyword (the ``mdi_method_arg`` from
         :meth:`get_model_chemistry_options`, not an aliased functional name). A
         DLPNO double hybrid is launched as its parent functional plus the
-        engine's ``--dlpno`` flag.
+        engine's ``--dlpno`` flag. ``precision="tight"`` adds VeryTightSCF
+        (unless the method words already set the SCF convergence), for finite
+        differences of gradients or Hessians: each SCF starts from the previous
+        geometry's orbitals, and a loosely converged one leaves noise that
+        depends on that geometry (2026-11-05).
         """
         config = cls.get_executor_config(executor, seamm_options)
         # A 3c composite is its keyword alone (no basis, no fitting basis; see
@@ -422,7 +432,7 @@ class ORCAStep(object):
             "--orca",
             config["code"],
             "--method",
-            _engine_method_words(method),
+            _engine_method_words(method, precision),
             *(("--auxiliary-basis", "none") if composite else ("--basis", basis)),
             "--charge",
             str(charge),

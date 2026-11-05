@@ -527,3 +527,15 @@ def test_timing_flags_are_the_options_of_the_line():
         "basis": "def2-QZVPPD",
     }
     assert timing_model.flag_tokens(record, flags) == {"RIJCOSX", "KEEPDENSITY"}
+
+
+def test_tight_precision_engine_words():
+    """precision="tight" (finite differences of gradients or Hessians) asks the
+    engine for VeryTightSCF, once, whatever the method."""
+    from orca_step.orca_step import _engine_method_words
+
+    assert _engine_method_words("B3LYP", "tight") == "B3LYP VERYTIGHTSCF"
+    assert _engine_method_words("B3LYP") == "B3LYP"
+    assert _engine_method_words("REVDSD-PBEP86-D4/2021", "tight") == (
+        "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF"
+    )
