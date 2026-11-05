@@ -23,7 +23,11 @@ Removed:
 Kept: everything else on the '!' line, in any order (ORCA's keywords are
 case-insensitive and unordered), and the other blocks. NoCOSX, which the step and
 engine add for some elements, is kept: a calculation with exact exchange is not
-the same level as one with COSX. RHF, UHF and similar words are kept too; ORCA
+the same level as one with COSX. It is dropped only when ORCA's output shows that
+COSX could not have been used anyway (see :func:`cosx_is_moot`) -- a functional
+without exact exchange such as r2SCAN-3c, or a basis set without an auxiliary
+Coulomb basis such as cc-pVTZ-F12 -- since the calculation is then the same with
+or without it. RHF, UHF and similar words are kept too; ORCA
 chooses from the multiplicity itself, so they are on the '!' line only when the
 user asked for them.
 
@@ -80,6 +84,8 @@ _DROPPED_WORDS = {
     "NBO",
 }
 _PAL = re.compile(r"PAL\d+")
+#: '!' words choosing whether the SCF uses COSX for the exchange
+_COSX_WORDS = {"RIJCOSX", "COSX", "NOCOSX"}
 
 #: Blocks dropped whole
 _DROPPED_BLOCKS = {"PAL", "OUTPUT", "ELPROP", "PLOTS", "GEOM"}
@@ -103,6 +109,41 @@ def orca_version(out_text):
     """The ORCA version from its output, e.g. "6.1.1", or None."""
     m = re.search(r"Program Version\s+(\S+)", out_text or "")
     return m.group(1) if m else None
+
+
+def cosx_is_moot(out_text):
+    """Whether ORCA's output shows that the SCF could not have used COSX, so that
+    COSX or NoCOSX does not change the calculation.
+
+    COSX approximates exact (Hartree-Fock) exchange, together with the RI
+    approximation for the Coulomb term. It is moot when the SCF has no exact
+    exchange (a functional that is not hybrid, e.g. r2SCAN-3c), or when ORCA has
+    no auxiliary Coulomb basis for the basis set (e.g. cc-pVTZ-F12), and then
+    uses exact exchange whatever the input says.
+
+    Parameters
+    ----------
+    out_text : str
+        The contents of orca.out.
+
+    Returns
+    -------
+    bool
+        True if COSX is moot; False if COSX was used, could have been, or the
+        output does not say.
+    """
+    text = out_text or ""
+    if re.search(r"RIJ-COSX \(HFX calculated with COS-X\)\)?\.* on", text):
+        return False
+    if re.search(r"Auxiliary Coulomb fitting basis\s+\.+\s+NOT available", text):
+        return True
+    if re.search(r"Method\s+\.+\s+DFT\(GTOs\)", text) is None:
+        return False  # Hartree-Fock, or not said
+    if "Hybrid DFT is turned on" in text:
+        return False
+    if re.search(r"Exchange Range Separation\s+\.+\s+USED", text):
+        return False
+    return True
 
 
 def _element_symbol(name):
@@ -138,7 +179,7 @@ def basis_file_blocks(text):
     return blocks
 
 
-def settings_text(input_text):
+def settings_text(input_text, cosx_moot=False):
     """The lines of an ORCA input that make up its settings, and the per-element
     basis sets in it.
 
@@ -146,6 +187,9 @@ def settings_text(input_text):
     ----------
     input_text : str
         The contents of orca.inp.
+    cosx_moot : bool
+        Drop COSX, RIJCOSX and NoCOSX, which do not change the calculation (see
+        :func:`cosx_is_moot`).
 
     Returns
     -------
@@ -170,6 +214,8 @@ def settings_text(input_text):
             if line.startswith("!"):
                 for word in line[1:].split():
                     if word in _DROPPED_WORDS or _PAL.fullmatch(word):
+                        continue
+                    if cosx_moot and word in _COSX_WORDS:
                         continue
                     words.add(word)
                 continue
@@ -264,7 +310,9 @@ def settings_text(input_text):
     return cleaned, elements
 
 
-def orca_calculation_record(files, version, atomic_numbers=None, coordinates=None):
+def orca_calculation_record(
+    files, version, atomic_numbers=None, coordinates=None, out_text=None
+):
     """The record of an ORCA calculation's settings, with its fingerprints.
 
     Parameters
@@ -276,13 +324,18 @@ def orca_calculation_record(files, version, atomic_numbers=None, coordinates=Non
         The ORCA version, e.g. "6.1.1" (see :func:`orca_version`).
     atomic_numbers, coordinates : optional
         The geometry, for its fingerprint.
+    out_text : str, optional
+        The contents of orca.out, which says whether COSX was moot (see
+        :func:`cosx_is_moot`). Without it COSX and NoCOSX are hashed.
 
     Returns
     -------
     dict
         See :func:`seamm_util.fingerprint.calculation_record`.
     """
-    lines, elements = settings_text(files.get("orca.inp", ""))
+    lines, elements = settings_text(
+        files.get("orca.inp", ""), cosx_moot=cosx_is_moot(out_text)
+    )
     if isinstance(files.get("basis.bas"), str):
         for symbol, block in basis_file_blocks(files["basis.bas"]).items():
             elements.setdefault(symbol, []).extend(block)

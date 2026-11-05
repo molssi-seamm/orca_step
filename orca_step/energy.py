@@ -546,6 +546,11 @@ class Energy(orca_step.ORCABase):
                 f"The relaxed MP2 density for the wfx file needs an MP2 or "
                 f"double-hybrid method, not {method}. Use the SCF density."
             )
+        if "F12" in (method or "").upper():
+            raise RuntimeError(
+                f"ORCA has no relaxed MP2 density for the explicitly-correlated "
+                f"{method}. Use the SCF density, or MP2 or RI-MP2."
+            )
         if multiplicity != 1 and orca_step.dlpno_parent(method) is not None:
             raise RuntimeError(
                 f"{method} is open shell here (multiplicity {multiplicity}), and "

@@ -40,6 +40,19 @@ metadata["methods"] = {
         "description": "RI-MP2 (resolution of identity)",
         "gradients": "analytic",
     },
+    "MP2-F12": {
+        "type": "QC",
+        "class": "MP2",
+        "description": "explicitly-correlated MP2-F12 (needs an F12 basis)",
+        # No analytic F12 gradient in ORCA, and no relaxed MP2-F12 density.
+        "gradients": "numeric",
+    },
+    "RI-MP2-F12": {
+        "type": "QC",
+        "class": "MP2",
+        "description": "explicitly-correlated RI-MP2-F12 (needs an F12 basis)",
+        "gradients": "numeric",
+    },
     "CCSD(T)": {
         "type": "QC",
         "class": "CC",
@@ -194,7 +207,7 @@ metadata["results"] = {
         "property": "MP2 energy#ORCA#{model}",
         "type": "float",
         "units": "E_h",
-        "methods": ["MP2", "RI-MP2"],
+        "methods": ["MP2", "RI-MP2", "MP2-F12", "RI-MP2-F12"],
     },
     "ccsd energy": {
         "description": "The CCSD total energy",
