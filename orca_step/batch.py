@@ -219,6 +219,12 @@ def get_task(
     # A double-hybrid gradient runs with VeryTightSCF (see double_hybrid_scf)
     first, rest = text.split("\n", 1)
     line, _ = double_hybrid_scf(first[1:].strip())
+    # precision="tight" (finite differences of gradients, e.g. VPT2): VeryTightSCF
+    if option("precision") == "tight":
+        words = line.split()
+        if "VERYTIGHTSCF" not in (w.upper() for w in words):
+            words = [w for w in words if w.upper() != "TIGHTSCF"] + ["VERYTIGHTSCF"]
+        line = " ".join(words)
     text = f"! {line}\n{rest}"
     files["orca.inp"] = text
     # The fingerprint is the calculation asked for, without the retry's input,

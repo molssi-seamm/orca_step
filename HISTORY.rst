@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.11.5 -- Tight convergence on request for finite differences
+    * Steps that take finite differences of ORCA's gradients or Hessians, such as the
+      new Vibrational Analysis step, can now ask for tight convergence: the MDI engine
+      and the separate ORCA calculations then use VeryTightSCF. The engine starts each
+      SCF from the previous structure's orbitals, and a loosely converged SCF left
+      noise depending on the previous structure (water's anharmonic force constants:
+      6.4 cm^-1 of noise with TightSCF tasks, 0.19 with VeryTightSCF).
+
 2026.11.4 -- Fingerprints no longer split by NoCOSX where COSX cannot be used; added MP2-F12
     * The settings fingerprint now leaves out COSX and NoCOSX when ORCA's output shows
       that COSX could not have been used: the SCF has no exact exchange (e.g.
