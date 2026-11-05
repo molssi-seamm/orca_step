@@ -212,12 +212,13 @@ def calculation_record(workdir, input_text, atomic_numbers, coords_ang):
     if "basis.bas" in input_text:
         files["basis.bas"] = (Path(workdir) / "basis.bas").read_text()
     out = Path(workdir) / "orca.out"
-    version = orca_version(out.read_text(errors="replace")) if out.exists() else None
+    text = out.read_text(errors="replace") if out.exists() else None
     return orca_calculation_record(
         files,
-        version,
+        orca_version(text),
         atomic_numbers=[int(z) for z in atomic_numbers],
         coordinates=np.asarray(coords_ang).tolist(),
+        out_text=text,
     )
 
 

@@ -1,6 +1,19 @@
 =======
 History
 =======
+2026.11.4 -- Bugfix: NoCOSX split the fingerprints where COSX cannot be used
+    * The settings fingerprint now leaves out COSX and NoCOSX when ORCA's output shows
+      that COSX could not have been used: the SCF has no exact exchange (e.g.
+      r2SCAN-3c), or the basis set has no auxiliary Coulomb basis (e.g. cc-pVTZ-F12
+      for CCSD(T)-F12, which ORCA runs with exact exchange anyway). NoCOSX, which the
+      step adds for atoms and for boron and some other elements, changes nothing
+      there, but it gave those species a different fingerprint, so a lookup by
+      fingerprint, such as the Thermochemistry step's for CBH fragments, missed them.
+    * NoCOSX still counts wherever COSX could be used, e.g. for hybrid functionals
+      with def2 basis sets.
+    * Fingerprints stored before this release for such calculations differ from the
+      new ones.
+
 2026.10.30.1 -- Bugfix: 3c composites from the model chemistry ran with the step's basis
     * An Energy, Optimization or Frequencies step using the model chemistry
       ``ORCA:CMP@R2SCAN-3C`` (or another 3c composite) filled in the step's own default

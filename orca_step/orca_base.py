@@ -1660,7 +1660,7 @@ class ORCABase(seamm.Node):
                 files["orca.inp"] = retry
             out = Path(run_directory) / "orca.out"
             text = out.read_text(errors="replace") if out.exists() else ""
-            return orca_calculation_record(files, orca_version(text))
+            return orca_calculation_record(files, orca_version(text), out_text=text)
         except Exception as e:  # pragma: no cover - never stop the step
             logger.warning(f"Could not fingerprint the ORCA input: {e}")
             return None

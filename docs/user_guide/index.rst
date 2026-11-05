@@ -1013,8 +1013,14 @@ come from the same kind of calculation:
 
 The Frequencies sub-step also stores them as ``frequency fingerprint``, ``frequency
 element fingerprints`` and ``frequency calculation``. The exchange scheme counts:
-exact exchange (NoCOSX), which the step chooses for structures with Na, Mg, Zn, B or
-P, is a different setting from COSX.
+exact exchange (NoCOSX), which the step chooses for atoms and for structures with Na,
+Mg, Zn, B or P, is a different setting from COSX. The exception is a calculation in
+which ORCA could not have used COSX, as its output shows: one whose SCF has no exact
+exchange (a functional that is not a hybrid, such as r2SCAN-3c), or one whose basis
+has no auxiliary Coulomb basis (such as cc-pVTZ-F12, for CCSD(T)-F12), which ORCA
+runs with exact exchange whatever the input says. NoCOSX changes nothing there, so it
+is left out of the fingerprint, and boron compounds and atoms match the other species
+at the same level.
 
 The MDI engine gives the same fingerprints for the same calculation through the
 commands ``<FINGERPRINT_LENGTH`` and ``<FINGERPRINT`` (the records of its last energy

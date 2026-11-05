@@ -11,6 +11,7 @@ import pytest
 
 from orca_step.fingerprint import (
     basis_file_blocks,
+    cosx_is_moot,
     orca_calculation_record,
     orca_version,
     settings_text,
@@ -121,6 +122,91 @@ def test_bse_basis_file():
     for symbol in ("H", "C"):
         assert a["element fingerprints"][symbol] == b["element fingerprints"][symbol]
     assert "O" not in b["element fingerprints"]
+
+
+# Excerpts of ORCA 6.1.1 output: the auxiliary basis sets and the Hamiltonian
+_AUX = """\
+Auxiliary Coulomb fitting basis             ... {j}
+Auxiliary J/K fitting basis                 ... NOT available
+Auxiliary Correlation fitting basis         ... AVAILABLE
+"""
+# canonical CCSD(T)-F12 with cc-pVTZ-F12, which has no auxiliary Coulomb basis
+F12_OUT = _AUX.format(j="NOT available") + """\
+Hamiltonian:
+ Ab initio Hamiltonian  Method          .... Hartree-Fock(GTOs)
+"""
+# r2SCAN-3c, a meta-GGA: no exact exchange
+R2SCAN_OUT = _AUX.format(j="AVAILABLE") + """\
+Hamiltonian:
+ Density Functional     Method          .... DFT(GTOs)
+  Functional family                     .... MGGA
+ RI-approximation to the Coulomb term is turned on
+   Number of AuxJ basis functions       .... 150
+"""
+# a hybrid with exact exchange (NoCOSX)
+HYBRID_OUT = _AUX.format(j="AVAILABLE") + """\
+Exchange Range Separation                   ... NOT USED
+Hamiltonian:
+ Density Functional     Method          .... DFT(GTOs)
+ Hybrid DFT is turned on
+   Fraction HF Exchange ScalHFX         ....  0.250000
+ RI-approximation to the Coulomb term is turned on
+   Number of AuxJ basis functions       .... 218
+"""
+# the same with COSX
+COSX_OUT = HYBRID_OUT + "   RIJ-COSX (HFX calculated with COS-X)).... on\n"
+# Hartree-Fock with an auxiliary Coulomb basis
+HF_OUT = _AUX.format(j="AVAILABLE") + """\
+Hamiltonian:
+ Ab initio Hamiltonian  Method          .... Hartree-Fock(GTOs)
+"""
+
+
+@pytest.mark.parametrize(
+    "out, moot",
+    [
+        (F12_OUT, True),
+        (R2SCAN_OUT, True),
+        (HYBRID_OUT, False),
+        (COSX_OUT, False),
+        (HF_OUT, False),
+        ("", False),
+        (None, False),
+    ],
+)
+def test_cosx_is_moot(out, moot):
+    assert cosx_is_moot(out) is moot
+
+
+F12_INPUT = """\
+! CCSD(T)-F12D/RI cc-pVTZ-F12 cc-pVQZ/C TIGHTSCF {cosx} cc-pVTZ-F12-CABS
+* xyz 0 1
+O 0 0 0
+*
+"""
+
+
+@pytest.mark.parametrize("out", [F12_OUT, R2SCAN_OUT])
+def test_moot_cosx_is_not_hashed(out):
+    """COSX cannot be used, so NoCOSX (which the step adds for atoms and some
+    elements) does not change the calculation or the fingerprint (thermo, ChemAI
+    5617 vs 5608: the energies agree to 2e-8 E_h)."""
+    with_nocosx = F12_INPUT.format(cosx="NoCOSX")
+    without = F12_INPUT.format(cosx="")
+    assert fingerprint(with_nocosx, out_text=out) == fingerprint(without, out_text=out)
+    assert fingerprint(without, out_text=out) == fingerprint(without)
+    assert orca_calculation_record({"orca.inp": with_nocosx}, "6.1.1", out_text=out)[
+        "files"
+    ] == {
+        "orca.inp": "! CC-PVQZ/C CC-PVTZ-F12 CC-PVTZ-F12-CABS CCSD(T)-F12D/RI TIGHTSCF"
+    }
+
+
+@pytest.mark.parametrize("out", [HYBRID_OUT, HF_OUT, None])
+def test_nocosx_is_hashed_when_it_counts(out):
+    assert fingerprint(STEP_INPUT, out_text=out) != fingerprint(
+        STEP_INPUT.replace("NoCOSX", ""), out_text=out
+    )
 
 
 def test_orca_version():
