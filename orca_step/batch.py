@@ -327,7 +327,42 @@ def analyze_task(
                 np.asarray(gradient, dtype=float), "hartree/bohr"
             ).m_as("kJ/mol/Å")
     check_properties(data, properties, f"The ORCA calculation '{result.key}'")
+    if task is not None:
+        record = calculation_record(task, configuration, options, out)
+        if record is not None:
+            data["calculation"] = record
     return data
+
+
+def calculation_record(task, configuration, options, out):
+    """The record of the task's settings (``orca_step.fingerprint``): the settings
+    fingerprint, the element fingerprints, and the fingerprint of the geometry the
+    calculation ran on, so that a consumer can store the energy with its level of
+    theory and check that it pairs with the right geometry. None if it cannot be
+    made; never raises."""
+    from .fingerprint import orca_calculation_record, orca_version
+
+    try:
+        files = {
+            name: text
+            for name, text in task.files.items()
+            if name != _RETRY_INPUT and isinstance(text, str)
+        }
+        data = structure_data(configuration)
+        indices = (options or {}).get("atom_indices")
+        if indices is None:
+            indices = range(len(data["atomic_numbers"]))
+        indices = list(indices)
+        return orca_calculation_record(
+            files,
+            orca_version(out),
+            [data["atomic_numbers"][i] for i in indices],
+            data["coordinates"][indices],
+            out_text=out,
+        )
+    except Exception as e:  # pragma: no cover - never fail the result
+        logger.warning(f"No calculation record for '{getattr(task, 'key', '?')}': {e}")
+        return None
 
 
 def _record_timing(task, result, out, model_chemistry, configuration, options):

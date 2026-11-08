@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.11.8.2 -- Calculation records from the batch path
+    * An ORCA calculation run as a task (the Model Chemistry's batch path, used by
+      the MBE, Energy and Thermochemistry steps) now returns the record of its
+      settings with its results, as the ORCA step's own calculations store it: the
+      settings fingerprint, which identifies the level of theory independently of the
+      cores, memory and geometry, and the fingerprint of the geometry it ran on. A
+      step can then store the energy with its level of theory and check that it is
+      paired with the right geometry.
+
 2026.11.8.1 -- Exact exchange for finite differences
     * Steps that take finite differences of ORCA's gradients or Hessians and ask for
       tight convergence, such as the Vibrational Analysis step, now also get exact
