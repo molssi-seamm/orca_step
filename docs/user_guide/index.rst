@@ -462,7 +462,8 @@ thermal enthalpy, entropy, and Gibbs free energy). The level-of-theory controls
 are the same as the Energy step, plus two extra controls:
 
 * **Second derivatives** — ``analytic`` (ORCA's ``AnFreq``; much faster, needs
-  an analytic second derivative for the method — HF, most DFT functionals, MP2)
+  an analytic second derivative for the method — HF and most DFT functionals;
+  ORCA 6 has none for MP2 or RI-MP2, double hybrids or ``(DLPNO-)CCSD(T)``)
   or ``numerical`` (``NumFreq``; finite-differences the gradient, works for any
   method with a gradient but is considerably more expensive).
 * **Temperature** — the temperature for the thermochemistry (the pressure is
@@ -513,8 +514,8 @@ residual, not zero.
    answers a custom ``<HESSIAN`` command (``AnFreq``) so a driver — e.g. the
    Normal Mode Sampling step — can pull the analytic Hessian over a warm MDI
    connection. The engine advertises ``<HESSIAN`` **only when ORCA has an
-   analytic Hessian for the method** (HF, MP2, ordinary DFT) and not for double
-   hybrids or ``(DLPNO-)CCSD(T)``, so the driver's capability check is truthful:
+   analytic Hessian for the method** (HF, ordinary DFT) and not for MP2, RI-MP2,
+   double hybrids or ``(DLPNO-)CCSD(T)``, so the driver's capability check is truthful:
    it uses the analytic Hessian when offered and finite-differences the forces
    otherwise.
 

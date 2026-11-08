@@ -30,12 +30,12 @@ class FrequenciesParameters(EnergyParameters):
             "help_text": (
                 "How to compute the Hessian. 'default' uses ORCA's analytic "
                 "second derivative (AnFreq) when one is available for the "
-                "method (HF, most DFT functionals, MP2), and falls back to "
+                "method (HF and most DFT functionals), and falls back to "
                 "the numerical one (NumFreq) otherwise -- the right choice "
                 "for almost every case. 'analytic' and 'numerical' force one "
                 "or the other regardless of whether the method has an "
                 "analytic Hessian: 'analytic' fails for a method without one "
-                "(e.g. a double hybrid or (DLPNO-)CCSD(T)); 'numerical' "
+                "(e.g. a double hybrid, MP2 or (DLPNO-)CCSD(T)); 'numerical' "
                 "(finite-differencing the gradient) works for any method "
                 "that has a gradient, but is considerably more expensive."
             ),

@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.11.8 -- Bugfix: MP2 frequencies no longer ask ORCA for an analytic Hessian
+    * ORCA 6 has no analytic Hessian for MP2 or RI-MP2 (AnFreq stops at once with
+      "MP2 analytic Hessian calculations are not implemented"), but the ORCA step
+      treated them like HF. With the default 'second derivatives', the Frequencies
+      step now uses ORCA's numerical Hessian (NumFreq) for MP2 and RI-MP2, and the
+      MDI engine no longer offers an analytic Hessian for them, so drivers such as
+      the Normal Mode Sampling and Vibrational Analysis steps take finite
+      differences of the gradients instead of failing.
+
 2026.11.5 -- Tight convergence on request for finite differences
     * Steps that take finite differences of ORCA's gradients or Hessians, such as the
       new Vibrational Analysis step, can now ask for tight convergence: the MDI engine
