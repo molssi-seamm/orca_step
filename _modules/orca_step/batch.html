@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.8 documentation</title>
+    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.8.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=93f150ad"></script>
+    <script src="../../_static/documentation_options.js?v=5120ad9a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8" />
+  <meta name="docsearch:version" content="2026.11.8.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -512,7 +512,8 @@
 <span class="sd">included), uses exact exchange (``NoCOSX``), as on every ORCA path</span>
 <span class="sd">(orca_step#44). ``options["exact_exchange_elements"]``, or the same key in the</span>
 <span class="sd">model chemistry's options, changes the element set ("none" for one-center jobs</span>
-<span class="sd">only).</span>
+<span class="sd">only). ``options["precision"] = "tight"``, for finite differences of gradients,</span>
+<span class="sd">adds VeryTightSCF and exact exchange (``NoCOSX``) for every structure.</span>
 
 <span class="sd">An SCF that fails with the basis set nearly linearly dependent is run once more</span>
 <span class="sd">with SThresh 1e-6 (see ``orca_base.sthresh_retry_command``); the task keeps its</span>
@@ -715,11 +716,14 @@
     <span class="n">first</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">line</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">double_hybrid_scf</span><span class="p">(</span><span class="n">first</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
     <span class="c1"># precision="tight" (finite differences of gradients, e.g. VPT2): VeryTightSCF</span>
+    <span class="c1"># and exact exchange (NoCOSX), unless an exchange scheme is already chosen</span>
     <span class="k">if</span> <span class="n">option</span><span class="p">(</span><span class="s2">"precision"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"tight"</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_step</span><span class="w"> </span><span class="kn">import</span> <span class="n">tight_exchange_words</span>
+
         <span class="n">words</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
         <span class="k">if</span> <span class="s2">"VERYTIGHTSCF"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">):</span>
             <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">"TIGHTSCF"</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"VERYTIGHTSCF"</span><span class="p">]</span>
-        <span class="n">line</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">tight_exchange_words</span><span class="p">(</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">))</span>
     <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"! </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">rest</span><span class="si">}</span><span class="s2">"</span>
     <span class="n">files</span><span class="p">[</span><span class="s2">"orca.inp"</span><span class="p">]</span> <span class="o">=</span> <span class="n">text</span>
     <span class="c1"># The fingerprint is the calculation asked for, without the retry's input,</span>

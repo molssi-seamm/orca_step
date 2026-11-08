@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.8 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.8.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=93f150ad"></script>
+    <script src="../_static/documentation_options.js?v=5120ad9a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8" />
+  <meta name="docsearch:version" content="2026.11.8.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -783,7 +783,16 @@ separate ORCA calculations then use <code class="docutils literal notranslate"><
 each SCF from the previous structure’s orbitals, and a loosely converged SCF
 leaves small errors that depend on which structure came before, which finite
 differences magnify (for water’s anharmonic force constants, 6.4 cm<sup>-1</sup>
-of noise with <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code> tasks, 0.19 with <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code>).</p>
+of noise with <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code> tasks, 0.19 with <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code>). They also use
+exact exchange (<code class="docutils literal notranslate"><span class="pre">NOCOSX</span></code>) for every structure: COSX computes the exchange on
+a grid that moves with the atoms, and its noise in the gradients (up to
+18 meV/Å of net force in sound double-hybrid gradients) is magnified in the
+force constants too. This costs nothing for functionals without exact exchange
+(GGAs and meta-GGAs) and makes hybrids and double hybrids slower, about three
+times for a fragment the size of ethylene carbonate. An exchange scheme in the
+extra keywords is kept, so adding <code class="docutils literal notranslate"><span class="pre">RIJCOSX</span></code> there uses COSX anyway. Exact
+exchange with a double-hybrid or RI-MP2 gradient needs enough memory per process
+for ORCA’s gradient to be right, as described above; the step checks it.</p>
 <p>Other elements keep COSX, which is about three times cheaper for a fragment the
 size of ethylene carbonate. COSX’s force errors are small for Li<sup>+</sup>,
 F<sup>-</sup> and Cl<sup>-</sup>, and moderate (3–6.5 meV/Å) for K, Ca, Rb, Cs, Sr

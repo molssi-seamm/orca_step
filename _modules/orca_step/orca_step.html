@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.11.8 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.11.8.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=93f150ad"></script>
+    <script src="../../_static/documentation_options.js?v=5120ad9a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8" />
+  <meta name="docsearch:version" content="2026.11.8.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -681,17 +681,41 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_engine_method_words</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The MDI engine's ``--method``: the ORCA keyword, plus VERYTIGHTSCF for a</span>
 <span class="sd">    double hybrid, since the engine always computes the gradient (see</span>
-<span class="sd">    ``orca_base.double_hybrid_scf``), or for ``precision="tight"``."""</span>
+<span class="sd">    ``orca_base.double_hybrid_scf``), or for ``precision="tight"``, which also</span>
+<span class="sd">    asks for exact exchange (see :func:`tight_exchange_words`)."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">double_hybrid_scf</span>
 
     <span class="n">keyword</span> <span class="o">=</span> <span class="n">orca_method_keyword</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
     <span class="n">line</span><span class="p">,</span> <span class="n">note</span> <span class="o">=</span> <span class="n">double_hybrid_scf</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2"> EnGrad"</span><span class="p">)</span>
     <span class="n">words</span> <span class="o">=</span> <span class="n">keyword</span> <span class="k">if</span> <span class="n">note</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-    <span class="k">if</span> <span class="n">precision</span> <span class="o">==</span> <span class="s2">"tight"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
-        <span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"SCF"</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-    <span class="p">):</span>
-        <span class="n">words</span> <span class="o">+=</span> <span class="s2">" VERYTIGHTSCF"</span>
+    <span class="k">if</span> <span class="n">precision</span> <span class="o">==</span> <span class="s2">"tight"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"SCF"</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="o">.</span><span class="n">split</span><span class="p">()):</span>
+            <span class="n">words</span> <span class="o">+=</span> <span class="s2">" VERYTIGHTSCF"</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="n">tight_exchange_words</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">words</span>
+
+
+<div class="viewcode-block" id="tight_exchange_words">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.tight_exchange_words">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">tight_exchange_words</span><span class="p">(</span><span class="n">words</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``words`` (ORCA '!' keywords) plus NOCOSX, unless they already choose an</span>
+<span class="sd">    exchange scheme.</span>
+
+<span class="sd">    For ``precision="tight"``, i.e. finite differences of gradients or Hessians:</span>
+<span class="sd">    COSX evaluates the exchange on a grid that moves with the atoms, and the</span>
+<span class="sd">    noise it leaves in the gradients (up to 18 meV/Å net force in sound</span>
+<span class="sd">    double-hybrid gradients) is magnified in the force constants. Exact exchange</span>
+<span class="sd">    leaves none. It does not change a method without exact exchange (GGAs,</span>
+<span class="sd">    meta-GGAs), and an exchange scheme already in ``words`` (e.g. RIJCOSX in the</span>
+<span class="sd">    extra keywords) is kept.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.batch</span><span class="w"> </span><span class="kn">import</span> <span class="n">engine_helpers</span>
+
+    <span class="n">schemes</span> <span class="o">=</span> <span class="n">engine_helpers</span><span class="p">()</span><span class="o">.</span><span class="n">_EXCHANGE_SCHEME_KEYWORDS</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">schemes</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="o">.</span><span class="n">split</span><span class="p">()):</span>
+        <span class="k">return</span> <span class="n">words</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">words</span><span class="si">}</span><span class="s2"> NOCOSX"</span></div>
+
 
 
 <div class="viewcode-block" id="mc_method_unalias">
@@ -952,7 +976,8 @@
 <span class="sd">        (unless the method words already set the SCF convergence), for finite</span>
 <span class="sd">        differences of gradients or Hessians: each SCF starts from the previous</span>
 <span class="sd">        geometry's orbitals, and a loosely converged one leaves noise that</span>
-<span class="sd">        depends on that geometry (2026-11-05).</span>
+<span class="sd">        depends on that geometry (2026-11-05). It also adds NoCOSX, for exact</span>
+<span class="sd">        exchange without COSX's grid noise (see :func:`tight_exchange_words`).</span>
 <span class="sd">        """</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_executor_config</span><span class="p">(</span><span class="n">executor</span><span class="p">,</span> <span class="n">seamm_options</span><span class="p">)</span>
         <span class="c1"># A 3c composite is its keyword alone (no basis, no fitting basis; see</span>

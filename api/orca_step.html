@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.8 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.8.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=93f150ad"></script>
+    <script src="../_static/documentation_options.js?v=5120ad9a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8" />
+  <meta name="docsearch:version" content="2026.11.8.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -544,7 +544,8 @@ auxiliary basis linearly dependent.</p>
 included), uses exact exchange (<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>), as on every ORCA path
 (orca_step#44). <code class="docutils literal notranslate"><span class="pre">options[&quot;exact_exchange_elements&quot;]</span></code>, or the same key in the
 model chemistry’s options, changes the element set (“none” for one-center jobs
-only).</p>
+only). <code class="docutils literal notranslate"><span class="pre">options[&quot;precision&quot;]</span> <span class="pre">=</span> <span class="pre">&quot;tight&quot;</span></code>, for finite differences of gradients,
+adds VeryTightSCF and exact exchange (<code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code>) for every structure.</p>
 <p>An SCF that fails with the basis set nearly linearly dependent is run once more
 with SThresh 1e-6 (see <code class="docutils literal notranslate"><span class="pre">orca_base.sthresh_retry_command</span></code>); the task keeps its
 fingerprint, and <code class="docutils literal notranslate"><span class="pre">orca.sthresh-retry</span></code> in its directory records the retry.
@@ -1777,7 +1778,8 @@ engine’s <code class="docutils literal notranslate"><span class="pre">--dlpno<
 (unless the method words already set the SCF convergence), for finite
 differences of gradients or Hessians: each SCF starts from the previous
 geometry’s orbitals, and a loosely converged one leaves noise that
-depends on that geometry (2026-11-05).</p>
+depends on that geometry (2026-11-05). It also adds NoCOSX, for exact
+exchange without COSX’s grid noise (see <a class="reference internal" href="#orca_step.orca_step.tight_exchange_words" title="orca_step.orca_step.tight_exchange_words"><code class="xref py py-func docutils literal notranslate"><span class="pre">tight_exchange_words()</span></code></a>).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1894,6 +1896,20 @@ correction – “&lt;functional&gt;-D4”, “&lt;functional&gt;-D3ZERO” or �
 a functional in <code class="xref py py-data docutils literal notranslate"><span class="pre">D4_FUNCTIONALS</span></code> or <code class="xref py py-data docutils literal notranslate"><span class="pre">D3_FUNCTIONALS</span></code> – otherwise
 <code class="docutils literal notranslate"><span class="pre">(method,</span> <span class="pre">&quot;&quot;)</span></code>. Case-insensitive; the functional comes back as ORCA spells it.
 ORCA’s own functionals win: WB97X-D4 is ORCA’s keyword, not WB97X plus D4.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.orca_step.tight_exchange_words">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">tight_exchange_words</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">words</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#tight_exchange_words"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.tight_exchange_words" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">words</span></code> (ORCA ‘!’ keywords) plus NOCOSX, unless they already choose an
+exchange scheme.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">precision=&quot;tight&quot;</span></code>, i.e. finite differences of gradients or Hessians:
+COSX evaluates the exchange on a grid that moves with the atoms, and the
+noise it leaves in the gradients (up to 18 meV/Å net force in sound
+double-hybrid gradients) is magnified in the force constants. Exact exchange
+leaves none. It does not change a method without exact exchange (GGAs,
+meta-GGAs), and an exchange scheme already in <code class="docutils literal notranslate"><span class="pre">words</span></code> (e.g. RIJCOSX in the
+extra keywords) is kept.</p>
 </dd></dl>
 
 </section>
@@ -2333,6 +2349,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.orca_method_blocks"><code class="docutils literal notranslate"><span class="pre">orca_method_blocks()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.orca_method_keyword"><code class="docutils literal notranslate"><span class="pre">orca_method_keyword()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.split_dispersion"><code class="docutils literal notranslate"><span class="pre">split_dispersion()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.tight_exchange_words"><code class="docutils literal notranslate"><span class="pre">tight_exchange_words()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.resolver">orca_step.resolver module</a><ul class="pst-show_toc_level nav section-nav flex-column">
