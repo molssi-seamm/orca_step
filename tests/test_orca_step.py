@@ -1210,13 +1210,16 @@ def test_orca_mdi_parse_hessian():
 
 
 def test_method_has_analytic_hessian():
-    """Analytic Hessian: yes for HF/MP2/ordinary DFT; no for double hybrids and
-    (DLPNO-)CCSD(T) (which have an analytic gradient but no analytic Hessian)."""
+    """Analytic Hessian: yes for HF and ordinary DFT; no for double hybrids, MP2 and
+    RI-MP2 (analytic gradient, no analytic Hessian: ORCA 6.1.1 refuses AnFreq) and
+    (DLPNO-)CCSD(T)."""
     from orca_step.orca_step import method_has_analytic_hessian as has
 
     assert has("HF") is True
-    assert has("MP2") is True
+    assert has("MP2") is False
+    assert has("RI-MP2") is False
     assert has("B3LYP") is True
+    assert has("R2SCAN-3C") is True
     assert has("REVDSD-PBEP86-D4/2021") is False  # double hybrid
     assert has("DLPNO-CCSD(T)") is False
     assert has("CCSD(T)-F12D/RI") is False
@@ -1237,6 +1240,8 @@ def test_mdi_engine_command_advertises_hessian(tmp_path):
 
     hf = argv("HF")
     assert hf[hf.index("--hessian") + 1] == "yes"
+    mp2 = argv("RI-MP2")
+    assert mp2[mp2.index("--hessian") + 1] == "no"
     rev = argv("REVDSD-PBEP86-D4/2021")
     assert rev[rev.index("--hessian") + 1] == "no"
 

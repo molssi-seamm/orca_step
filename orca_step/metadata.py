@@ -20,7 +20,12 @@ metadata = {}
 # "gradients" key records whether ORCA has an ANALYTIC nuclear gradient for the
 # method ("analytic") or whether a numerical gradient is required ("numeric").
 # For "DFT" the gradient availability depends on the functional, so it is looked
-# up per functional instead.
+# up per functional instead. The "hessians" key does the same for the analytic
+# second derivative (AnFreq); without it, a method has an analytic Hessian iff it
+# has an analytic gradient. ORCA 6.1.1 has analytic Hessians only for SCF (HF and
+# DFT): AnFreq with MP2 or RI-MP2 stops at the input check with "MP2 analytic
+# Hessian calculations are not implemented - please use NumFreq" (checked
+# 2026-11-08, TinkerCliffs job 8546067; the MP2 Hessian was dropped after 5.0).
 metadata["methods"] = {
     "HF": {
         "type": "QC",
@@ -33,12 +38,16 @@ metadata["methods"] = {
         "class": "MP2",
         "description": "second-order Moller-Plesset (MP2)",
         "gradients": "analytic",
+        # No analytic MP2 Hessian in ORCA 6 -> NumFreq
+        "hessians": "numeric",
     },
     "RI-MP2": {
         "type": "QC",
         "class": "MP2",
         "description": "RI-MP2 (resolution of identity)",
         "gradients": "analytic",
+        # No analytic MP2 Hessian in ORCA 6 -> NumFreq
+        "hessians": "numeric",
     },
     "MP2-F12": {
         "type": "QC",

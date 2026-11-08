@@ -111,10 +111,10 @@ def method_has_analytic_hessian(method):
     """Whether ORCA has an *analytic* Hessian for `method` (a functional or a QC
     method keyword).
 
-    Double hybrids have an analytic gradient but NO analytic Hessian (they need
-    NumFreq); (DLPNO-)CCSD(T) and the non-self-consistent double hybrids have
-    neither. Everything else with an analytic gradient (HF, MP2, the ordinary
-    DFT functionals) has an analytic Hessian. Used to decide whether the MDI
+    Double hybrids, MP2 and RI-MP2 have an analytic gradient but NO analytic
+    Hessian (they need NumFreq); (DLPNO-)CCSD(T) and the non-self-consistent
+    double hybrids have neither. HF and the ordinary DFT functionals have an
+    analytic Hessian. Used to decide whether the MDI
     engine should advertise ``<HESSIAN``.
     """
     functionals = orca_step.metadata["functionals"]
@@ -132,9 +132,11 @@ def method_has_analytic_hessian(method):
         if "double-hybrid" in category or rec.get("gradients") == "numeric":
             return False
         return True
-    # A non-DFT QC method: analytic Hessian iff it has an analytic gradient.
-    grad = orca_step.metadata["methods"].get(method, {}).get("gradients", "analytic")
-    return grad == "analytic"
+    # A non-DFT QC method: as its "hessians" entry says (MP2 and RI-MP2 have an
+    # analytic gradient but no analytic Hessian in ORCA 6), else iff it has an
+    # analytic gradient.
+    rec = orca_step.metadata["methods"].get(method, {})
+    return rec.get("hessians", rec.get("gradients", "analytic")) == "analytic"
 
 
 def dlpno_parent(method):
