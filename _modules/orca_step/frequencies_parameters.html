@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.frequencies_parameters &#8212; SEAMM ORCA Plug-in 2026.11.5 documentation</title>
+    <title>orca_step.frequencies_parameters &#8212; SEAMM ORCA Plug-in 2026.11.8 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=e86bfd1c"></script>
+    <script src="../../_static/documentation_options.js?v=93f150ad"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.5" />
+  <meta name="docsearch:version" content="2026.11.8" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -525,12 +525,12 @@
             <span class="s2">"help_text"</span><span class="p">:</span> <span class="p">(</span>
                 <span class="s2">"How to compute the Hessian. 'default' uses ORCA's analytic "</span>
                 <span class="s2">"second derivative (AnFreq) when one is available for the "</span>
-                <span class="s2">"method (HF, most DFT functionals, MP2), and falls back to "</span>
+                <span class="s2">"method (HF and most DFT functionals), and falls back to "</span>
                 <span class="s2">"the numerical one (NumFreq) otherwise -- the right choice "</span>
                 <span class="s2">"for almost every case. 'analytic' and 'numerical' force one "</span>
                 <span class="s2">"or the other regardless of whether the method has an "</span>
                 <span class="s2">"analytic Hessian: 'analytic' fails for a method without one "</span>
-                <span class="s2">"(e.g. a double hybrid or (DLPNO-)CCSD(T)); 'numerical' "</span>
+                <span class="s2">"(e.g. a double hybrid, MP2 or (DLPNO-)CCSD(T)); 'numerical' "</span>
                 <span class="s2">"(finite-differencing the gradient) works for any method "</span>
                 <span class="s2">"that has a gradient, but is considerably more expensive."</span>
             <span class="p">),</span>

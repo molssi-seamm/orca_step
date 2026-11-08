@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.5 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.8 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=e86bfd1c"></script>
+    <script src="_static/documentation_options.js?v=93f150ad"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.5" />
+  <meta name="docsearch:version" content="2026.11.8" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,16 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.8 – Bugfix: MP2 frequencies no longer ask ORCA for an analytic Hessian</dt><dd><ul class="simple">
+<li><p>ORCA 6 has no analytic Hessian for MP2 or RI-MP2 (AnFreq stops at once with
+“MP2 analytic Hessian calculations are not implemented”), but the ORCA step
+treated them like HF. With the default ‘second derivatives’, the Frequencies
+step now uses ORCA’s numerical Hessian (NumFreq) for MP2 and RI-MP2, and the
+MDI engine no longer offers an analytic Hessian for them, so drivers such as
+the Normal Mode Sampling and Vibrational Analysis steps take finite
+differences of the gradients instead of failing.</p></li>
+</ul>
+</dd>
 <dt>2026.11.5 – Tight convergence on request for finite differences</dt><dd><ul class="simple">
 <li><p>Steps that take finite differences of ORCA’s gradients or Hessians, such as the
 new Vibrational Analysis step, can now ask for tight convergence: the MDI engine

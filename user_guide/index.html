@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.5 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.8 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=e86bfd1c"></script>
+    <script src="../_static/documentation_options.js?v=93f150ad"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.5" />
+  <meta name="docsearch:version" content="2026.11.8" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -939,7 +939,8 @@ thermal enthalpy, entropy, and Gibbs free energy). The level-of-theory controls
 are the same as the Energy step, plus two extra controls:</p>
 <ul class="simple">
 <li><p><strong>Second derivatives</strong> — <code class="docutils literal notranslate"><span class="pre">analytic</span></code> (ORCA’s <code class="docutils literal notranslate"><span class="pre">AnFreq</span></code>; much faster, needs
-an analytic second derivative for the method — HF, most DFT functionals, MP2)
+an analytic second derivative for the method — HF and most DFT functionals;
+ORCA 6 has none for MP2 or RI-MP2, double hybrids or <code class="docutils literal notranslate"><span class="pre">(DLPNO-)CCSD(T)</span></code>)
 or <code class="docutils literal notranslate"><span class="pre">numerical</span></code> (<code class="docutils literal notranslate"><span class="pre">NumFreq</span></code>; finite-differences the gradient, works for any
 method with a gradient but is considerably more expensive).</p></li>
 <li><p><strong>Temperature</strong> — the temperature for the thermochemistry (the pressure is
@@ -987,8 +988,8 @@ residual, not zero.</p>
 answers a custom <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> command (<code class="docutils literal notranslate"><span class="pre">AnFreq</span></code>) so a driver — e.g. the
 Normal Mode Sampling step — can pull the analytic Hessian over a warm MDI
 connection. The engine advertises <code class="docutils literal notranslate"><span class="pre">&lt;HESSIAN</span></code> <strong>only when ORCA has an
-analytic Hessian for the method</strong> (HF, MP2, ordinary DFT) and not for double
-hybrids or <code class="docutils literal notranslate"><span class="pre">(DLPNO-)CCSD(T)</span></code>, so the driver’s capability check is truthful:
+analytic Hessian for the method</strong> (HF, ordinary DFT) and not for MP2, RI-MP2,
+double hybrids or <code class="docutils literal notranslate"><span class="pre">(DLPNO-)CCSD(T)</span></code>, so the driver’s capability check is truthful:
 it uses the analytic Hessian when offered and finite-differences the forces
 otherwise.</p>
 </div>
