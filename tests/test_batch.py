@@ -459,9 +459,10 @@ def test_double_hybrid_gradients_run_with_verytightscf():
     }
     line = get_task(water, mc, key="w").files["orca.inp"].splitlines()[0]
     assert "VERYTIGHTSCF" in line.split() and "TIGHTSCF" not in line.split()
-    # An energy alone keeps TightSCF; so does a hybrid's gradient
+    # An energy too (science, 2026-11-08); a hybrid's gradient keeps TightSCF
     line = get_task(water, mc, key="e", properties=("energy",)).files["orca.inp"]
-    assert "TIGHTSCF" in line.splitlines()[0].split()
+    words = line.splitlines()[0].split()
+    assert "VERYTIGHTSCF" in words and "TIGHTSCF" not in words
     line = get_task(water, _mc(), key="b").files["orca.inp"].splitlines()[0]
     assert "TIGHTSCF" in line.split() and "VERYTIGHTSCF" not in line.split()
 
@@ -489,13 +490,15 @@ def test_double_hybrid_gradients_run_with_verytightscf():
         "REVDSD-PBEP86-D4/2021 def2-SVP TIGHTSCF EnGrad",
         "REVDSD-PBEP86-D4/2021 def2-SVP Opt",
         "B2PLYP def2-SVP NumFreq",
+        "REVDSD-PBEP86-D4/2021 def2-SVP TIGHTSCF",  # an energy
+        "RI-MP2 def2-SVP def2-SVP/C TIGHTSCF",  # MP2 itself
     ):
         new, note = double_hybrid_scf(line)
         assert "VERYTIGHTSCF" in new.split() and "TIGHTSCF" not in new.split()
-        assert "double-hybrid gradient runs with VERYTIGHTSCF" in note
+        assert "(double hybrid or MP2) runs with VERYTIGHTSCF" in note
     for line in (
-        "REVDSD-PBEP86-D4/2021 def2-SVP TIGHTSCF",  # an energy
         "B3LYP def2-SVP TIGHTSCF EnGrad",  # not a double hybrid
+        "CCSD(T) def2-SVP TIGHTSCF",  # coupled cluster: unchanged
         "REVDSD-PBEP86-D4/2021 def2-SVP EXTREMESCF EnGrad",  # already tighter
     ):
         assert double_hybrid_scf(line) == (line, None)

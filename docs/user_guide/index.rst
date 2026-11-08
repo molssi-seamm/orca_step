@@ -284,14 +284,20 @@ RIJCOSX's grid leaves up to 18 meV/Å in sound gradients, and there the limit is
 reach a label. The Energy step keeps the forces but prints a warning not to use
 them.
 
-Since VeryTightSCF costs only 2--17 % more, every double-hybrid gradient --
-forces, an optimization, numerical frequencies, on the model-chemistry and MDI
-paths too -- runs with at least ``VERYTIGHTSCF``, whatever the SCF convergence
-setting says; a tighter preset (``EXTREMESCF``) is kept, and the output notes
-the change. This applies with RIJCOSX too, so that all the fragments of a
-many-body expansion share one SCF setting: TightSCF energies stop slightly
-short of convergence, and that cancels in the increments only if every fragment
-is converged the same way. Energies alone keep the setting.
+The energy needs it too. The MP2 part of a double hybrid, or MP2 itself, is not
+variational in the orbitals, so the SCF's convergence error enters the
+correlation energy at first order: with ``TIGHTSCF``, revDSD energies of single
+molecules are off by about 0.05--0.1 kJ/mol, an error that does not cancel
+between monomers and clusters or between the species of a reaction (0.1--0.3
+kJ/mol over a CBH reaction with ten fragments).
+
+Since VeryTightSCF costs only 2--17 % more, every calculation with an MP2 part
+-- a double hybrid or MP2, energies as well as forces, optimizations and
+numerical frequencies, on the model-chemistry and MDI paths too -- runs with at
+least ``VERYTIGHTSCF``, whatever the SCF convergence setting says; a tighter
+preset (``EXTREMESCF``) is kept, and the output notes the change. This applies
+with RIJCOSX too, so that all the species of a reaction or many-body expansion
+share one SCF setting.
 
 Steps that take finite differences of ORCA's gradients or Hessians, such as
 **Vibrational Analysis**, ask for tight convergence: the MDI engine and the

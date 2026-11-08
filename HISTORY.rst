@@ -1,6 +1,18 @@
 =======
 History
 =======
+2026.11.8.3 -- VeryTightSCF for every calculation with an MP2 part
+    * Double hybrids and MP2 now run with at least VeryTightSCF for energies too, not
+      only for gradients, optimizations and frequencies, on every path (the ORCA step,
+      the Model Chemistry's tasks and the MDI engine). The MP2 part is not variational
+      in the orbitals, so the SCF's convergence error enters its energy at first
+      order: with TightSCF, revDSD-PBEP86 energies of single molecules were off by
+      about 0.05-0.1 kJ/mol, an error that does not cancel between the species of a
+      reaction or between monomers and clusters. VeryTightSCF costs 2-17 % more.
+    * Energies of double hybrids or MP2 computed earlier with TightSCF differ
+      slightly from new ones: do not mix the two within one reaction or many-body
+      expansion.
+
 2026.11.8.2 -- Calculation records from the batch path
     * An ORCA calculation run as a task (the Model Chemistry's batch path, used by
       the MBE, Energy and Thermochemistry steps) now returns the record of its
