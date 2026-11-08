@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.11.8.1 -- Exact exchange for finite differences
+    * Steps that take finite differences of ORCA's gradients or Hessians and ask for
+      tight convergence, such as the Vibrational Analysis step, now also get exact
+      exchange (NoCOSX), in the MDI engine and in separate ORCA calculations. COSX
+      evaluates the exchange on a grid that moves with the atoms, and its noise in the
+      gradients is magnified in the force constants. Functionals without exact
+      exchange are unaffected; hybrids and double hybrids are slower. 'RIJCOSX' in the
+      extra keywords keeps COSX.
+
 2026.11.8 -- Bugfix: MP2 frequencies no longer ask ORCA for an analytic Hessian
     * ORCA 6 has no analytic Hessian for MP2 or RI-MP2 (AnFreq stops at once with
       "MP2 analytic Hessian calculations are not implemented"), but the ORCA step
