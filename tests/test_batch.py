@@ -567,3 +567,51 @@ def test_tight_precision_task():
     line = get_task(water, _mc(), key="d").files["orca.inp"].splitlines()[0]
     assert "TIGHTSCF" in line.split() and "VERYTIGHTSCF" not in line.split()
     assert "NOCOSX" not in line.upper().split()
+
+
+def test_analyze_task_returns_the_calculation_record(tmp_path):
+    """Given its task, a result carries the settings fingerprint (as the ORCA
+    step's own runs record it, independent of the cores and the geometry) and
+    the fingerprint of the geometry it ran on, so that a consumer can store the
+    energy with its level of theory and pair it with the right geometry."""
+    from seamm_util.fingerprint import geometry_fingerprint
+
+    from orca_step.batch import analyze_task, get_task
+    from seamm_exec import TaskResult
+
+    xyz = [[0, 0, 0.117], [0, 0.757, -0.467], [0, -0.757, -0.467]]
+    water = Geometry([8, 1, 1], xyz)
+    out = "Program Version 6.1.1\nFINAL SINGLE POINT ENERGY       -76.300000000000\n"
+    (tmp_path / "orca.out").write_text(out)
+    result = TaskResult(
+        key="w", state="finished", directory=tmp_path, files={"orca.out": "orca.out"}
+    )
+    records = []
+    for ntasks in (1, 4):
+        task = get_task(
+            water,
+            _mc(),
+            key="w",
+            properties=("energy",),
+            resources=seamm_exec.Resources(ntasks=ntasks, mem_per_cpu=2000),
+        )
+        data = analyze_task(result, _mc(), water, properties=("energy",), task=task)
+        records.append(data["calculation"])
+    record = records[0]
+    assert record["program"] == "ORCA" and record["version"] == "6.1.1"
+    assert record["fingerprint"].startswith("sha256:")
+    assert record["geometry fingerprint"] == geometry_fingerprint([8, 1, 1], xyz)
+    # The cores do not change the settings
+    assert records[1]["fingerprint"] == record["fingerprint"]
+    # Another geometry: the same settings, another geometry fingerprint
+    moved = Geometry([8, 1, 1], [[0, 0, 0.12], xyz[1], xyz[2]])
+    task = get_task(moved, _mc(), key="m", properties=("energy",))
+    other = analyze_task(result, _mc(), moved, properties=("energy",), task=task)
+    assert other["calculation"]["fingerprint"] == record["fingerprint"]
+    assert (
+        other["calculation"]["geometry fingerprint"] != record["geometry fingerprint"]
+    )
+    # Without the task there is no record
+    assert "calculation" not in analyze_task(
+        result, _mc(), water, properties=("energy",)
+    )
