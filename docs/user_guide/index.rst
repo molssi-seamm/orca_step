@@ -299,7 +299,16 @@ separate ORCA calculations then use ``VERYTIGHTSCF`` too. The engine starts
 each SCF from the previous structure's orbitals, and a loosely converged SCF
 leaves small errors that depend on which structure came before, which finite
 differences magnify (for water's anharmonic force constants, 6.4 cm\ :sup:`-1`
-of noise with ``TIGHTSCF`` tasks, 0.19 with ``VERYTIGHTSCF``).
+of noise with ``TIGHTSCF`` tasks, 0.19 with ``VERYTIGHTSCF``). They also use
+exact exchange (``NOCOSX``) for every structure: COSX computes the exchange on
+a grid that moves with the atoms, and its noise in the gradients (up to
+18 meV/Å of net force in sound double-hybrid gradients) is magnified in the
+force constants too. This costs nothing for functionals without exact exchange
+(GGAs and meta-GGAs) and makes hybrids and double hybrids slower, about three
+times for a fragment the size of ethylene carbonate. An exchange scheme in the
+extra keywords is kept, so adding ``RIJCOSX`` there uses COSX anyway. Exact
+exchange with a double-hybrid or RI-MP2 gradient needs enough memory per process
+for ORCA's gradient to be right, as described above; the step checks it.
 
 Other elements keep COSX, which is about three times cheaper for a fragment the
 size of ethylene carbonate. COSX's force errors are small for Li\ :sup:`+`,

@@ -167,17 +167,38 @@ def orca_method_blocks(method):
 def _engine_method_words(method, precision=None):
     """The MDI engine's ``--method``: the ORCA keyword, plus VERYTIGHTSCF for a
     double hybrid, since the engine always computes the gradient (see
-    ``orca_base.double_hybrid_scf``), or for ``precision="tight"``."""
+    ``orca_base.double_hybrid_scf``), or for ``precision="tight"``, which also
+    asks for exact exchange (see :func:`tight_exchange_words`)."""
     from .orca_base import double_hybrid_scf
 
     keyword = orca_method_keyword(method)
     line, note = double_hybrid_scf(f"{keyword} EnGrad")
     words = keyword if note is None else f"{keyword} {line.split()[-1]}"
-    if precision == "tight" and not any(
-        w.upper().endswith("SCF") for w in words.split()
-    ):
-        words += " VERYTIGHTSCF"
+    if precision == "tight":
+        if not any(w.upper().endswith("SCF") for w in words.split()):
+            words += " VERYTIGHTSCF"
+        words = tight_exchange_words(words)
     return words
+
+
+def tight_exchange_words(words):
+    """``words`` (ORCA '!' keywords) plus NOCOSX, unless they already choose an
+    exchange scheme.
+
+    For ``precision="tight"``, i.e. finite differences of gradients or Hessians:
+    COSX evaluates the exchange on a grid that moves with the atoms, and the
+    noise it leaves in the gradients (up to 18 meV/Å net force in sound
+    double-hybrid gradients) is magnified in the force constants. Exact exchange
+    leaves none. It does not change a method without exact exchange (GGAs,
+    meta-GGAs), and an exchange scheme already in ``words`` (e.g. RIJCOSX in the
+    extra keywords) is kept.
+    """
+    from .batch import engine_helpers
+
+    schemes = engine_helpers()._EXCHANGE_SCHEME_KEYWORDS
+    if any(w.upper() in schemes for w in words.split()):
+        return words
+    return f"{words} NOCOSX"
 
 
 def mc_method_unalias(method):
@@ -413,7 +434,8 @@ class ORCAStep(object):
         (unless the method words already set the SCF convergence), for finite
         differences of gradients or Hessians: each SCF starts from the previous
         geometry's orbitals, and a loosely converged one leaves noise that
-        depends on that geometry (2026-11-05).
+        depends on that geometry (2026-11-05). It also adds NoCOSX, for exact
+        exchange without COSX's grid noise (see :func:`tight_exchange_words`).
         """
         config = cls.get_executor_config(executor, seamm_options)
         # A 3c composite is its keyword alone (no basis, no fitting basis; see

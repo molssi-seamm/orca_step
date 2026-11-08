@@ -19,7 +19,8 @@ A job with one center, or with any atom of Na, Mg, Zn, B or P (ghosts
 included), uses exact exchange (``NoCOSX``), as on every ORCA path
 (orca_step#44). ``options["exact_exchange_elements"]``, or the same key in the
 model chemistry's options, changes the element set ("none" for one-center jobs
-only).
+only). ``options["precision"] = "tight"``, for finite differences of gradients,
+adds VeryTightSCF and exact exchange (``NoCOSX``) for every structure.
 
 An SCF that fails with the basis set nearly linearly dependent is run once more
 with SThresh 1e-6 (see ``orca_base.sthresh_retry_command``); the task keeps its
@@ -220,11 +221,14 @@ def get_task(
     first, rest = text.split("\n", 1)
     line, _ = double_hybrid_scf(first[1:].strip())
     # precision="tight" (finite differences of gradients, e.g. VPT2): VeryTightSCF
+    # and exact exchange (NoCOSX), unless an exchange scheme is already chosen
     if option("precision") == "tight":
+        from .orca_step import tight_exchange_words
+
         words = line.split()
         if "VERYTIGHTSCF" not in (w.upper() for w in words):
             words = [w for w in words if w.upper() != "TIGHTSCF"] + ["VERYTIGHTSCF"]
-        line = " ".join(words)
+        line = tight_exchange_words(" ".join(words))
     text = f"! {line}\n{rest}"
     files["orca.inp"] = text
     # The fingerprint is the calculation asked for, without the retry's input,

@@ -534,11 +534,20 @@ def test_tight_precision_engine_words():
     engine for VeryTightSCF, once, whatever the method."""
     from orca_step.orca_step import _engine_method_words
 
-    assert _engine_method_words("B3LYP", "tight") == "B3LYP VERYTIGHTSCF"
+    assert _engine_method_words("B3LYP", "tight") == "B3LYP VERYTIGHTSCF NOCOSX"
     assert _engine_method_words("B3LYP") == "B3LYP"
     assert _engine_method_words("REVDSD-PBEP86-D4/2021", "tight") == (
-        "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF"
+        "REVDSD-PBEP86-D4/2021 VERYTIGHTSCF NOCOSX"
     )
+
+
+def test_tight_exchange_words():
+    """precision="tight" asks for exact exchange unless a scheme is chosen."""
+    from orca_step.orca_step import tight_exchange_words
+
+    assert tight_exchange_words("B3LYP VERYTIGHTSCF") == "B3LYP VERYTIGHTSCF NOCOSX"
+    for scheme in ("RIJCOSX", "NoCOSX", "RIJK", "NORI"):
+        assert tight_exchange_words(f"B3LYP {scheme}") == f"B3LYP {scheme}"
 
 
 def test_tight_precision_task():
@@ -554,5 +563,7 @@ def test_tight_precision_task():
         .splitlines()[0]
     )
     assert "VERYTIGHTSCF" in line.split() and "TIGHTSCF" not in line.split()
+    assert [w.upper() for w in line.split()].count("NOCOSX") == 1
     line = get_task(water, _mc(), key="d").files["orca.inp"].splitlines()[0]
     assert "TIGHTSCF" in line.split() and "VERYTIGHTSCF" not in line.split()
+    assert "NOCOSX" not in line.upper().split()
