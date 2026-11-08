@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.8.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.8.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=5120ad9a"></script>
+    <script src="../_static/documentation_options.js?v=66d827f0"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8.1" />
+  <meta name="docsearch:version" content="2026.11.8.2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1391,7 +1391,12 @@ Builder and Normal Mode Sampling’s finite-difference Hessian. They run several
 a time on this machine, or on the cluster when the job’s target sends its
 calculations to a queue, and a rerun of the job reuses those that had finished.
 ORCA starts afresh for each structure in any case, so running them side by side
-is usually faster than one after another in an engine. Periodic structures are not run this way.</p></li>
+is usually faster than one after another in an engine. Periodic structures are not run this way.
+Each calculation returns the record of its settings with its results, as the ORCA
+step’s own calculations store it: the settings fingerprint, which identifies the
+level of theory whatever the cores, memory and geometry, and the fingerprint of the
+geometry it ran on, so that the calling step can store the energy with its level
+and check that it belongs to that geometry.</p></li>
 <li><p><strong>As a persistent</strong> <a class="reference external" href="https://molssi-mdi.github.io/MDI_Library/">MDI</a> <strong>engine</strong>
 for steps that drive ORCA one geometry after another (LAMMPS QM-MD, Normal Mode
 Sampling’s analytic Hessian on this machine).</p></li>

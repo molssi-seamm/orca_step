@@ -942,6 +942,11 @@ How ORCA then runs is chosen for you, and gives the same numbers either way:
   calculations to a queue, and a rerun of the job reuses those that had finished.
   ORCA starts afresh for each structure in any case, so running them side by side
   is usually faster than one after another in an engine. Periodic structures are not run this way.
+  Each calculation returns the record of its settings with its results, as the ORCA
+  step's own calculations store it: the settings fingerprint, which identifies the
+  level of theory whatever the cores, memory and geometry, and the fingerprint of the
+  geometry it ran on, so that the calling step can store the energy with its level
+  and check that it belongs to that geometry.
 * **As a persistent** `MDI <https://molssi-mdi.github.io/MDI_Library/>`_ **engine**
   for steps that drive ORCA one geometry after another (LAMMPS QM-MD, Normal Mode
   Sampling's analytic Hessian on this machine).

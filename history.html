@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.8.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.8.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=5120ad9a"></script>
+    <script src="_static/documentation_options.js?v=66d827f0"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8.1" />
+  <meta name="docsearch:version" content="2026.11.8.2" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,16 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.8.2 – Calculation records from the batch path</dt><dd><ul class="simple">
+<li><p>An ORCA calculation run as a task (the Model Chemistry’s batch path, used by
+the MBE, Energy and Thermochemistry steps) now returns the record of its
+settings with its results, as the ORCA step’s own calculations store it: the
+settings fingerprint, which identifies the level of theory independently of the
+cores, memory and geometry, and the fingerprint of the geometry it ran on. A
+step can then store the energy with its level of theory and check that it is
+paired with the right geometry.</p></li>
+</ul>
+</dd>
 <dt>2026.11.8.1 – Exact exchange for finite differences</dt><dd><ul class="simple">
 <li><p>Steps that take finite differences of ORCA’s gradients or Hessians and ask for
 tight convergence, such as the Vibrational Analysis step, now also get exact
