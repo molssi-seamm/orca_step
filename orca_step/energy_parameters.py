@@ -205,9 +205,11 @@ class EnergyParameters(seamm.Parameters):
                 "TIGHTSCF for optimizations). The presets run SLOPPYSCF (loosest) "
                 "-> LOOSESCF -> NORMALSCF -> STRONGSCF -> TIGHTSCF -> VERYTIGHTSCF "
                 "-> EXTREMESCF (tightest). TIGHTSCF (the default here) is a good "
-                "choice for smooth energies/forces. A double hybrid's gradient "
-                "(forces, optimization, numerical frequencies) always runs with at "
-                "least VERYTIGHTSCF: with TIGHTSCF ORCA 6.1.1 computes some of them "
+                "choice for smooth energies/forces. A calculation with an MP2 part "
+                "(a double hybrid or MP2: energies, forces, optimizations, "
+                "numerical frequencies) always runs with at least VERYTIGHTSCF: "
+                "the MP2 energy carries the SCF's convergence error at first order, "
+                "and with TIGHTSCF ORCA 6.1.1 computes some double-hybrid gradients "
                 "wrongly."
             ),
         },

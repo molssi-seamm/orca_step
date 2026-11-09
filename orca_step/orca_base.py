@@ -660,24 +660,29 @@ _SCF_PRESETS = (
 #: The SCF preset every double-hybrid gradient runs with at least
 DOUBLE_HYBRID_GRADIENT_SCF = "VERYTIGHTSCF"
 _DOUBLE_HYBRIDS = ("global double-hybrid", "range-separated double-hybrid")
+#: Method classes whose energy has an MP2 part (see :func:`double_hybrid_scf`)
+_MP2_CLASSES = _DOUBLE_HYBRIDS + ("MP2",)
 _GRADIENT_KINDS = ("gradient", "opt", "freq", "numgrad", "numfreq")
 
 
 def double_hybrid_scf(keyword_line):
-    """``(keyword_line, note)``: a double-hybrid gradient's '!' line with its SCF
-    convergence raised to :data:`DOUBLE_HYBRID_GRADIENT_SCF`, and a note saying
-    so (None if nothing changed).
+    """``(keyword_line, note)``: the '!' line of a calculation with an MP2 part (a
+    double hybrid, or MP2 itself) with its SCF convergence raised to
+    :data:`DOUBLE_HYBRID_GRADIENT_SCF`, and a note saying so (None if nothing
+    changed).
 
-    With TightSCF, ORCA 6.1.1 gets about 0.8 % of double-hybrid gradients with
-    exact exchange wrong -- their forces do not sum to zero, by up to 1.55 eV/Å
-    -- and VeryTightSCF fixes them at 2-17 % more time (science, 2026-10-09).
-    Every double-hybrid gradient gets it, not just those with exact exchange, so
-    that the fragments of one many-body expansion share one SCF setting. A
-    tighter preset (EXTREMESCF) is kept. Without a leading '!'.
+    The MP2 part is not variational in the orbitals, so the SCF's convergence
+    error enters the correlation energy at first order: with TightSCF, revDSD
+    energies of isolated molecules are off by about 0.05-0.1 kJ/mol, an error that
+    does not cancel between monomers and clusters (science, 2026-10-05/16), and
+    ORCA 6.1.1 gets about 0.8 % of double-hybrid gradients with exact exchange
+    wrong, their forces not summing to zero by up to 1.55 eV/Å (2026-10-09).
+    VeryTightSCF fixes both at 2-17 % more time. Every such calculation gets it --
+    energies as well as gradients (science, 2026-11-08), with exact exchange or
+    not -- so that all the species of one reaction or many-body expansion share
+    one SCF setting. A tighter preset (EXTREMESCF) is kept. Without a leading '!'.
     """
-    if task_kind(keyword_line) not in _GRADIENT_KINDS:
-        return keyword_line, None
-    if method_class(None, keyword_line) not in _DOUBLE_HYBRIDS:
+    if method_class(None, keyword_line) not in _MP2_CLASSES:
         return keyword_line, None
     words = keyword_line.split()
     presets = [w.upper() for w in words if w.upper() in _SCF_PRESETS]
@@ -689,9 +694,11 @@ def double_hybrid_scf(keyword_line):
         return keyword_line, None
     words = [w for w in words if w.upper() not in _SCF_PRESETS] + [target]
     note = (
-        f"A double-hybrid gradient runs with {target}, not "
-        f"{current or 'ORCA' + chr(39) + 's default'}: with TIGHTSCF ORCA 6.1.1 "
-        "computes some of them wrongly (forces that do not sum to zero)."
+        f"A calculation with an MP2 part (double hybrid or MP2) runs with {target}, "
+        f"not {current or 'ORCA' + chr(39) + 's default'}: the SCF's convergence "
+        "error enters the MP2 correlation energy at first order (about 0.05-0.1 "
+        "kJ/mol per molecule with TIGHTSCF), and some double-hybrid gradients come "
+        "out wrong."
     )
     return " ".join(words), note
 
