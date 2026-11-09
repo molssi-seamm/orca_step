@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.8.2 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.8.3 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=66d827f0"></script>
+    <script src="_static/documentation_options.js?v=c2a0a3e9"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8.2" />
+  <meta name="docsearch:version" content="2026.11.8.3" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,19 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.8.3 – VeryTightSCF for every calculation with an MP2 part</dt><dd><ul class="simple">
+<li><p>Double hybrids and MP2 now run with at least VeryTightSCF for energies too, not
+only for gradients, optimizations and frequencies, on every path (the ORCA step,
+the Model Chemistry’s tasks and the MDI engine). The MP2 part is not variational
+in the orbitals, so the SCF’s convergence error enters its energy at first
+order: with TightSCF, revDSD-PBEP86 energies of single molecules were off by
+about 0.05-0.1 kJ/mol, an error that does not cancel between the species of a
+reaction or between monomers and clusters. VeryTightSCF costs 2-17 % more.</p></li>
+<li><p>Energies of double hybrids or MP2 computed earlier with TightSCF differ
+slightly from new ones: do not mix the two within one reaction or many-body
+expansion.</p></li>
+</ul>
+</dd>
 <dt>2026.11.8.2 – Calculation records from the batch path</dt><dd><ul class="simple">
 <li><p>An ORCA calculation run as a task (the Model Chemistry’s batch path, used by
 the MBE, Energy and Thermochemistry steps) now returns the record of its

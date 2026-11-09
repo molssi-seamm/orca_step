@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.11.8.2 documentation</title>
+    <title>orca_step.orca_base &#8212; SEAMM ORCA Plug-in 2026.11.8.3 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=66d827f0"></script>
+    <script src="../../_static/documentation_options.js?v=c2a0a3e9"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8.2" />
+  <meta name="docsearch:version" content="2026.11.8.3" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1171,26 +1171,31 @@
 <span class="c1">#: The SCF preset every double-hybrid gradient runs with at least</span>
 <span class="n">DOUBLE_HYBRID_GRADIENT_SCF</span> <span class="o">=</span> <span class="s2">"VERYTIGHTSCF"</span>
 <span class="n">_DOUBLE_HYBRIDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"global double-hybrid"</span><span class="p">,</span> <span class="s2">"range-separated double-hybrid"</span><span class="p">)</span>
+<span class="c1">#: Method classes whose energy has an MP2 part (see :func:`double_hybrid_scf`)</span>
+<span class="n">_MP2_CLASSES</span> <span class="o">=</span> <span class="n">_DOUBLE_HYBRIDS</span> <span class="o">+</span> <span class="p">(</span><span class="s2">"MP2"</span><span class="p">,)</span>
 <span class="n">_GRADIENT_KINDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"gradient"</span><span class="p">,</span> <span class="s2">"opt"</span><span class="p">,</span> <span class="s2">"freq"</span><span class="p">,</span> <span class="s2">"numgrad"</span><span class="p">,</span> <span class="s2">"numfreq"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="double_hybrid_scf">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_base.double_hybrid_scf">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">double_hybrid_scf</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""``(keyword_line, note)``: a double-hybrid gradient's '!' line with its SCF</span>
-<span class="sd">    convergence raised to :data:`DOUBLE_HYBRID_GRADIENT_SCF`, and a note saying</span>
-<span class="sd">    so (None if nothing changed).</span>
+<span class="w">    </span><span class="sd">"""``(keyword_line, note)``: the '!' line of a calculation with an MP2 part (a</span>
+<span class="sd">    double hybrid, or MP2 itself) with its SCF convergence raised to</span>
+<span class="sd">    :data:`DOUBLE_HYBRID_GRADIENT_SCF`, and a note saying so (None if nothing</span>
+<span class="sd">    changed).</span>
 
-<span class="sd">    With TightSCF, ORCA 6.1.1 gets about 0.8 % of double-hybrid gradients with</span>
-<span class="sd">    exact exchange wrong -- their forces do not sum to zero, by up to 1.55 eV/Å</span>
-<span class="sd">    -- and VeryTightSCF fixes them at 2-17 % more time (science, 2026-10-09).</span>
-<span class="sd">    Every double-hybrid gradient gets it, not just those with exact exchange, so</span>
-<span class="sd">    that the fragments of one many-body expansion share one SCF setting. A</span>
-<span class="sd">    tighter preset (EXTREMESCF) is kept. Without a leading '!'.</span>
+<span class="sd">    The MP2 part is not variational in the orbitals, so the SCF's convergence</span>
+<span class="sd">    error enters the correlation energy at first order: with TightSCF, revDSD</span>
+<span class="sd">    energies of isolated molecules are off by about 0.05-0.1 kJ/mol, an error that</span>
+<span class="sd">    does not cancel between monomers and clusters (science, 2026-10-05/16), and</span>
+<span class="sd">    ORCA 6.1.1 gets about 0.8 % of double-hybrid gradients with exact exchange</span>
+<span class="sd">    wrong, their forces not summing to zero by up to 1.55 eV/Å (2026-10-09).</span>
+<span class="sd">    VeryTightSCF fixes both at 2-17 % more time. Every such calculation gets it --</span>
+<span class="sd">    energies as well as gradients (science, 2026-11-08), with exact exchange or</span>
+<span class="sd">    not -- so that all the species of one reaction or many-body expansion share</span>
+<span class="sd">    one SCF setting. A tighter preset (EXTREMESCF) is kept. Without a leading '!'.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">task_kind</span><span class="p">(</span><span class="n">keyword_line</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_GRADIENT_KINDS</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">method_class</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_DOUBLE_HYBRIDS</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">method_class</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">keyword_line</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_MP2_CLASSES</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="kc">None</span>
     <span class="n">words</span> <span class="o">=</span> <span class="n">keyword_line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
     <span class="n">presets</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">_SCF_PRESETS</span><span class="p">]</span>
@@ -1202,9 +1207,11 @@
         <span class="k">return</span> <span class="n">keyword_line</span><span class="p">,</span> <span class="kc">None</span>
     <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SCF_PRESETS</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">target</span><span class="p">]</span>
     <span class="n">note</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">"A double-hybrid gradient runs with </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">, not "</span>
-        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">current</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'ORCA'</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">chr</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'s default'</span><span class="si">}</span><span class="s2">: with TIGHTSCF ORCA 6.1.1 "</span>
-        <span class="s2">"computes some of them wrongly (forces that do not sum to zero)."</span>
+        <span class="sa">f</span><span class="s2">"A calculation with an MP2 part (double hybrid or MP2) runs with </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">, "</span>
+        <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">current</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'ORCA'</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">chr</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'s default'</span><span class="si">}</span><span class="s2">: the SCF's convergence "</span>
+        <span class="s2">"error enters the MP2 correlation energy at first order (about 0.05-0.1 "</span>
+        <span class="s2">"kJ/mol per molecule with TIGHTSCF), and some double-hybrid gradients come "</span>
+        <span class="s2">"out wrong."</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">),</span> <span class="n">note</span></div>
 

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.8.2 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.8.3 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=66d827f0"></script>
+    <script src="../_static/documentation_options.js?v=c2a0a3e9"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8.2" />
+  <meta name="docsearch:version" content="2026.11.8.3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -769,14 +769,19 @@ RIJCOSX’s grid leaves up to 18 meV/Å in sound gradients, and there the limit 
 50 meV/Å. A model-chemistry task over the limit fails, so its forces never
 reach a label. The Energy step keeps the forces but prints a warning not to use
 them.</p>
-<p>Since VeryTightSCF costs only 2–17 % more, every double-hybrid gradient –
-forces, an optimization, numerical frequencies, on the model-chemistry and MDI
-paths too – runs with at least <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code>, whatever the SCF convergence
-setting says; a tighter preset (<code class="docutils literal notranslate"><span class="pre">EXTREMESCF</span></code>) is kept, and the output notes
-the change. This applies with RIJCOSX too, so that all the fragments of a
-many-body expansion share one SCF setting: TightSCF energies stop slightly
-short of convergence, and that cancels in the increments only if every fragment
-is converged the same way. Energies alone keep the setting.</p>
+<p>The energy needs it too. The MP2 part of a double hybrid, or MP2 itself, is not
+variational in the orbitals, so the SCF’s convergence error enters the
+correlation energy at first order: with <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code>, revDSD energies of single
+molecules are off by about 0.05–0.1 kJ/mol, an error that does not cancel
+between monomers and clusters or between the species of a reaction (0.1–0.3
+kJ/mol over a CBH reaction with ten fragments).</p>
+<p>Since VeryTightSCF costs only 2–17 % more, every calculation with an MP2 part
+– a double hybrid or MP2, energies as well as forces, optimizations and
+numerical frequencies, on the model-chemistry and MDI paths too – runs with at
+least <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code>, whatever the SCF convergence setting says; a tighter
+preset (<code class="docutils literal notranslate"><span class="pre">EXTREMESCF</span></code>) is kept, and the output notes the change. This applies
+with RIJCOSX too, so that all the species of a reaction or many-body expansion
+share one SCF setting.</p>
 <p>Steps that take finite differences of ORCA’s gradients or Hessians, such as
 <strong>Vibrational Analysis</strong>, ask for tight convergence: the MDI engine and the
 separate ORCA calculations then use <code class="docutils literal notranslate"><span class="pre">VERYTIGHTSCF</span></code> too. The engine starts
