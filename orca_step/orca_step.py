@@ -205,12 +205,47 @@ def mc_method_unalias(method):
     """Inverse of :func:`mc_method_alias`: the real ORCA functional keyword for a
     (possibly aliased) model-chemistry method, or the method unchanged if it is
     not an aliased functional."""
-    if method in orca_step.metadata["functionals"]:
+    known = (orca_step.metadata["functionals"], orca_step.metadata["methods"])
+    if any(method in table for table in known):
         return method
     candidate = method.replace("_", "/")
-    if candidate in orca_step.metadata["functionals"]:
+    if any(candidate in table for table in known):
+        # e.g. REVDSD-PBEP86-D4/2021, or CCSD(T)-F12D/RI
         return candidate
     return method
+
+
+#: The explicitly-correlated (F12) model chemistries offered: method -> {F12 orbital
+#: basis: its RI fitting basis}. The CABS is always <basis>-CABS. Only combinations
+#: validated in production are offered: CCSD(T)-F12D/RI with cc-pVTZ-F12 and
+#: cc-pVQZ/C is thermo's canonical F12 (part A, 2026-10-30; the fragment store's
+#: rows from jobs 5608-5620 have exactly these settings).
+F12_MODEL_CHEMISTRIES = {
+    "CCSD(T)-F12D/RI": {
+        "method": "CCSD(T)-F12D/RI",
+        "words": "",
+        "blocks": (),
+        "bases": {"cc-pVTZ-F12": "cc-pVQZ/C"},
+    },
+    # thermo's DLPNO-F12 (part A validation, jobs 5516, 5536, 5560): TightPNO with
+    # TCutPNO tightened to 1e-8. The PNO settings are in the name, so that the label
+    # says which thresholds were used; ORCA's NormalPNO default is not offered.
+    "DLPNO-CCSD(T)-F12D(TightPNO,TCutPNO=1e-8)": {
+        "method": "DLPNO-CCSD(T)-F12D",
+        "words": "TightPNO",
+        "blocks": ("%mdci TCutPNO 1e-8 end",),
+        "bases": {"cc-pVTZ-F12": "cc-pVQZ/C"},
+    },
+}
+
+
+def f12_variant(method):
+    """The F12 model chemistry for a method name (advertised or un-aliased), or
+    None: its ORCA keyword, extra '!' words, '%' blocks and bases."""
+    variant = F12_MODEL_CHEMISTRIES.get(method)
+    if variant is None:
+        variant = F12_MODEL_CHEMISTRIES.get(str(method).replace("_", "/"))
+    return variant
 
 
 class ORCAStep(object):
@@ -242,10 +277,9 @@ class ORCAStep(object):
 
         options = {}
         for method, info in orca_step.metadata["methods"].items():
-            # F12 methods need a specific F12 orbital basis (+CABS), not the
-            # generic advertised bases, so they are not sensible generic model
-            # chemistries; skip them (this also keeps the '/RI' out of the
-            # model-chemistry grammar, which reserves '/').
+            # F12 methods need an F12 orbital basis with its CABS and fitting
+            # basis, not the generic advertised bases: only the validated
+            # combinations are offered (F12_MODEL_CHEMISTRIES), below.
             if "F12" in method.upper():
                 continue
             mtype = info.get("type", "QC")
@@ -321,6 +355,30 @@ class ORCAStep(object):
                             mdi_capable and method_has_analytic_hessian(real)
                         ),
                     }
+        for name, variant in F12_MODEL_CHEMISTRIES.items():
+            method = variant["method"]
+            info = orca_step.metadata["methods"][method]
+            if mdi_only or info.get("gradients", "analytic") == "analytic":
+                continue  # (no analytic F12 gradient in ORCA: never MDI-capable)
+            adv_method = mc_method_alias(name)
+            for basis, aux in variant["bases"].items():
+                key = f"ORCA:{info.get('type', 'QC')}@{adv_method}/{basis}"
+                options[key] = {
+                    "model_chemistry": key,
+                    "type": info.get("type", "QC"),
+                    "method": adv_method,
+                    "basis": basis,
+                    "description": f"{name} / {basis} + {basis}-CABS, {aux}",
+                    "periodic": False,
+                    "mdi_capable": False,
+                    "mdi_method_arg": None,
+                    "mdi_basis_arg": None,
+                    "prefers_batch": True,
+                    "parallel_tasks": True,
+                    "analytic_hessian": False,
+                    # The fitting basis is part of the method (validated with it)
+                    "aux_basis": aux,
+                }
         return options
 
     @classmethod
