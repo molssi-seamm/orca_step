@@ -347,6 +347,15 @@ class ORCAStep(object):
         return analyze_task(result, model_chemistry, configuration, **kwargs)
 
     @classmethod
+    def expected_fingerprints(cls, configuration, model_chemistry, **kwargs):
+        """The settings fingerprints a calculation of this structure would
+        record, without running it (one, or two when ``NoCOSX`` may be moot).
+        See :func:`orca_step.batch.expected_fingerprints`."""
+        from .batch import expected_fingerprints
+
+        return expected_fingerprints(configuration, model_chemistry, **kwargs)
+
+    @classmethod
     def thermochemistry_reference(cls, model_chemistry):
         """``(code, method, settings)`` under which SEAMM's thermochemistry
         database holds the atomic references for a model chemistry -- the same

@@ -1,6 +1,16 @@
 =======
 History
 =======
+2026.11.11 -- The fingerprints of a calculation, predicted before it runs
+    * ``ORCAStep.expected_fingerprints`` (and ``orca_step.batch.expected_fingerprints``)
+      gives the settings fingerprints a calculation of a structure would record,
+      without running ORCA: the energy of the Model Chemistry's tasks, or the MDI
+      engine's analytic Hessian. ORCA's settings depend on the structure's elements
+      (exact exchange, NoCOSX, for atoms and for Na, Mg, Zn, B and P), so the
+      Thermochemistry step uses this to look each species up in the fragment store
+      with its own fingerprint. Checked against the fingerprints stored by a real
+      job.
+
 2026.11.8.3 -- VeryTightSCF for every calculation with an MP2 part
     * Double hybrids and MP2 now run with at least VeryTightSCF for energies too, not
       only for gradients, optimizations and frequencies, on every path (the ORCA step,

@@ -365,6 +365,135 @@ def calculation_record(task, configuration, options, out):
         return None
 
 
+def expected_fingerprints(
+    configuration,
+    model_chemistry,
+    *,
+    kind="energy",
+    properties=("energy",),
+    options=None,
+    version=None,
+):
+    """The settings fingerprints a calculation of this structure would record,
+    without running it.
+
+    ORCA's settings depend on the structure through its elements: a one-center
+    job, or one with Na, Mg, Zn, B or P, uses exact exchange (``NoCOSX``,
+    orca_step#44). So the species of one model chemistry do not all share a
+    fingerprint, and a consumer that looks up stored results (e.g. the fragment
+    store of the thermochemistry step) must ask for each species' own.
+
+    The input is built by the same code as the run: :func:`get_task` for an
+    energy (the batch path), and the MDI engine's input builder for a Hessian
+    (``orca_hessian_input``, as the engine's ``AnFreq`` run writes it). Whether
+    COSX is moot (a functional without exact exchange, a basis without an
+    auxiliary Coulomb basis) is known only from ORCA's output, so both
+    fingerprints are returned: the stored one is always one of them, and for a
+    structure without ``NoCOSX`` they are the same.
+
+    Parameters
+    ----------
+    configuration : molsystem configuration or seamm_exec.Geometry
+        The structure.
+    model_chemistry : dict
+        The model chemistry, as for :func:`get_task`.
+    kind : str
+        "energy" (the energy or energy + gradient of :func:`get_task`) or
+        "hessian" (the MDI engine's analytic Hessian).
+    properties : iterable of str
+        For "energy": the properties asked for, as for :func:`get_task`.
+    options : dict, optional
+        The task options, as for :func:`get_task` (e.g.
+        ``exact_exchange_elements``, ``precision``).
+    version : str
+        The ORCA version, e.g. "6.1.1", which is part of the fingerprint: take
+        it from a record of the same run (one ORCA per installation).
+
+    Returns
+    -------
+    [str]
+        The fingerprints, without duplicates: as written first, then with COSX
+        moot.
+    """
+    from .fingerprint import orca_calculation_record
+
+    options = dict(options or {})
+    if kind == "energy":
+        task = get_task(
+            configuration,
+            model_chemistry,
+            key="expected-fingerprint",
+            properties=tuple(properties),
+            options=options,
+        )
+        files = {
+            name: text
+            for name, text in task.files.items()
+            if name != _RETRY_INPUT and isinstance(text, str)
+        }
+    elif kind == "hessian":
+        files = _engine_hessian_files(configuration, model_chemistry, options)
+    else:
+        raise ValueError(f"kind must be 'energy' or 'hessian', not '{kind}'")
+    out = []
+    for moot in (False, True):
+        record = orca_calculation_record(files, version, cosx_moot=moot)
+        if record["fingerprint"] not in out:
+            out.append(record["fingerprint"])
+    return out
+
+
+def _engine_hessian_files(configuration, model_chemistry, options):
+    """The input files of the MDI engine's analytic Hessian (``AnFreq``) for a
+    structure, as ``data/orca_mdi.py`` writes them when launched by
+    ``ORCAStep.mdi_engine_command`` for this model chemistry."""
+    from seamm_exec.evaluator import mdi_method_and_basis
+
+    from .orca_base import composite_basis, composite_method
+    from .orca_step import _engine_method_words, mc_method_unalias
+
+    helpers = engine_helpers()
+    data = structure_data(configuration)
+    symbols = list(data["symbols"])
+    numbers = list(data["atomic_numbers"])
+    method, basis = mdi_method_and_basis(model_chemistry)
+    method = mc_method_unalias(method)
+
+    def option(name, default=None):
+        if name in options:
+            return options[name]
+        return (model_chemistry.get("options") or {}).get(name, default)
+
+    words = _engine_method_words(method, option("precision"))
+    # As the engine: a composite has no basis or fitting-basis words
+    # (orca_mdi.engine_basis; launched with --auxiliary-basis none)
+    if composite_method(method) is not None:
+        composite_basis(method, basis)  # refuses a basis that is not its own
+        basis = helpers.engine_basis(words, None)
+    else:
+        basis = helpers.engine_basis(words, basis)
+        words = f"{words} AutoAux"
+    words = helpers.exchange_method(
+        words, symbols, option("cosx", "by-element"), option("exact_exchange_elements")
+    )
+    files = {}
+    with tempfile.TemporaryDirectory() as tmp:
+        basis, block = helpers.basis_keyword_and_block(basis, numbers, tmp)
+        if block:
+            files["basis.bas"] = (Path(tmp) / "basis.bas").read_text()
+    files["orca.inp"] = helpers.orca_hessian_input(
+        words,
+        basis,
+        int(options.get("charge", data["charge"])),
+        int(options.get("multiplicity", data["multiplicity"])),
+        symbols,
+        data["coordinates"],
+        1,
+        blocks=block,
+    )
+    return files
+
+
 def _record_timing(task, result, out, model_chemistry, configuration, options):
     """The timing record of a model-chemistry task; never raises."""
     try:

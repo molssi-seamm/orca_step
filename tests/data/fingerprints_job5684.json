@@ -1,0 +1,85 @@
+{
+ "source": "ChemAI fragments.db, rows harvested from SEAMM job 5684 (2026-11-10): r2SCAN-3c geometries and analytic Hessians over the MDI engine, revDSD-PBEP86-D4(2021)/def2-TZVPP single points through the batch path, ORCA 6.1.1",
+ "species": [
+  {
+   "species": "C",
+   "charge": 0,
+   "multiplicity": 1,
+   "symbols": [
+    "C",
+    "H",
+    "H",
+    "H",
+    "H"
+   ],
+   "coordinates": [
+    [
+     1.087592957156032e-06,
+     9.959336281004603e-07,
+     7.057739047657567e-07
+    ],
+    [
+     -0.6343750392184128,
+     -0.8251967824359943,
+     -0.3284533196236087
+    ],
+    [
+     -0.44168977362309186,
+     0.9466438035707768,
+     -0.3162855080976177
+    ],
+    [
+     0.0842285620700817,
+     -0.0166330364791836,
+     1.088068275314384
+    ],
+    [
+     0.9918351631784633,
+     -0.10481498058922666,
+     -0.44333015336859605
+    ]
+   ],
+   "frequency_fingerprint": "sha256:6b46c8c4ce3a34ac05b348c67b085e940393cd2ec1618bc27edd9a00e1288312",
+   "energy_fingerprint": "sha256:1e16835c756c3ad6a96295d7af6f8887c0b2d5593c29988bd2977c65e4027995",
+   "geometry_version": "6.1.1",
+   "energy_version": "6.1.1"
+  },
+  {
+   "species": "B",
+   "charge": 0,
+   "multiplicity": 1,
+   "symbols": [
+    "B",
+    "H",
+    "H",
+    "H"
+   ],
+   "coordinates": [
+    [
+     1.1131101835913355e-07,
+     -4.767583994631274e-06,
+     0.00025669891049812435
+    ],
+    [
+     -0.6601964251068673,
+     -0.9922531820692344,
+     -0.006645758886094207
+    ],
+    [
+     -0.5292338002185424,
+     1.0678442054686883,
+     0.00969227549822301
+    ],
+    [
+     1.1894301140113246,
+     -0.0755862558126545,
+     -0.0033032155216247833
+    ]
+   ],
+   "frequency_fingerprint": "sha256:6b46c8c4ce3a34ac05b348c67b085e940393cd2ec1618bc27edd9a00e1288312",
+   "energy_fingerprint": "sha256:7ca1cbbca2b949b3c4c3969ac217ea8678a6f8adfbb2a5c97d609c89448077ad",
+   "geometry_version": "6.1.1",
+   "energy_version": "6.1.1"
+  }
+ ]
+}
