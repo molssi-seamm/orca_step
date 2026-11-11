@@ -1058,6 +1058,14 @@ commands ``<FINGERPRINT_LENGTH`` and ``<FINGERPRINT`` (the records of its last e
 and Hessian runs as JSON), and its option ``--cosx by-element|on|off`` lets a driver
 use one exchange scheme for every structure, e.g. all the species of a reaction.
 
+A program that looks results up by fingerprint -- the Thermochemistry step's
+fragment store, for one -- can ask what fingerprints a calculation of a structure
+would record without running it: ``ORCAStep.expected_fingerprints`` (through
+``seamm_exec.expected_fingerprints``) builds the input as the run would and hashes
+it. It returns the fingerprint as written and, when NoCOSX was added, the one with
+COSX moot, since only ORCA's output tells which applies; the stored fingerprint is
+always one of them.
+
 Settings that depend on each other
 ==================================
 

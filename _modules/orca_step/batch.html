@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.8.3 documentation</title>
+    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.11 documentation</title>
   
   
   
@@ -30,7 +30,7 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
@@ -39,12 +39,12 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c2a0a3e9"></script>
+    <script src="../../_static/documentation_options.js?v=83e1bca7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/orca_step/batch';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8.3" />
+  <meta name="docsearch:version" content="2026.11.11" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -862,6 +862,135 @@
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - never fail the result</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No calculation record for '</span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="n">task</span><span class="p">,</span><span class="w"> </span><span class="s1">'key'</span><span class="p">,</span><span class="w"> </span><span class="s1">'?'</span><span class="p">)</span><span class="si">}</span><span class="s2">': </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">expected_fingerprints</span><span class="p">(</span>
+    <span class="n">configuration</span><span class="p">,</span>
+    <span class="n">model_chemistry</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">kind</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">(</span><span class="s2">"energy"</span><span class="p">,),</span>
+    <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The settings fingerprints a calculation of this structure would record,</span>
+<span class="sd">    without running it.</span>
+
+<span class="sd">    ORCA's settings depend on the structure through its elements: a one-center</span>
+<span class="sd">    job, or one with Na, Mg, Zn, B or P, uses exact exchange (``NoCOSX``,</span>
+<span class="sd">    orca_step#44). So the species of one model chemistry do not all share a</span>
+<span class="sd">    fingerprint, and a consumer that looks up stored results (e.g. the fragment</span>
+<span class="sd">    store of the thermochemistry step) must ask for each species' own.</span>
+
+<span class="sd">    The input is built by the same code as the run: :func:`get_task` for an</span>
+<span class="sd">    energy (the batch path), and the MDI engine's input builder for a Hessian</span>
+<span class="sd">    (``orca_hessian_input``, as the engine's ``AnFreq`` run writes it). Whether</span>
+<span class="sd">    COSX is moot (a functional without exact exchange, a basis without an</span>
+<span class="sd">    auxiliary Coulomb basis) is known only from ORCA's output, so both</span>
+<span class="sd">    fingerprints are returned: the stored one is always one of them, and for a</span>
+<span class="sd">    structure without ``NoCOSX`` they are the same.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    configuration : molsystem configuration or seamm_exec.Geometry</span>
+<span class="sd">        The structure.</span>
+<span class="sd">    model_chemistry : dict</span>
+<span class="sd">        The model chemistry, as for :func:`get_task`.</span>
+<span class="sd">    kind : str</span>
+<span class="sd">        "energy" (the energy or energy + gradient of :func:`get_task`) or</span>
+<span class="sd">        "hessian" (the MDI engine's analytic Hessian).</span>
+<span class="sd">    properties : iterable of str</span>
+<span class="sd">        For "energy": the properties asked for, as for :func:`get_task`.</span>
+<span class="sd">    options : dict, optional</span>
+<span class="sd">        The task options, as for :func:`get_task` (e.g.</span>
+<span class="sd">        ``exact_exchange_elements``, ``precision``).</span>
+<span class="sd">    version : str</span>
+<span class="sd">        The ORCA version, e.g. "6.1.1", which is part of the fingerprint: take</span>
+<span class="sd">        it from a record of the same run (one ORCA per installation).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    [str]</span>
+<span class="sd">        The fingerprints, without duplicates: as written first, then with COSX</span>
+<span class="sd">        moot.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.fingerprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">orca_calculation_record</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">options</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"energy"</span><span class="p">:</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="n">get_task</span><span class="p">(</span>
+            <span class="n">configuration</span><span class="p">,</span>
+            <span class="n">model_chemistry</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"expected-fingerprint"</span><span class="p">,</span>
+            <span class="n">properties</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">properties</span><span class="p">),</span>
+            <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">text</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="n">_RETRY_INPUT</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"hessian"</span><span class="p">:</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">_engine_hessian_files</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"kind must be 'energy' or 'hessian', not '</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">moot</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">orca_calculation_record</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">cosx_moot</span><span class="o">=</span><span class="n">moot</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">record</span><span class="p">[</span><span class="s2">"fingerprint"</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s2">"fingerprint"</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_engine_hessian_files</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The input files of the MDI engine's analytic Hessian (``AnFreq``) for a</span>
+<span class="sd">    structure, as ``data/orca_mdi.py`` writes them when launched by</span>
+<span class="sd">    ``ORCAStep.mdi_engine_command`` for this model chemistry."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_exec.evaluator</span><span class="w"> </span><span class="kn">import</span> <span class="n">mdi_method_and_basis</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">composite_basis</span><span class="p">,</span> <span class="n">composite_method</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.orca_step</span><span class="w"> </span><span class="kn">import</span> <span class="n">_engine_method_words</span><span class="p">,</span> <span class="n">mc_method_unalias</span>
+
+    <span class="n">helpers</span> <span class="o">=</span> <span class="n">engine_helpers</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">structure_data</span><span class="p">(</span><span class="n">configuration</span><span class="p">)</span>
+    <span class="n">symbols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"symbols"</span><span class="p">])</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"atomic_numbers"</span><span class="p">])</span>
+    <span class="n">method</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">mdi_method_and_basis</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">)</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">mc_method_unalias</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">option</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">options</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+
+    <span class="n">words</span> <span class="o">=</span> <span class="n">_engine_method_words</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">option</span><span class="p">(</span><span class="s2">"precision"</span><span class="p">))</span>
+    <span class="c1"># As the engine: a composite has no basis or fitting-basis words</span>
+    <span class="c1"># (orca_mdi.engine_basis; launched with --auxiliary-basis none)</span>
+    <span class="k">if</span> <span class="n">composite_method</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">composite_basis</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>  <span class="c1"># refuses a basis that is not its own</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">engine_basis</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">engine_basis</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="n">basis</span><span class="p">)</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">words</span><span class="si">}</span><span class="s2"> AutoAux"</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">exchange_method</span><span class="p">(</span>
+        <span class="n">words</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">option</span><span class="p">(</span><span class="s2">"cosx"</span><span class="p">,</span> <span class="s2">"by-element"</span><span class="p">),</span> <span class="n">option</span><span class="p">(</span><span class="s2">"exact_exchange_elements"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="n">basis</span><span class="p">,</span> <span class="n">block</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">basis_keyword_and_block</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">numbers</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">block</span><span class="p">:</span>
+            <span class="n">files</span><span class="p">[</span><span class="s2">"basis.bas"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"basis.bas"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+    <span class="n">files</span><span class="p">[</span><span class="s2">"orca.inp"</span><span class="p">]</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">orca_hessian_input</span><span class="p">(</span>
+        <span class="n">words</span><span class="p">,</span>
+        <span class="n">basis</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"charge"</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s2">"charge"</span><span class="p">])),</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplicity"</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s2">"multiplicity"</span><span class="p">])),</span>
+        <span class="n">symbols</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"coordinates"</span><span class="p">],</span>
+        <span class="mi">1</span><span class="p">,</span>
+        <span class="n">blocks</span><span class="o">=</span><span class="n">block</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">files</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_record_timing</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">model_chemistry</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>

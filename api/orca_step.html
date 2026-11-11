@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.8.3 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.11 documentation</title>
   
   
   
@@ -31,7 +31,7 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=c224919a" />
   
   <!-- So that users can add custom icons -->
@@ -40,12 +40,12 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=c2a0a3e9"></script>
+    <script src="../_static/documentation_options.js?v=83e1bca7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/orca_step';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.8.3" />
+  <meta name="docsearch:version" content="2026.11.11" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1056,7 +1056,7 @@ output does not say.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="orca_step.fingerprint.orca_calculation_record">
-<span class="sig-prename descclassname"><span class="pre">orca_step.fingerprint.</span></span><span class="sig-name descname"><span class="pre">orca_calculation_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_numbers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/fingerprint.html#orca_calculation_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.fingerprint.orca_calculation_record" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">orca_step.fingerprint.</span></span><span class="sig-name descname"><span class="pre">orca_calculation_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_numbers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosx_moot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/fingerprint.html#orca_calculation_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.fingerprint.orca_calculation_record" title="Link to this definition">#</a></dt>
 <dd><p>The record of an ORCA calculation’s settings, with its fingerprints.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1068,6 +1068,9 @@ Binary files, e.g. an orca.gbw for the guess, are not settings.</p></li>
 <li><p><strong>coordinates</strong> (<em>optional</em>) – The geometry, for its fingerprint.</p></li>
 <li><p><strong>out_text</strong> (<em>str</em><em>, </em><em>optional</em>) – The contents of orca.out, which says whether COSX was moot (see
 <a class="reference internal" href="#orca_step.fingerprint.cosx_is_moot" title="orca_step.fingerprint.cosx_is_moot"><code class="xref py py-func docutils literal notranslate"><span class="pre">cosx_is_moot()</span></code></a>). Without it COSX and NoCOSX are hashed.</p></li>
+<li><p><strong>cosx_moot</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether COSX is moot, overriding <cite>out_text</cite>: for predicting the
+fingerprint of a calculation that has not run (see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">orca_step.batch.expected_fingerprints()</span></code>).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1757,6 +1760,14 @@ own run time.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.expected_fingerprints">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">expected_fingerprints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_chemistry</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.expected_fingerprints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.expected_fingerprints" title="Link to this definition">#</a></dt>
+<dd><p>The settings fingerprints a calculation of this structure would
+record, without running it (one, or two when <code class="docutils literal notranslate"><span class="pre">NoCOSX</span></code> may be moot).
+See <code class="xref py py-func docutils literal notranslate"><span class="pre">orca_step.batch.expected_fingerprints()</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep.get_executor_config">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_executor_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">executor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seamm_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep.get_executor_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep.get_executor_config" title="Link to this definition">#</a></dt>
 <dd><p>How to launch ORCA (and its MDI engine) on this machine.</p>
@@ -2338,6 +2349,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.create_node"><code class="docutils literal notranslate"><span class="pre">ORCAStep.create_node()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.create_tk_node"><code class="docutils literal notranslate"><span class="pre">ORCAStep.create_tk_node()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.description"><code class="docutils literal notranslate"><span class="pre">ORCAStep.description()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.expected_fingerprints"><code class="docutils literal notranslate"><span class="pre">ORCAStep.expected_fingerprints()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_executor_config"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_executor_config()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_mdi_engine_command"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_mdi_engine_command()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.get_model_chemistry_options"><code class="docutils literal notranslate"><span class="pre">ORCAStep.get_model_chemistry_options()</span></code></a></li>
