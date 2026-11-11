@@ -311,7 +311,7 @@ def settings_text(input_text, cosx_moot=False):
 
 
 def orca_calculation_record(
-    files, version, atomic_numbers=None, coordinates=None, out_text=None
+    files, version, atomic_numbers=None, coordinates=None, out_text=None, cosx_moot=None
 ):
     """The record of an ORCA calculation's settings, with its fingerprints.
 
@@ -327,15 +327,19 @@ def orca_calculation_record(
     out_text : str, optional
         The contents of orca.out, which says whether COSX was moot (see
         :func:`cosx_is_moot`). Without it COSX and NoCOSX are hashed.
+    cosx_moot : bool, optional
+        Whether COSX is moot, overriding `out_text`: for predicting the
+        fingerprint of a calculation that has not run (see
+        :func:`orca_step.batch.expected_fingerprints`).
 
     Returns
     -------
     dict
         See :func:`seamm_util.fingerprint.calculation_record`.
     """
-    lines, elements = settings_text(
-        files.get("orca.inp", ""), cosx_moot=cosx_is_moot(out_text)
-    )
+    if cosx_moot is None:
+        cosx_moot = cosx_is_moot(out_text)
+    lines, elements = settings_text(files.get("orca.inp", ""), cosx_moot=cosx_moot)
     if isinstance(files.get("basis.bas"), str):
         for symbol, block in basis_file_blocks(files["basis.bas"]).items():
             elements.setdefault(symbol, []).extend(block)
