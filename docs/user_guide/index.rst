@@ -980,8 +980,9 @@ by ``%maxcore``.
 A model-chemistry calculation can also be given the frozen core, as a number of
 frozen orbitals per element, ``none`` (all electrons) or ``default`` (ORCA's
 choice), and a scalar-relativistic Hamiltonian, DKH2 or X2C, with the nucleus model
-(point or finite) stated explicitly. Composite recipes use these for their
-core-valence and relativistic corrections. ORCA's own frozen core is, in electrons:
+(point or finite) stated explicitly, and the orbital basis can be decontracted
+(``decontract``). Composite recipes use these for their core-valence and
+relativistic corrections. ORCA's own frozen core is, in electrons:
 none for H-Be, 2 for B-Mg (so Na and Mg freeze only 1s), 10 for Al-Zn (so K-Zn
 correlate 3s3p), 18 for Ga-Sr (so Ga-Kr correlate 3d), 28 for Y-Cd, 36 for In-Yb,
 46 for Lu-Hg and 68 for Tl-Rn. Only counts that differ from these are written, as
