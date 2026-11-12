@@ -145,3 +145,16 @@ def check_frozen_core(expected, parts):
     if got != expected:
         return f"ORCA froze {got} core orbitals, not the {expected} asked for"
     return None
+
+
+def model_chemistry_capabilities(mtype):
+    """What a model-chemistry calculation of this type can be told (composite
+    recipes check their components against it): the frozen core, a
+    scalar-relativistic Hamiltonian and its nucleus model, and whether the energy
+    comes with its parts (correlated methods)."""
+    return {
+        "frozen_core": ["default", "none", "per-element"],
+        "relativistic": ["none", "DKH2", "X2C"],
+        "nucleus": ["point", "finite"],
+        "energy parts": mtype == "QC",
+    }
