@@ -987,6 +987,16 @@ They run as the Energy sub-step runs F12: with the matching CABS
 (cc-pVTZ-F12-CABS), the cc-pVQZ/C correlation fitting basis and ``TIGHTSCF``, and
 no integration grid. The Thermochemistry step's ``high`` preset uses them.
 
+A correlated calculation run this way (MP2, RI-MP2, CCSD(T), DLPNO-CCSD(T) and
+their F12 forms) also returns the parts of its energy: the HF energy, the F12 CABS
+singles, the correlation energies and the triples, with the reference (RHF, UHF or
+quasi-restricted orbitals), the number of frozen-core orbitals, the T1 diagnostic and
+<S**2>. The values come from ORCA's property file at full precision, the splits from
+its output. They must add up to ORCA's final energy within 2e-9 E_h, or none are
+returned. Composite recipes use them, for example to extrapolate the correlation
+energy separately, and the Thermochemistry step stores them with the energies in
+its fragment store.
+
 Functionals without a dispersion correction of their own are also offered with
 Grimme's D4 correction, as ``<functional>-D4`` -- e.g. ``ORCA:DFT@R2SCAN-D4/def2-TZVP``,
 which runs ``! R2SCAN D4``. They are offered for the functionals the D4 model has
