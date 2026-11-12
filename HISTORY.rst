@@ -1,6 +1,16 @@
 =======
 History
 =======
+2026.11.12 -- The parts of correlated energies
+    * Correlated calculations run through a model chemistry (MP2, RI-MP2, CCSD(T),
+      DLPNO-CCSD(T) and their F12 forms) also return the parts of their energy: the
+      HF energy, the F12 CABS singles, the correlation energies and the triples,
+      with the reference (RHF, UHF or quasi-restricted orbitals), the number of
+      frozen-core orbitals, the T1 diagnostic and <S**2>. The parts must add up to
+      ORCA's final energy within 2e-9 E_h, or none are returned.
+    * Composite recipes use them, for example to extrapolate the correlation energy
+      separately, and the Thermochemistry step keeps them in its fragment store.
+
 2026.11.11.1 -- CCSD(T)-F12 as model chemistries
     * Canonical CCSD(T)-F12D/RI and DLPNO-CCSD(T)-F12D (TightPNO, TCutPNO 1e-8) are
       offered as model chemistries with cc-pVTZ-F12, the basis they were validated
