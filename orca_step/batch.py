@@ -213,7 +213,7 @@ def get_task(
     method, basis, blocks = method_and_blocks(model_chemistry, option("aux_basis"))
     # The frozen core and a scalar-relativistic Hamiltonian, when asked for
     # (composite recipes): only what differs from ORCA's defaults is written
-    from .frozen_core import frozen_core_input, relativistic_input
+    from .frozen_core import decontract_block, frozen_core_input, relativistic_input
 
     real = [z for z, sym in zip(numbers, symbols) if not sym.endswith(":")]
     fc_keywords, fc_block, _ = frozen_core_input(option("frozen_core"), real)
@@ -223,7 +223,9 @@ def get_task(
     extra_keywords = fc_keywords + rel_keywords
     if extra_keywords:
         method = f"{method} {' '.join(extra_keywords)}"
-    blocks.extend(b for b in (fc_block, rel_block) if b)
+    blocks.extend(
+        b for b in (fc_block, rel_block, decontract_block(option("decontract"))) if b
+    )
     if multiplicity != 1 and any(b.startswith("%mp2 DLPNO") for b in blocks):
         raise ValueError(
             f"DLPNO {model_chemistry.get('method')} needs a closed-shell system "

@@ -156,5 +156,15 @@ def model_chemistry_capabilities(mtype):
         "frozen_core": ["default", "none", "per-element"],
         "relativistic": ["none", "DKH2", "X2C"],
         "nucleus": ["point", "finite"],
+        "decontract": True,
         "energy parts": mtype == "QC",
     }
+
+
+def decontract_block(decontract):
+    """The ``%basis`` block that decontracts the orbital basis, or ""."""
+    if decontract in (None, False):
+        return ""
+    if decontract is not True:
+        raise ValueError(f"decontract must be true or false, not {decontract!r}")
+    return "%basis Decontract true end"

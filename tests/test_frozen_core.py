@@ -143,3 +143,17 @@ def test_a_frozen_core_mismatch_fails_the_task(tmp_path):
         analyze_task(
             result, _mc(frozen_core={"H": 0, "O": 0}), _water(), properties=("energy",)
         )
+
+
+def test_decontract():
+    from orca_step.batch import get_task
+    from orca_step.frozen_core import decontract_block
+
+    assert decontract_block(None) == "" and decontract_block(False) == ""
+    assert decontract_block(True) == "%basis Decontract true end"
+    with pytest.raises(ValueError):
+        decontract_block("yes")
+    plain = get_task(_water(), _mc(), key="w", properties=("energy",))
+    decon = get_task(_water(), _mc(decontract=True), key="w", properties=("energy",))
+    assert "%basis Decontract true end" in decon.files["orca.inp"]
+    assert decon.files["orca.inp"] != plain.files["orca.inp"]
