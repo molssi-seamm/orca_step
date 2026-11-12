@@ -277,7 +277,7 @@ def get_task(
     # so that adding the retry reruns nothing already finished.
     fingerprint = _fingerprint(files, False)
     cmd = ["{code}", "orca.inp", ">", "orca.out", "2>", "orca.err"]
-    return_files = ["orca.out", "orca.err", "orca.engrad"]
+    return_files = ["orca.out", "orca.err", "orca.engrad", "orca.property.txt"]
     if retry is not None:
         files[_RETRY_INPUT] = sthresh_retry_input(text, retry)
         cmd += sthresh_retry_command(retry)
@@ -373,6 +373,16 @@ def analyze_task(
         record = calculation_record(task, configuration, options, out)
         if record is not None:
             data["calculation"] = record
+    # The parts of a correlated energy (HF, correlation, triples, ...), for
+    # composite recipes and the fragment store; None for a run that has none
+    if "energy" in data and out:
+        properties_text = _text(result, "orca.property.txt")
+        if properties_text:
+            from .energy_parts import energy_parts
+
+            parts = energy_parts(out, properties_text)
+            if parts is not None:
+                data["energy parts"] = parts
     return data
 
 
