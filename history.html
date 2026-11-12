@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.12 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=b41936cd"></script>
+    <script src="_static/documentation_options.js?v=900c25b8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,21 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.12.1 – Frozen cores and scalar-relativistic Hamiltonians for model chemistries</dt><dd><ul class="simple">
+<li><p>A model-chemistry calculation can be given its frozen core (a number of frozen
+orbitals per element, all electrons, or ORCA’s default), a scalar-relativistic
+Hamiltonian (DKH2 or X2C) with the nucleus model stated explicitly, and a
+decontracted orbital basis. Only frozen-core counts that differ from ORCA’s
+own defaults are written, so asking for the default leaves the calculation,
+and its fingerprint, unchanged.</p></li>
+<li><p>After each calculation the number of frozen orbitals ORCA used is checked
+against the count asked for, and a mismatch fails the calculation.</p></li>
+<li><p>ORCA 6.1.1 reads <code class="docutils literal notranslate"><span class="pre">NewNCore</span> <span class="pre">Hf</span></code> as hydrogen, so the step writes atomic
+numbers; the documentation warns about this.</p></li>
+<li><p>The model chemistries say what settings they can take, for composite recipes
+to check.</p></li>
+</ul>
+</dd>
 <dt>2026.11.12 – The parts of correlated energies</dt><dd><ul class="simple">
 <li><p>Correlated calculations run through a model chemistry (MP2, RI-MP2, CCSD(T),
 DLPNO-CCSD(T) and their F12 forms) also return the parts of their energy: the

@@ -977,6 +977,24 @@ of water with cc-pVQZ reached 2.2 GB of resident memory with ``%maxcore`` 800 MB
 quadruple-zeta components of composite recipes, by the memory they actually use, not
 by ``%maxcore``.
 
+A model-chemistry calculation can also be given the frozen core, as a number of
+frozen orbitals per element, ``none`` (all electrons) or ``default`` (ORCA's
+choice), and a scalar-relativistic Hamiltonian, DKH2 or X2C, with the nucleus model
+(point or finite) stated explicitly, and the orbital basis can be decontracted
+(``decontract``). Composite recipes use these for their core-valence and
+relativistic corrections. ORCA's own frozen core is, in electrons:
+none for H-Be, 2 for B-Mg (so Na and Mg freeze only 1s), 10 for Al-Zn (so K-Zn
+correlate 3s3p), 18 for Ga-Sr (so Ga-Kr correlate 3d), 28 for Y-Cd, 36 for In-Yb,
+46 for Lu-Hg and 68 for Tl-Rn. Only counts that differ from these are written, as
+``%method NewNCore Z n end``, with ``CheckFrozenCore`` on, and after the run the
+number of frozen orbitals ORCA reports must be the one asked for.
+
+.. warning::
+
+   ORCA 6.1.1 reads ``NewNCore Hf n`` as hydrogen: the line sets hydrogen's
+   frozen core, not hafnium's. The step therefore always writes the atomic number
+   (``NewNCore 72 n``). Write it that way in your own inputs too.
+
 Every calculation run this way uses tight SCF convergence and the fine integration
 grid (``TIGHTSCF DEFGRID3``). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA's looser defaults.

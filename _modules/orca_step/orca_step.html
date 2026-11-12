@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.11.12 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=b41936cd"></script>
+    <script src="../../_static/documentation_options.js?v=900c25b8"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -503,6 +503,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">orca_step</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.frozen_core</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_chemistry_capabilities</span>
 
 
 <div class="viewcode-block" id="full_orca_path">
@@ -881,6 +882,7 @@
                         <span class="s2">"analytic_hessian"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span>
                             <span class="n">mdi_capable</span> <span class="ow">and</span> <span class="n">method_has_analytic_hessian</span><span class="p">(</span><span class="n">real</span><span class="p">)</span>
                         <span class="p">),</span>
+                        <span class="s2">"capabilities"</span><span class="p">:</span> <span class="n">model_chemistry_capabilities</span><span class="p">(</span><span class="n">mtype</span><span class="p">),</span>
                     <span class="p">}</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">F12_MODEL_CHEMISTRIES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">method</span> <span class="o">=</span> <span class="n">variant</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span>
@@ -905,6 +907,7 @@
                     <span class="s2">"analytic_hessian"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                     <span class="c1"># The fitting basis is part of the method (validated with it)</span>
                     <span class="s2">"aux_basis"</span><span class="p">:</span> <span class="n">aux</span><span class="p">,</span>
+                    <span class="s2">"capabilities"</span><span class="p">:</span> <span class="n">model_chemistry_capabilities</span><span class="p">(</span><span class="s2">"QC"</span><span class="p">),</span>
                 <span class="p">}</span>
         <span class="k">return</span> <span class="n">options</span></div>
 

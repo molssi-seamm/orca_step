@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.12 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b41936cd"></script>
+    <script src="../_static/documentation_options.js?v=900c25b8"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1423,6 +1423,23 @@ of water with cc-pVQZ reached 2.2 GB of resident memory with <code class="docuti
 (about 2.7 times). Size large-basis coupled-cluster calculations, such as the
 quadruple-zeta components of composite recipes, by the memory they actually use, not
 by <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code>.</p>
+<p>A model-chemistry calculation can also be given the frozen core, as a number of
+frozen orbitals per element, <code class="docutils literal notranslate"><span class="pre">none</span></code> (all electrons) or <code class="docutils literal notranslate"><span class="pre">default</span></code> (ORCA’s
+choice), and a scalar-relativistic Hamiltonian, DKH2 or X2C, with the nucleus model
+(point or finite) stated explicitly, and the orbital basis can be decontracted
+(<code class="docutils literal notranslate"><span class="pre">decontract</span></code>). Composite recipes use these for their core-valence and
+relativistic corrections. ORCA’s own frozen core is, in electrons:
+none for H-Be, 2 for B-Mg (so Na and Mg freeze only 1s), 10 for Al-Zn (so K-Zn
+correlate 3s3p), 18 for Ga-Sr (so Ga-Kr correlate 3d), 28 for Y-Cd, 36 for In-Yb,
+46 for Lu-Hg and 68 for Tl-Rn. Only counts that differ from these are written, as
+<code class="docutils literal notranslate"><span class="pre">%method</span> <span class="pre">NewNCore</span> <span class="pre">Z</span> <span class="pre">n</span> <span class="pre">end</span></code>, with <code class="docutils literal notranslate"><span class="pre">CheckFrozenCore</span></code> on, and after the run the
+number of frozen orbitals ORCA reports must be the one asked for.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>ORCA 6.1.1 reads <code class="docutils literal notranslate"><span class="pre">NewNCore</span> <span class="pre">Hf</span> <span class="pre">n</span></code> as hydrogen: the line sets hydrogen’s
+frozen core, not hafnium’s. The step therefore always writes the atomic number
+(<code class="docutils literal notranslate"><span class="pre">NewNCore</span> <span class="pre">72</span> <span class="pre">n</span></code>). Write it that way in your own inputs too.</p>
+</div>
 <p>Every calculation run this way uses tight SCF convergence and the fine integration
 grid (<code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span> <span class="pre">DEFGRID3</span></code>). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA’s looser defaults.</p>

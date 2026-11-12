@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>orca_step.frozen_core &#8212; SEAMM ORCA Plug-in 2026.11.12.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../../_static/documentation_options.js?v=900c25b8"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/orca_step/frozen_core';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2026.11.12.1" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/SEAMM logo.png" class="logo__image only-light" alt=""/>
+    <img src="../../_static/SEAMM Inverted 288x181.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">ORCA</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API Documentation
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../authors.html">
+    Development Team
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../history.html">
+    History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi-seamm.github.io">
+    Main SEAMM documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi-seamm.github.io">
+    SEAMM Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/molssi-seamm/geometry_analysis_step" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-twitter fa-lg" aria-hidden="true"></i><span class="visually-hidden">Twitter</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../authors.html">
+    Development Team
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../history.html">
+    History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi-seamm.github.io">
+    Main SEAMM documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi-seamm.github.io">
+    SEAMM Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/molssi-seamm/geometry_analysis_step" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-twitter fa-lg" aria-hidden="true"></i><span class="visually-hidden">Twitter</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">orca_step.frozen_core</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for orca_step.frozen_core</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">"""Frozen-core control and scalar-relativistic Hamiltonians for model-chemistry</span>
+<span class="sd">calculations (composite phase 2 §3).</span>
+
+<span class="sd">A recipe gives the frozen core as a count of ORBITALS per element (or ``none``, or</span>
+<span class="sd">``default`` for ORCA's own choice). ORCA counts core ELECTRONS</span>
+<span class="sd">(``%method NewNCore Z n end``). Only the elements whose count differs from ORCA's</span>
+<span class="sd">default are written, so a calculation that asks for ORCA's default has the same</span>
+<span class="sd">input, and the same settings fingerprint, as one that does not say. When anything</span>
+<span class="sd">is written, ``CheckFrozenCore`` is pinned on. The elements are written by atomic</span>
+<span class="sd">number: ORCA 6.1.1 reads ``NewNCore Hf n`` as hydrogen.</span>
+
+<span class="sd">After the run the number of frozen orbitals ORCA reports is checked against the</span>
+<span class="sd">count asked for (:func:`check_frozen_core`).</span>
+<span class="sd">"""</span>
+
+<span class="c1">#: ORCA 6.1.1's default frozen core, in electrons, by atomic number, as ORCA</span>
+<span class="c1">#: prints it ("Setting NCore(X) from N to ..."), 2026-11-12. Li and Be are not</span>
+<span class="c1">#: frozen; Na and Mg freeze only 1s; K-Zn freeze 1s-2p.</span>
+<span class="n">ORCA_DEFAULT_CORE_ELECTRONS</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">_first</span><span class="p">,</span> <span class="n">_last</span><span class="p">,</span> <span class="n">_n</span> <span class="ow">in</span> <span class="p">(</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="c1"># H-Be</span>
+    <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>  <span class="c1"># B-Mg</span>
+    <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>  <span class="c1"># Al-Zn</span>
+    <span class="p">(</span><span class="mi">31</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span>  <span class="c1"># Ga-Sr</span>
+    <span class="p">(</span><span class="mi">39</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="mi">28</span><span class="p">),</span>  <span class="c1"># Y-Cd</span>
+    <span class="p">(</span><span class="mi">49</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">36</span><span class="p">),</span>  <span class="c1"># In-Yb</span>
+    <span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">46</span><span class="p">),</span>  <span class="c1"># Lu-Hg</span>
+    <span class="p">(</span><span class="mi">81</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="mi">68</span><span class="p">),</span>  <span class="c1"># Tl-Rn</span>
+<span class="p">):</span>
+    <span class="k">for</span> <span class="n">_z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_first</span><span class="p">,</span> <span class="n">_last</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">ORCA_DEFAULT_CORE_ELECTRONS</span><span class="p">[</span><span class="n">_z</span><span class="p">]</span> <span class="o">=</span> <span class="n">_n</span>
+
+<span class="c1">#: The scalar-relativistic Hamiltonians and their ORCA keywords</span>
+<span class="n">RELATIVISTIC</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"none"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"DKH2"</span><span class="p">:</span> <span class="s2">"DKH2"</span><span class="p">,</span> <span class="s2">"X2C"</span><span class="p">:</span> <span class="s2">"X2C"</span><span class="p">}</span>
+<span class="c1">#: The nucleus models, written explicitly with any relativistic Hamiltonian</span>
+<span class="n">NUCLEUS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"point"</span><span class="p">:</span> <span class="s2">"false"</span><span class="p">,</span> <span class="s2">"finite"</span><span class="p">:</span> <span class="s2">"true"</span><span class="p">}</span>
+
+
+<span class="n">_SYMBOLS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu "</span>
+    <span class="s2">"Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs "</span>
+    <span class="s2">"Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl "</span>
+    <span class="s2">"Pb Bi Po At Rn"</span>
+<span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="n">ATOMIC_NUMBER</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_SYMBOLS</span><span class="p">)}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_atomic_number</span><span class="p">(</span><span class="n">element</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">element</span>
+    <span class="k">if</span> <span class="n">element</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ATOMIC_NUMBER</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown element '</span><span class="si">{</span><span class="n">element</span><span class="si">}</span><span class="s2">' in the frozen core"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ATOMIC_NUMBER</span><span class="p">[</span><span class="n">element</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_orbitals_by_number</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""{Z: orbitals} from {symbol or Z: orbitals}."""</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">element</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">frozen_core</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">element</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+            <span class="n">element</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">_atomic_number</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<div class="viewcode-block" id="frozen_core_input">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.frozen_core_input">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">frozen_core_input</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The ORCA input for a frozen core, and the frozen orbitals expected.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    frozen_core : None, "default", "none" or {element: orbitals}</span>
+<span class="sd">        None and "default": ORCA's default; "none": all electrons correlated.</span>
+<span class="sd">    atomic_numbers : [int]</span>
+<span class="sd">        The real atoms of the calculation (not ghosts).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (keywords, block, expected)</span>
+<span class="sd">        Keywords for the '!' line ([] or ["NoFrozenCore"]), a ``%method`` block</span>
+<span class="sd">        (or ""), and the number of frozen orbitals expected (None for ORCA's</span>
+<span class="sd">        default, which is not checked).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">frozen_core</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="s2">""</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">frozen_core</span> <span class="o">==</span> <span class="s2">"none"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">"NoFrozenCore"</span><span class="p">],</span> <span class="s2">""</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The frozen core must be 'default', 'none' or a count per element, not "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">frozen_core</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">_orbitals_by_number</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">)</span>
+    <span class="n">present</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">atomic_numbers</span><span class="p">))</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">z</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">present</span> <span class="k">if</span> <span class="n">z</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"The frozen core gives no count for the element(s) with atomic number "</span>
+            <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">present</span><span class="p">:</span>
+        <span class="n">electrons</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">counts</span><span class="p">[</span><span class="n">z</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">electrons</span> <span class="o">!=</span> <span class="n">ORCA_DEFAULT_CORE_ELECTRONS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  NewNCore </span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">electrons</span><span class="si">}</span><span class="s2"> end"</span><span class="p">)</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">)]</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">atomic_numbers</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="s2">""</span><span class="p">,</span> <span class="n">expected</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="s2">"%method</span><span class="se">\n</span><span class="s2">  CheckFrozenCore true</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">end"</span>
+    <span class="k">return</span> <span class="p">[],</span> <span class="n">block</span><span class="p">,</span> <span class="n">expected</span></div>
+
+
+
+<div class="viewcode-block" id="relativistic_input">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.relativistic_input">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">relativistic_input</span><span class="p">(</span><span class="n">relativistic</span><span class="p">,</span> <span class="n">nucleus</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The '!' keywords and the ``%rel`` block of a scalar-relativistic</span>
+<span class="sd">    Hamiltonian. The nucleus model is always written when there is one, so the</span>
+<span class="sd">    input, and the settings fingerprint, say which was used."""</span>
+    <span class="k">if</span> <span class="n">relativistic</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nucleus</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"A nucleus model needs a relativistic Hamiltonian"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">relativistic</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RELATIVISTIC</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unknown relativistic Hamiltonian '</span><span class="si">{</span><span class="n">relativistic</span><span class="si">}</span><span class="s2">'; ORCA's model "</span>
+            <span class="sa">f</span><span class="s2">"chemistries offer </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RELATIVISTIC</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">nucleus</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NUCLEUS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The relativistic Hamiltonian </span><span class="si">{</span><span class="n">relativistic</span><span class="si">}</span><span class="s2"> needs the nucleus model "</span>
+            <span class="sa">f</span><span class="s2">"given explicitly: </span><span class="si">{</span><span class="s1">' or '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">NUCLEUS</span><span class="p">)</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">nucleus</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">RELATIVISTIC</span><span class="p">[</span><span class="n">relativistic</span><span class="p">]],</span> <span class="sa">f</span><span class="s2">"%rel FiniteNuc </span><span class="si">{</span><span class="n">NUCLEUS</span><span class="p">[</span><span class="n">nucleus</span><span class="p">]</span><span class="si">}</span><span class="s2"> end"</span></div>
+
+
+
+<div class="viewcode-block" id="check_frozen_core">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.check_frozen_core">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_frozen_core</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The reason the run's frozen core is not the one asked for, or None."""</span>
+    <span class="k">if</span> <span class="n">expected</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span> <span class="ow">or</span> <span class="n">parts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen core orbitals"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2"> frozen-core orbitals were asked for, but the run reports "</span>
+            <span class="s2">"no count to check them against"</span>
+        <span class="p">)</span>
+    <span class="n">got</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="s2">"frozen core orbitals"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">got</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"ORCA froze </span><span class="si">{</span><span class="n">got</span><span class="si">}</span><span class="s2"> core orbitals, not the </span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2"> asked for"</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="model_chemistry_capabilities">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.model_chemistry_capabilities">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">model_chemistry_capabilities</span><span class="p">(</span><span class="n">mtype</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""What a model-chemistry calculation of this type can be told (composite</span>
+<span class="sd">    recipes check their components against it): the frozen core, a</span>
+<span class="sd">    scalar-relativistic Hamiltonian and its nucleus model, and whether the energy</span>
+<span class="sd">    comes with its parts (correlated methods)."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"frozen_core"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"default"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">,</span> <span class="s2">"per-element"</span><span class="p">],</span>
+        <span class="s2">"relativistic"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"DKH2"</span><span class="p">,</span> <span class="s2">"X2C"</span><span class="p">],</span>
+        <span class="s2">"nucleus"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"point"</span><span class="p">,</span> <span class="s2">"finite"</span><span class="p">],</span>
+        <span class="s2">"decontract"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"energy parts"</span><span class="p">:</span> <span class="n">mtype</span> <span class="o">==</span> <span class="s2">"QC"</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="decontract_block">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.decontract_block">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">decontract_block</span><span class="p">(</span><span class="n">decontract</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The ``%basis`` block that decontracts the orbital basis, or ""."""</span>
+    <span class="k">if</span> <span class="n">decontract</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">decontract</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"decontract must be true or false, not </span><span class="si">{</span><span class="n">decontract</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"%basis Decontract true end"</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.12 documentation</title>
+    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.12.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=b41936cd"></script>
+    <script src="../../_static/documentation_options.js?v=900c25b8"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12" />
+  <meta name="docsearch:version" content="2026.11.12.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -706,6 +706,21 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
 
     <span class="n">method</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="n">blocks</span> <span class="o">=</span> <span class="n">method_and_blocks</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">,</span> <span class="n">option</span><span class="p">(</span><span class="s2">"aux_basis"</span><span class="p">))</span>
+    <span class="c1"># The frozen core and a scalar-relativistic Hamiltonian, when asked for</span>
+    <span class="c1"># (composite recipes): only what differs from ORCA's defaults is written</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.frozen_core</span><span class="w"> </span><span class="kn">import</span> <span class="n">decontract_block</span><span class="p">,</span> <span class="n">frozen_core_input</span><span class="p">,</span> <span class="n">relativistic_input</span>
+
+    <span class="n">real</span> <span class="o">=</span> <span class="p">[</span><span class="n">z</span> <span class="k">for</span> <span class="n">z</span><span class="p">,</span> <span class="n">sym</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">symbols</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">sym</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">":"</span><span class="p">)]</span>
+    <span class="n">fc_keywords</span><span class="p">,</span> <span class="n">fc_block</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">frozen_core_input</span><span class="p">(</span><span class="n">option</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">),</span> <span class="n">real</span><span class="p">)</span>
+    <span class="n">rel_keywords</span><span class="p">,</span> <span class="n">rel_block</span> <span class="o">=</span> <span class="n">relativistic_input</span><span class="p">(</span>
+        <span class="n">option</span><span class="p">(</span><span class="s2">"relativistic"</span><span class="p">),</span> <span class="n">option</span><span class="p">(</span><span class="s2">"nucleus"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">extra_keywords</span> <span class="o">=</span> <span class="n">fc_keywords</span> <span class="o">+</span> <span class="n">rel_keywords</span>
+    <span class="k">if</span> <span class="n">extra_keywords</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extra_keywords</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">blocks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="n">fc_block</span><span class="p">,</span> <span class="n">rel_block</span><span class="p">,</span> <span class="n">decontract_block</span><span class="p">(</span><span class="n">option</span><span class="p">(</span><span class="s2">"decontract"</span><span class="p">)))</span> <span class="k">if</span> <span class="n">b</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">multiplicity</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"%mp2 DLPNO"</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"DLPNO </span><span class="si">{</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'method'</span><span class="p">)</span><span class="si">}</span><span class="s2"> needs a closed-shell system "</span>
@@ -881,6 +896,23 @@
             <span class="n">parts</span> <span class="o">=</span> <span class="n">energy_parts</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">properties_text</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">parts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">data</span><span class="p">[</span><span class="s2">"energy parts"</span><span class="p">]</span> <span class="o">=</span> <span class="n">parts</span>
+    <span class="c1"># A frozen core asked for is checked against what ORCA froze</span>
+    <span class="n">frozen_core</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s2">"frozen_core"</span><span class="p">,</span> <span class="p">(</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">frozen_core</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"energy"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.frozen_core</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_frozen_core</span><span class="p">,</span> <span class="n">frozen_core_input</span>
+
+        <span class="n">cdata</span> <span class="o">=</span> <span class="n">structure_data</span><span class="p">(</span><span class="n">configuration</span><span class="p">)</span>
+        <span class="n">atom_indices</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"atom_indices"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">atom_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">atom_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cdata</span><span class="p">[</span><span class="s2">"atomic_numbers"</span><span class="p">]))</span>
+        <span class="n">ghosts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ghost_atoms"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span>
+        <span class="n">real</span> <span class="o">=</span> <span class="p">[</span><span class="n">cdata</span><span class="p">[</span><span class="s2">"atomic_numbers"</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">atom_indices</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ghosts</span><span class="p">]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">expected</span> <span class="o">=</span> <span class="n">frozen_core_input</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">,</span> <span class="n">real</span><span class="p">)</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="n">check_frozen_core</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"energy parts"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AnalysisError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The ORCA calculation '</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">': </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span></div>
 
 
