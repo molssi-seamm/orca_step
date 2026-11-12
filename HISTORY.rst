@@ -1,6 +1,18 @@
 =======
 History
 =======
+2026.11.11.1 -- CCSD(T)-F12 as model chemistries
+    * Canonical CCSD(T)-F12D/RI and DLPNO-CCSD(T)-F12D (TightPNO, TCutPNO 1e-8) are
+      offered as model chemistries with cc-pVTZ-F12, the basis they were validated
+      with: ``ORCA:QC@CCSD(T)-F12D_RI/cc-pVTZ-F12`` and
+      ``ORCA:QC@DLPNO-CCSD(T)-F12D(TightPNO,TCutPNO=1e-8)/cc-pVTZ-F12``. They run
+      with the matching CABS, the cc-pVQZ/C fitting basis and tight SCF, as the
+      Energy sub-step runs F12, and are what the Thermochemistry step's ``high``
+      preset uses.
+    * Model-chemistry calculations of the double hybrids' DLPNO variants are still
+      refused for open-shell structures; other methods with extra input blocks no
+      longer are.
+
 2026.11.11 -- The fingerprints of a calculation, predicted before it runs
     * ``ORCAStep.expected_fingerprints`` (and ``orca_step.batch.expected_fingerprints``)
       gives the settings fingerprints a calculation of a structure would record,
