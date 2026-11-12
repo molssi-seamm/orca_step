@@ -1,6 +1,20 @@
 =======
 History
 =======
+2026.11.12.1 -- Frozen cores and scalar-relativistic Hamiltonians for model chemistries
+    * A model-chemistry calculation can be given its frozen core (a number of frozen
+      orbitals per element, all electrons, or ORCA's default), a scalar-relativistic
+      Hamiltonian (DKH2 or X2C) with the nucleus model stated explicitly, and a
+      decontracted orbital basis. Only frozen-core counts that differ from ORCA's
+      own defaults are written, so asking for the default leaves the calculation,
+      and its fingerprint, unchanged.
+    * After each calculation the number of frozen orbitals ORCA used is checked
+      against the count asked for, and a mismatch fails the calculation.
+    * ORCA 6.1.1 reads ``NewNCore Hf`` as hydrogen, so the step writes atomic
+      numbers; the documentation warns about this.
+    * The model chemistries say what settings they can take, for composite recipes
+      to check.
+
 2026.11.12 -- The parts of correlated energies
     * Correlated calculations run through a model chemistry (MP2, RI-MP2, CCSD(T),
       DLPNO-CCSD(T) and their F12 forms) also return the parts of their energy: the

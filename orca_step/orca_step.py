@@ -10,6 +10,7 @@ import shutil
 import sys
 
 import orca_step
+from .frozen_core import model_chemistry_capabilities
 
 
 def full_orca_path(code):
@@ -354,6 +355,7 @@ class ORCAStep(object):
                         "analytic_hessian": bool(
                             mdi_capable and method_has_analytic_hessian(real)
                         ),
+                        "capabilities": model_chemistry_capabilities(mtype),
                     }
         for name, variant in F12_MODEL_CHEMISTRIES.items():
             method = variant["method"]
@@ -378,6 +380,7 @@ class ORCAStep(object):
                     "analytic_hessian": False,
                     # The fitting basis is part of the method (validated with it)
                     "aux_basis": aux,
+                    "capabilities": model_chemistry_capabilities("QC"),
                 }
         return options
 
