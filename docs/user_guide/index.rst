@@ -971,6 +971,12 @@ Each calculation run this way gets ``%maxcore`` of 80 % of the memory per core i
 given, keeping the rest for ORCA's overshoot and the leader process -- as the ORCA step's
 own runs do.
 
+Coupled-cluster calculations can use much more than ``%maxcore``: canonical CCSD(T)
+of water with cc-pVQZ reached 2.2 GB of resident memory with ``%maxcore`` 800 MB
+(about 2.7 times). Size large-basis coupled-cluster calculations, such as the
+quadruple-zeta components of composite recipes, by the memory they actually use, not
+by ``%maxcore``.
+
 Every calculation run this way uses tight SCF convergence and the fine integration
 grid (``TIGHTSCF DEFGRID3``). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA's looser defaults.
