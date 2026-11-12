@@ -211,6 +211,19 @@ def get_task(
         return (model_chemistry.get("options") or {}).get(name, default)
 
     method, basis, blocks = method_and_blocks(model_chemistry, option("aux_basis"))
+    # The frozen core and a scalar-relativistic Hamiltonian, when asked for
+    # (composite recipes): only what differs from ORCA's defaults is written
+    from .frozen_core import frozen_core_input, relativistic_input
+
+    real = [z for z, sym in zip(numbers, symbols) if not sym.endswith(":")]
+    fc_keywords, fc_block, _ = frozen_core_input(option("frozen_core"), real)
+    rel_keywords, rel_block = relativistic_input(
+        option("relativistic"), option("nucleus")
+    )
+    extra_keywords = fc_keywords + rel_keywords
+    if extra_keywords:
+        method = f"{method} {' '.join(extra_keywords)}"
+    blocks.extend(b for b in (fc_block, rel_block) if b)
     if multiplicity != 1 and any(b.startswith("%mp2 DLPNO") for b in blocks):
         raise ValueError(
             f"DLPNO {model_chemistry.get('method')} needs a closed-shell system "
@@ -383,6 +396,23 @@ def analyze_task(
             parts = energy_parts(out, properties_text)
             if parts is not None:
                 data["energy parts"] = parts
+    # A frozen core asked for is checked against what ORCA froze
+    frozen_core = options.get(
+        "frozen_core", (model_chemistry.get("options") or {}).get("frozen_core")
+    )
+    if frozen_core not in (None, "default") and "energy" in data:
+        from .frozen_core import check_frozen_core, frozen_core_input
+
+        cdata = structure_data(configuration)
+        atom_indices = options.get("atom_indices")
+        if atom_indices is None:
+            atom_indices = range(len(cdata["atomic_numbers"]))
+        ghosts = set(options.get("ghost_atoms") or ())
+        real = [cdata["atomic_numbers"][i] for i in atom_indices if i not in ghosts]
+        _, _, expected = frozen_core_input(frozen_core, real)
+        problem = check_frozen_core(expected, data.get("energy parts"))
+        if problem is not None:
+            raise AnalysisError(f"The ORCA calculation '{result.key}': {problem}")
     return data
 
 
