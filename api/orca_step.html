@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.11.1 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.12 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=0273fb53"></script>
+    <script src="../_static/documentation_options.js?v=b41936cd"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11.1" />
+  <meta name="docsearch:version" content="2026.11.12" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -956,6 +956,89 @@ its functional type.</p>
 <dd><p>Parameters that this kind of step never uses.</p>
 </dd></dl>
 
+</dd></dl>
+
+</section>
+<section id="module-orca_step.energy_parts">
+<span id="orca-step-energy-parts-module"></span><h2>orca_step.energy_parts module<a class="headerlink" href="#module-orca_step.energy_parts" title="Link to this heading">#</a></h2>
+<p>The parts of a correlated energy from ORCA: the reference (HF) energy, the CABS
+singles of F12, the correlation energies and the triples, for composite recipes
+that combine parts of calculations (composite_step) and for the fragment store,
+which keeps them with the energy (its <code class="docutils literal notranslate"><span class="pre">byproducts</span></code>).</p>
+<p>The layout (agreed with the thermochemistry science, 2026-11-12):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">"parts version"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"E_h"</span><span class="p">,</span>
+ <span class="s2">"parts"</span><span class="p">:</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">value</span><span class="p">},</span>              <span class="c1"># energies, E_h, as ORCA gives them</span>
+ <span class="s2">"total"</span><span class="p">:</span> <span class="p">[</span><span class="n">names</span><span class="p">],</span>                    <span class="c1"># the parts that sum to the energy</span>
+ <span class="s2">"factors"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"(T) scale f"</span><span class="p">:</span> <span class="n">value</span><span class="p">},</span>   <span class="c1"># dimensionless</span>
+ <span class="s2">"reference"</span><span class="p">:</span> <span class="s2">"RHF"</span> <span class="o">|</span> <span class="s2">"UHF"</span> <span class="o">|</span> <span class="s2">"QRO"</span><span class="p">,</span>
+ <span class="s2">"frozen core orbitals"</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span> <span class="s2">"relativistic"</span><span class="p">:</span> <span class="s2">"none"</span> <span class="o">|</span> <span class="s2">"DKH2"</span> <span class="o">|</span> <span class="s2">"X2C"</span><span class="p">,</span>
+ <span class="s2">"diagnostics"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"T1"</span><span class="p">:</span> <span class="o">...</span><span class="p">,</span> <span class="s2">"&lt;S**2&gt;"</span><span class="p">:</span> <span class="o">...</span><span class="p">},</span>
+ <span class="s2">"sources"</span><span class="p">:</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="s2">"property file"</span> <span class="o">|</span> <span class="s2">"output"</span> <span class="o">|</span> <span class="s2">"computed"</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>The parts of each kind of run:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p>MP2</p></td>
+<td><p>HF, MP2 correlation</p></td>
+</tr>
+<tr class="row-even"><td><p>RI-MP2</p></td>
+<td><p>HF, RI-MP2 correlation</p></td>
+</tr>
+<tr class="row-odd"><td><p>CCSD(T)</p></td>
+<td><p>HF, CCSD correlation, (T); MP2 correlation (closed-shell RHF)</p></td>
+</tr>
+<tr class="row-even"><td><p>CCSD(T)-F12D/RI</p></td>
+<td><p>HF, CABS singles, CCSD correlation, F12 correction, (T); MP2
+correlation (closed-shell RHF); factor (T) scale f</p></td>
+</tr>
+<tr class="row-odd"><td><p>DLPNO-CCSD(T)</p></td>
+<td><p>HF, DLPNO-MP2 correlation, DLPNO-CCSD correlation, DLPNO-(T0)</p></td>
+</tr>
+<tr class="row-even"><td><p>DLPNO-CCSD(T)-F12D</p></td>
+<td><p>HF, CABS singles, DLPNO-CCSD correlation, F12 correction,
+DLPNO-(T0), DLPNO-MP2 correlation; factor (T) scale f
+(computed)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>“HF” is the energy of the reference determinant the correlation is built on: the
+SCF energy, or for quasi-restricted orbitals (QRO) the QRO determinant’s energy,
+not the UHF one. For F12 it excludes the CABS singles. “(T)” is never scaled; f =
+(CCSD correlation + F12 correction) / CCSD correlation, as ORCA prints it for
+canonical F12 and computed the same way for DLPNO-F12. The DLPNO correlation is
+everything ORCA’s total includes (weak pairs, PNO corrections). The MP2 energy a
+CC run prints is reported only for closed-shell RHF; for UHF or QRO it is not a
+standalone method and is left out.</p>
+<p>The parts must reproduce ORCA’s final single-point energy within 2e-9 E_h (the
+splits are printed to 1e-9 E_h); otherwise no parts are given.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="orca_step.energy_parts.SUM_TOLERANCE">
+<span class="sig-prename descclassname"><span class="pre">orca_step.energy_parts.</span></span><span class="sig-name descname"><span class="pre">SUM_TOLERANCE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2e-09</span></span><a class="headerlink" href="#orca_step.energy_parts.SUM_TOLERANCE" title="Link to this definition">#</a></dt>
+<dd><p>The parts must sum to the final energy within this, E_h</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.energy_parts.energy_parts">
+<span class="sig-prename descclassname"><span class="pre">orca_step.energy_parts.</span></span><span class="sig-name descname"><span class="pre">energy_parts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy_parts.html#energy_parts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy_parts.energy_parts" title="Link to this definition">#</a></dt>
+<dd><p>The parts of the run’s energy, or None (with the reason logged) when the
+run has none or they cannot be given safely.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">orca.out</span></code>.</p></li>
+<li><p><strong>properties_text</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">orca.property.txt</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.energy_parts.property_blocks">
+<span class="sig-prename descclassname"><span class="pre">orca_step.energy_parts.</span></span><span class="sig-name descname"><span class="pre">property_blocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/energy_parts.html#property_blocks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.energy_parts.property_blocks" title="Link to this definition">#</a></dt>
+<dd><p>{block name: {key: value}} from an ORCA <code class="docutils literal notranslate"><span class="pre">.property.txt</span></code>: numbers (the
+last number of an array of one value), integers and strings.</p>
 </dd></dl>
 
 </section>
@@ -2244,6 +2327,12 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_parameters.EnergyParameters.unused"><code class="docutils literal notranslate"><span class="pre">EnergyParameters.unused</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.energy_parts">orca_step.energy_parts module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_parts.SUM_TOLERANCE"><code class="docutils literal notranslate"><span class="pre">SUM_TOLERANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_parts.energy_parts"><code class="docutils literal notranslate"><span class="pre">energy_parts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.energy_parts.property_blocks"><code class="docutils literal notranslate"><span class="pre">property_blocks()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.energy_step">orca_step.energy_step module</a><ul class="pst-show_toc_level nav section-nav flex-column">

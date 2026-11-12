@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.11.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.12 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=0273fb53"></script>
+    <script src="_static/documentation_options.js?v=b41936cd"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11.1" />
+  <meta name="docsearch:version" content="2026.11.12" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,17 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.12 – The parts of correlated energies</dt><dd><ul class="simple">
+<li><p>Correlated calculations run through a model chemistry (MP2, RI-MP2, CCSD(T),
+DLPNO-CCSD(T) and their F12 forms) also return the parts of their energy: the
+HF energy, the F12 CABS singles, the correlation energies and the triples,
+with the reference (RHF, UHF or quasi-restricted orbitals), the number of
+frozen-core orbitals, the T1 diagnostic and &lt;S**2&gt;. The parts must add up to
+ORCA’s final energy within 2e-9 E_h, or none are returned.</p></li>
+<li><p>Composite recipes use them, for example to extrapolate the correlation energy
+separately, and the Thermochemistry step keeps them in its fragment store.</p></li>
+</ul>
+</dd>
 <dt>2026.11.11.1 – CCSD(T)-F12 as model chemistries</dt><dd><ul class="simple">
 <li><p>Canonical CCSD(T)-F12D/RI and DLPNO-CCSD(T)-F12D (TightPNO, TCutPNO 1e-8) are
 offered as model chemistries with cc-pVTZ-F12, the basis they were validated

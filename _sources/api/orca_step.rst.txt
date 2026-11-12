@@ -52,6 +52,14 @@ orca\_step.energy\_parameters module
    :show-inheritance:
    :undoc-members:
 
+orca\_step.energy\_parts module
+-------------------------------
+
+.. automodule:: orca_step.energy_parts
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 orca\_step.energy\_step module
 ------------------------------
 

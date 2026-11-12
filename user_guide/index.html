@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.11.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.12 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=0273fb53"></script>
+    <script src="../_static/documentation_options.js?v=b41936cd"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11.1" />
+  <meta name="docsearch:version" content="2026.11.12" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1418,6 +1418,11 @@ everything but single atoms.</p>
 <p>Each calculation run this way gets <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code> of 80 % of the memory per core it is
 given, keeping the rest for ORCA’s overshoot and the leader process – as the ORCA step’s
 own runs do.</p>
+<p>Coupled-cluster calculations can use much more than <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code>: canonical CCSD(T)
+of water with cc-pVQZ reached 2.2 GB of resident memory with <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code> 800 MB
+(about 2.7 times). Size large-basis coupled-cluster calculations, such as the
+quadruple-zeta components of composite recipes, by the memory they actually use, not
+by <code class="docutils literal notranslate"><span class="pre">%maxcore</span></code>.</p>
 <p>Every calculation run this way uses tight SCF convergence and the fine integration
 grid (<code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span> <span class="pre">DEFGRID3</span></code>). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA’s looser defaults.</p>
@@ -1432,6 +1437,15 @@ approximation;</p></li>
 <p>They run as the Energy sub-step runs F12: with the matching CABS
 (cc-pVTZ-F12-CABS), the cc-pVQZ/C correlation fitting basis and <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code>, and
 no integration grid. The Thermochemistry step’s <code class="docutils literal notranslate"><span class="pre">high</span></code> preset uses them.</p>
+<p>A correlated calculation run this way (MP2, RI-MP2, CCSD(T), DLPNO-CCSD(T) and
+their F12 forms) also returns the parts of its energy: the HF energy, the F12 CABS
+singles, the correlation energies and the triples, with the reference (RHF, UHF or
+quasi-restricted orbitals), the number of frozen-core orbitals, the T1 diagnostic and
+&lt;S**2&gt;. The values come from ORCA’s property file at full precision, the splits from
+its output. They must add up to ORCA’s final energy within 2e-9 E_h, or none are
+returned. Composite recipes use them, for example to extrapolate the correlation
+energy separately, and the Thermochemistry step stores them with the energies in
+its fragment store.</p>
 <p>Functionals without a dispersion correction of their own are also offered with
 Grimme’s D4 correction, as <code class="docutils literal notranslate"><span class="pre">&lt;functional&gt;-D4</span></code> – e.g. <code class="docutils literal notranslate"><span class="pre">ORCA:DFT&#64;R2SCAN-D4/def2-TZVP</span></code>,
 which runs <code class="docutils literal notranslate"><span class="pre">!</span> <span class="pre">R2SCAN</span> <span class="pre">D4</span></code>. They are offered for the functionals the D4 model has
