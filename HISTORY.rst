@@ -1,6 +1,13 @@
 =======
 History
 =======
+2026.11.12.2 -- Quasi-restricted orbitals for open-shell model chemistries
+    * An open-shell correlated calculation run through a model chemistry can be told
+      its reference: ORCA's default (UHF) or quasi-restricted orbitals (QRO). QRO is
+      written only for open-shell systems, so closed-shell calculations and their
+      fingerprints are unchanged, and after the run the reference ORCA used is
+      checked. Composite recipes use it for open-shell species.
+
 2026.11.12.1 -- Frozen cores and scalar-relativistic Hamiltonians for model chemistries
     * A model-chemistry calculation can be given its frozen core (a number of frozen
       orbitals per element, all electrons, or ORCA's default), a scalar-relativistic

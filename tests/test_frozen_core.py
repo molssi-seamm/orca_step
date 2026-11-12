@@ -157,3 +157,75 @@ def test_decontract():
     decon = get_task(_water(), _mc(decontract=True), key="w", properties=("energy",))
     assert "%basis Decontract true end" in decon.files["orca.inp"]
     assert decon.files["orca.inp"] != plain.files["orca.inp"]
+
+
+# -- the reference of open-shell calculations ---------------------------------------
+
+
+def _oh(multiplicity=2):
+    from seamm_exec import Geometry
+
+    return Geometry([8, 1], [[0, 0, 0], [0, 0, 0.9697]], multiplicity=multiplicity)
+
+
+def test_reference_input():
+    from orca_step.frozen_core import reference_input
+
+    assert reference_input("QRO", 2) == "%mdci UseQROs true end"
+    # Closed shells, and ORCA's own UHF, write nothing
+    assert reference_input("QRO", 1) == ""
+    assert reference_input("UHF", 2) == "" and reference_input(None, 2) == ""
+    with pytest.raises(ValueError, match="must be one of"):
+        reference_input("ROHF", 2)
+
+
+def test_qro_changes_only_open_shell_inputs():
+    from orca_step.batch import get_task
+
+    plain = get_task(_water(), _mc(), key="w", properties=("energy",))
+    qro = get_task(_water(), _mc(reference="QRO"), key="w", properties=("energy",))
+    assert qro.files["orca.inp"] == plain.files["orca.inp"]
+    uhf = get_task(_oh(), _mc(), key="oh", properties=("energy",))
+    same = get_task(_oh(), _mc(reference="UHF"), key="oh", properties=("energy",))
+    assert same.files["orca.inp"] == uhf.files["orca.inp"]
+    qro = get_task(_oh(), _mc(reference="QRO"), key="oh", properties=("energy",))
+    assert "%mdci UseQROs true end" in qro.files["orca.inp"]
+    assert qro.files["orca.inp"] != uhf.files["orca.inp"]
+
+
+def test_qro_joins_an_existing_mdci_block():
+    """DLPNO-F12 has its own %mdci block (TCutPNO); QRO goes into it."""
+    from orca_step.batch import get_task
+    from orca_step.orca_step import mc_method_alias
+
+    method = mc_method_alias("DLPNO-CCSD(T)-F12D(TightPNO,TCutPNO=1e-8)")
+    mc = _mc(method, "cc-pVTZ-F12", reference="QRO", aux_basis="cc-pVQZ/C")
+    text = get_task(_oh(), mc, key="oh", properties=("energy",)).files["orca.inp"]
+    mdci = [line for line in text.splitlines() if line.lower().startswith("%mdci")]
+    assert mdci == ["%mdci TCutPNO 1e-8 UseQROs true end"]
+
+
+@pytest.mark.parametrize("fixture, ok", [("oh_cc_qro", True), ("oh_cc_uhf", False)])
+def test_the_reference_is_checked_after_the_run(tmp_path, fixture, ok):
+    from seamm_exec import AnalysisError, TaskResult
+
+    from orca_step.batch import analyze_task
+
+    data = Path(__file__).parent / "data" / "energy_parts"
+    for name in ("out", "property.txt"):
+        text = gzip.open(data / f"{fixture}.{name}.gz", "rt").read()
+        (tmp_path / f"orca.{name}").write_text(text)
+    result = TaskResult(
+        key="oh",
+        state="finished",
+        directory=tmp_path,
+        files={"orca.out": "orca.out", "orca.property.txt": "orca.property.txt"},
+    )
+    if ok:
+        out = analyze_task(result, _mc(reference="QRO"), _oh(), properties=("energy",))
+        assert out["energy parts"]["reference"] == "QRO"
+    else:
+        with pytest.raises(AnalysisError, match="quasi-restricted orbitals"):
+            analyze_task(result, _mc(reference="QRO"), _oh(), properties=("energy",))
+        # UHF asked for, UHF run: fine
+        analyze_task(result, _mc(reference="UHF"), _oh(), properties=("energy",))
