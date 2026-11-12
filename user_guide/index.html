@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.11 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.11.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="../_static/documentation_options.js?v=0273fb53"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11" />
+  <meta name="docsearch:version" content="2026.11.11.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1421,6 +1421,17 @@ own runs do.</p>
 <p>Every calculation run this way uses tight SCF convergence and the fine integration
 grid (<code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span> <span class="pre">DEFGRID3</span></code>). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA’s looser defaults.</p>
+<p>Two explicitly-correlated coupled-cluster methods are offered as model chemistries,
+each only with the basis it was validated with, cc-pVTZ-F12:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ORCA:QC&#64;CCSD(T)-F12D_RI/cc-pVTZ-F12</span></code> – canonical CCSD(T)-F12D with the RI
+approximation;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ORCA:QC&#64;DLPNO-CCSD(T)-F12D(TightPNO,TCutPNO=1e-8)/cc-pVTZ-F12</span></code> – its local
+(DLPNO) counterpart with tight PNO settings, for larger closed-shell molecules.</p></li>
+</ul>
+<p>They run as the Energy sub-step runs F12: with the matching CABS
+(cc-pVTZ-F12-CABS), the cc-pVQZ/C correlation fitting basis and <code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span></code>, and
+no integration grid. The Thermochemistry step’s <code class="docutils literal notranslate"><span class="pre">high</span></code> preset uses them.</p>
 <p>Functionals without a dispersion correction of their own are also offered with
 Grimme’s D4 correction, as <code class="docutils literal notranslate"><span class="pre">&lt;functional&gt;-D4</span></code> – e.g. <code class="docutils literal notranslate"><span class="pre">ORCA:DFT&#64;R2SCAN-D4/def2-TZVP</span></code>,
 which runs <code class="docutils literal notranslate"><span class="pre">!</span> <span class="pre">R2SCAN</span> <span class="pre">D4</span></code>. They are offered for the functionals the D4 model has

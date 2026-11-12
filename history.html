@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.11 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.11.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="_static/documentation_options.js?v=0273fb53"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11" />
+  <meta name="docsearch:version" content="2026.11.11.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,19 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.11.1 – CCSD(T)-F12 as model chemistries</dt><dd><ul class="simple">
+<li><p>Canonical CCSD(T)-F12D/RI and DLPNO-CCSD(T)-F12D (TightPNO, TCutPNO 1e-8) are
+offered as model chemistries with cc-pVTZ-F12, the basis they were validated
+with: <code class="docutils literal notranslate"><span class="pre">ORCA:QC&#64;CCSD(T)-F12D_RI/cc-pVTZ-F12</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ORCA:QC&#64;DLPNO-CCSD(T)-F12D(TightPNO,TCutPNO=1e-8)/cc-pVTZ-F12</span></code>. They run
+with the matching CABS, the cc-pVQZ/C fitting basis and tight SCF, as the
+Energy sub-step runs F12, and are what the Thermochemistry step’s <code class="docutils literal notranslate"><span class="pre">high</span></code>
+preset uses.</p></li>
+<li><p>Model-chemistry calculations of the double hybrids’ DLPNO variants are still
+refused for open-shell structures; other methods with extra input blocks no
+longer are.</p></li>
+</ul>
+</dd>
 <dt>2026.11.11 – The fingerprints of a calculation, predicted before it runs</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">ORCAStep.expected_fingerprints</span></code> (and <code class="docutils literal notranslate"><span class="pre">orca_step.batch.expected_fingerprints</span></code>)
 gives the settings fingerprints a calculation of a structure would record,

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.11.11 documentation</title>
+    <title>orca_step.orca_step &#8212; SEAMM ORCA Plug-in 2026.11.11.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="../../_static/documentation_options.js?v=0273fb53"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11" />
+  <meta name="docsearch:version" content="2026.11.11.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -724,12 +724,50 @@
 <span class="w">    </span><span class="sd">"""Inverse of :func:`mc_method_alias`: the real ORCA functional keyword for a</span>
 <span class="sd">    (possibly aliased) model-chemistry method, or the method unchanged if it is</span>
 <span class="sd">    not an aliased functional."""</span>
-    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]:</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="p">(</span><span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">],</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"methods"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">method</span> <span class="ow">in</span> <span class="n">table</span> <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">known</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">method</span>
     <span class="n">candidate</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"/"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"functionals"</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">candidate</span> <span class="ow">in</span> <span class="n">table</span> <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">known</span><span class="p">):</span>
+        <span class="c1"># e.g. REVDSD-PBEP86-D4/2021, or CCSD(T)-F12D/RI</span>
         <span class="k">return</span> <span class="n">candidate</span>
     <span class="k">return</span> <span class="n">method</span></div>
+
+
+
+<span class="c1">#: The explicitly-correlated (F12) model chemistries offered: method -&gt; {F12 orbital</span>
+<span class="c1">#: basis: its RI fitting basis}. The CABS is always &lt;basis&gt;-CABS. Only combinations</span>
+<span class="c1">#: validated in production are offered: CCSD(T)-F12D/RI with cc-pVTZ-F12 and</span>
+<span class="c1">#: cc-pVQZ/C is thermo's canonical F12 (part A, 2026-10-30; the fragment store's</span>
+<span class="c1">#: rows from jobs 5608-5620 have exactly these settings).</span>
+<span class="n">F12_MODEL_CHEMISTRIES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"CCSD(T)-F12D/RI"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"CCSD(T)-F12D/RI"</span><span class="p">,</span>
+        <span class="s2">"words"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"blocks"</span><span class="p">:</span> <span class="p">(),</span>
+        <span class="s2">"bases"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"cc-pVTZ-F12"</span><span class="p">:</span> <span class="s2">"cc-pVQZ/C"</span><span class="p">},</span>
+    <span class="p">},</span>
+    <span class="c1"># thermo's DLPNO-F12 (part A validation, jobs 5516, 5536, 5560): TightPNO with</span>
+    <span class="c1"># TCutPNO tightened to 1e-8. The PNO settings are in the name, so that the label</span>
+    <span class="c1"># says which thresholds were used; ORCA's NormalPNO default is not offered.</span>
+    <span class="s2">"DLPNO-CCSD(T)-F12D(TightPNO,TCutPNO=1e-8)"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"DLPNO-CCSD(T)-F12D"</span><span class="p">,</span>
+        <span class="s2">"words"</span><span class="p">:</span> <span class="s2">"TightPNO"</span><span class="p">,</span>
+        <span class="s2">"blocks"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"%mdci TCutPNO 1e-8 end"</span><span class="p">,),</span>
+        <span class="s2">"bases"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"cc-pVTZ-F12"</span><span class="p">:</span> <span class="s2">"cc-pVQZ/C"</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="f12_variant">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.orca_step.f12_variant">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">f12_variant</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The F12 model chemistry for a method name (advertised or un-aliased), or</span>
+<span class="sd">    None: its ORCA keyword, extra '!' words, '%' blocks and bases."""</span>
+    <span class="n">variant</span> <span class="o">=</span> <span class="n">F12_MODEL_CHEMISTRIES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">variant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">variant</span> <span class="o">=</span> <span class="n">F12_MODEL_CHEMISTRIES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"/"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">variant</span></div>
 
 
 
@@ -766,10 +804,9 @@
 
         <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"methods"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="c1"># F12 methods need a specific F12 orbital basis (+CABS), not the</span>
-            <span class="c1"># generic advertised bases, so they are not sensible generic model</span>
-            <span class="c1"># chemistries; skip them (this also keeps the '/RI' out of the</span>
-            <span class="c1"># model-chemistry grammar, which reserves '/').</span>
+            <span class="c1"># F12 methods need an F12 orbital basis with its CABS and fitting</span>
+            <span class="c1"># basis, not the generic advertised bases: only the validated</span>
+            <span class="c1"># combinations are offered (F12_MODEL_CHEMISTRIES), below.</span>
             <span class="k">if</span> <span class="s2">"F12"</span> <span class="ow">in</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
                 <span class="k">continue</span>
             <span class="n">mtype</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">,</span> <span class="s2">"QC"</span><span class="p">)</span>
@@ -845,6 +882,30 @@
                             <span class="n">mdi_capable</span> <span class="ow">and</span> <span class="n">method_has_analytic_hessian</span><span class="p">(</span><span class="n">real</span><span class="p">)</span>
                         <span class="p">),</span>
                     <span class="p">}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">F12_MODEL_CHEMISTRIES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">variant</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">orca_step</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"methods"</span><span class="p">][</span><span class="n">method</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">mdi_only</span> <span class="ow">or</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"gradients"</span><span class="p">,</span> <span class="s2">"analytic"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"analytic"</span><span class="p">:</span>
+                <span class="k">continue</span>  <span class="c1"># (no analytic F12 gradient in ORCA: never MDI-capable)</span>
+            <span class="n">adv_method</span> <span class="o">=</span> <span class="n">mc_method_alias</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">basis</span><span class="p">,</span> <span class="n">aux</span> <span class="ow">in</span> <span class="n">variant</span><span class="p">[</span><span class="s2">"bases"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"ORCA:</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'type'</span><span class="p">,</span><span class="w"> </span><span class="s1">'QC'</span><span class="p">)</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">adv_method</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">"</span>
+                <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"model_chemistry"</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">,</span> <span class="s2">"QC"</span><span class="p">),</span>
+                    <span class="s2">"method"</span><span class="p">:</span> <span class="n">adv_method</span><span class="p">,</span>
+                    <span class="s2">"basis"</span><span class="p">:</span> <span class="n">basis</span><span class="p">,</span>
+                    <span class="s2">"description"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2"> + </span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">-CABS, </span><span class="si">{</span><span class="n">aux</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="s2">"periodic"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">"mdi_capable"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">"mdi_method_arg"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">"mdi_basis_arg"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">"prefers_batch"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">"parallel_tasks"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">"analytic_hessian"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="c1"># The fitting basis is part of the method (validated with it)</span>
+                    <span class="s2">"aux_basis"</span><span class="p">:</span> <span class="n">aux</span><span class="p">,</span>
+                <span class="p">}</span>
         <span class="k">return</span> <span class="n">options</span></div>
 
 

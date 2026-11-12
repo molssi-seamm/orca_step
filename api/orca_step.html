@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.11 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.11.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=83e1bca7"></script>
+    <script src="../_static/documentation_options.js?v=0273fb53"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.11" />
+  <meta name="docsearch:version" content="2026.11.11.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1723,6 +1723,21 @@ own run time.</p></li>
 <section id="module-orca_step.orca_step">
 <span id="orca-step-orca-step-module"></span><h2>orca_step.orca_step module<a class="headerlink" href="#module-orca_step.orca_step" title="Link to this heading">#</a></h2>
 <p>Stevedore helper for the main ORCA node.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="orca_step.orca_step.F12_MODEL_CHEMISTRIES">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">F12_MODEL_CHEMISTRIES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CCSD(T)-F12D/RI':</span> <span class="pre">{'bases':</span> <span class="pre">{'cc-pVTZ-F12':</span> <span class="pre">'cc-pVQZ/C'},</span> <span class="pre">'blocks':</span> <span class="pre">(),</span> <span class="pre">'method':</span> <span class="pre">'CCSD(T)-F12D/RI',</span> <span class="pre">'words':</span> <span class="pre">''},</span> <span class="pre">'DLPNO-CCSD(T)-F12D(TightPNO,TCutPNO=1e-8)':</span> <span class="pre">{'bases':</span> <span class="pre">{'cc-pVTZ-F12':</span> <span class="pre">'cc-pVQZ/C'},</span> <span class="pre">'blocks':</span> <span class="pre">('%mdci</span> <span class="pre">TCutPNO</span> <span class="pre">1e-8</span> <span class="pre">end',),</span> <span class="pre">'method':</span> <span class="pre">'DLPNO-CCSD(T)-F12D',</span> <span class="pre">'words':</span> <span class="pre">'TightPNO'}}</span></span><a class="headerlink" href="#orca_step.orca_step.F12_MODEL_CHEMISTRIES" title="Link to this definition">#</a></dt>
+<dd><p>method -&gt; {F12 orbital
+basis: its RI fitting basis}. The CABS is always &lt;basis&gt;-CABS. Only combinations
+validated in production are offered: CCSD(T)-F12D/RI with cc-pVTZ-F12 and
+cc-pVQZ/C is thermo’s canonical F12 (part A, 2026-10-30; the fragment store’s
+rows from jobs 5608-5620 have exactly these settings).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The explicitly-correlated (F12) model chemistries offered</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="orca_step.orca_step.ORCAStep">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">ORCAStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flowchart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#ORCAStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.ORCAStep" title="Link to this definition">#</a></dt>
@@ -1845,6 +1860,13 @@ without a <code class="docutils literal notranslate"><span class="pre">bse:</spa
 <dd><p>The canonical double-hybrid ORCA keyword behind a DLPNO pseudo-functional
 (e.g. <code class="docutils literal notranslate"><span class="pre">REVDSD-PBEP86-D4/2021</span></code> for <code class="docutils literal notranslate"><span class="pre">DLPNO-REVDSD-PBEP86-D4/2021</span></code>), or
 None if <cite>method</cite> is not one. See the DLPNO note in <code class="docutils literal notranslate"><span class="pre">metadata.py</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.orca_step.f12_variant">
+<span class="sig-prename descclassname"><span class="pre">orca_step.orca_step.</span></span><span class="sig-name descname"><span class="pre">f12_variant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/orca_step.html#f12_variant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.orca_step.f12_variant" title="Link to this definition">#</a></dt>
+<dd><p>The F12 model chemistry for a method name (advertised or un-aliased), or
+None: its ORCA keyword, extra ‘!’ words, ‘%’ blocks and bases.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -2343,6 +2365,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.orca_step">orca_step.orca_step module</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.F12_MODEL_CHEMISTRIES"><code class="docutils literal notranslate"><span class="pre">F12_MODEL_CHEMISTRIES</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep"><code class="docutils literal notranslate"><span class="pre">ORCAStep</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.analyze_task"><code class="docutils literal notranslate"><span class="pre">ORCAStep.analyze_task()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.ORCAStep.can_run_task"><code class="docutils literal notranslate"><span class="pre">ORCAStep.can_run_task()</span></code></a></li>
@@ -2359,6 +2382,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.dlpno_parent"><code class="docutils literal notranslate"><span class="pre">dlpno_parent()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.f12_variant"><code class="docutils literal notranslate"><span class="pre">f12_variant()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.full_orca_path"><code class="docutils literal notranslate"><span class="pre">full_orca_path()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.mc_method_alias"><code class="docutils literal notranslate"><span class="pre">mc_method_alias()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.orca_step.mc_method_unalias"><code class="docutils literal notranslate"><span class="pre">mc_method_unalias()</span></code></a></li>
