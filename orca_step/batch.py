@@ -87,7 +87,12 @@ def method_and_blocks(model_chemistry, aux_basis=None):
     """The method words (keyword plus the auxiliary basis, by default AutoAux), the
     basis, and any '%' block for a model chemistry -- exactly as ORCA's MDI engine
     is launched for it. ``aux_basis`` is as :func:`auxiliary_basis_words` takes."""
-    from .orca_step import dlpno_parent, mc_method_unalias, orca_method_keyword
+    from .orca_step import (
+        dlpno_parent,
+        f12_variant,
+        mc_method_unalias,
+        orca_method_keyword,
+    )
 
     from seamm_exec.evaluator import mdi_method_and_basis
 
@@ -95,8 +100,18 @@ def method_and_blocks(model_chemistry, aux_basis=None):
     # engine's, or (for methods with no MDI engine, e.g. CCSD(T), which the
     # batch path can still run) the un-aliased method.
     method, basis = mdi_method_and_basis(model_chemistry)
-    method = mc_method_unalias(method)
     blocks = []
+    variant = f12_variant(method)
+    if variant is not None:
+        # An F12 model chemistry: its keyword, extra words and blocks
+        keyword = f"{variant['method']} {variant['words']}".strip()
+        blocks.extend(variant["blocks"])
+        basis = basis or "cc-pVTZ-F12"
+        aux = auxiliary_basis_words(aux_basis, variant["method"], basis)
+        words = f"{keyword} {aux}".strip()
+        cabs = f12_cabs(variant["method"], basis)
+        return (f"{words} {cabs}".strip() if cabs else words), basis, blocks
+    method = mc_method_unalias(method)
     parent = dlpno_parent(method)
     keyword = orca_method_keyword(method)
     if parent is not None:
@@ -107,7 +122,29 @@ def method_and_blocks(model_chemistry, aux_basis=None):
         return keyword, composite_basis(keyword, basis), blocks
     basis = basis or "def2-SVP"
     aux = auxiliary_basis_words(aux_basis, keyword, basis)
-    return f"{keyword} {aux}".strip(), basis, blocks
+    words = f"{keyword} {aux}".strip()
+    cabs = f12_cabs(keyword, basis)
+    if cabs:
+        words += f" {cabs}"
+    return words, basis, blocks
+
+
+def is_f12(method):
+    """Whether an ORCA method keyword is explicitly correlated (F12)."""
+    return "F12" in str(method).upper()
+
+
+def f12_cabs(method, basis):
+    """The CABS an F12 method needs with an F12 orbital basis, ``<basis>-CABS``, as
+    the Energy sub-step adds it; '' for other methods or bases."""
+    if not is_f12(method):
+        return ""
+    name = str(basis or "")
+    if name.lower().startswith("bse:"):
+        name = name[4:]
+    if name.upper().endswith("-F12"):
+        return f"{name}-CABS"
+    return ""
 
 
 def can_run_task(configuration, model_chemistry, *, options=None):
@@ -174,7 +211,7 @@ def get_task(
         return (model_chemistry.get("options") or {}).get(name, default)
 
     method, basis, blocks = method_and_blocks(model_chemistry, option("aux_basis"))
-    if multiplicity != 1 and blocks:
+    if multiplicity != 1 and any(b.startswith("%mp2 DLPNO") for b in blocks):
         raise ValueError(
             f"DLPNO {model_chemistry.get('method')} needs a closed-shell system "
             f"(ORCA has DLPNO-MP2 gradients only for RHF), not multiplicity "
@@ -229,6 +266,11 @@ def get_task(
         if "VERYTIGHTSCF" not in (w.upper() for w in words):
             words = [w for w in words if w.upper() != "TIGHTSCF"] + ["VERYTIGHTSCF"]
         line = tight_exchange_words(" ".join(words))
+    if is_f12(method):
+        # No integration grid in an F12 calculation: the automatic DEFGRID3 of the
+        # engine's accuracy keywords is left out, as the Energy sub-step writes
+        # F12 inputs, so the settings fingerprints of the two routes agree
+        line = " ".join(w for w in line.split() if w.upper() != "DEFGRID3")
     text = f"! {line}\n{rest}"
     files["orca.inp"] = text
     # The fingerprint is the calculation asked for, without the retry's input,

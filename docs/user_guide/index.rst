@@ -975,6 +975,18 @@ Every calculation run this way uses tight SCF convergence and the fine integrati
 grid (``TIGHTSCF DEFGRID3``). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA's looser defaults.
 
+Two explicitly-correlated coupled-cluster methods are offered as model chemistries,
+each only with the basis it was validated with, cc-pVTZ-F12:
+
+* ``ORCA:QC@CCSD(T)-F12D_RI/cc-pVTZ-F12`` -- canonical CCSD(T)-F12D with the RI
+  approximation;
+* ``ORCA:QC@DLPNO-CCSD(T)-F12D(TightPNO,TCutPNO=1e-8)/cc-pVTZ-F12`` -- its local
+  (DLPNO) counterpart with tight PNO settings, for larger closed-shell molecules.
+
+They run as the Energy sub-step runs F12: with the matching CABS
+(cc-pVTZ-F12-CABS), the cc-pVQZ/C correlation fitting basis and ``TIGHTSCF``, and
+no integration grid. The Thermochemistry step's ``high`` preset uses them.
+
 Functionals without a dispersion correction of their own are also offered with
 Grimme's D4 correction, as ``<functional>-D4`` -- e.g. ``ORCA:DFT@R2SCAN-D4/def2-TZVP``,
 which runs ``! R2SCAN D4``. They are offered for the functionals the D4 model has

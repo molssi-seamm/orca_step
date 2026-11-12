@@ -1318,11 +1318,19 @@ def test_f12_methods_and_bases_in_metadata():
     assert {"cc-pVDZ-F12", "cc-pVTZ-F12", "cc-pVQZ-F12"} <= set(bases)
 
 
-def test_f12_methods_excluded_from_model_chemistry():
-    """F12 methods need F12-specific bases, so they are not advertised as
-    generic model chemistries (which pair with non-F12 bases)."""
+def test_f12_methods_only_with_their_validated_bases():
+    """F12 methods need F12-specific bases, so they are never paired with the
+    generic advertised bases: only the validated F12 combinations are offered
+    (orca_step.F12_MODEL_CHEMISTRIES), each with an F12 orbital basis."""
     opts = orca_step.ORCAStep.get_model_chemistry_options()
-    assert not any("F12" in k.upper() for k in opts)
+    f12 = [k for k in opts if "F12" in k.upper()]
+    assert sorted(f12) == sorted(
+        [
+            "ORCA:QC@CCSD(T)-F12D_RI/cc-pVTZ-F12",
+            "ORCA:QC@DLPNO-CCSD(T)-F12D(TightPNO,TCutPNO=1e-8)/cc-pVTZ-F12",
+        ]
+    )
+    assert all(k.endswith("-F12") for k in f12)
 
 
 def test_cabs_keyword_derivation():
