@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.12.1 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.12.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=900c25b8"></script>
+    <script src="../_static/documentation_options.js?v=a7f4afd2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.1" />
+  <meta name="docsearch:version" content="2026.11.12.2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1329,6 +1329,15 @@ frozen; Na and Mg freeze only 1s; K-Zn freeze 1s-2p.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="orca_step.frozen_core.REFERENCES">
+<span class="sig-prename descclassname"><span class="pre">orca_step.frozen_core.</span></span><span class="sig-name descname"><span class="pre">REFERENCES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('default',</span> <span class="pre">'UHF',</span> <span class="pre">'QRO')</span></span><a class="headerlink" href="#orca_step.frozen_core.REFERENCES" title="Link to this definition">#</a></dt>
+<dd><p>The references an open-shell correlated calculation can be built on. “default”
+and “UHF” are ORCA’s own choice (UHF); “QRO” takes quasi-restricted orbitals
+from the UHF solution. ROHF is not offered: ORCA’s canonical coupled cluster
+refuses it, and ROHF-NoIter silently gave OH the wrong state (2026-11-12).</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="orca_step.frozen_core.RELATIVISTIC">
 <span class="sig-prename descclassname"><span class="pre">orca_step.frozen_core.</span></span><span class="sig-name descname"><span class="pre">RELATIVISTIC</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'DKH2':</span> <span class="pre">'DKH2',</span> <span class="pre">'X2C':</span> <span class="pre">'X2C',</span> <span class="pre">'none':</span> <span class="pre">None}</span></span><a class="headerlink" href="#orca_step.frozen_core.RELATIVISTIC" title="Link to this definition">#</a></dt>
 <dd><p>The scalar-relativistic Hamiltonians and their ORCA keywords</p>
@@ -1338,6 +1347,12 @@ frozen; Na and Mg freeze only 1s; K-Zn freeze 1s-2p.</p>
 <dt class="sig sig-object py" id="orca_step.frozen_core.check_frozen_core">
 <span class="sig-prename descclassname"><span class="pre">orca_step.frozen_core.</span></span><span class="sig-name descname"><span class="pre">check_frozen_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expected</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frozen_core.html#check_frozen_core"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frozen_core.check_frozen_core" title="Link to this definition">#</a></dt>
 <dd><p>The reason the run’s frozen core is not the one asked for, or None.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.frozen_core.check_reference">
+<span class="sig-prename descclassname"><span class="pre">orca_step.frozen_core.</span></span><span class="sig-name descname"><span class="pre">check_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frozen_core.html#check_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frozen_core.check_reference" title="Link to this definition">#</a></dt>
+<dd><p>The reason the run’s reference is not the one asked for, or None.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1374,7 +1389,18 @@ default, which is not checked).</p>
 <dd><p>What a model-chemistry calculation of this type can be told (composite
 recipes check their components against it): the frozen core, a
 scalar-relativistic Hamiltonian and its nucleus model, and whether the energy
-comes with its parts (correlated methods).</p>
+comes with its parts (correlated methods), and the reference of an open-shell
+correlated calculation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="orca_step.frozen_core.reference_input">
+<span class="sig-prename descclassname"><span class="pre">orca_step.frozen_core.</span></span><span class="sig-name descname"><span class="pre">reference_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frozen_core.html#reference_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frozen_core.reference_input" title="Link to this definition">#</a></dt>
+<dd><p>The block that makes an open-shell correlated calculation use quasi-
+restricted orbitals, or “”.</p>
+<p>Closed-shell calculations, and open-shell ones on ORCA’s default (UHF), get
+nothing, so asking for a reference changes neither their input nor their
+settings fingerprint.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -2470,11 +2496,14 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-orca_step.frozen_core">orca_step.frozen_core module</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.NUCLEUS"><code class="docutils literal notranslate"><span class="pre">NUCLEUS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.ORCA_DEFAULT_CORE_ELECTRONS"><code class="docutils literal notranslate"><span class="pre">ORCA_DEFAULT_CORE_ELECTRONS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.REFERENCES"><code class="docutils literal notranslate"><span class="pre">REFERENCES</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.RELATIVISTIC"><code class="docutils literal notranslate"><span class="pre">RELATIVISTIC</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.check_frozen_core"><code class="docutils literal notranslate"><span class="pre">check_frozen_core()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.check_reference"><code class="docutils literal notranslate"><span class="pre">check_reference()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.decontract_block"><code class="docutils literal notranslate"><span class="pre">decontract_block()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.frozen_core_input"><code class="docutils literal notranslate"><span class="pre">frozen_core_input()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.model_chemistry_capabilities"><code class="docutils literal notranslate"><span class="pre">model_chemistry_capabilities()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.reference_input"><code class="docutils literal notranslate"><span class="pre">reference_input()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.relativistic_input"><code class="docutils literal notranslate"><span class="pre">relativistic_input()</span></code></a></li>
 </ul>
 </li>

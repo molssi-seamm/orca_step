@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.frozen_core &#8212; SEAMM ORCA Plug-in 2026.11.12.1 documentation</title>
+    <title>orca_step.frozen_core &#8212; SEAMM ORCA Plug-in 2026.11.12.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=900c25b8"></script>
+    <script src="../../_static/documentation_options.js?v=a7f4afd2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.1" />
+  <meta name="docsearch:version" content="2026.11.12.2" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -631,6 +631,49 @@
 
 
 
+<span class="c1">#: The references an open-shell correlated calculation can be built on. "default"</span>
+<span class="c1">#: and "UHF" are ORCA's own choice (UHF); "QRO" takes quasi-restricted orbitals</span>
+<span class="c1">#: from the UHF solution. ROHF is not offered: ORCA's canonical coupled cluster</span>
+<span class="c1">#: refuses it, and ROHF-NoIter silently gave OH the wrong state (2026-11-12).</span>
+<span class="n">REFERENCES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"default"</span><span class="p">,</span> <span class="s2">"UHF"</span><span class="p">,</span> <span class="s2">"QRO"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="reference_input">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.reference_input">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">reference_input</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">multiplicity</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The block that makes an open-shell correlated calculation use quasi-</span>
+<span class="sd">    restricted orbitals, or "".</span>
+
+<span class="sd">    Closed-shell calculations, and open-shell ones on ORCA's default (UHF), get</span>
+<span class="sd">    nothing, so asking for a reference changes neither their input nor their</span>
+<span class="sd">    settings fingerprint.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">):</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="s2">"default"</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">REFERENCES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The reference of an open-shell calculation must be one of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">REFERENCES</span><span class="p">)</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">reference</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="o">==</span> <span class="s2">"QRO"</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">multiplicity</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"%mdci UseQROs true end"</span>
+    <span class="k">return</span> <span class="s2">""</span></div>
+
+
+
+<div class="viewcode-block" id="check_reference">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.check_reference">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_reference</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">multiplicity</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The reason the run's reference is not the one asked for, or None."""</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="o">!=</span> <span class="s2">"QRO"</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">multiplicity</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">got</span> <span class="o">=</span> <span class="p">(</span><span class="n">parts</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reference"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">got</span> <span class="o">!=</span> <span class="s2">"QRO"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"quasi-restricted orbitals were asked for, but the run used </span><span class="si">{</span><span class="n">got</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
 <div class="viewcode-block" id="check_frozen_core">
 <a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.check_frozen_core">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_frozen_core</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
@@ -655,9 +698,11 @@
 <span class="w">    </span><span class="sd">"""What a model-chemistry calculation of this type can be told (composite</span>
 <span class="sd">    recipes check their components against it): the frozen core, a</span>
 <span class="sd">    scalar-relativistic Hamiltonian and its nucleus model, and whether the energy</span>
-<span class="sd">    comes with its parts (correlated methods)."""</span>
+<span class="sd">    comes with its parts (correlated methods), and the reference of an open-shell</span>
+<span class="sd">    correlated calculation."""</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"frozen_core"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"default"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">,</span> <span class="s2">"per-element"</span><span class="p">],</span>
+        <span class="s2">"reference"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">REFERENCES</span><span class="p">),</span>
         <span class="s2">"relativistic"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"DKH2"</span><span class="p">,</span> <span class="s2">"X2C"</span><span class="p">],</span>
         <span class="s2">"nucleus"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"point"</span><span class="p">,</span> <span class="s2">"finite"</span><span class="p">],</span>
         <span class="s2">"decontract"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>

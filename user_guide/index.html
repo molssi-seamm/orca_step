@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.12.1 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.12.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=900c25b8"></script>
+    <script src="../_static/documentation_options.js?v=a7f4afd2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.1" />
+  <meta name="docsearch:version" content="2026.11.12.2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1440,6 +1440,15 @@ number of frozen orbitals ORCA reports must be the one asked for.</p>
 frozen core, not hafnium’s. The step therefore always writes the atomic number
 (<code class="docutils literal notranslate"><span class="pre">NewNCore</span> <span class="pre">72</span> <span class="pre">n</span></code>). Write it that way in your own inputs too.</p>
 </div>
+<p>An open-shell correlated calculation can also be told its <code class="docutils literal notranslate"><span class="pre">reference</span></code>:
+<code class="docutils literal notranslate"><span class="pre">default</span></code> or <code class="docutils literal notranslate"><span class="pre">UHF</span></code> (ORCA’s own choice, an unrestricted Hartree-Fock reference),
+or <code class="docutils literal notranslate"><span class="pre">QRO</span></code>, quasi-restricted orbitals built from the UHF solution
+(<code class="docutils literal notranslate"><span class="pre">%mdci</span> <span class="pre">UseQROs</span> <span class="pre">true</span> <span class="pre">end</span></code>, joined to the model chemistry’s own <code class="docutils literal notranslate"><span class="pre">%mdci</span></code> block if
+it has one). Closed-shell calculations, and open-shell ones on ORCA’s default, are
+not changed at all, so asking for a reference does not change their input or their
+fingerprint. After a QRO run, the reference ORCA reports must be QRO. ROHF is not
+offered: ORCA’s canonical coupled cluster refuses it. The composite recipes shipped
+with the Composite step use QRO for open-shell species.</p>
 <p>Every calculation run this way uses tight SCF convergence and the fine integration
 grid (<code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span> <span class="pre">DEFGRID3</span></code>). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA’s looser defaults.</p>

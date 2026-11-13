@@ -995,6 +995,16 @@ number of frozen orbitals ORCA reports must be the one asked for.
    frozen core, not hafnium's. The step therefore always writes the atomic number
    (``NewNCore 72 n``). Write it that way in your own inputs too.
 
+An open-shell correlated calculation can also be told its ``reference``:
+``default`` or ``UHF`` (ORCA's own choice, an unrestricted Hartree-Fock reference),
+or ``QRO``, quasi-restricted orbitals built from the UHF solution
+(``%mdci UseQROs true end``, joined to the model chemistry's own ``%mdci`` block if
+it has one). Closed-shell calculations, and open-shell ones on ORCA's default, are
+not changed at all, so asking for a reference does not change their input or their
+fingerprint. After a QRO run, the reference ORCA reports must be QRO. ROHF is not
+offered: ORCA's canonical coupled cluster refuses it. The composite recipes shipped
+with the Composite step use QRO for open-shell species.
+
 Every calculation run this way uses tight SCF convergence and the fine integration
 grid (``TIGHTSCF DEFGRID3``). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA's looser defaults.
