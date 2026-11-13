@@ -1,6 +1,16 @@
 =======
 History
 =======
+2026.11.12.3 -- Bugfix: correlated energies of one-electron systems
+    * Correlated model chemistries (MP2, CCSD(T) and their F12 and DLPNO forms) failed
+      for a system with one electron, such as the hydrogen atom, because ORCA's
+      correlation modules refuse it. Such a calculation now runs as HF in the same
+      basis and Hamiltonian; its correlation energy is zero, and its energy parts are
+      the HF energy alone. The CABS singles correction of an F12 method is not
+      included, since ORCA cannot compute it for one electron.
+    * In a system with more electrons, a frozen core that leaves fewer than two
+      correlated is refused before the calculation runs.
+
 2026.11.12.2 -- Quasi-restricted orbitals for open-shell model chemistries
     * An open-shell correlated calculation run through a model chemistry can be told
       its reference: ORCA's default (UHF) or quasi-restricted orbitals (QRO). QRO is

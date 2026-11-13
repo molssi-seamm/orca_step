@@ -207,3 +207,89 @@ def decontract_block(decontract):
     if decontract is not True:
         raise ValueError(f"decontract must be true or false, not {decontract!r}")
     return "%basis Decontract true end"
+
+
+# -- Systems with no electron pairs to correlate --------------------------------------
+
+#: The method keywords of uncorrelated (SCF) model chemistries
+SCF_METHODS = {"HF", "RHF", "UHF", "ROHF"}
+
+
+def is_correlated(model_chemistry):
+    """Whether a model chemistry is a correlated wavefunction method (MP2, CCSD(T),
+    their F12 and DLPNO forms), whose energy ORCA's MP2 and MDCI modules compute."""
+    if str(model_chemistry.get("type") or "").upper() != "QC":
+        return False
+    method = str(model_chemistry.get("method") or "").split("/")[0].strip().upper()
+    return method not in SCF_METHODS
+
+
+def frozen_core_electrons(frozen_core, atomic_numbers):
+    """The number of core electrons frozen: ORCA's default, none, or the count per
+    element asked for (see :func:`frozen_core_input`)."""
+    if frozen_core in (None, "default"):
+        return sum(ORCA_DEFAULT_CORE_ELECTRONS.get(int(z), 0) for z in atomic_numbers)
+    if frozen_core == "none":
+        return 0
+    counts = _orbitals_by_number(frozen_core)
+    return sum(2 * counts.get(int(z), 0) for z in atomic_numbers)
+
+
+def correlation_electrons(frozen_core, atomic_numbers, charge):
+    """(electrons, correlated electrons) of a calculation."""
+    n = sum(int(z) for z in atomic_numbers) - int(charge)
+    return n, n - frozen_core_electrons(frozen_core, atomic_numbers)
+
+
+def check_electron_pairs(frozen_core, atomic_numbers, charge):
+    """Whether a correlated calculation is of a one-electron system (H, He+,
+    H2+, ...), which runs as HF: there is nothing to correlate, so the correlated
+    energy is the HF energy, exact within the basis. ORCA's MP2 and MDCI modules
+    refuse such a system ("no electrons to correlate", "number of processes
+    exceeds number of pairs (0)").
+
+    Raises
+    ------
+    ValueError
+        If the frozen core leaves fewer than two correlated electrons in a system
+        with more than one: no pairs to correlate, but the HF energy would not be
+        the correlated one either.
+    """
+    n, correlated = correlation_electrons(frozen_core, atomic_numbers, charge)
+    if n <= 1:
+        return True
+    if correlated < 2:
+        raise ValueError(
+            f"The frozen core leaves {correlated} of the {n} electrons correlated, "
+            "so there are no electron pairs to correlate. Freeze fewer core "
+            "orbitals."
+        )
+    return False
+
+
+def one_electron_parts(energy, reference, frozen_core_orbitals, relativistic, f12):
+    """The ``energy parts`` of a one-electron system's correlated energy, run as HF:
+    the HF energy is the total and the correlation is zero.
+
+    The reference is reported as the one asked for: with one electron the UHF,
+    ROHF and quasi-restricted determinants are the same. An F12 method's CABS
+    singles correction is not included: ORCA computes it only in its F12
+    correlation modules, which refuse a one-electron system (for the H atom with
+    cc-pVTZ-F12 it would be about -5e-5 E_h, the basis's HF error).
+    """
+    parts = {
+        "parts version": 1,
+        "units": "E_h",
+        "parts": {"HF": energy},
+        "total": ["HF"],
+        "factors": {},
+        "reference": reference,
+        "frozen core orbitals": frozen_core_orbitals,
+        "relativistic": relativistic,
+        "diagnostics": {},
+        "sources": {"HF": "output"},
+        "one electron": True,
+    }
+    if f12:
+        parts["omitted"] = ["CABS singles"]
+    return parts

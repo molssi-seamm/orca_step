@@ -229,3 +229,121 @@ def test_the_reference_is_checked_after_the_run(tmp_path, fixture, ok):
             analyze_task(result, _mc(reference="QRO"), _oh(), properties=("energy",))
         # UHF asked for, UHF run: fine
         analyze_task(result, _mc(reference="UHF"), _oh(), properties=("energy",))
+
+
+# -- one-electron systems: nothing to correlate --------------------------------------
+
+
+def _h(charge=0, n=1):
+    from seamm_exec import Geometry
+
+    xyz = [[0, 0, 0], [0, 0, 1.06]][:n]
+    multiplicity = 2 if (n - charge) % 2 else 1
+    return Geometry([1] * n, xyz, charge=charge, multiplicity=multiplicity)
+
+
+def test_which_model_chemistries_are_correlated():
+    from orca_step.frozen_core import is_correlated
+
+    assert is_correlated(_mc())
+    assert is_correlated(_mc("CCSD(T)-F12D_RI", "cc-pVTZ-F12"))
+    assert is_correlated(_mc("RI-MP2"))
+    assert not is_correlated(_mc("HF"))
+    assert not is_correlated({**_mc("B3LYP"), "type": "DFT"})
+
+
+def test_electron_pairs():
+    from orca_step.frozen_core import check_electron_pairs, correlation_electrons
+
+    assert check_electron_pairs({"H": 0}, [1], 0)  # H
+    assert check_electron_pairs(None, [1, 1], 1)  # H2+
+    assert not check_electron_pairs({"H": 0}, [1, 1], 0)  # H2: one pair
+    assert not check_electron_pairs("default", [3], 0)  # Li: ORCA freezes nothing
+    assert correlation_electrons({"Li": 1}, [3], 0) == (3, 1)
+    with pytest.raises(ValueError, match="leaves 1 of the 3 electrons correlated"):
+        check_electron_pairs({"Li": 1}, [3], 0)
+
+
+@pytest.mark.parametrize(
+    "mc",
+    [
+        _mc("CCSD(T)", "cc-pwCVTZ", frozen_core={"H": 0}, reference="QRO"),
+        _mc("CCSD(T)-F12D_RI", "cc-pVTZ-F12", reference="QRO", aux_basis="cc-pVQZ/C"),
+        _mc("RI-MP2", "cc-pVTZ"),
+    ],
+)
+def test_a_one_electron_system_runs_as_hf(mc):
+    """ORCA's MP2 and MDCI modules refuse one electron, so the task is HF in the
+    same basis: no correlation keywords, frozen core, CABS or QRO block."""
+    from orca_step.batch import get_task
+
+    for system in (_h(), _h(charge=1, n=2)):
+        text = get_task(system, mc, key="h", properties=("energy",)).files["orca.inp"]
+        line = text.splitlines()[0]
+        assert line.split()[:2] == ["!", "HF"], line
+        assert f" {mc['basis']} " in f"{line} "
+        for word in ("CCSD", "MP2", "F12D", "CABS", "AutoAux", "UseQROs", "NewNCore"):
+            assert word not in text
+    # Two electrons are correlated as asked
+    text = get_task(_h(n=2), mc, key="h2", properties=("energy",)).files["orca.inp"]
+    assert text.splitlines()[0].split()[1] != "HF"
+
+
+def test_the_hamiltonian_is_kept_for_one_electron():
+    from orca_step.batch import get_task
+
+    mc = _mc(
+        "CCSD(T)", "cc-pVTZ-DK", relativistic="DKH2", nucleus="point", decontract=True
+    )
+    text = get_task(_h(), mc, key="h", properties=("energy",)).files["orca.inp"]
+    assert text.splitlines()[0].split()[:3] == ["!", "HF", "DKH2"]
+    assert "%rel FiniteNuc false end" in text
+    assert "%basis Decontract true end" in text
+
+
+def test_a_frozen_core_without_pairs_is_refused():
+    from seamm_exec import Geometry
+
+    from orca_step.batch import get_task
+
+    li = Geometry([3], [[0, 0, 0]], multiplicity=2)
+    with pytest.raises(ValueError, match="no electron pairs"):
+        get_task(li, _mc(frozen_core={"Li": 1}), key="li", properties=("energy",))
+
+
+@pytest.mark.parametrize("method", ["CCSD(T)", "CCSD(T)-F12D_RI"])
+def test_one_electron_parts(tmp_path, method):
+    """The H atom's HF/cc-pVTZ-DK (DKH2) run, analysed as the correlated
+    calculation asked for: its energy is the HF part and the correlation is zero."""
+    from seamm_exec import TaskResult
+
+    from orca_step.batch import analyze_task
+
+    data = Path(__file__).parent / "data" / "energy_parts"
+    for name in ("out", "property.txt"):
+        text = gzip.open(data / f"h_atom_hf_dkh2.{name}.gz", "rt").read()
+        (tmp_path / f"orca.{name}").write_text(text)
+    result = TaskResult(
+        key="h",
+        state="finished",
+        directory=tmp_path,
+        files={"orca.out": "orca.out", "orca.property.txt": "orca.property.txt"},
+    )
+    mc = _mc(
+        method,
+        "cc-pVTZ-DK",
+        frozen_core={"H": 0},
+        reference="QRO",
+        relativistic="DKH2",
+        nucleus="point",
+    )
+    out = analyze_task(result, mc, _h(), properties=("energy",))
+    parts = out["energy parts"]
+    assert parts["parts"] == {"HF": pytest.approx(-0.499816346412, abs=1e-11)}
+    assert parts["total"] == ["HF"] and parts["one electron"]
+    assert out["energy"] == pytest.approx(-0.499816346412 * 2625.4996394798254)
+    # The reference asked for (one electron: UHF = ROHF = QRO), no frozen core
+    assert parts["reference"] == "QRO"
+    assert parts["frozen core orbitals"] == 0
+    assert parts["relativistic"] == "DKH2"
+    assert ("omitted" in parts) == ("F12" in method)
