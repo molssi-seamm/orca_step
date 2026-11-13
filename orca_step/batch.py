@@ -147,6 +147,28 @@ def f12_cabs(method, basis):
     return ""
 
 
+def one_electron_system(model_chemistry, configuration, options=None):
+    """Whether a correlated calculation is of a one-electron system, which runs as
+    HF (see :func:`orca_step.frozen_core.check_electron_pairs`, which also refuses
+    a frozen core that leaves no electron pairs)."""
+    from .frozen_core import check_electron_pairs, is_correlated
+
+    if not is_correlated(model_chemistry):
+        return False
+    options = dict(options or {})
+    data = structure_data(configuration)
+    atom_indices = options.get("atom_indices")
+    if atom_indices is None:
+        atom_indices = range(len(data["atomic_numbers"]))
+    ghosts = set(options.get("ghost_atoms") or ())
+    real = [data["atomic_numbers"][i] for i in atom_indices if i not in ghosts]
+    charge = int(options.get("charge", data["charge"]))
+    frozen_core = options.get(
+        "frozen_core", (model_chemistry.get("options") or {}).get("frozen_core")
+    )
+    return check_electron_pairs(frozen_core, real, charge)
+
+
 def can_run_task(configuration, model_chemistry, *, options=None):
     """Whether :func:`get_task` can run this structure: molecules only (ORCA has
     no periodic mode here), and no open-shell DLPNO double hybrid."""
@@ -225,6 +247,10 @@ def get_task(
     rel_keywords, rel_block = relativistic_input(
         option("relativistic"), option("nucleus")
     )
+    if one_electron_system(model_chemistry, configuration, options):
+        # Nothing to correlate: the correlated energy is the HF energy, in the
+        # same basis, with the same Hamiltonian
+        method, blocks, fc_keywords, fc_block = "HF", [], [], ""
     extra_keywords = fc_keywords + rel_keywords
     if extra_keywords:
         method = f"{method} {' '.join(extra_keywords)}"
@@ -233,7 +259,11 @@ def get_task(
     )
     # Quasi-restricted orbitals for an open-shell correlated calculation, in the
     # model chemistry's %mdci block if it has one (e.g. DLPNO's TCutPNO)
-    qro = reference_input(option("reference"), multiplicity)
+    qro = (
+        ""
+        if method.split()[0] == "HF"
+        else reference_input(option("reference"), multiplicity)
+    )
     if qro:
         mdci = [i for i, b in enumerate(blocks) if b.lower().startswith("%mdci ")]
         if mdci and blocks[mdci[0]].rstrip().lower().endswith(" end"):
@@ -413,10 +443,32 @@ def analyze_task(
             parts = energy_parts(out, properties_text)
             if parts is not None:
                 data["energy parts"] = parts
-    # A frozen core asked for is checked against what ORCA froze
     frozen_core = options.get(
         "frozen_core", (model_chemistry.get("options") or {}).get("frozen_core")
     )
+    reference = options.get(
+        "reference", (model_chemistry.get("options") or {}).get("reference")
+    )
+    # A one-electron system ran as HF: its parts are the HF energy and no
+    # correlation (see frozen_core.one_electron_parts)
+    if "energy" in data and one_electron_system(
+        model_chemistry, configuration, options
+    ):
+        from .frozen_core import one_electron_parts
+
+        mc_options = model_chemistry.get("options") or {}
+        relativistic = options.get("relativistic", mc_options.get("relativistic"))
+        multiplicity = int(
+            options.get("multiplicity", structure_data(configuration)["multiplicity"])
+        )
+        data["energy parts"] = one_electron_parts(
+            data["energy"] / float(Q_(1.0, "hartree").m_as("kJ/mol")),
+            (reference if reference == "QRO" else "UHF") if multiplicity > 1 else "RHF",
+            0,
+            relativistic if relativistic not in (None, "") else "none",
+            is_f12(model_chemistry.get("method")),
+        )
+    # A frozen core asked for is checked against what ORCA froze
     if frozen_core not in (None, "default") and "energy" in data:
         from .frozen_core import check_frozen_core, frozen_core_input
 
@@ -431,9 +483,6 @@ def analyze_task(
         if problem is not None:
             raise AnalysisError(f"The ORCA calculation '{result.key}': {problem}")
     # Quasi-restricted orbitals asked for are checked against the run's reference
-    reference = options.get(
-        "reference", (model_chemistry.get("options") or {}).get("reference")
-    )
     if reference == "QRO" and "energy" in data:
         from .frozen_core import check_reference
 
