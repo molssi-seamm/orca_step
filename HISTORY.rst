@@ -1,6 +1,13 @@
 =======
 History
 =======
+2026.11.13 -- Bugfix: correlated energies of small species on several cores
+    * ORCA's coupled-cluster module refuses to run on more processes than there are
+      correlated electron pairs, so CCSD(T) and CCSD(T)-F12 failed for H2 (one pair)
+      and other small species given several cores, e.g. in the Thermochemistry
+      step's 'high' preset. Such a calculation now runs on at most as many processes
+      as it has pairs.
+
 2026.11.12.3 -- Bugfix: correlated energies of one-electron systems
     * Correlated model chemistries (MP2, CCSD(T) and their F12 and DLPNO forms) failed
       for a system with one electron, such as the hydrogen atom, because ORCA's

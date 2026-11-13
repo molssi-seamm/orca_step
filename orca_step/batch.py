@@ -236,8 +236,10 @@ def get_task(
     # The frozen core and a scalar-relativistic Hamiltonian, when asked for
     # (composite recipes): only what differs from ORCA's defaults is written
     from .frozen_core import (
+        correlated_pairs,
         decontract_block,
         frozen_core_input,
+        is_correlated,
         reference_input,
         relativistic_input,
     )
@@ -296,6 +298,12 @@ def get_task(
             # at 2 ranks x 2 GB, %maxcore 2000 was killed for exceeding its 4 GB.
             maxcore = max(256, int(0.8 * resources.mem_per_cpu / 1_000_000))
     blocks.append(f"%maxcore {maxcore}")
+    if method.split()[0] != "HF" and is_correlated(model_chemistry):
+        # ORCA's MDCI module runs on at most one process per correlated pair
+        # (H2 has one), so a tiny species uses fewer processes than it was given
+        ntasks = max(
+            1, min(ntasks, correlated_pairs(option("frozen_core"), real, charge))
+        )
     sthresh = _threshold(option("sthresh"))
     if sthresh is not None:
         blocks.append(f"%scf SThresh {sthresh:.3e} end")
