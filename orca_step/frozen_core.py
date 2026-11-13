@@ -132,6 +132,43 @@ def relativistic_input(relativistic, nucleus=None):
     return [RELATIVISTIC[relativistic]], f"%rel FiniteNuc {NUCLEUS[nucleus]} end"
 
 
+#: The references an open-shell correlated calculation can be built on. "default"
+#: and "UHF" are ORCA's own choice (UHF); "QRO" takes quasi-restricted orbitals
+#: from the UHF solution. ROHF is not offered: ORCA's canonical coupled cluster
+#: refuses it, and ROHF-NoIter silently gave OH the wrong state (2026-11-12).
+REFERENCES = ("default", "UHF", "QRO")
+
+
+def reference_input(reference, multiplicity):
+    """The block that makes an open-shell correlated calculation use quasi-
+    restricted orbitals, or "".
+
+    Closed-shell calculations, and open-shell ones on ORCA's default (UHF), get
+    nothing, so asking for a reference changes neither their input nor their
+    settings fingerprint.
+    """
+    if reference in (None, ""):
+        reference = "default"
+    if reference not in REFERENCES:
+        raise ValueError(
+            f"The reference of an open-shell calculation must be one of "
+            f"{', '.join(REFERENCES)}, not {reference!r}"
+        )
+    if reference == "QRO" and int(multiplicity) > 1:
+        return "%mdci UseQROs true end"
+    return ""
+
+
+def check_reference(reference, multiplicity, parts):
+    """The reason the run's reference is not the one asked for, or None."""
+    if reference != "QRO" or int(multiplicity) == 1:
+        return None
+    got = (parts or {}).get("reference")
+    if got != "QRO":
+        return f"quasi-restricted orbitals were asked for, but the run used {got}"
+    return None
+
+
 def check_frozen_core(expected, parts):
     """The reason the run's frozen core is not the one asked for, or None."""
     if expected is None:
@@ -151,9 +188,11 @@ def model_chemistry_capabilities(mtype):
     """What a model-chemistry calculation of this type can be told (composite
     recipes check their components against it): the frozen core, a
     scalar-relativistic Hamiltonian and its nucleus model, and whether the energy
-    comes with its parts (correlated methods)."""
+    comes with its parts (correlated methods), and the reference of an open-shell
+    correlated calculation."""
     return {
         "frozen_core": ["default", "none", "per-element"],
+        "reference": list(REFERENCES),
         "relativistic": ["none", "DKH2", "X2C"],
         "nucleus": ["point", "finite"],
         "decontract": True,

@@ -213,7 +213,12 @@ def get_task(
     method, basis, blocks = method_and_blocks(model_chemistry, option("aux_basis"))
     # The frozen core and a scalar-relativistic Hamiltonian, when asked for
     # (composite recipes): only what differs from ORCA's defaults is written
-    from .frozen_core import decontract_block, frozen_core_input, relativistic_input
+    from .frozen_core import (
+        decontract_block,
+        frozen_core_input,
+        reference_input,
+        relativistic_input,
+    )
 
     real = [z for z, sym in zip(numbers, symbols) if not sym.endswith(":")]
     fc_keywords, fc_block, _ = frozen_core_input(option("frozen_core"), real)
@@ -226,6 +231,16 @@ def get_task(
     blocks.extend(
         b for b in (fc_block, rel_block, decontract_block(option("decontract"))) if b
     )
+    # Quasi-restricted orbitals for an open-shell correlated calculation, in the
+    # model chemistry's %mdci block if it has one (e.g. DLPNO's TCutPNO)
+    qro = reference_input(option("reference"), multiplicity)
+    if qro:
+        mdci = [i for i, b in enumerate(blocks) if b.lower().startswith("%mdci ")]
+        if mdci and blocks[mdci[0]].rstrip().lower().endswith(" end"):
+            b = blocks[mdci[0]].rstrip()
+            blocks[mdci[0]] = b[: -len("end")].rstrip() + " UseQROs true end"
+        else:
+            blocks.append(qro)
     if multiplicity != 1 and any(b.startswith("%mp2 DLPNO") for b in blocks):
         raise ValueError(
             f"DLPNO {model_chemistry.get('method')} needs a closed-shell system "
@@ -413,6 +428,19 @@ def analyze_task(
         real = [cdata["atomic_numbers"][i] for i in atom_indices if i not in ghosts]
         _, _, expected = frozen_core_input(frozen_core, real)
         problem = check_frozen_core(expected, data.get("energy parts"))
+        if problem is not None:
+            raise AnalysisError(f"The ORCA calculation '{result.key}': {problem}")
+    # Quasi-restricted orbitals asked for are checked against the run's reference
+    reference = options.get(
+        "reference", (model_chemistry.get("options") or {}).get("reference")
+    )
+    if reference == "QRO" and "energy" in data:
+        from .frozen_core import check_reference
+
+        multiplicity = int(
+            options.get("multiplicity", structure_data(configuration)["multiplicity"])
+        )
+        problem = check_reference(reference, multiplicity, data.get("energy parts"))
         if problem is not None:
             raise AnalysisError(f"The ORCA calculation '{result.key}': {problem}")
     return data
