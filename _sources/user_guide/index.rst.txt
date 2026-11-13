@@ -1005,6 +1005,17 @@ fingerprint. After a QRO run, the reference ORCA reports must be QRO. ROHF is no
 offered: ORCA's canonical coupled cluster refuses it. The composite recipes shipped
 with the Composite step use QRO for open-shell species.
 
+A system with only one electron, such as the hydrogen atom, has nothing to
+correlate, and ORCA's MP2 and coupled-cluster modules refuse it. A correlated
+calculation of such a system therefore runs as HF, with the same basis set and
+Hamiltonian: its correlation energy is zero and the HF energy is exact within the
+basis, whatever the reference. Its energy parts are the HF energy alone, with the
+reference asked for. ORCA computes the CABS singles correction of an F12 method only
+in its F12 correlation modules, so a one-electron F12 calculation does not include
+it (for the hydrogen atom with cc-pVTZ-F12 it is about -5e-5 E_h, the basis set's
+HF error). A frozen core that leaves fewer than two electrons correlated in a larger
+system is refused.
+
 Every calculation run this way uses tight SCF convergence and the fine integration
 grid (``TIGHTSCF DEFGRID3``). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA's looser defaults.

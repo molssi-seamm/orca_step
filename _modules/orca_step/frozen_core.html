@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.frozen_core &#8212; SEAMM ORCA Plug-in 2026.11.12.2 documentation</title>
+    <title>orca_step.frozen_core &#8212; SEAMM ORCA Plug-in 2026.11.12.3 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=a7f4afd2"></script>
+    <script src="../../_static/documentation_options.js?v=038c2bcb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.2" />
+  <meta name="docsearch:version" content="2026.11.12.3" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -720,6 +720,107 @@
     <span class="k">if</span> <span class="n">decontract</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"decontract must be true or false, not </span><span class="si">{</span><span class="n">decontract</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">return</span> <span class="s2">"%basis Decontract true end"</span></div>
+
+
+
+<span class="c1"># -- Systems with no electron pairs to correlate --------------------------------------</span>
+
+<span class="c1">#: The method keywords of uncorrelated (SCF) model chemistries</span>
+<span class="n">SCF_METHODS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"HF"</span><span class="p">,</span> <span class="s2">"RHF"</span><span class="p">,</span> <span class="s2">"UHF"</span><span class="p">,</span> <span class="s2">"ROHF"</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="is_correlated">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.is_correlated">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_correlated</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whether a model chemistry is a correlated wavefunction method (MP2, CCSD(T),</span>
+<span class="sd">    their F12 and DLPNO forms), whose energy ORCA's MP2 and MDCI modules compute."""</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">"QC"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">model_chemistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SCF_METHODS</span></div>
+
+
+
+<div class="viewcode-block" id="frozen_core_electrons">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.frozen_core_electrons">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">frozen_core_electrons</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The number of core electrons frozen: ORCA's default, none, or the count per</span>
+<span class="sd">    element asked for (see :func:`frozen_core_input`)."""</span>
+    <span class="k">if</span> <span class="n">frozen_core</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ORCA_DEFAULT_CORE_ELECTRONS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">atomic_numbers</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">frozen_core</span> <span class="o">==</span> <span class="s2">"none"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">_orbitals_by_number</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">atomic_numbers</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="correlation_electrons">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.correlation_electrons">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">correlation_electrons</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">charge</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""(electrons, correlated electrons) of a calculation."""</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">atomic_numbers</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">charge</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">frozen_core_electrons</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="check_electron_pairs">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.check_electron_pairs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_electron_pairs</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">charge</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whether a correlated calculation is of a one-electron system (H, He+,</span>
+<span class="sd">    H2+, ...), which runs as HF: there is nothing to correlate, so the correlated</span>
+<span class="sd">    energy is the HF energy, exact within the basis. ORCA's MP2 and MDCI modules</span>
+<span class="sd">    refuse such a system ("no electrons to correlate", "number of processes</span>
+<span class="sd">    exceeds number of pairs (0)").</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the frozen core leaves fewer than two correlated electrons in a system</span>
+<span class="sd">        with more than one: no pairs to correlate, but the HF energy would not be</span>
+<span class="sd">        the correlated one either.</span>
+<span class="sd">    """</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">correlated</span> <span class="o">=</span> <span class="n">correlation_electrons</span><span class="p">(</span><span class="n">frozen_core</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">charge</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">correlated</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The frozen core leaves </span><span class="si">{</span><span class="n">correlated</span><span class="si">}</span><span class="s2"> of the </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> electrons correlated, "</span>
+            <span class="s2">"so there are no electron pairs to correlate. Freeze fewer core "</span>
+            <span class="s2">"orbitals."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="one_electron_parts">
+<a class="viewcode-back" href="../../api/orca_step.html#orca_step.frozen_core.one_electron_parts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">one_electron_parts</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">frozen_core_orbitals</span><span class="p">,</span> <span class="n">relativistic</span><span class="p">,</span> <span class="n">f12</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The ``energy parts`` of a one-electron system's correlated energy, run as HF:</span>
+<span class="sd">    the HF energy is the total and the correlation is zero.</span>
+
+<span class="sd">    The reference is reported as the one asked for: with one electron the UHF,</span>
+<span class="sd">    ROHF and quasi-restricted determinants are the same. An F12 method's CABS</span>
+<span class="sd">    singles correction is not included: ORCA computes it only in its F12</span>
+<span class="sd">    correlation modules, which refuse a one-electron system (for the H atom with</span>
+<span class="sd">    cc-pVTZ-F12 it would be about -5e-5 E_h, the basis's HF error).</span>
+<span class="sd">    """</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"parts version"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"E_h"</span><span class="p">,</span>
+        <span class="s2">"parts"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"HF"</span><span class="p">:</span> <span class="n">energy</span><span class="p">},</span>
+        <span class="s2">"total"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"HF"</span><span class="p">],</span>
+        <span class="s2">"factors"</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="s2">"reference"</span><span class="p">:</span> <span class="n">reference</span><span class="p">,</span>
+        <span class="s2">"frozen core orbitals"</span><span class="p">:</span> <span class="n">frozen_core_orbitals</span><span class="p">,</span>
+        <span class="s2">"relativistic"</span><span class="p">:</span> <span class="n">relativistic</span><span class="p">,</span>
+        <span class="s2">"diagnostics"</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="s2">"sources"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"HF"</span><span class="p">:</span> <span class="s2">"output"</span><span class="p">},</span>
+        <span class="s2">"one electron"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">f12</span><span class="p">:</span>
+        <span class="n">parts</span><span class="p">[</span><span class="s2">"omitted"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"CABS singles"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">parts</span></div>
 
 </pre></div>
 
