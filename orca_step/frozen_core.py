@@ -241,6 +241,18 @@ def correlation_electrons(frozen_core, atomic_numbers, charge):
     return n, n - frozen_core_electrons(frozen_core, atomic_numbers)
 
 
+def correlated_pairs(frozen_core, atomic_numbers, charge):
+    """The smallest number of correlated electron pairs ORCA's MDCI module can
+    count for a calculation: m(m + 1)/2 for the m correlated electron pairs
+    (pairs of occupied orbitals i <= j). Exact for a closed shell; an open
+    shell has at least as many. ORCA refuses to run MDCI on more processes than
+    pairs ("Number of processes (2) in parallel calculation exceeds number of
+    pairs (1)" for H2)."""
+    _, correlated = correlation_electrons(frozen_core, atomic_numbers, charge)
+    m = max(0, correlated) // 2
+    return m * (m + 1) // 2
+
+
 def check_electron_pairs(frozen_core, atomic_numbers, charge):
     """Whether a correlated calculation is of a one-electron system (H, He+,
     H2+, ...), which runs as HF: there is nothing to correlate, so the correlated

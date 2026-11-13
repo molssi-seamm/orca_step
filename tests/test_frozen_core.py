@@ -347,3 +347,51 @@ def test_one_electron_parts(tmp_path, method):
     assert parts["frozen core orbitals"] == 0
     assert parts["relativistic"] == "DKH2"
     assert ("omitted" in parts) == ("F12" in method)
+
+
+def test_correlated_pairs():
+    from orca_step.frozen_core import correlated_pairs
+
+    assert correlated_pairs({"H": 0}, [1, 1], 0) == 1  # H2: one pair
+    assert correlated_pairs("default", [8, 1, 1], 0) == 10  # water, 1s frozen: 4 MOs
+    assert correlated_pairs("default", [2, 1], 0) == 1  # HeH, 3 electrons: >= 1
+    assert correlated_pairs("none", [6, 6, 8, 1, 1, 1, 1, 1, 1], 0) == 91  # ethanol
+
+
+@pytest.mark.parametrize(
+    "mc",
+    [
+        _mc("CCSD(T)-F12D_RI", "cc-pVTZ-F12", aux_basis="cc-pVQZ/C"),
+        _mc("CCSD(T)", "cc-pwCVTZ", frozen_core={"H": 0}, reference="QRO"),
+        _mc("RI-MP2", "cc-pVTZ"),
+    ],
+)
+def test_mdci_runs_on_no_more_processes_than_pairs(mc):
+    """ORCA refuses MDCI on more processes than correlated pairs (ChemAI 5726: H2
+    in CCSD(T)-F12 on 2 processes, "exceeds number of pairs (1)"). The task is
+    capped; a molecule with enough pairs keeps the cores it was given."""
+    import re
+
+    import seamm_exec
+    from seamm_exec import Geometry
+
+    from orca_step.batch import get_task
+
+    def nprocs(system):
+        task = get_task(
+            system,
+            mc,
+            key="x",
+            properties=("energy",),
+            resources=seamm_exec.Resources(ntasks=8, mem_per_cpu=2_000_000_000),
+        )
+        m = re.search(r"%pal\s+nprocs\s+(\d+)", task.files["orca.inp"])
+        return int(m.group(1)) if m else 1
+
+    assert nprocs(_h(n=2)) == 1  # H2: one pair
+    if isinstance((mc.get("options") or {}).get("frozen_core"), dict):
+        return  # its frozen core is given for H only
+    heh = Geometry([2, 1], [[0, 0, 0], [0, 0, 1.5]], multiplicity=2)
+    assert nprocs(heh) == 1  # open shell, 3 electrons
+    water = Geometry([8, 1, 1], [[0, 0, 0], [0.76, 0.59, 0], [-0.76, 0.59, 0]])
+    assert nprocs(water) == 8  # 10 pairs (default frozen core)

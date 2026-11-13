@@ -1016,6 +1016,12 @@ it (for the hydrogen atom with cc-pVTZ-F12 it is about -5e-5 E_h, the basis set'
 HF error). A frozen core that leaves fewer than two electrons correlated in a larger
 system is refused.
 
+ORCA's coupled-cluster module also refuses to run on more processes than there are
+correlated electron pairs (pairs of correlated occupied orbitals): H\ :sub:`2` has
+one, water with its 1s frozen ten. A correlated calculation of a small species
+therefore runs on at most that many processes, whatever cores it was given; larger
+molecules have far more pairs than cores, and are unaffected.
+
 Every calculation run this way uses tight SCF convergence and the fine integration
 grid (``TIGHTSCF DEFGRID3``). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA's looser defaults.
