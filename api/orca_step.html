@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.12.3 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.13 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=038c2bcb"></script>
+    <script src="../_static/documentation_options.js?v=1061b2d4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.3" />
+  <meta name="docsearch:version" content="2026.11.13" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1379,6 +1379,17 @@ exceeds number of pairs (0)”).</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="orca_step.frozen_core.correlated_pairs">
+<span class="sig-prename descclassname"><span class="pre">orca_step.frozen_core.</span></span><span class="sig-name descname"><span class="pre">correlated_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frozen_core</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_numbers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frozen_core.html#correlated_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frozen_core.correlated_pairs" title="Link to this definition">#</a></dt>
+<dd><p>The smallest number of correlated electron pairs ORCA’s MDCI module can
+count for a calculation: m(m + 1)/2 for the m correlated electron pairs
+(pairs of occupied orbitals i &lt;= j). Exact for a closed shell; an open
+shell has at least as many. ORCA refuses to run MDCI on more processes than
+pairs (“Number of processes (2) in parallel calculation exceeds number of
+pairs (1)” for H2).</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="orca_step.frozen_core.correlation_electrons">
 <span class="sig-prename descclassname"><span class="pre">orca_step.frozen_core.</span></span><span class="sig-name descname"><span class="pre">correlation_electrons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frozen_core</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_numbers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/orca_step/frozen_core.html#correlation_electrons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#orca_step.frozen_core.correlation_electrons" title="Link to this definition">#</a></dt>
 <dd><p>(electrons, correlated electrons) of a calculation.</p>
@@ -2557,6 +2568,7 @@ Optimization, …), modeled on the MOPAC and Gaussian steps.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.check_electron_pairs"><code class="docutils literal notranslate"><span class="pre">check_electron_pairs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.check_frozen_core"><code class="docutils literal notranslate"><span class="pre">check_frozen_core()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.check_reference"><code class="docutils literal notranslate"><span class="pre">check_reference()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.correlated_pairs"><code class="docutils literal notranslate"><span class="pre">correlated_pairs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.correlation_electrons"><code class="docutils literal notranslate"><span class="pre">correlation_electrons()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.decontract_block"><code class="docutils literal notranslate"><span class="pre">decontract_block()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orca_step.frozen_core.frozen_core_electrons"><code class="docutils literal notranslate"><span class="pre">frozen_core_electrons()</span></code></a></li>

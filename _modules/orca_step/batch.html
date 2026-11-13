@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.12.3 documentation</title>
+    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.13 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=038c2bcb"></script>
+    <script src="../../_static/documentation_options.js?v=1061b2d4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.3" />
+  <meta name="docsearch:version" content="2026.11.13" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -731,8 +731,10 @@
     <span class="c1"># The frozen core and a scalar-relativistic Hamiltonian, when asked for</span>
     <span class="c1"># (composite recipes): only what differs from ORCA's defaults is written</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.frozen_core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">correlated_pairs</span><span class="p">,</span>
         <span class="n">decontract_block</span><span class="p">,</span>
         <span class="n">frozen_core_input</span><span class="p">,</span>
+        <span class="n">is_correlated</span><span class="p">,</span>
         <span class="n">reference_input</span><span class="p">,</span>
         <span class="n">relativistic_input</span><span class="p">,</span>
     <span class="p">)</span>
@@ -791,6 +793,12 @@
             <span class="c1"># at 2 ranks x 2 GB, %maxcore 2000 was killed for exceeding its 4 GB.</span>
             <span class="n">maxcore</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span> <span class="o">*</span> <span class="n">resources</span><span class="o">.</span><span class="n">mem_per_cpu</span> <span class="o">/</span> <span class="mi">1_000_000</span><span class="p">))</span>
     <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%maxcore </span><span class="si">{</span><span class="n">maxcore</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"HF"</span> <span class="ow">and</span> <span class="n">is_correlated</span><span class="p">(</span><span class="n">model_chemistry</span><span class="p">):</span>
+        <span class="c1"># ORCA's MDCI module runs on at most one process per correlated pair</span>
+        <span class="c1"># (H2 has one), so a tiny species uses fewer processes than it was given</span>
+        <span class="n">ntasks</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">ntasks</span><span class="p">,</span> <span class="n">correlated_pairs</span><span class="p">(</span><span class="n">option</span><span class="p">(</span><span class="s2">"frozen_core"</span><span class="p">),</span> <span class="n">real</span><span class="p">,</span> <span class="n">charge</span><span class="p">))</span>
+        <span class="p">)</span>
     <span class="n">sthresh</span> <span class="o">=</span> <span class="n">_threshold</span><span class="p">(</span><span class="n">option</span><span class="p">(</span><span class="s2">"sthresh"</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">sthresh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%scf SThresh </span><span class="si">{</span><span class="n">sthresh</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2"> end"</span><span class="p">)</span>

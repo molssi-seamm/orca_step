@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.12.3 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.13 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=038c2bcb"></script>
+    <script src="_static/documentation_options.js?v=1061b2d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.3" />
+  <meta name="docsearch:version" content="2026.11.13" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,14 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.13 – Bugfix: correlated energies of small species on several cores</dt><dd><ul class="simple">
+<li><p>ORCA’s coupled-cluster module refuses to run on more processes than there are
+correlated electron pairs, so CCSD(T) and CCSD(T)-F12 failed for H2 (one pair)
+and other small species given several cores, e.g. in the Thermochemistry
+step’s ‘high’ preset. Such a calculation now runs on at most as many processes
+as it has pairs.</p></li>
+</ul>
+</dd>
 <dt>2026.11.12.3 – Bugfix: correlated energies of one-electron systems</dt><dd><ul class="simple">
 <li><p>Correlated model chemistries (MP2, CCSD(T) and their F12 and DLPNO forms) failed
 for a system with one electron, such as the hydrogen atom, because ORCA’s

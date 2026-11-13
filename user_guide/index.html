@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.12.3 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.13 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=038c2bcb"></script>
+    <script src="../_static/documentation_options.js?v=1061b2d4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.12.3" />
+  <meta name="docsearch:version" content="2026.11.13" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1459,6 +1459,11 @@ in its F12 correlation modules, so a one-electron F12 calculation does not inclu
 it (for the hydrogen atom with cc-pVTZ-F12 it is about -5e-5 E_h, the basis set’s
 HF error). A frozen core that leaves fewer than two electrons correlated in a larger
 system is refused.</p>
+<p>ORCA’s coupled-cluster module also refuses to run on more processes than there are
+correlated electron pairs (pairs of correlated occupied orbitals): H<sub>2</sub> has
+one, water with its 1s frozen ten. A correlated calculation of a small species
+therefore runs on at most that many processes, whatever cores it was given; larger
+molecules have far more pairs than cores, and are unaffected.</p>
 <p>Every calculation run this way uses tight SCF convergence and the fine integration
 grid (<code class="docutils literal notranslate"><span class="pre">TIGHTSCF</span> <span class="pre">DEFGRID3</span></code>). These calculations are mostly forces for training
 data or for derivatives, which need both, rather than ORCA’s looser defaults.</p>
