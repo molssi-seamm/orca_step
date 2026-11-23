@@ -52,6 +52,9 @@ setup(
     # deployment
     install_requires=requirements,
 
+    # The run-path tests build flowcharts with a Loop (CI installs '.[test]')
+    extras_require={"test": ["loop-step"]},
+
     test_suite='tests',
 
     # Valid platforms your code works on, adjust to your flavor
