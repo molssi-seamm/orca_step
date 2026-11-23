@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.13 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.23 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=1061b2d4"></script>
+    <script src="../_static/documentation_options.js?v=bd31c218"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.13" />
+  <meta name="docsearch:version" content="2026.11.23" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -913,6 +913,27 @@ dedicated control, for example on a difficult atom:</p>
 </pre></div>
 </div>
 </li>
+</ul>
+<p>Both fields can use flowchart variables, written as in any SEAMM text with
+<code class="docutils literal notranslate"><span class="pre">${...}</span></code>, for example a field strength from a loop:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>%scf
+  EField 0.0, 0.0, ${Fz}
+end
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">${name}</span></code> is replaced by the variable’s value when the step runs. Any Python
+expression of the variables and an f-string format work too: <code class="docutils literal notranslate"><span class="pre">${Fz:.5f}</span></code>,
+<code class="docutils literal notranslate"><span class="pre">${2</span> <span class="pre">*</span> <span class="pre">Fz}</span></code>.</p></li>
+<li><p>A variable with units must be converted to the number ORCA expects, e.g.
+<code class="docutils literal notranslate"><span class="pre">${Fz.m_as(&quot;hartree/(e*bohr)&quot;)}</span></code>. <code class="docutils literal notranslate"><span class="pre">${Fz}</span></code> alone would write the units’
+text into the input, so it stops the step with an error that suggests this.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$${</span></code> writes a literal <code class="docutils literal notranslate"><span class="pre">${</span></code>, and ORCA’s own <code class="docutils literal notranslate"><span class="pre">$new_job</span></code> is written as it
+is.</p></li>
+<li><p>A bare <code class="docutils literal notranslate"><span class="pre">$name</span></code> is not replaced, so it stops the step before ORCA runs, with
+a message that suggests <code class="docutils literal notranslate"><span class="pre">${name}</span></code>. An undefined variable in <code class="docutils literal notranslate"><span class="pre">${...}</span></code> stops
+it too. The one exception is a field that holds only <code class="docutils literal notranslate"><span class="pre">$name</span></code>, which gives
+the variable’s value (e.g. keywords kept in a variable).</p></li>
 </ul>
 </section>
 <section id="energies-gradients-and-forces">

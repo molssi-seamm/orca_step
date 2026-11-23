@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.11.13 documentation</title>
+    <title>orca_step.energy_parameters &#8212; SEAMM ORCA Plug-in 2026.11.23 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1061b2d4"></script>
+    <script src="../../_static/documentation_options.js?v=bd31c218"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.13" />
+  <meta name="docsearch:version" content="2026.11.23" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -895,13 +895,17 @@
             <span class="s2">"help_text"</span><span class="p">:</span> <span class="p">(</span>
                 <span class="s2">"Any additional ORCA '!' keywords to append, e.g. 'RIJCOSX', "</span>
                 <span class="s2">"'NoFrozenCore', 'SlowConv'. The SCF tolerance and integration "</span>
-                <span class="s2">"grid have their own controls above."</span>
+                <span class="s2">"grid have their own controls above. Flowchart variables are "</span>
+                <span class="s2">"written with $</span><span class="si">{name}</span><span class="s2">, e.g. '$</span><span class="si">{grid_keyword}</span><span class="s2">'; see the extra "</span>
+                <span class="s2">"blocks for more."</span>
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"extra blocks"</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">"default"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
             <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"special"</span><span class="p">,</span>
             <span class="s2">"widget"</span><span class="p">:</span> <span class="s2">"seamm_widgets.LabeledText"</span><span class="p">,</span>
+            <span class="c1"># Expand ${...} in the text, as in any text parameter (seamm 2026.11.23)</span>
+            <span class="s2">"expand"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
             <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
             <span class="s2">"enumeration"</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
             <span class="s2">"format_string"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
@@ -913,6 +917,11 @@
                 <span class="s2">"tricks with no dedicated control, e.g. for a difficult atom:"</span>
                 <span class="s2">"</span><span class="se">\n</span><span class="si">%s</span><span class="s2">cf</span><span class="se">\n</span><span class="s2">  MaxIter 400</span><span class="se">\n</span><span class="s2">"</span>
                 <span class="s2">"  Shift Shift 0.3 ErrStart 0.05 end</span><span class="se">\n</span><span class="s2">  DIISBfac 1.1</span><span class="se">\n</span><span class="s2">end"</span>
+                <span class="s2">"</span><span class="se">\n</span><span class="s2">Flowchart variables are written with ${...}: '$</span><span class="si">{Fz}</span><span class="s2">' gives the "</span>
+                <span class="s2">"value of Fz, '$</span><span class="si">{Fz:.5f}</span><span class="s2">' formats it, and for a variable with "</span>
+                <span class="s2">"units '${Fz.m_as(</span><span class="se">\"</span><span class="s2">hartree/(e*bohr)</span><span class="se">\"</span><span class="s2">)}' gives its number in "</span>
+                <span class="s2">"the units ORCA expects. A bare '$Fz' is an error, except ORCA's "</span>
+                <span class="s2">"own '$new_job'; '$${' writes a literal '${'."</span>
             <span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">"bond orders"</span><span class="p">:</span> <span class="p">{</span>

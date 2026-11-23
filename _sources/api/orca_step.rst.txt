@@ -180,6 +180,14 @@ orca\_step.resolver module
    :show-inheritance:
    :undoc-members:
 
+orca\_step.text\_checks module
+------------------------------
+
+.. automodule:: orca_step.text_checks
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 orca\_step.tk\_bsse module
 --------------------------
 
