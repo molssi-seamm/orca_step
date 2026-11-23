@@ -82,21 +82,36 @@ class Optimization(Energy):
             P = self.parameters.current_values_to_dict(
                 context=seamm.flowchart_variables._data
             )
-        super().analyze(indent=indent, P=P, data=data)
-
         directory = Path(self.directory)
 
-        # Convergence check from the output.
-        out = directory / "orca.out"
-        converged = False
-        if out.exists():
-            text = out.read_text()
-            converged = "THE OPTIMIZATION HAS CONVERGED" in text
+        # Convergence, from the output. Checked first, so that with 'fail the
+        # step' nothing from an unconverged optimization is stored.
+        converged, cycles = self._optimization_status(directory)
         if not converged:
-            printer.normal(
+            message = (
+                f"The ORCA geometry optimization did not converge in {cycles} "
+                f"cycles, in {directory}."
+            )
+            if P.get("if not converged", "warn and continue") == "fail the step":
+                raise RuntimeError(
+                    message + " The step stops here, as 'If not converged' asks."
+                )
+
+        super().analyze(indent=indent, P=P, data=data)
+
+        _, initial_configuration = self.get_system_configuration(None)
+        self.store_results(
+            configuration=initial_configuration,
+            data={
+                "optimization converged": int(converged),
+                "optimization cycles": cycles,
+            },
+        )
+        if not converged:
+            # At job level, so it reaches job.out from inside a Loop too
+            printer.job(
                 __(
-                    "Warning: the ORCA geometry optimization did not report "
-                    "convergence.",
+                    "Warning: " + message + " The last geometry is kept.",
                     indent=self.indent + 4 * " ",
                 )
             )
@@ -109,7 +124,6 @@ class Optimization(Energy):
             return
         coords = self._read_xyz_coordinates(xyz)
 
-        _, initial_configuration = self.get_system_configuration(None)
         if len(coords) != initial_configuration.n_atoms:
             logger.warning(
                 f"orca.xyz has {len(coords)} atoms, configuration has "
@@ -136,6 +150,20 @@ class Optimization(Energy):
             system, configuration, P, model=getattr(self, "model", "") or "ORCA"
         )
         printer.normal(__(text, indent=self.indent + 4 * " "))
+
+    @staticmethod
+    def _optimization_status(directory):
+        """(converged, cycles) of the ORCA optimization in ``directory``, from
+        orca.out: "THE OPTIMIZATION HAS CONVERGED", and the number of
+        "GEOMETRY OPTIMIZATION CYCLE" headers. (False, 0) without an orca.out."""
+        out = Path(directory) / "orca.out"
+        if not out.exists():
+            return False, 0
+        text = out.read_text(errors="replace")
+        return (
+            "THE OPTIMIZATION HAS CONVERGED" in text,
+            text.count("GEOMETRY OPTIMIZATION CYCLE"),
+        )
 
     @staticmethod
     def _read_xyz_coordinates(path):

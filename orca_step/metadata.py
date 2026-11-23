@@ -387,6 +387,20 @@ metadata["results"] = {
         "type": "float",
         "units": "1/cm",
     },
+    "optimization converged": {
+        "description": "Whether the geometry optimization converged (1) or not (0)",
+        "dimensionality": "scalar",
+        "calculation": ["optimization"],
+        "property": "optimization converged#ORCA#{model}",
+        "type": "integer",
+    },
+    "optimization cycles": {
+        "description": "The number of geometry optimization cycles",
+        "dimensionality": "scalar",
+        "calculation": ["optimization"],
+        "property": "optimization cycles#ORCA#{model}",
+        "type": "integer",
+    },
     "n imaginary frequencies": {
         "description": "The number of imaginary vibrational frequencies",
         "dimensionality": "scalar",
