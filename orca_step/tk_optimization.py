@@ -20,10 +20,9 @@ class TkOptimization(TkEnergy):
     def create_dialog(self, title="ORCA Optimization"):
         frame = super().create_dialog(title=title)
         P = self.node.parameters
-        if "optimization convergence" not in self:
-            self["optimization convergence"] = P["optimization convergence"].widget(
-                frame
-            )
+        for key in ("optimization convergence", "if not converged"):
+            if key not in self:
+                self[key] = P[key].widget(frame)
         for key in ("structure handling", "system name", "configuration name"):
             if key not in self:
                 self[key] = P[key].widget(frame)
@@ -32,9 +31,10 @@ class TkOptimization(TkEnergy):
 
     def reset_dialog(self, widget=None):
         row = super().reset_dialog(widget)
-        if "optimization convergence" in self:
-            self["optimization convergence"].grid(row=row, column=0, sticky=tk.EW)
-            row += 1
+        for key in ("optimization convergence", "if not converged"):
+            if key in self:
+                self[key].grid(row=row, column=0, sticky=tk.EW)
+                row += 1
         for key in ("structure handling", "system name", "configuration name"):
             if key in self:
                 self[key].grid(row=row, column=0, sticky=tk.EW)

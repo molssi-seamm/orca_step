@@ -25,6 +25,26 @@ class OptimizationParameters(EnergyParameters):
             "description": "Convergence:",
             "help_text": "The ORCA geometry-optimization convergence preset.",
         },
+        "if not converged": {
+            # What happens after the calculation, not what it computes: left out
+            # of the fingerprint a resumed job must match.
+            "resource": True,
+            "default": "warn and continue",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": ("warn and continue", "fail the step"),
+            "format_string": "",
+            "description": "If not converged:",
+            "help_text": (
+                "What to do when ORCA reports that the optimization did not "
+                "converge. 'warn and continue' prints a warning and keeps the last "
+                "geometry, as before. 'fail the step' stops it with an error before "
+                "anything is stored, so a Loop counts the iteration as failed and "
+                "the steps after it never use an unconverged structure. Either way "
+                "the properties 'optimization converged' and 'optimization cycles' "
+                "can be stored with the results."
+            ),
+        },
     }
 
     # An optimization needs a gradient, which an extrapolated energy lacks.

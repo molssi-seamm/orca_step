@@ -1,7 +1,18 @@
 =======
 History
 =======
-2026.11.23 -- Bugfix: flowchart variables in the extra keywords and extra blocks
+2026.11.23.1 -- Bugfix: an optimization that did not converge passed silently
+    * When ORCA reported that a geometry optimization did not converge, the step
+      printed a warning that did not reach job.out from inside a Loop, and kept the
+      last geometry, so a production set could contain unconverged structures. The
+      warning now goes to job.out, and a new control, **If not converged**, can
+      instead stop the step with an error before anything is stored (*fail the
+      step*), so a Loop counts the iteration as failed.
+    * The results can store whether the optimization converged and how many cycles
+      it took, as the properties ``optimization converged`` and ``optimization
+      cycles``.
+
+2026.11.23 --Bugfix: flowchart variables in the extra keywords and extra blocks
     * The extra ORCA blocks wrote a variable such as ``$Fz`` from a loop into the
       input as it was, and ORCA failed in every iteration. Both free-text fields now
       expand flowchart variables with SEAMM's ``${...}``, as any text does, e.g.
