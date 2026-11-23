@@ -434,6 +434,26 @@ Two free-text escape hatches cover anything without a dedicated control:
        DIISBfac 1.1
      end
 
+Both fields can use flowchart variables, written as in any SEAMM text with
+``${...}``, for example a field strength from a loop::
+
+     %scf
+       EField 0.0, 0.0, ${Fz}
+     end
+
+* ``${name}`` is replaced by the variable's value when the step runs. Any Python
+  expression of the variables and an f-string format work too: ``${Fz:.5f}``,
+  ``${2 * Fz}``.
+* A variable with units must be converted to the number ORCA expects, e.g.
+  ``${Fz.m_as("hartree/(e*bohr)")}``. ``${Fz}`` alone would write the units'
+  text into the input, so it stops the step with an error that suggests this.
+* ``$${`` writes a literal ``${``, and ORCA's own ``$new_job`` is written as it
+  is.
+* A bare ``$name`` is not replaced, so it stops the step before ORCA runs, with
+  a message that suggests ``${name}``. An undefined variable in ``${...}`` stops
+  it too. The one exception is a field that holds only ``$name``, which gives
+  the variable's value (e.g. keywords kept in a variable).
+
 Energies, gradients, and forces
 ===============================
 

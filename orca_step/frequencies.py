@@ -101,6 +101,7 @@ class Frequencies(Energy):
 
     def run(self, keywords=None):
         """Add ORCA's Freq/NumFreq keyword to the energy run."""
+        self.check_text_fields()
         P = self.parameters.current_values_to_dict(
             context=seamm.flowchart_variables._data
         )

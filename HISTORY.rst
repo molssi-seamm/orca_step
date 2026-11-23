@@ -1,7 +1,17 @@
 =======
 History
 =======
-2026.11.13 -- Bugfix: correlated energies of small species on several cores
+2026.11.23 -- Bugfix: flowchart variables in the extra keywords and extra blocks
+    * The extra ORCA blocks wrote a variable such as ``$Fz`` from a loop into the
+      input as it was, and ORCA failed in every iteration. Both free-text fields now
+      expand flowchart variables with SEAMM's ``${...}``, as any text does, e.g.
+      ``EField 0, 0, ${Fz}``; a variable with units is written as a number with
+      ``${Fz.m_as("hartree/(e*bohr)")}``. ``$${`` writes a literal ``${``.
+    * A bare ``$name`` (other than ORCA's ``$new_job``), or ``${name}`` of a variable
+      with units, now stops the step before ORCA runs, with a message that suggests
+      the right form. Requires seamm 2026.11.23.
+
+2026.11.13 --Bugfix: correlated energies of small species on several cores
     * ORCA's coupled-cluster module refuses to run on more processes than there are
       correlated electron pairs, so CCSD(T) and CCSD(T)-F12 failed for H2 (one pair)
       and other small species given several cores, e.g. in the Thermochemistry

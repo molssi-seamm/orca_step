@@ -18,6 +18,7 @@ from tabulate import tabulate
 
 from molsystem import elements
 import orca_step
+from . import text_checks
 from .orca_base import (
     auxiliary_basis_words,
     composite_basis,
@@ -620,6 +621,20 @@ class Energy(orca_step.ORCABase):
             ),
         )
 
+    def check_text_fields(self):
+        """Check the free text written to orca.inp ('extra keywords', 'extra
+        blocks') as typed, before SEAMM expands its '${...}': a bare '$name' or a
+        variable with units would reach ORCA unnoticed. See ``text_checks``."""
+        variables = seamm.flowchart_variables._data
+        for field in ("extra keywords", "extra blocks"):
+            try:
+                text = self.parameters[field].value
+            except (KeyError, TypeError, AttributeError):
+                continue  # e.g. BSSE has no extra blocks
+            text_checks.check_text(
+                text, variables, field=f"'{field}'", where=self.header
+            )
+
     def extra_input(self, P):
         """Return ``(extra_blocks, extra_files)`` for the ORCA input: the BSE
         basis block (if used), the SCF guess/convergence block, an optional
@@ -975,6 +990,7 @@ class Energy(orca_step.ORCABase):
         NOT call ``super().run()`` -- doing so would cite the plug-in a second
         time. The working directory is created by ``run_orca``.
         """
+        self.check_text_fields()
         P = self.parameters.current_values_to_dict(
             context=seamm.flowchart_variables._data
         )
