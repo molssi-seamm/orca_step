@@ -56,6 +56,7 @@ class Optimization(Energy):
 
     def run(self, keywords=None):
         """Run the optimization by adding the Opt keyword to the energy run."""
+        self.check_text_fields()
         P = self.parameters.current_values_to_dict(
             context=seamm.flowchart_variables._data
         )

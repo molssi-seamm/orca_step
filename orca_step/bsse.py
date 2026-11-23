@@ -327,6 +327,7 @@ class BSSE(Energy):
         (which set up printing and cited the plug-in), so it does not call
         ``super().run()``.
         """
+        self.check_text_fields()
         P = self.parameters.current_values_to_dict(
             context=seamm.flowchart_variables._data
         )

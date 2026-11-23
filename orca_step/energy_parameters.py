@@ -400,13 +400,17 @@ class EnergyParameters(seamm.Parameters):
             "help_text": (
                 "Any additional ORCA '!' keywords to append, e.g. 'RIJCOSX', "
                 "'NoFrozenCore', 'SlowConv'. The SCF tolerance and integration "
-                "grid have their own controls above."
+                "grid have their own controls above. Flowchart variables are "
+                "written with ${name}, e.g. '${grid_keyword}'; see the extra "
+                "blocks for more."
             ),
         },
         "extra blocks": {
             "default": "",
             "kind": "special",
             "widget": "seamm_widgets.LabeledText",
+            # Expand ${...} in the text, as in any text parameter (seamm 2026.11.23)
+            "expand": True,
             "default_units": "",
             "enumeration": tuple(),
             "format_string": "",
@@ -418,6 +422,11 @@ class EnergyParameters(seamm.Parameters):
                 "tricks with no dedicated control, e.g. for a difficult atom:"
                 "\n%scf\n  MaxIter 400\n"
                 "  Shift Shift 0.3 ErrStart 0.05 end\n  DIISBfac 1.1\nend"
+                "\nFlowchart variables are written with ${...}: '${Fz}' gives the "
+                "value of Fz, '${Fz:.5f}' formats it, and for a variable with "
+                "units '${Fz.m_as(\"hartree/(e*bohr)\")}' gives its number in "
+                "the units ORCA expects. A bare '$Fz' is an error, except ORCA's "
+                "own '$new_job'; '$${' writes a literal '${'."
             ),
         },
         "bond orders": {
