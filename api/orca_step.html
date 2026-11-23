@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.23 documentation</title>
+    <title>orca_step package &#8212; SEAMM ORCA Plug-in 2026.11.23.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=bd31c218"></script>
+    <script src="../_static/documentation_options.js?v=d6932bcf"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.23" />
+  <meta name="docsearch:version" content="2026.11.23.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1578,7 +1578,7 @@ gradient or Hessian, which an extrapolated energy does not have.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="orca_step.optimization_parameters.OptimizationParameters.parameters">
-<span class="sig-name descname"><span class="pre">parameters</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'optimization</span> <span class="pre">convergence':</span> <span class="pre">{'default':</span> <span class="pre">'NormalOpt',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Convergence:',</span> <span class="pre">'enumeration':</span> <span class="pre">('LooseOpt',</span> <span class="pre">'NormalOpt',</span> <span class="pre">'TightOpt',</span> <span class="pre">'VeryTightOpt'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">'The</span> <span class="pre">ORCA</span> <span class="pre">geometry-optimization</span> <span class="pre">convergence</span> <span class="pre">preset.',</span> <span class="pre">'kind':</span> <span class="pre">'enum'}}</span></span><a class="headerlink" href="#orca_step.optimization_parameters.OptimizationParameters.parameters" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'if</span> <span class="pre">not</span> <span class="pre">converged':</span> <span class="pre">{'default':</span> <span class="pre">'warn</span> <span class="pre">and</span> <span class="pre">continue',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'If</span> <span class="pre">not</span> <span class="pre">converged:',</span> <span class="pre">'enumeration':</span> <span class="pre">('warn</span> <span class="pre">and</span> <span class="pre">continue',</span> <span class="pre">'fail</span> <span class="pre">the</span> <span class="pre">step'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">&quot;What</span> <span class="pre">to</span> <span class="pre">do</span> <span class="pre">when</span> <span class="pre">ORCA</span> <span class="pre">reports</span> <span class="pre">that</span> <span class="pre">the</span> <span class="pre">optimization</span> <span class="pre">did</span> <span class="pre">not</span> <span class="pre">converge.</span> <span class="pre">'warn</span> <span class="pre">and</span> <span class="pre">continue'</span> <span class="pre">prints</span> <span class="pre">a</span> <span class="pre">warning</span> <span class="pre">and</span> <span class="pre">keeps</span> <span class="pre">the</span> <span class="pre">last</span> <span class="pre">geometry,</span> <span class="pre">as</span> <span class="pre">before.</span> <span class="pre">'fail</span> <span class="pre">the</span> <span class="pre">step'</span> <span class="pre">stops</span> <span class="pre">it</span> <span class="pre">with</span> <span class="pre">an</span> <span class="pre">error</span> <span class="pre">before</span> <span class="pre">anything</span> <span class="pre">is</span> <span class="pre">stored,</span> <span class="pre">so</span> <span class="pre">a</span> <span class="pre">Loop</span> <span class="pre">counts</span> <span class="pre">the</span> <span class="pre">iteration</span> <span class="pre">as</span> <span class="pre">failed</span> <span class="pre">and</span> <span class="pre">the</span> <span class="pre">steps</span> <span class="pre">after</span> <span class="pre">it</span> <span class="pre">never</span> <span class="pre">use</span> <span class="pre">an</span> <span class="pre">unconverged</span> <span class="pre">structure.</span> <span class="pre">Either</span> <span class="pre">way</span> <span class="pre">the</span> <span class="pre">properties</span> <span class="pre">'optimization</span> <span class="pre">converged'</span> <span class="pre">and</span> <span class="pre">'optimization</span> <span class="pre">cycles'</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">stored</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">results.&quot;,</span> <span class="pre">'kind':</span> <span class="pre">'enum',</span> <span class="pre">'resource':</span> <span class="pre">True},</span> <span class="pre">'optimization</span> <span class="pre">convergence':</span> <span class="pre">{'default':</span> <span class="pre">'NormalOpt',</span> <span class="pre">'default_units':</span> <span class="pre">'',</span> <span class="pre">'description':</span> <span class="pre">'Convergence:',</span> <span class="pre">'enumeration':</span> <span class="pre">('LooseOpt',</span> <span class="pre">'NormalOpt',</span> <span class="pre">'TightOpt',</span> <span class="pre">'VeryTightOpt'),</span> <span class="pre">'format_string':</span> <span class="pre">'',</span> <span class="pre">'help_text':</span> <span class="pre">'The</span> <span class="pre">ORCA</span> <span class="pre">geometry-optimization</span> <span class="pre">convergence</span> <span class="pre">preset.',</span> <span class="pre">'kind':</span> <span class="pre">'enum'}}</span></span><a class="headerlink" href="#orca_step.optimization_parameters.OptimizationParameters.parameters" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

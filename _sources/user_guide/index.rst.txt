@@ -480,6 +480,14 @@ The **Optimization** sub-step adds ORCA's ``Opt`` keyword to the energy run and,
 when it finishes, stores the optimized geometry. A **Convergence** control
 selects ORCA's optimization preset (``LooseOpt`` … ``VeryTightOpt``).
 
+**If not converged** says what happens when ORCA reports that the optimization
+did not converge. *Warn and continue* (the default) prints a warning in job.out
+and keeps the last geometry. *Fail the step* stops the step with an error before
+anything is stored, so a Loop counts the iteration as failed and nothing after
+it uses an unconverged structure; use it for production sets. Either way, the
+results can store ``optimization converged`` (1 or 0) and ``optimization
+cycles`` as properties of the configuration.
+
 A **Structure handling** control chooses where the optimized geometry goes. It
 defaults to *Overwrite the current configuration*, so the optimized structure
 flows straight into any following sub-step — for example a **Frequencies**

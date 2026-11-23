@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.optimization_parameters &#8212; SEAMM ORCA Plug-in 2026.11.23 documentation</title>
+    <title>orca_step.optimization_parameters &#8212; SEAMM ORCA Plug-in 2026.11.23.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=bd31c218"></script>
+    <script src="../../_static/documentation_options.js?v=d6932bcf"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.23" />
+  <meta name="docsearch:version" content="2026.11.23.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -519,6 +519,26 @@
             <span class="s2">"format_string"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
             <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Convergence:"</span><span class="p">,</span>
             <span class="s2">"help_text"</span><span class="p">:</span> <span class="s2">"The ORCA geometry-optimization convergence preset."</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">"if not converged"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># What happens after the calculation, not what it computes: left out</span>
+            <span class="c1"># of the fingerprint a resumed job must match.</span>
+            <span class="s2">"resource"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"default"</span><span class="p">:</span> <span class="s2">"warn and continue"</span><span class="p">,</span>
+            <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"enum"</span><span class="p">,</span>
+            <span class="s2">"default_units"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"enumeration"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"warn and continue"</span><span class="p">,</span> <span class="s2">"fail the step"</span><span class="p">),</span>
+            <span class="s2">"format_string"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"If not converged:"</span><span class="p">,</span>
+            <span class="s2">"help_text"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">"What to do when ORCA reports that the optimization did not "</span>
+                <span class="s2">"converge. 'warn and continue' prints a warning and keeps the last "</span>
+                <span class="s2">"geometry, as before. 'fail the step' stops it with an error before "</span>
+                <span class="s2">"anything is stored, so a Loop counts the iteration as failed and "</span>
+                <span class="s2">"the steps after it never use an unconverged structure. Either way "</span>
+                <span class="s2">"the properties 'optimization converged' and 'optimization cycles' "</span>
+                <span class="s2">"can be stored with the results."</span>
+            <span class="p">),</span>
         <span class="p">},</span>
     <span class="p">}</span>
 

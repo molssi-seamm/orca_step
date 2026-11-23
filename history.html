@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.23 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.23.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=bd31c218"></script>
+    <script src="_static/documentation_options.js?v=d6932bcf"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.23" />
+  <meta name="docsearch:version" content="2026.11.23.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,7 +511,19 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
-<dt>2026.11.23 – Bugfix: flowchart variables in the extra keywords and extra blocks</dt><dd><ul class="simple">
+<dt>2026.11.23.1 – Bugfix: an optimization that did not converge passed silently</dt><dd><ul class="simple">
+<li><p>When ORCA reported that a geometry optimization did not converge, the step
+printed a warning that did not reach job.out from inside a Loop, and kept the
+last geometry, so a production set could contain unconverged structures. The
+warning now goes to job.out, and a new control, <strong>If not converged</strong>, can
+instead stop the step with an error before anything is stored (<em>fail the
+step</em>), so a Loop counts the iteration as failed.</p></li>
+<li><p>The results can store whether the optimization converged and how many cycles
+it took, as the properties <code class="docutils literal notranslate"><span class="pre">optimization</span> <span class="pre">converged</span></code> and <code class="docutils literal notranslate"><span class="pre">optimization</span>
+<span class="pre">cycles</span></code>.</p></li>
+</ul>
+</dd>
+<dt>2026.11.23 –Bugfix: flowchart variables in the extra keywords and extra blocks</dt><dd><ul class="simple">
 <li><p>The extra ORCA blocks wrote a variable such as <code class="docutils literal notranslate"><span class="pre">$Fz</span></code> from a loop into the
 input as it was, and ORCA failed in every iteration. Both free-text fields now
 expand flowchart variables with SEAMM’s <code class="docutils literal notranslate"><span class="pre">${...}</span></code>, as any text does, e.g.

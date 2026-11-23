@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.23 documentation</title>
+    <title>User Guide &#8212; SEAMM ORCA Plug-in 2026.11.23.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=bd31c218"></script>
+    <script src="../_static/documentation_options.js?v=d6932bcf"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.23" />
+  <meta name="docsearch:version" content="2026.11.23.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -958,6 +958,13 @@ which is convenient for generating machine-learned force-field training data.</p
 <p>The <strong>Optimization</strong> sub-step adds ORCA’s <code class="docutils literal notranslate"><span class="pre">Opt</span></code> keyword to the energy run and,
 when it finishes, stores the optimized geometry. A <strong>Convergence</strong> control
 selects ORCA’s optimization preset (<code class="docutils literal notranslate"><span class="pre">LooseOpt</span></code> … <code class="docutils literal notranslate"><span class="pre">VeryTightOpt</span></code>).</p>
+<p><strong>If not converged</strong> says what happens when ORCA reports that the optimization
+did not converge. <em>Warn and continue</em> (the default) prints a warning in job.out
+and keeps the last geometry. <em>Fail the step</em> stops the step with an error before
+anything is stored, so a Loop counts the iteration as failed and nothing after
+it uses an unconverged structure; use it for production sets. Either way, the
+results can store <code class="docutils literal notranslate"><span class="pre">optimization</span> <span class="pre">converged</span></code> (1 or 0) and <code class="docutils literal notranslate"><span class="pre">optimization</span>
+<span class="pre">cycles</span></code> as properties of the configuration.</p>
 <p>A <strong>Structure handling</strong> control chooses where the optimized geometry goes. It
 defaults to <em>Overwrite the current configuration</em>, so the optimized structure
 flows straight into any following sub-step — for example a <strong>Frequencies</strong>
