@@ -27,7 +27,9 @@ Usage (TCP; the driver picks the port/host):
 Besides the standard commands the engine answers <FINGERPRINT_LENGTH and
 <FINGERPRINT, the fingerprints of the settings of its last energy and Hessian
 runs as JSON (see orca_step.fingerprint), the same as the ORCA step stores for
-the same calculation.
+the same calculation; and <SPIN, the <S**2> of the last energy/gradient and its
+ideal value S(S+1), two doubles (both NaN for a closed-shell RKS calculation, where
+ORCA prints none).
 
 Dependencies (all present in the SEAMM environment): pymdi, numpy, seamm_util,
 and the ORCA executable (its full path passed with --orca so it can find its
@@ -245,6 +247,16 @@ def basis_keyword_and_block(basis, atomic_numbers, workdir):
         (Path(workdir) / "basis.bas").write_text(text)
         return "", '%basis GTOName "basis.bas" end'
     return basis, ""
+
+
+def parse_spin(out_text):
+    """(<S**2>, S(S+1)) of the last SCF in ORCA's stdout, or (nan, nan) when it
+    printed none (a closed-shell, spin-restricted calculation)."""
+    s2 = re.findall(r"Expectation value of <S\*\*2>\s*:\s*(-?\d+\.\d+)", out_text)
+    ideal = re.findall(r"Ideal value S\*\(S\+1\)[^:]*:\s*(-?\d+\.\d+)", out_text)
+    if not s2 or not ideal:
+        return float("nan"), float("nan")
+    return float(s2[-1]), float(ideal[-1])
 
 
 def parse_energy(out_text):
@@ -499,6 +511,7 @@ def main():
         "<FORCES",
         "<FINGERPRINT_LENGTH",
         "<FINGERPRINT",
+        "<SPIN",
         "EXIT",
     ]
     if hessian_capable:
@@ -519,6 +532,8 @@ def main():
     hessian = None
     # The fingerprints of the last energy/gradient and Hessian runs
     records = {"energy": None, "hessian": None}
+    # <S**2> and S(S+1) of the last energy/gradient (NaN for closed-shell RKS)
+    spin = [float("nan"), float("nan")]
 
     def run_calculation():
         """Write the ORCA input for the current geometry, run the orca binary
@@ -567,6 +582,7 @@ def main():
         if energy is None:
             raise RuntimeError(f"Could not parse an energy from {workdir}/orca.out")
         gradient = parse_engrad((workdir / "orca.engrad").read_text(), natoms)
+        spin[:] = parse_spin(out_text)
         records["energy"] = calculation_record(
             workdir, text, atomic_numbers, coords_ang
         )
@@ -686,6 +702,17 @@ def main():
                 mdi.MDI_DOUBLE,
                 comm,
             )
+        elif command == "<SPIN":
+            # <S**2> and S(S+1) of the energy/gradient at the current geometry,
+            # computing it first if needed, as for <ENERGY. Custom command.
+            if recompute:
+                if not (have_elements and have_coords):
+                    raise RuntimeError(
+                        "<SPIN requested before >ELEMENTS and >COORDS were received."
+                    )
+                run_calculation()
+                recompute = False
+            mdi.MDI_Send(np.asarray(spin, dtype=float), 2, mdi.MDI_DOUBLE, comm)
         elif command in ("<FINGERPRINT_LENGTH", "<FINGERPRINT"):
             # The fingerprints of the settings of the last calculations, as JSON:
             # {"energy": record, "hessian": record}, each None until computed

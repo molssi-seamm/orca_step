@@ -3104,3 +3104,26 @@ def test_wfx_mode_writes_all_natural_orbitals():
     assert orca_step.Energy.wfx_mode(relaxed) == "all"
     assert _orca_2aim_options("all") == ["-useall"]
     assert _orca_2aim_options(True) == []
+
+
+def test_engine_parses_spin():
+    """The MDI engine's <SPIN values come from ORCA's <S**2> lines (an excerpt of a
+    real ORCA 6.1.1 UKS run of the CH3 radical, r2SCAN-3c); a closed-shell output
+    has none, and gives NaN."""
+    import math
+
+    mdi = _load_orca_mdi()
+    text = (
+        Path(__file__).parent / "data" / "engine_uks" / "orca_s2_excerpt.out"
+    ).read_text()
+    assert mdi.parse_spin(text) == pytest.approx((0.755550, 0.75))
+    s2, ideal = mdi.parse_spin("FINAL SINGLE POINT ENERGY   -40.5\n")
+    assert math.isnan(s2) and math.isnan(ideal)
+
+
+def test_engine_advertises_spin():
+    """<SPIN is registered with the engine's commands and answered."""
+    path = importlib.resources.files("orca_step") / "data" / "orca_mdi.py"
+    source = path.read_text()
+    assert '"<SPIN",' in source
+    assert 'command == "<SPIN"' in source

@@ -1,7 +1,14 @@
 =======
 History
 =======
-2026.11.23.1 -- Bugfix: an optimization that did not converge passed silently
+2026.11.23.2 -- The MDI engine reports <S**2>
+    * The ORCA MDI engine answers a new custom command, ``<SPIN``, with <S**2> of its
+      last energy and gradient and the ideal value S(S+1), read from ORCA's output
+      (NaN for a closed-shell calculation). Drivers such as the Thermochemistry step's
+      CBH approach can then store the spin contamination of open-shell species,
+      although the engine's output stays where it runs.
+
+2026.11.23.1 --Bugfix: an optimization that did not converge passed silently
     * When ORCA reported that a geometry optimization did not converge, the step
       printed a warning that did not reach job.out from inside a Loop, and kept the
       last geometry, so a production set could contain unconverged structures. The
