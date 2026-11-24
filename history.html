@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.23.1 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.23.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=d6932bcf"></script>
+    <script src="_static/documentation_options.js?v=e16ba1a5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.23.1" />
+  <meta name="docsearch:version" content="2026.11.23.2" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,7 +511,15 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
-<dt>2026.11.23.1 – Bugfix: an optimization that did not converge passed silently</dt><dd><ul class="simple">
+<dt>2026.11.23.2 – The MDI engine reports &lt;S**2&gt;</dt><dd><ul class="simple">
+<li><p>The ORCA MDI engine answers a new custom command, <code class="docutils literal notranslate"><span class="pre">&lt;SPIN</span></code>, with &lt;S**2&gt; of its
+last energy and gradient and the ideal value S(S+1), read from ORCA’s output
+(NaN for a closed-shell calculation). Drivers such as the Thermochemistry step’s
+CBH approach can then store the spin contamination of open-shell species,
+although the engine’s output stays where it runs.</p></li>
+</ul>
+</dd>
+<dt>2026.11.23.1 –Bugfix: an optimization that did not converge passed silently</dt><dd><ul class="simple">
 <li><p>When ORCA reported that a geometry optimization did not converge, the step
 printed a warning that did not reach job.out from inside a Loop, and kept the
 last geometry, so a production set could contain unconverged structures. The
