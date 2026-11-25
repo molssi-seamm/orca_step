@@ -249,6 +249,29 @@ def basis_keyword_and_block(basis, atomic_numbers, workdir):
     return basis, ""
 
 
+#: ORCA files kept between the engine's runs: the orbitals, from which ORCA
+#: autostarts the next SCF (its guess). Everything else ORCA left in the work
+#: directory is removed before each run.
+KEEP_BETWEEN_RUNS = {"orca.gbw"}
+
+
+def clean_workdir(workdir):
+    """Remove the files a previous ORCA run left in the work directory, keeping
+    ``orca.gbw`` for the SCF guess (and files that are not ORCA's, e.g.
+    ``basis.bas``). An analytic Hessian (``AnFreq``) run after an ``EnGrad`` in
+    the same directory found the old density container ("WARNING: Old
+    DensityContainer found on disk!") and, for 4-hydroxy-TEMPO, gave a Hessian
+    with eigenvalues of -3e7 cm^-1 (Thermochemistry job 6043, 2026-11-25).
+    Returns the names removed."""
+    removed = []
+    for path in sorted(Path(workdir).glob("orca.*")):
+        if path.name in KEEP_BETWEEN_RUNS or not path.is_file():
+            continue
+        path.unlink()
+        removed.append(path.name)
+    return removed
+
+
 def parse_spin(out_text):
     """(<S**2>, S(S+1)) of the last SCF in ORCA's stdout, or (nan, nan) when it
     printed none (a closed-shell, spin-restricted calculation)."""
@@ -563,6 +586,9 @@ def main():
             args.ncores,
             blocks=blocks,
         )
+        stale = clean_workdir(workdir)
+        if stale:
+            logger.debug(f"removed the previous run's files: {', '.join(stale)}")
         (workdir / "orca.inp").write_text(text)
         t0 = time.perf_counter()
         with (workdir / "orca.out").open("w") as out:
@@ -608,6 +634,9 @@ def main():
             args.ncores,
             blocks=basis_block,
         )
+        stale = clean_workdir(workdir)
+        if stale:
+            logger.debug(f"removed the previous run's files: {', '.join(stale)}")
         (workdir / "orca.inp").write_text(text)
         t0 = time.perf_counter()
         with (workdir / "orca.out").open("w") as out:
