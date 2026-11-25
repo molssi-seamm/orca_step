@@ -618,3 +618,31 @@ def test_analyze_task_returns_the_calculation_record(tmp_path):
     assert "calculation" not in analyze_task(
         result, _mc(), water, properties=("energy",)
     )
+
+
+def test_analyze_task_reports_the_spin_of_an_open_shell(tmp_path):
+    """<S**2> from the output, as the MDI engine's <SPIN gives it; none for a
+    closed shell."""
+    from orca_step.batch import analyze_task
+    from seamm_exec import TaskResult
+
+    geometry = Geometry([1], [[0, 0, 0]])
+
+    def result(out):
+        (tmp_path / "orca.out").write_text(out)
+        return TaskResult(
+            key="h",
+            state="finished",
+            directory=tmp_path,
+            files={"orca.out": "orca.out"},
+        )
+
+    energy = "FINAL SINGLE POINT ENERGY        -0.500000000000\n"
+    uks = (
+        "Expectation value of <S**2>     :     0.750123\n"
+        "Ideal value S*(S+1) for S=0.5   :     0.750000\n" + energy
+    )
+    data = analyze_task(result(uks), _mc(), geometry, properties=("energy",))
+    assert data["spin"] == {"S**2": 0.750123, "S(S+1)": 0.75}
+    data = analyze_task(result(energy), _mc(), geometry, properties=("energy",))
+    assert "spin" not in data
