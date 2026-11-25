@@ -1,6 +1,14 @@
 =======
 History
 =======
+2026.11.25 -- Bugfix: the MDI engine no longer leaves one run's files for the next
+    * Before each ORCA run (energy and gradient, or analytic Hessian) the warm MDI
+      engine now removes what the previous run left in its work directory, keeping
+      only ``orca.gbw``, from which ORCA takes the SCF guess. An analytic Hessian run
+      after a gradient in the same directory found the gradient's old density
+      container ("WARNING: Old DensityContainer found on disk!"), and for
+      4-hydroxy-TEMPO at r2SCAN-3c gave a Hessian with eigenvalues of -3e7 cm^-1.
+
 2026.11.23.2 -- The MDI engine reports <S**2>
     * The ORCA MDI engine answers a new custom command, ``<SPIN``, with <S**2> of its
       last energy and gradient and the ideal value S(S+1), read from ORCA's output

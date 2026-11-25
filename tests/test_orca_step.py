@@ -3127,3 +3127,28 @@ def test_engine_advertises_spin():
     source = path.read_text()
     assert '"<SPIN",' in source
     assert 'command == "<SPIN"' in source
+
+
+def test_engine_cleans_the_previous_runs_files(tmp_path):
+    """Before each ORCA run the MDI engine removes what the previous run left
+    (the density container, engrad, hess ...) and keeps only orca.gbw for the
+    SCF guess and files that are not ORCA's (6043, 2026-11-25: an AnFreq run
+    found the EnGrad run's old DensityContainer and gave a garbage Hessian)."""
+    m = _load_orca_mdi()
+    for name in (
+        "orca.gbw",
+        "orca.densities",
+        "orca.densitiesinfo",
+        "orca.engrad",
+        "orca.ges",
+        "orca.hess",
+        "orca.property.txt",
+        "orca.out",
+        "basis.bas",
+    ):
+        (tmp_path / name).write_text("x")
+    removed = m.clean_workdir(tmp_path)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["basis.bas", "orca.gbw"]
+    assert "orca.densities" in removed and "orca.gbw" not in removed
+    # nothing left to remove: nothing reported
+    assert m.clean_workdir(tmp_path) == []
