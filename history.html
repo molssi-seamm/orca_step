@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.25 documentation</title>
+    <title>History &#8212; SEAMM ORCA Plug-in 2026.11.25.1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=d2c0d6cc"></script>
+    <script src="_static/documentation_options.js?v=291d9058"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.25" />
+  <meta name="docsearch:version" content="2026.11.25.1" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,6 +511,12 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">#</a></h1>
 <dl class="simple">
+<dt>2026.11.25.1 – &lt;S**2&gt; of every open-shell separate calculation</dt><dd><ul class="simple">
+<li><p>The results of a separate calculation (a task) now carry &lt;S**2&gt; and its ideal value
+S(S+1) for any open-shell SCF, as the MDI engine’s <code class="docutils literal notranslate"><span class="pre">&lt;SPIN</span></code> gives them. Before,
+&lt;S**2&gt; was kept only with the parts of a correlated energy, so a DFT run had none.</p></li>
+</ul>
+</dd>
 <dt>2026.11.25 – Bugfix: the MDI engine no longer leaves one run’s files for the next</dt><dd><ul class="simple">
 <li><p>Before each ORCA run (energy and gradient, or analytic Hessian) the warm MDI
 engine now removes what the previous run left in its work directory, keeping

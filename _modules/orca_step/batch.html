@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.25 documentation</title>
+    <title>orca_step.batch &#8212; SEAMM ORCA Plug-in 2026.11.25.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d2c0d6cc"></script>
+    <script src="../../_static/documentation_options.js?v=291d9058"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2026.11.25" />
+  <meta name="docsearch:version" content="2026.11.25.1" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -917,6 +917,11 @@
     <span class="n">energy</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">parse_energy</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="k">if</span> <span class="n">out</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">energy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">data</span><span class="p">[</span><span class="s2">"energy"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">Q_</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="s2">"hartree"</span><span class="p">)</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">"kJ/mol"</span><span class="p">))</span>
+        <span class="c1"># &lt;S**2&gt; of an open-shell SCF, as the MDI engine's &lt;SPIN gives it (for</span>
+        <span class="c1"># spin-contamination checks); none for a closed shell</span>
+        <span class="n">s2</span><span class="p">,</span> <span class="n">ideal</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">parse_spin</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">s2</span> <span class="o">==</span> <span class="n">s2</span> <span class="ow">and</span> <span class="n">ideal</span> <span class="o">==</span> <span class="n">ideal</span><span class="p">:</span>  <span class="c1"># not NaN</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"spin"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"S**2"</span><span class="p">:</span> <span class="n">s2</span><span class="p">,</span> <span class="s2">"S(S+1)"</span><span class="p">:</span> <span class="n">ideal</span><span class="p">}</span>
     <span class="k">if</span> <span class="s2">"gradients"</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
         <span class="n">engrad</span> <span class="o">=</span> <span class="n">_text</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"orca.engrad"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">engrad</span><span class="p">:</span>
