@@ -419,6 +419,11 @@ def analyze_task(
     energy = helpers.parse_energy(out) if out else None
     if energy is not None:
         data["energy"] = float(Q_(energy, "hartree").m_as("kJ/mol"))
+        # <S**2> of an open-shell SCF, as the MDI engine's <SPIN gives it (for
+        # spin-contamination checks); none for a closed shell
+        s2, ideal = helpers.parse_spin(out)
+        if s2 == s2 and ideal == ideal:  # not NaN
+            data["spin"] = {"S**2": s2, "S(S+1)": ideal}
     if "gradients" in properties:
         engrad = _text(result, "orca.engrad")
         if engrad:
