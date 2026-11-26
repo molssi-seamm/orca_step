@@ -1,6 +1,15 @@
 =======
 History
 =======
+2026.11.26 -- The MDI engine keeps a reference guess and can tighten its SCF
+    * The ORCA MDI engine answers SAVE_GUESS (keep the last SCF's orbitals) and
+      RESTORE_GUESS (start the next SCF from them), so the points of a finite
+      difference no longer start each from the previous point's orbitals. That chain
+      made the warm-engine Hessian of 4-hydroxy-TEMPO depend on the order of its
+      points (SEAMM job 6074).
+    * TIGHT_SCF / NORMAL_SCF switch the engine to VeryTightSCF and exact exchange for
+      finite differences, as precision="tight" gives a batch calculation, and back.
+
 2026.11.25.1 -- <S**2> of every open-shell separate calculation
     * The results of a separate calculation (a task) now carry <S**2> and its ideal value
       S(S+1) for any open-shell SCF, as the MDI engine's ``<SPIN`` gives them. Before,
