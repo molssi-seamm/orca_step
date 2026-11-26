@@ -1,6 +1,11 @@
 =======
 History
 =======
+2026.11.25.1 -- <S**2> of every open-shell separate calculation
+    * The results of a separate calculation (a task) now carry <S**2> and its ideal value
+      S(S+1) for any open-shell SCF, as the MDI engine's ``<SPIN`` gives them. Before,
+      <S**2> was kept only with the parts of a correlated energy, so a DFT run had none.
+
 2026.11.25 -- Bugfix: the MDI engine no longer leaves one run's files for the next
     * Before each ORCA run (energy and gradient, or analytic Hessian) the warm MDI
       engine now removes what the previous run left in its work directory, keeping
