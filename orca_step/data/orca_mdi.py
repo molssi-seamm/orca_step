@@ -40,6 +40,7 @@ import argparse
 import json
 import logging
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -253,6 +254,23 @@ def basis_keyword_and_block(basis, atomic_numbers, workdir):
 #: autostarts the next SCF (its guess). Everything else ORCA left in the work
 #: directory is removed before each run.
 KEEP_BETWEEN_RUNS = {"orca.gbw"}
+
+#: The orbitals saved by SAVE_GUESS and put back as orca.gbw by RESTORE_GUESS, so
+#: every point of a finite difference starts its SCF from the reference
+#: structure's orbitals rather than from the previous point's (a chain whose
+#: result depends on the path: the warm-engine FD Hessian of 4-hydroxy-TEMPO,
+#: SEAMM job 6074, 2026-11-26). Not 'orca.*', so clean_workdir leaves it.
+REFERENCE_GUESS = "reference.gbw"
+
+
+def tight_method_words(method):
+    """The method words for precise finite differences (the TIGHT_SCF command),
+    as ``precision="tight"`` gives a batch calculation: VERYTIGHTSCF unless the
+    words already choose an SCF preset (:func:`accuracy_keywords` then drops the
+    engine's TIGHTSCF)."""
+    if {w.upper() for w in method.split()} & _SCF_PRESETS:
+        return method
+    return f"{method} VERYTIGHTSCF"
 
 
 def clean_workdir(workdir):
@@ -535,6 +553,10 @@ def main():
         "<FINGERPRINT_LENGTH",
         "<FINGERPRINT",
         "<SPIN",
+        "SAVE_GUESS",
+        "RESTORE_GUESS",
+        "TIGHT_SCF",
+        "NORMAL_SCF",
         "EXIT",
     ]
     if hessian_capable:
@@ -557,6 +579,14 @@ def main():
     records = {"energy": None, "hessian": None}
     # <S**2> and S(S+1) of the last energy/gradient (NaN for closed-shell RKS)
     spin = [float("nan"), float("nan")]
+    # TIGHT_SCF: VeryTightSCF and exact exchange for every run, until NORMAL_SCF
+    tight = [False]
+
+    def run_method_and_cosx():
+        """The method words and exchange scheme of the next run."""
+        if tight[0]:
+            return tight_method_words(method), "off"
+        return method, args.cosx
 
     def run_calculation():
         """Write the ORCA input for the current geometry, run the orca binary
@@ -576,8 +606,9 @@ def main():
         blocks = "\n".join(
             b for b in (basis_block, "%mp2 DLPNO true end" if args.dlpno else "") if b
         )
+        words, cosx = run_method_and_cosx()
         text = orca_input(
-            exchange_method(method, symbols, args.cosx, args.exact_exchange_elements),
+            exchange_method(words, symbols, cosx, args.exact_exchange_elements),
             basis,
             charge,
             multiplicity,
@@ -624,8 +655,9 @@ def main():
         basis, basis_block = basis_keyword_and_block(
             args.basis, atomic_numbers, workdir
         )
+        words, cosx = run_method_and_cosx()
         text = orca_hessian_input(
-            exchange_method(method, symbols, args.cosx, args.exact_exchange_elements),
+            exchange_method(words, symbols, cosx, args.exact_exchange_elements),
             basis,
             charge,
             multiplicity,
@@ -752,6 +784,27 @@ def main():
                 mdi.MDI_Send(len(text), 1, mdi.MDI_INT, comm)
             else:
                 mdi.MDI_Send(text, len(text), mdi.MDI_CHAR, comm)
+        elif command == "SAVE_GUESS":
+            # Keep the orbitals of the last SCF as the reference guess. Custom.
+            gbw = workdir / "orca.gbw"
+            if not gbw.exists():
+                raise RuntimeError(
+                    "SAVE_GUESS before any SCF: there are no orbitals to save."
+                )
+            shutil.copyfile(gbw, workdir / REFERENCE_GUESS)
+        elif command == "RESTORE_GUESS":
+            # The next SCF starts from the saved reference orbitals. Custom.
+            reference = workdir / REFERENCE_GUESS
+            if not reference.exists():
+                raise RuntimeError("RESTORE_GUESS before SAVE_GUESS.")
+            shutil.copyfile(reference, workdir / "orca.gbw")
+        elif command in ("TIGHT_SCF", "NORMAL_SCF"):
+            # VeryTightSCF and exact exchange for the following runs, or back to
+            # the engine's own settings. Custom.
+            if tight[0] != (command == "TIGHT_SCF"):
+                tight[0] = command == "TIGHT_SCF"
+                recompute = True
+                hessian = None
         elif command == "EXIT":
             logger.debug("EXIT -- shutting down.")
             break
